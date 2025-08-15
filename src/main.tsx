@@ -1,22 +1,13 @@
-// import { StrictMode } from 'react'
-// import { createRoot } from 'react-dom/client'
-// import './index.css'
-// import App from './App.tsx'
-//
-// createRoot(document.getElementById('root')!).render(
-//   <StrictMode>
-//     <App />
-//   </StrictMode>,
-// )
-
-
 import { StrictMode } from 'react'
 import ReactDOM from 'react-dom/client'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
+import QueryClientProviderWrapper from "../src/queries/ReactQuery.tsx";
 import './index.css'
 import './App.css'
+import './assets/css/colors.css'
 
 import { routeTree } from './routeTree.gen'
+import {ToastContainer} from "react-toastify";
 
 
 const router = createRouter({ routeTree })
@@ -34,7 +25,20 @@ if (!rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement)
   root.render(
     <StrictMode>
-      <RouterProvider router={router} />
+      <QueryClientProviderWrapper>
+        <ToastContainer
+          position="top-right"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+        />
+        <RouterProvider router={router} />
+      </QueryClientProviderWrapper>
     </StrictMode>,
   )
 }
