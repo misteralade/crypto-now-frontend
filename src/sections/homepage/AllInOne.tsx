@@ -2,11 +2,11 @@ import CustomButton from "../../components/global/Button";
 
 export default function AllInOne() {
   return (
-    <section className="mt-40">
+    <section className="mt-40 max-md:px-4">
       <div className="max-w-6xl mx-auto">
         <div className="grid lg:grid-cols-2 gap-12 items-start">
           <div>
-            <h2 className="text-3xl lg:text-4xl max-w-[378px] font-normal text-[#0E0F0C] tracking-[0.8px] mb-8">
+            <h2 className="text-3xl max-md:text-center lg:text-4xl max-w-[378px] font-normal text-[#0E0F0C] tracking-[0.8px] mb-8">
               Make your trade in 3 simple steps
             </h2>
 
@@ -45,7 +45,7 @@ export default function AllInOne() {
           </div>
 
           <div className="">
-            <div className="bg-[#F5F5FF] max-w-[589px] h-[461px] rounded-2xl"></div>
+            <div className="bg-[#F5F5FF] max-w-[589px] h-[300px] lg:h-[461px] rounded-2xl"></div>
           </div>
         </div>
       </div>
