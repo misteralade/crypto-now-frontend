@@ -1,28 +1,26 @@
-import { StrictMode } from 'react'
-import ReactDOM from 'react-dom/client'
-import { RouterProvider, createRouter } from '@tanstack/react-router'
+import { StrictMode } from "react";
+import ReactDOM from "react-dom/client";
+import { RouterProvider, createRouter } from "@tanstack/react-router";
 import QueryClientProviderWrapper from "../src/queries/ReactQuery.tsx";
-import './index.css'
-import './App.css'
-import './assets/css/colors.css'
+import "./index.css";
+import "./assets/css/colors.css";
 
-import { routeTree } from './routeTree.gen'
-import {ToastContainer} from "react-toastify";
+import { routeTree } from "./routeTree.gen";
+import { ToastContainer } from "react-toastify";
 
-
-const router = createRouter({ routeTree })
+const router = createRouter({ routeTree });
 
 // Register the router instance for type safety
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface Register {
-    router: typeof router
+    router: typeof router;
   }
 }
 
 // Render the app
-const rootElement = document.getElementById('root')!
+const rootElement = document.getElementById("root")!;
 if (!rootElement.innerHTML) {
-  const root = ReactDOM.createRoot(rootElement)
+  const root = ReactDOM.createRoot(rootElement);
   root.render(
     <StrictMode>
       <QueryClientProviderWrapper>
@@ -39,6 +37,6 @@ if (!rootElement.innerHTML) {
         />
         <RouterProvider router={router} />
       </QueryClientProviderWrapper>
-    </StrictMode>,
-  )
+    </StrictMode>
+  );
 }
