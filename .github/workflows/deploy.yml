@@ -14,10 +14,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set Firebase Target
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Configure environment
         run: |
           if [ "${{ github.ref }}" == "refs/heads/dev" ]; then
             echo "FIREBASE_TARGET=crypto-now-dev" >> $GITHUB_ENV
@@ -27,24 +36,20 @@ jobs:
             echo "VITE_BASE_URL=${{ secrets.VITE_BASE_URL_PROD }}" > .env
           fi
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
-
-      - name: Install Dependencies
-        run: npm ci
-
-      - name: Build Project
+      - name: Build project
         run: npm run build
 
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
 
-      - name: Deploy to Firebase
+      - name: Authenticate with Firebase
         env:
-          GOOGLE_APPLICATION_CREDENTIALS: /tmp/firebase-service-account.json
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: |
-          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > /tmp/firebase-service-account.json
-          firebase deploy --only hosting:${{ env.FIREBASE_TARGET }}
+          echo "$FIREBASE_SERVICE_ACCOUNT" > service-account.json
+          gcloud auth activate-service-account --key-file=service-account.json
+
+      - name: Deploy to Firebase Hosting
+        run: |
+          firebase use crypto-now-8d762
+          firebase deploy --only hosting:${{ env.FIREBASE_TARGET }} --non-interactive
