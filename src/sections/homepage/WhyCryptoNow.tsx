@@ -6,7 +6,7 @@ export default function WhyCryptoNow() {
   return (
     <section className="py-14 px-4 bg-[#F5F5FF] mt-40">
       <div className="max-w-6xl mx-auto">
-        <h2 className="text-5xl font-normal text-center text-[#0E0F0C] mb-10">
+        <h2 className="sm:text-4xl text-3xl md:text-5xl font-normal text-center text-[#0E0F0C] mb-10">
           Why CryptoNow?
         </h2>
 
