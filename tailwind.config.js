@@ -5,6 +5,7 @@ module.exports = withMT({
   theme: {
     extend: {
       colors: {
+        main: "#03034D",
         pry: "#2A3A23",
         ter: "#9CDD85",
         yellowPry: "#FFDE6B",
@@ -15,9 +16,20 @@ module.exports = withMT({
         black: "#1F1F1F",
         redPry: "#E94646",
       },
-      //added SF-regular
       fontFamily: {
-        sans: ["SF-regular", "sans-serif"],
+        sans: [
+          "DM Sans",
+          "ui-sans-serif",
+          "system-ui",
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "Segoe UI",
+          "Roboto",
+          "Helvetica Neue",
+          "Arial",
+          "Noto Sans",
+          "sans-serif",
+        ],
       },
     },
   },
