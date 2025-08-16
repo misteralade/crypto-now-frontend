@@ -2,11 +2,11 @@ import CustomButton from "../../components/global/Button";
 
 export default function InstantTradeSection() {
   return (
-    <section className="">
+    <section className="max-md:px-4">
       <div className="max-w-6xl mx-auto mt-24">
         {/* Header Section */}
-        <div className="text-center mb-12">
-          <h2 className="text-5xl font-normal tracking-[1px] text-[#0E0F0C] mb-3">
+        <div className="text-center mb-8 md:mb-12">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-normal md:tracking-[1px] text-[#0E0F0C] mb-3">
             Instant trade as a Guest
           </h2>
           <p className="text-gray-600 text-xl max-w-xl mx-auto leading-relaxed">
@@ -21,7 +21,7 @@ export default function InstantTradeSection() {
           <span className="text-black font-normal text-base">I want to</span>
 
           {/* First bordered container: Buy + Bitcoin */}
-          <div className="flex items-center bg-white rounded-[100px] border border-[#ECECEC] p-2">
+          <div className="flex items-center max-md:w-full bg-white rounded-[100px] border border-[#ECECEC] p-2">
             {/* Buy dropdown */}
             <div className="flex items-center gap-3 px-4 py-2">
               <select className="bg-transparent border-none outline-none font-medium text-gray-900 cursor-pointer">
