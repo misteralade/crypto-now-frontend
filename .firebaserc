@@ -1,0 +1,13 @@
+{
+  "projects": {
+    "default": "crypto-now-8d762"
+  },
+  "targets": {
+      "crypto-now-8d762": {
+        "hosting": {
+          "crypto-now-dev": ["crypto-now-dev"],
+          "crypto-now-prod": ["crypto-now-prod"]
+        }
+      }
+  }
+}
