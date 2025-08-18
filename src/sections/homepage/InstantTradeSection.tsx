@@ -9,7 +9,7 @@ export default function InstantTradeSection() {
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-normal md:tracking-[1px] text-[#0E0F0C] mb-3">
             Instant trade as a Guest
           </h2>
-          <p className="text-gray-600 text-xl max-w-xl mx-auto leading-relaxed">
+          <p className="text-gray-600 text-base sm:text-lg md:text-xl max-w-xl mx-auto leading-relaxed">
             You can also buy and sell your crypto coins without having to sign
             up. It's fast, easy, and reliable.
           </p>

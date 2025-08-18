@@ -64,7 +64,7 @@ export default function Footer() {
           </div>
 
           {/* Contact info */}
-          <div>
+          <div className="max-sm:col-span-2">
             <h3 className="font-semibold text-gray-900 mb-4">Contact info</h3>
             <div className="space-y-3">
               <p className="text-gray-600 underline">help@cryptonow.com</p>

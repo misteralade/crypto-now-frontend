@@ -4,10 +4,10 @@ export default function Testimonials() {
       <div className="max-w-6xl mx-auto">
         {/* Header Section */}
         <div className="text-center mb-12">
-          <h2 className="text-5xl font-normal text-[#0E0F0C] mb-2">
+          <h2 className="text-2xl sm:text-4xl md:text-5xl font-normal text-[#0E0F0C] mb-2">
             Testimonials
           </h2>
-          <p className="text-[#454745] font-normal text-lg">
+          <p className="text-[#454745] font-normal text-base sm:text-lg">
             What our customers are saying about our service
           </p>
         </div>
