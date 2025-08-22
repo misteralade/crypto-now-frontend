@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import AuthBg from "../assets/backgrounds/auth-bg.webp";
 import Logo from "../assets/logo/logo.svg";
 
@@ -6,9 +7,9 @@ export default function AuthLayout({ children }: { children: any }) {
     <div className="min-h-screen flex">
       <div className="flex-1 flex flex-col justify-center items-center px-8 py-12 bg-white relative">
         <div className="w-full max-w-[400px] max-xl:mt-20">
-          <div className="absolute top-8">
+          <Link className="absolute top-8" to="/">
             <img src={Logo} alt="CryptoNow Logo" className="h-8" />
-          </div>
+          </Link>
 
           {/* Form content passed as children */}
           {children}
