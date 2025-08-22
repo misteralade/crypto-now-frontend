@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Menu } from "lucide-react";
 import Button from "./Button";
 import Logo from "../../assets/logo/logo.svg";
+import { Link } from "@tanstack/react-router";
 
 export default function Navbar() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -102,9 +103,12 @@ export default function Navbar() {
 
           {/* Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            <button className="text-gray-700 hover:text-gray-900 font-medium">
+            <Link
+              to="/sign-in"
+              className="text-gray-700 hover:text-gray-900 font-medium"
+            >
               Login
-            </button>
+            </Link>
             <Button buttonText="Create Account" />
           </div>
 
@@ -246,15 +250,12 @@ export default function Navbar() {
 
             {/* Auth Buttons in Mobile Drawer */}
             <div className="pt-4 space-y-3">
-              <button
-                onClick={handleMenuItemClick}
-                className="text-gray-700 hover:text-gray-900 font-medium py-2 w-full text-left border border-gray-300 rounded-md px-4 hover:bg-gray-50 transition-colors duration-200"
-              >
-                Login
+              <button className="text-gray-700 hover:text-gray-900 font-medium py-2 w-full text-left border border-gray-300 rounded-md px-4 hover:bg-gray-50 transition-colors duration-200 my-3">
+                <Link to="/sign-in">Login</Link>
               </button>
 
-              <div className="w-full">
-                <Button buttonText="Create Account" />
+              <div className="w-full mt-3">
+                <Button className="w-full" buttonText="Create Account" />
               </div>
             </div>
           </div>

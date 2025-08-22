@@ -2,14 +2,14 @@ import CustomButton from "../../components/global/Button";
 
 export default function StepsSection() {
   return (
-    <section className="mt-40 max-md:px-4">
+    <section className="sm:mt-20 mt-14 md:mt-40 max-md:px-4">
       <div className="max-w-7xl mx-auto">
-        <div className="grid lg:grid-cols-2 gap-12 items-start">
-          <div className="">
+        <div className="grid md:grid-cols-2 gap-12 items-start">
+          <div className="max-md:order-2">
             <div className="bg-[#F5F5FF] max-w-[589px] h-[300px] sm:h-[461px] rounded-2xl"></div>
           </div>
 
-          <div>
+          <div className="max-md:w-full max-md:flex items-center justify-center flex-col">
             <h2 className="text-2xl sm:text-3xl max-md:text-center lg:text-4xl max-w-[378px] font-normal text-[#0E0F0C] md:tracking-[0.8px] mb-8">
               Make your trade in 3 simple steps
             </h2>
