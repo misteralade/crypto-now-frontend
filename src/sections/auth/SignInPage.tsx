@@ -1,6 +1,7 @@
 import { useState } from "react";
 import CustomButton from "../../components/global/Button";
 import AuthLayout from "../../layouts/AuthLayout";
+import { Link } from "@tanstack/react-router";
 
 export default function SignInPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -169,12 +170,12 @@ export default function SignInPage() {
         {/* Create Account Link */}
         <p className="text-center text-[14px] leading-[20px] text-[#6B7280] pt-2">
           Don't have an account?{" "}
-          <a
-            href="#"
+          <Link
+            to="/sign-up"
             className="font-semibold text-[#1E1B4B] hover:text-[#2D2A5A] underline transition-colors duration-200"
           >
             Create one
-          </a>
+          </Link>
         </p>
       </form>
     </AuthLayout>
