@@ -2,7 +2,7 @@ import { useState } from "react";
 import CustomButton from "../../components/global/Button";
 import AuthLayout from "../../layouts/AuthLayout";
 
-export default function LoginPage() {
+export default function SignInPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("jonas@gmail.com");
   const [password, setPassword] = useState("");
