@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+@theme {
+    --color-fade: #9A9A9A;
+    --color-FormFocusRing: #3B82F6;
+    --color-desc: #454745;
+}
+
 body {
   font-family: "DM Sans", sans-serif;
 }

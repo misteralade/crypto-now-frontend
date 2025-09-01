@@ -10,7 +10,7 @@ export default function SignInPage() {
   const [keepLoggedIn, setKeepLoggedIn] = useState(false);
 
   return (
-    <AuthLayout>
+    <AuthLayout layoutType={2}>
       {/* Form Header */}
       <div className="mb-10">
         <h1 className="md:text-[40px] text-3xl md:leading-[48px] font-semibold text-[#0E0F0C] mb-1 md:mb-2">
@@ -100,7 +100,7 @@ export default function SignInPage() {
           {/* Forgot Password Link */}
           <div className="flex justify-end mt-3">
             <a
-              href="#"
+              href="/forgot-password"
               className="text-[14px] text-[#6B7280] hover:text-[#1E1B4B] underline transition-colors duration-200"
             >
               Forgot password?

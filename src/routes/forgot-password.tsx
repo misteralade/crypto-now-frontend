@@ -9,10 +9,14 @@ export const Route = createFileRoute("/forgot-password")({
 
 function RouteComponent() {
   const [step, setStep] = useState(0);
+
   return (
     <>
-      {/* <OtpSent /> */}
-      <ForgotPasswordPage />
+        {step === 1 ? (
+            <OtpSent />
+        ): (
+            <ForgotPasswordPage setStep={setStep}/>
+        )}
     </>
   );
 }

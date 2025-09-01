@@ -31,7 +31,7 @@ const CustomButton = (props: CustomButtonProps) => {
 
   // Base styles for both button and link variants
   const baseStyles =
-    "bg-[#03034D] cursor-pointer text-white px-6 py-3 rounded-full font-medium hover:bg-[#03034D]/90 transition-colors inline-block text-center no-underline";
+    `bg-[#03034D] cursor-pointer text-white px-6 py-3 rounded-full font-medium hover:bg-[#03034D]/90 transition-colors inline-block text-center no-underline disabled:opacity-50 disabled:cursor-not-allowed`;
 
   // Link variant styles (more subtle, underlined)
   const linkStyles =
@@ -57,6 +57,7 @@ const CustomButton = (props: CustomButtonProps) => {
 
   // Button variant
   const buttonProps = props as ButtonProps;
+
   return (
     <button
       className={finalClassName}
