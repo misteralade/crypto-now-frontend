@@ -1,13 +1,28 @@
 "use client";
+
 import { useState } from "react";
 import { Menu } from "lucide-react";
-import Button from "./Button";
-import Logo from "../../assets/logo/logo.svg";
+import Button from "../Button.tsx";
+import Logo from "../../../assets/logo/logo.svg";
 import { Link } from "@tanstack/react-router";
+import NavbarDropdown from "./NavbarDropdown.tsx";
+import {ChevronDown} from "lucide-react";
+import type {DropItem} from "../../../types/navbar.types.ts";
 
 export default function Navbar() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  const dropItems: DropItem[] = [
+      {
+          text: "buy",
+          id: 1,
+      },
+      {
+          text: "sell",
+          id: 2,
+      },
+  ]
 
   const openDrawer = () => setIsDrawerOpen(true);
   const closeDrawer = () => setIsDrawerOpen(false);
@@ -45,45 +60,14 @@ export default function Navbar() {
             <div className="relative">
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center text-gray-700 hover:text-gray-900 font-medium"
+                className="flex items-center gap-1 text-gray-700 hover:text-gray-900 font-medium"
               >
                 Buy & sell crypto
-                <svg
-                  className="ml-1 h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
+                <ChevronDown className="h-5 w-5" />
               </button>
 
               {isDropdownOpen && (
-                <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
-                  <a
-                    href="#"
-                    className="block px-4 py-2 text-gray-700 hover:bg-gray-50"
-                  >
-                    Buy Crypto
-                  </a>
-                  <a
-                    href="#"
-                    className="block px-4 py-2 text-gray-700 hover:bg-gray-50"
-                  >
-                    Sell Crypto
-                  </a>
-                  <a
-                    href="#"
-                    className="block px-4 py-2 text-gray-700 hover:bg-gray-50"
-                  >
-                    Exchange
-                  </a>
-                </div>
+                  <NavbarDropdown dropItems={dropItems}/>
               )}
             </div>
 
