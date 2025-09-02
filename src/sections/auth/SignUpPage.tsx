@@ -9,7 +9,7 @@ export default function SignInPage() {
   const [password, setPassword] = useState("");
 
   return (
-    <AuthLayout>
+    <AuthLayout layoutType={2}>
       {/* Form Header */}
       <div className="mb-10">
         <h1 className="md:text-[40px] text-3xl md:leading-[48px] font-semibold text-[#0E0F0C] mb-1 md:mb-2">
