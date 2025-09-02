@@ -8,14 +8,18 @@ import {useNavigate} from "@tanstack/react-router";
 
 interface NavbarDropdownProp {
     dropItems: DropItem[];
+    isMobile?: boolean;
+    isDropdownOpen?: boolean;
+    handleMenuItemClick?: () => void;
 }
 
-export default function NavbarDropdown({dropItems}: NavbarDropdownProp) {
+export default function NavbarDropdown({dropItems, isMobile, isDropdownOpen, handleMenuItemClick}: NavbarDropdownProp) {
     const navigate = useNavigate()
     const [activeDropOption, setActiveDropOption] = useState<TradeOption>("")
     const [dropStep, setDropStep] = useState<number>(0);
     const [selectedToken, setSelectedToken] = useState<string>("");
     const [selectedCurrency, setSelectedCurrency] = useState<string>("");
+    const [showTradeDrop, setShowTradeDrop] = useState<boolean>(false);
 
     const availableTokens: TradeParamDisplay[] = [
         {
@@ -38,9 +42,6 @@ export default function NavbarDropdown({dropItems}: NavbarDropdownProp) {
         },
     ]
 
-    console.log("selectedToken", selectedToken);
-    console.log("selectedCurrency", selectedCurrency);
-
     const handleDropClick = (option: TradeOption) => {
         if(activeDropOption !== option) {
             setActiveDropOption(option);
@@ -50,16 +51,50 @@ export default function NavbarDropdown({dropItems}: NavbarDropdownProp) {
         setSelectedCurrency("");
 
         setDropStep(1)
-    }
-
-    const handleRouting = (currency: string) => {
-        setSelectedCurrency(currency);
-        navigate({to: `/trade-crypto?option=${activeDropOption}&&currency=${selectedCurrency}&&token=${selectedToken}`})
+        setShowTradeDrop(!showTradeDrop)
     }
 
     const handleNextStep = (token: string) => {
         setSelectedToken(token);
         setDropStep(2);
+    }
+
+    const handleRouting = (currency: string) => {
+        setSelectedCurrency(currency);
+        navigate({to: `/trade-crypto?option=${activeDropOption}&&currency=${selectedCurrency}&&token=${selectedToken}`})
+
+        if(isMobile && handleMenuItemClick){
+            handleMenuItemClick();
+        }
+    }
+
+    if(isMobile){
+        return (
+            <div
+                className={`relative overflow-visible transition-all duration-300 ease-in-out ${
+                    isDropdownOpen ? "max-h-90 opacity-100" : "max-h-0 opacity-0"
+                }`}
+            >
+                <div className="ml-4 pb-2 flex flex-col space-y-2">
+                    {dropItems.map((item, index) => (
+                        <span key={index}
+                                className="text-gray-600 relative capitalize hover:text-gray-900 py-1 transition-colors duration-200"
+                               onClick={() => handleDropClick(item.text)}
+                        >
+                            {item.text}
+
+                            {activeDropOption === item.text && showTradeDrop && (
+                                <>
+                                    {dropStep === 1 && <NavTokenDrop items={availableTokens} action={handleNextStep} isMobile={isMobile}/>}
+
+                                    {dropStep === 2 && <NavTokenDrop items={availableCurrency}  action={handleRouting} isMobile={isMobile}/>}
+                                </>
+                            )}
+                        </span>
+                    ))}
+                </div>
+            </div>
+        )
     }
 
     return(
@@ -72,7 +107,7 @@ export default function NavbarDropdown({dropItems}: NavbarDropdownProp) {
                     <button className="capitalize font-medium text-lg">{item.text}</button>
                     <ChevronRight className={`w-5 h-5 text-black/70`} />
 
-                    {activeDropOption === item.text && (
+                    {activeDropOption === item.text && showTradeDrop && (
                         <>
                             {dropStep === 1 && <NavTokenDrop items={availableTokens} action={handleNextStep}/>}
 

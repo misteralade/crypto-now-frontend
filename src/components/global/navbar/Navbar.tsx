@@ -119,7 +119,7 @@ export default function Navbar() {
 
       {/* Drawer */}
       <div
-        className={`fixed top-0 left-0 h-full w-80 bg-white shadow-lg z-50 transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 left-0 h-full w-80 bg-white shadow-lg z-40 transform transition-transform duration-300 ease-in-out ${
           isDrawerOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -186,35 +186,7 @@ export default function Navbar() {
                 </svg>
               </button>
 
-              <div
-                className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                  isDropdownOpen ? "max-h-40 opacity-100" : "max-h-0 opacity-0"
-                }`}
-              >
-                <div className="ml-4 pb-2 flex flex-col space-y-2">
-                  <a
-                    href="#"
-                    onClick={handleMenuItemClick}
-                    className="text-gray-600 hover:text-gray-900 py-1 transition-colors duration-200"
-                  >
-                    Buy Crypto
-                  </a>
-                  <a
-                    href="#"
-                    onClick={handleMenuItemClick}
-                    className="text-gray-600 hover:text-gray-900 py-1 transition-colors duration-200"
-                  >
-                    Sell Crypto
-                  </a>
-                  <a
-                    href="#"
-                    onClick={handleMenuItemClick}
-                    className="text-gray-600 hover:text-gray-900 py-1 transition-colors duration-200"
-                  >
-                    Exchange
-                  </a>
-                </div>
-              </div>
+               <NavbarDropdown dropItems={dropItems} isMobile={true} isDropdownOpen={isDropdownOpen} handleMenuItemClick={handleMenuItemClick} />
             </div>
 
             <a
