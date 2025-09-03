@@ -4,6 +4,16 @@
     --color-fade: #9A9A9A;
     --color-FormFocusRing: #3B82F6;
     --color-desc: #454745;
+    --color-greyBg: #F5F5FF;
+    --color-greyBg2: #D5D3F8;
+    --color-accent: #948EEE;
+    --color-accent1: #575AE5;
+    --color-fadeBg: #F2F2FD;
+    --color-fadeText: #A0A3BD;
+    --color-black: #0E0F0C;
+    --color-body: #454745;
+    --color-red:#EB5757;
+    --color-primary: #03034D;
 }
 
 body {

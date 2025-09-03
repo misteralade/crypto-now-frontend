@@ -1,13 +1,28 @@
 "use client";
+
 import { useState } from "react";
 import { Menu } from "lucide-react";
-import Button from "./Button";
-import Logo from "../../assets/logo/logo.svg";
+import Button from "../Button.tsx";
+import Logo from "../../../assets/logo/logo.svg";
 import { Link } from "@tanstack/react-router";
+import NavbarDropdown from "./NavbarDropdown.tsx";
+import {ChevronDown} from "lucide-react";
+import type {DropItem} from "../../../types/navbar.types.ts";
 
 export default function Navbar() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  const dropItems: DropItem[] = [
+      {
+          text: "buy",
+          id: 1,
+      },
+      {
+          text: "sell",
+          id: 2,
+      },
+  ]
 
   const openDrawer = () => setIsDrawerOpen(true);
   const closeDrawer = () => setIsDrawerOpen(false);
@@ -19,7 +34,7 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="bg-white px-6 py-3">
+      <nav className="bg-white px-4 md:px-12 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center">
@@ -29,7 +44,7 @@ export default function Navbar() {
           {/* Navigation Links */}
           <div className="hidden md:flex items-center space-x-8">
             <a
-              href="#"
+              href="/"
               className="text-gray-700 hover:text-gray-900 font-medium"
             >
               Home
@@ -45,45 +60,14 @@ export default function Navbar() {
             <div className="relative">
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center text-gray-700 hover:text-gray-900 font-medium"
+                className="flex items-center gap-1 text-gray-700 hover:text-gray-900 font-medium"
               >
                 Buy & sell crypto
-                <svg
-                  className="ml-1 h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
+                <ChevronDown className="h-5 w-5" />
               </button>
 
               {isDropdownOpen && (
-                <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
-                  <a
-                    href="#"
-                    className="block px-4 py-2 text-gray-700 hover:bg-gray-50"
-                  >
-                    Buy Crypto
-                  </a>
-                  <a
-                    href="#"
-                    className="block px-4 py-2 text-gray-700 hover:bg-gray-50"
-                  >
-                    Sell Crypto
-                  </a>
-                  <a
-                    href="#"
-                    className="block px-4 py-2 text-gray-700 hover:bg-gray-50"
-                  >
-                    Exchange
-                  </a>
-                </div>
+                  <NavbarDropdown dropItems={dropItems}/>
               )}
             </div>
 
@@ -135,7 +119,7 @@ export default function Navbar() {
 
       {/* Drawer */}
       <div
-        className={`fixed top-0 left-0 h-full w-80 bg-white shadow-lg z-50 transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 left-0 h-full w-80 bg-white shadow-lg z-40 transform transition-transform duration-300 ease-in-out ${
           isDrawerOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -202,35 +186,7 @@ export default function Navbar() {
                 </svg>
               </button>
 
-              <div
-                className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                  isDropdownOpen ? "max-h-40 opacity-100" : "max-h-0 opacity-0"
-                }`}
-              >
-                <div className="ml-4 pb-2 flex flex-col space-y-2">
-                  <a
-                    href="#"
-                    onClick={handleMenuItemClick}
-                    className="text-gray-600 hover:text-gray-900 py-1 transition-colors duration-200"
-                  >
-                    Buy Crypto
-                  </a>
-                  <a
-                    href="#"
-                    onClick={handleMenuItemClick}
-                    className="text-gray-600 hover:text-gray-900 py-1 transition-colors duration-200"
-                  >
-                    Sell Crypto
-                  </a>
-                  <a
-                    href="#"
-                    onClick={handleMenuItemClick}
-                    className="text-gray-600 hover:text-gray-900 py-1 transition-colors duration-200"
-                  >
-                    Exchange
-                  </a>
-                </div>
-              </div>
+               <NavbarDropdown dropItems={dropItems} isMobile={true} isDropdownOpen={isDropdownOpen} handleMenuItemClick={handleMenuItemClick} />
             </div>
 
             <a
