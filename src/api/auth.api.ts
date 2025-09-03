@@ -1,5 +1,5 @@
 import { axiosPostRequestHandler } from "./index.ts";
-import {LoginRequestSchema} from "../schema/auth.schema.ts";
+// import {LoginRequestSchema} from "../schema/auth.schema.ts";
 
 class AuthServiceApi {
   private static instance: AuthServiceApi;
@@ -14,7 +14,7 @@ class AuthServiceApi {
     return AuthServiceApi.instance;
   }
 
-  async login(payload: LoginRequestSchema) {
+  async login(payload: any) {
     return await axiosPostRequestHandler("/admin/auth/sign-in", payload);
   }
 }

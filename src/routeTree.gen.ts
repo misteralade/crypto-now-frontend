@@ -8,70 +8,161 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as rootRouteImport } from "./routes/__root";
+import { Route as TradeCryptoRouteImport } from "./routes/trade-crypto";
+import { Route as SignUpRouteImport } from "./routes/sign-up";
+import { Route as SignInRouteImport } from "./routes/sign-in";
+import { Route as ResetPasswordRouteImport } from "./routes/reset-password";
+import { Route as ForgotPasswordRouteImport } from "./routes/forgot-password";
+import { Route as IndexRouteImport } from "./routes/index";
 
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
+const TradeCryptoRoute = TradeCryptoRouteImport.update({
+  id: "/trade-crypto",
+  path: "/trade-crypto",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
+const SignUpRoute = SignUpRouteImport.update({
+  id: "/sign-up",
+  path: "/sign-up",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const SignInRoute = SignInRouteImport.update({
+  id: "/sign-in",
+  path: "/sign-in",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: "/reset-password",
+  path: "/reset-password",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: "/forgot-password",
+  path: "/forgot-password",
+  getParentRoute: () => rootRouteImport,
+} as any);
 const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/login': typeof LoginRoute
+  "/": typeof IndexRoute;
+  "/forgot-password": typeof ForgotPasswordRoute;
+  "/reset-password": typeof ResetPasswordRoute;
+  "/sign-in": typeof SignInRoute;
+  "/sign-up": typeof SignUpRoute;
+  "/trade-crypto": typeof TradeCryptoRoute;
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/login': typeof LoginRoute
+  "/": typeof IndexRoute;
+  "/forgot-password": typeof ForgotPasswordRoute;
+  "/reset-password": typeof ResetPasswordRoute;
+  "/sign-in": typeof SignInRoute;
+  "/sign-up": typeof SignUpRoute;
+  "/trade-crypto": typeof TradeCryptoRoute;
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/login': typeof LoginRoute
+  __root__: typeof rootRouteImport;
+  "/": typeof IndexRoute;
+  "/forgot-password": typeof ForgotPasswordRoute;
+  "/reset-password": typeof ResetPasswordRoute;
+  "/sign-in": typeof SignInRoute;
+  "/sign-up": typeof SignUpRoute;
+  "/trade-crypto": typeof TradeCryptoRoute;
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login'
-  fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login'
-  id: '__root__' | '/' | '/login'
-  fileRoutesById: FileRoutesById
+  fileRoutesByFullPath: FileRoutesByFullPath;
+  fullPaths:
+    | "/"
+    | "/forgot-password"
+    | "/reset-password"
+    | "/sign-in"
+    | "/sign-up"
+    | "/trade-crypto";
+  fileRoutesByTo: FileRoutesByTo;
+  to:
+    | "/"
+    | "/forgot-password"
+    | "/reset-password"
+    | "/sign-in"
+    | "/sign-up"
+    | "/trade-crypto";
+  id:
+    | "__root__"
+    | "/"
+    | "/forgot-password"
+    | "/reset-password"
+    | "/sign-in"
+    | "/sign-up"
+    | "/trade-crypto";
+  fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  LoginRoute: typeof LoginRoute
+  IndexRoute: typeof IndexRoute;
+  ForgotPasswordRoute: typeof ForgotPasswordRoute;
+  ResetPasswordRoute: typeof ResetPasswordRoute;
+  SignInRoute: typeof SignInRoute;
+  SignUpRoute: typeof SignUpRoute;
+  TradeCryptoRoute: typeof TradeCryptoRoute;
 }
 
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface FileRoutesByPath {
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
+    "/trade-crypto": {
+      id: "/trade-crypto";
+      path: "/trade-crypto";
+      fullPath: "/trade-crypto";
+      preLoaderRoute: typeof TradeCryptoRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/sign-up": {
+      id: "/sign-up";
+      path: "/sign-up";
+      fullPath: "/sign-up";
+      preLoaderRoute: typeof SignUpRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/sign-in": {
+      id: "/sign-in";
+      path: "/sign-in";
+      fullPath: "/sign-in";
+      preLoaderRoute: typeof SignInRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/reset-password": {
+      id: "/reset-password";
+      path: "/reset-password";
+      fullPath: "/reset-password";
+      preLoaderRoute: typeof ResetPasswordRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/forgot-password": {
+      id: "/forgot-password";
+      path: "/forgot-password";
+      fullPath: "/forgot-password";
+      preLoaderRoute: typeof ForgotPasswordRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/": {
+      id: "/";
+      path: "/";
+      fullPath: "/";
+      preLoaderRoute: typeof IndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  LoginRoute: LoginRoute,
-}
+  ForgotPasswordRoute: ForgotPasswordRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
+  SignInRoute: SignInRoute,
+  SignUpRoute: SignUpRoute,
+  TradeCryptoRoute: TradeCryptoRoute,
+};
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>()
+  ._addFileTypes<FileRouteTypes>();

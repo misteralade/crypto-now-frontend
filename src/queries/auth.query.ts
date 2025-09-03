@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import type {LoginRequestSchema} from "../schema/auth.schema.ts";
+// import type {LoginRequestSchema} from "../schema/auth.schema.ts";
 import {authServiceApi} from "../api/auth.api.ts";
 import {useState} from "react";
 import {toast} from "react-toastify";
@@ -9,7 +9,7 @@ export const useAuthQuery = () => {
   const [loggingInLoading, setLoggingInLoading] = useState(false);
 
   const loginMutation = useMutation({
-    mutationFn: async (data: LoginRequestSchema) => {
+    mutationFn: async (data: any) => {
       setLoggingInLoading(true);
       return await authServiceApi.login(data);
     },

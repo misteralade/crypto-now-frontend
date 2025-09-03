@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import Navbar from "../components/global/Navbar";
+import Navbar from "../components/global/navbar/Navbar.tsx";
 import HeroSection from "../sections/homepage/HeroSection";
 import StepsSection from "../sections/homepage/StepsSection";
 import WhyCryptoNow from "../sections/homepage/WhyCryptoNow";

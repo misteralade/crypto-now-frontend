@@ -1,0 +1,55 @@
+name: Build and Deploy Vite App to Firebase Hosting
+
+on:
+  push:
+    branches:
+      - master
+      - dev
+
+env:
+  NODE_VERSION: "22"
+  FIREBASE_PROJECT: "crypto-now-8d762"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set target environment
+        run: |
+          if [ "${{ github.ref }}" == "refs/heads/dev" ]; then
+            echo "FIREBASE_TARGET=crypto-now-dev" >> $GITHUB_ENV
+          elif [ "${{ github.ref }}" == "refs/heads/master" ]; then
+            echo "FIREBASE_TARGET=crypto-now-prod" >> $GITHUB_ENV
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Configure environment
+        run: |
+          if [ "${{ github.ref }}" == "refs/heads/dev" ]; then
+            echo "VITE_BASE_URL=${{ secrets.VITE_BASE_URL_DEV }}" > .env
+          elif [ "${{ github.ref }}" == "refs/heads/master" ]; then
+            echo "VITE_BASE_URL=${{ secrets.VITE_BASE_URL_PROD }}" > .env
+          fi
+
+      - name: Build project
+        run: npm run build
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Deploy to Firebase Hosting
+        run: |
+          firebase use ${{ env.FIREBASE_PROJECT }} --token ${{ secrets.FIREBASE_TOKEN }}
+          firebase deploy --only hosting:${{ env.FIREBASE_TARGET }} --non-interactive --token ${{ secrets.FIREBASE_TOKEN }}
