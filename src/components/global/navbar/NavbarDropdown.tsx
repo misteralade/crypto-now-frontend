@@ -18,7 +18,6 @@ export default function NavbarDropdown({dropItems, isMobile, isDropdownOpen, han
     const [activeDropOption, setActiveDropOption] = useState<TradeOption>("")
     const [dropStep, setDropStep] = useState<number>(0);
     const [selectedToken, setSelectedToken] = useState<string>("");
-    const [selectedCurrency, setSelectedCurrency] = useState<string>("");
     const [showTradeDrop, setShowTradeDrop] = useState<boolean>(false);
 
     const availableTokens: TradeParamDisplay[] = [
@@ -41,17 +40,16 @@ export default function NavbarDropdown({dropItems, isMobile, isDropdownOpen, han
             name: "USD"
         },
     ]
-
     const handleDropClick = (option: TradeOption) => {
-        if(activeDropOption !== option) {
+        if (activeDropOption === option) {
+            setShowTradeDrop(!showTradeDrop);
+        } else {
             setActiveDropOption(option);
+            setShowTradeDrop(true);
+            setDropStep(1);
         }
 
         setSelectedToken("");
-        setSelectedCurrency("");
-
-        setDropStep(1)
-        setShowTradeDrop(!showTradeDrop)
     }
 
     const handleNextStep = (token: string) => {
@@ -60,8 +58,7 @@ export default function NavbarDropdown({dropItems, isMobile, isDropdownOpen, han
     }
 
     const handleRouting = (currency: string) => {
-        setSelectedCurrency(currency);
-        navigate({to: `/trade-crypto?option=${activeDropOption}&&currency=${selectedCurrency}&&token=${selectedToken}`})
+        navigate({to: `/trade-crypto?option=${activeDropOption}&currency=${currency}&token=${selectedToken}`})
 
         if(isMobile && handleMenuItemClick){
             handleMenuItemClick();
@@ -98,7 +95,7 @@ export default function NavbarDropdown({dropItems, isMobile, isDropdownOpen, han
     }
 
     return(
-        <div className="absolute top-full left-0 mt-2 bg-grey border border-gray-200 rounded-md shadow-lg z-10 px-1 py-2 space-y-2">
+        <div className="absolute top-full left-0 mt-2 bg-greyBg border border-gray-200 rounded-md shadow-lg z-10 px-1 py-2 space-y-2">
             {dropItems.map((item, index) => (
                 <div key={index} className={`flex gap-10 justify-between items-center 
                 cursor-pointer p-2 rounded-lg relative ${activeDropOption === item.text && "bg-accent"}`}

@@ -1,4 +1,5 @@
 import type {TradeParamDisplay} from "../../../types/global.type.ts";
+import type {MouseEvent} from "react";
 
 interface NavTokenTradeProps {
     items: TradeParamDisplay[];
@@ -7,7 +8,7 @@ interface NavTokenTradeProps {
 }
 
 export default function NavTradeDrop({items, action, isMobile}: NavTokenTradeProps) {
-    const handleClick = (selectedItem: string, e: any) => {
+    const handleClick = (selectedItem: string, e:   MouseEvent<HTMLButtonElement>) => {
         e.stopPropagation();
 
         setTimeout(() => {
@@ -24,7 +25,7 @@ export default function NavTradeDrop({items, action, isMobile}: NavTokenTradePro
             {items.map((item, index) => (
                 <button key={index} className="flex items-center w-full gap-2
                 justify-center py-2 rounded-lg hover:bg-accent/50"
-                        onClick={(e) => handleClick(item.name, e)}
+                        onClick={(e: MouseEvent<HTMLButtonElement>) => handleClick(item.name, e)}
                 >
                     {item.symbol}
                     <span className="text-lg font-medium">{item.name}</span>

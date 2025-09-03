@@ -34,7 +34,7 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="bg-white px-6 py-3">
+      <nav className="bg-white px-4 md:px-12 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center">
@@ -44,7 +44,7 @@ export default function Navbar() {
           {/* Navigation Links */}
           <div className="hidden md:flex items-center space-x-8">
             <a
-              href="#"
+              href="/"
               className="text-gray-700 hover:text-gray-900 font-medium"
             >
               Home
