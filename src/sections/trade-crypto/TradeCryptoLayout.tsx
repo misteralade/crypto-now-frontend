@@ -10,12 +10,12 @@ interface TradeCryptoLayoutProps {
 
 export default function TradeCryptoLayout({ currency, token, option }: TradeCryptoLayoutProps) {
     return (
-        <div className="max-w-6xl mx-auto md:px-6 grid md:grid-cols-10 md:gap-4">
-            <div className={`col-span-3`}>
+        <div className="max-w-6xl mx-auto md:px-6 flex flex-col md:flex-row gap-7 items-start">
+            <div className={`md:basis-1/4 w-full`}>
                 <TradeSteps step={1} />
             </div>
 
-            <div className={`col-span-7`}>
+            <div className={`md:basis-3/4 w-full`}>
                 <TradeStepDisplay step={1} tradeType={option} currency={currency} token={token} />
             </div>
         </div>

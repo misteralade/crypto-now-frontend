@@ -2,9 +2,8 @@ import type {DropItem, TradeOption} from "../../../types/navbar.types.ts";
 import {ChevronRight} from "lucide-react";
 import {useState} from "react";
 import NavTokenDrop from "./NavTradeDrop.tsx";
-import type {TradeParamDisplay} from "../../../types/global.type.ts";
-import {TokenBTC, TokenUSDT} from "@web3icons/react";
 import {useNavigate} from "@tanstack/react-router";
+import {availableCurrency, availableTokens} from "../../../types/global.type.tsx";
 
 interface NavbarDropdownProp {
     dropItems: DropItem[];
@@ -20,26 +19,6 @@ export default function NavbarDropdown({dropItems, isMobile, isDropdownOpen, han
     const [selectedToken, setSelectedToken] = useState<string>("");
     const [showTradeDrop, setShowTradeDrop] = useState<boolean>(false);
 
-    const availableTokens: TradeParamDisplay[] = [
-        {
-            symbol: <TokenBTC variant="branded" size="20"  />,
-            name: "BTC"
-        },
-        {
-            symbol: <TokenUSDT variant="branded" size="20"  />,
-            name: "USDT"
-        },
-    ]
-    const availableCurrency: TradeParamDisplay[] = [
-        {
-            symbol: <TokenBTC variant="branded" size="20"  />,
-            name: "NGN"
-        },
-        {
-            symbol: <TokenUSDT variant="branded" size="20"  />,
-            name: "USD"
-        },
-    ]
     const handleDropClick = (option: TradeOption) => {
         if (activeDropOption === option) {
             setShowTradeDrop(!showTradeDrop);
