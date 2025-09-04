@@ -1,6 +1,7 @@
 import TradeSteps from "./TradeSteps.tsx";
 import TradeStepDisplay from "./TradeStepDisplay.tsx";
 import type {TradeType} from "../../types/trade.types.ts";
+import {useState} from "react";
 
 interface TradeCryptoLayoutProps {
     option: TradeType;
@@ -9,14 +10,15 @@ interface TradeCryptoLayoutProps {
 }
 
 export default function TradeCryptoLayout({ currency, token, option }: TradeCryptoLayoutProps) {
+    const [step, setStep] = useState<number>(1)
     return (
-        <div className="max-w-6xl mx-auto md:px-6 grid md:grid-cols-10 md:gap-4">
-            <div className={`col-span-3`}>
-                <TradeSteps step={1} />
+        <div className="max-w-6xl mx-auto md:px-6 flex flex-col md:flex-row gap-7 items-start">
+            <div className={`md:basis-1/4 w-full`}>
+                <TradeSteps step={step} />
             </div>
 
-            <div className={`col-span-7`}>
-                <TradeStepDisplay step={1} tradeType={option} currency={currency} token={token} />
+            <div className={`md:basis-3/4 w-full`}>
+                <TradeStepDisplay step={step} tradeType={option} currency={currency} token={token} setStep={setStep}/>
             </div>
         </div>
     )

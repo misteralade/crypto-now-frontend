@@ -1,4 +1,4 @@
-import type {TradeParamDisplay} from "../../../types/global.type.ts";
+import type {TradeParamDisplay} from "../../../types/global.type.tsx";
 import type {MouseEvent} from "react";
 
 interface NavTokenTradeProps {

@@ -1,11 +1,12 @@
 @import "tailwindcss";
 
 @theme {
-    --color-fade: #9A9A9A;
+    --color-grey: #9A9A9A;
     --color-FormFocusRing: #3B82F6;
     --color-desc: #454745;
     --color-greyBg: #F5F5FF;
     --color-greyBg2: #D5D3F8;
+    --color-grey2: #828282;
     --color-accent: #948EEE;
     --color-accent1: #575AE5;
     --color-fadeBg: #F2F2FD;
@@ -14,8 +15,23 @@
     --color-body: #454745;
     --color-red:#EB5757;
     --color-primary: #03034D;
+    --color-formGroupBg: #F0F0FF;
+    --color-border: #ECECEC;
+    --color-placeholder: #97A0B2;
 }
 
 body {
   font-family: "DM Sans", sans-serif;
+}
+
+/* For Webkit-based browsers (Chrome, Safari, Edge) */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0; /* Ensures no extra space is left behind */
+}
+
+/* For Firefox */
+input[type="number"] {
+    -moz-appearance: textfield;
 }

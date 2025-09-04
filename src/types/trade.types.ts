@@ -5,3 +5,8 @@ export interface TradeStep {
 }
 
 export type TradeType = "buy" | "sell";
+
+export interface AdditionalInfo {
+    title: string;
+    value: string;
+}
