@@ -8,9 +8,10 @@ interface TradeCryptoPageProps {
     step: number;
     currency: string;
     token: string;
+    setStep: (value: number) => void
 }
 
-export default function TradeStepDisplay({ tradeType, step, currency, token }: TradeCryptoPageProps) {
+export default function TradeStepDisplay({ tradeType, step, currency, token, setStep }: TradeCryptoPageProps) {
     const [activeTab, setActiveTab] = useState<TradeType>(tradeType);
 
     return (
@@ -19,7 +20,7 @@ export default function TradeStepDisplay({ tradeType, step, currency, token }: T
             <TradeStepDisplayHeading step={step} tradeType={tradeType} activeTab={activeTab} setActiveTab={setActiveTab} />
 
            {/* Content*/}
-            {step === 1 && <TradeStep1 token={token} currency={currency} tradeType={activeTab} />}
+            {step === 1 && <TradeStep1 token={token} currency={currency} tradeType={activeTab} setStep={setStep} />}
         </div>
     )
 }

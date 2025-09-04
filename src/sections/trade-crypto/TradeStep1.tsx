@@ -11,31 +11,56 @@ interface TradeStep1Props {
     token: string;
     currency: string;
     tradeType: TradeType;
+    setStep: (value: number) => void
 }
 
-export default function TradeStep1({token, currency, tradeType}: TradeStep1Props) {
+export default function TradeStep1({token, currency, tradeType, setStep}: TradeStep1Props) {
     const [numberOfToken, setNumberOfToken] = useState<string | number>("");
     const [amountToBuy, setAmountToBuy] = useState<string | number>("");
-    const [selectedToken, setSelectedToken] = useState<TradeParamDisplay>(availableTokens.find((item) => item.name === token) as TradeParamDisplay)
-    const [selectedCurrency, setSelectedCurrency] = useState<TradeParamDisplay>( availableCurrency?.find((item) => item.name === currency) as TradeParamDisplay)
+    const [selectedToken, setSelectedToken] = useState<TradeParamDisplay>(
+        availableTokens.find((item) => item.name === token) || availableTokens[0]
+    );
+    const [selectedCurrency, setSelectedCurrency] = useState<TradeParamDisplay>(
+        availableCurrency.find((item) => item.name === currency) || availableCurrency[0]
+    );
     const rates = [
         {
             currency: "USD",
+            token: "USDT",
             rate: 1,
         },
         {
             currency: "NGN",
-            rate: 1528
-        }
+            token: "USDT",
+            rate: 1528,
+        },
+        {
+            currency: "NGN",
+            token: "BTC",
+            rate: 170251147.66,
+        },
+        {
+            currency: "USD",
+            token: "BTC",
+            rate: 111464.60,
+        },
     ];
 
     const [rate, setRate] = useState<number>(0)
 
     useEffect(() => {
-        const foundRateObject = rates.find((item) => item.currency === selectedCurrency.name);
+        if (selectedCurrency && selectedToken) {
+            const foundRateObject = rates.find(
+                (item) => item.currency.toLowerCase() === selectedCurrency.name.toLowerCase() && item.token.toLowerCase() === selectedToken.name.toLowerCase()
+            );
 
-        setRate(foundRateObject?.rate as number)
-    }, [selectedCurrency]);
+            if (foundRateObject) {
+                setRate(foundRateObject.rate);
+            } else {
+                setRate(0);
+            }
+        }
+    }, [selectedCurrency, selectedToken]);
 
 
     const fee: number = 0.1
@@ -57,9 +82,11 @@ export default function TradeStep1({token, currency, tradeType}: TradeStep1Props
     ]
 
     useEffect(() => {
-        if(tradeType === "sell"){
+        if (tradeType === "sell" && numberOfToken !== "" && rate !== 0) {
             setAmountToBuy(Number(numberOfToken) * rate);
-        } else {
+        }
+
+        if(tradeType === "buy" && amountToBuy !== "" && rate !== 0) {
             setNumberOfToken(Number(amountToBuy) / rate);
         }
     }, [numberOfToken, amountToBuy, tradeType, rate]);
@@ -68,6 +95,8 @@ export default function TradeStep1({token, currency, tradeType}: TradeStep1Props
 
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
+
+        setStep(2)
 
         const data = {
             token: selectedToken.name,
