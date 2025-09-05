@@ -12,9 +12,9 @@ export default function TradeAdditionalInfo ({heading, additionalInfo}: TradeAdd
 
             <div className={`space-y-2`}>
                 {additionalInfo.map((item, index) => (
-                    <div key={index} className={`flex ${typeof item.value === 'string' ? "items-center": "items-end"} justify-between `} >
+                    <div key={index} className={`flex ${typeof item.value === 'string' ? "items-center": "md:items-end items-center"} gap-5 justify-between `} >
                         <h3 className={`text-grey2 font-medium`}>{item.title}</h3>
-                        {typeof item.value === 'string' ?  <p className={`text-black`}>{item.value}</p>: item.value}
+                        {typeof item.value === 'string' ?  <p className={`text-black overflow-hidden whitespace-nowrap text-ellipsis`}>{item.value}</p>: item.value}
                     </div>
                 ))}
             </div>

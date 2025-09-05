@@ -125,13 +125,13 @@ export default function ConfirmBankDetailsModal({
     }
 
     return (
-        <div className="fixed inset-0 h-full bg-black/20 bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg px-8 pt-14 pb-5 min-w-md relative space-y-10">
+        <div className="fixed inset-0 h-full bg-black/20 bg-opacity-50 flex items-center justify-center z-50 px-2 md:px-0">
+            <div className="bg-white rounded-lg md:px-8 px-3 pt-14 pb-5 w-full md:min-w-md relative space-y-10">
                 {renderContent()}
 
                 {/* Action Buttons - only show when viewing details */}
                 {showActionButtons() && (
-                    <div className="flex gap-4 w-4/5 mx-auto">
+                    <div className="flex gap-4 w-full md:w-4/5 mx-auto">
                         <button
                             type="button"
                             onClick={handleChangeAccount}

@@ -73,11 +73,11 @@ export default function TradeStepDisplay({activeTab, setActiveTab, tradeType, st
 
     useEffect(() => {
         if (activeTab === "sell" && numberOfToken !== "" && rate !== 0) {
-            setAmountToBuy(Number(numberOfToken) * rate);
+            setAmountToBuy((Number(numberOfToken) * rate).toFixed(5));
         }
 
         if(activeTab === "buy" && amountToBuy !== "" && rate !== 0) {
-            setNumberOfToken(Number(amountToBuy) / rate);
+            setNumberOfToken((Number(amountToBuy) / rate).toFixed(5));
         }
     }, [numberOfToken, amountToBuy, tradeType, rate]);
 

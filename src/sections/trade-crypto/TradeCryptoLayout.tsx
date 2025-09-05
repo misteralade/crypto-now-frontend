@@ -4,6 +4,7 @@ import type {TradeType, BankDetailsData, WalletDetailsData} from "../../types/tr
 import {useState} from "react";
 import {PaymentConfirmationModal} from "./modals/PaymentConfirmationModal.tsx";
 import ConfirmBankDetailsModal from "./modals/ConfirmBankDetailsModal.tsx";
+import TradeSuccess from "./TradeSuccess.tsx";
 
 interface TradeCryptoLayoutProps {
     option: TradeType;
@@ -32,7 +33,16 @@ export default function TradeCryptoLayout({ currency, token, option }: TradeCryp
     return (
         <>
             <div className="max-w-6xl mx-auto md:px-6 flex flex-col md:flex-row gap-7 items-start">
-                {step === 4 ? <h1>Success</h1>:
+                {step === 4 ?
+                    <TradeSuccess
+                        type={activeTab}
+                        amount={250}
+                        status={'Completed'}
+                        dateTime={`16 Aug 2025, 10:42 AM`}
+                        token={'USDT'}
+                        orderId={'7a2e2225-1a4b-4557'}
+                    />
+                    :
                     <>
                         <div className={`md:basis-1/4 w-full`}>
                             <TradeSteps step={step} />

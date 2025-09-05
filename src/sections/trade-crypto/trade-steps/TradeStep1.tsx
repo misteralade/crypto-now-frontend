@@ -1,7 +1,7 @@
 import TradeFormInput from '../TradeFormInput.tsx'
 import CustomButton from "../../../components/global/Button.tsx";
 import type {TradeType, TradeAdditionalInfoInterface} from "../../../types/trade.types.ts";
-import SwapIcon from "../../../assets/icons/fluent_arrow-swap-20-regular.png"
+import SwapIcon from "../../../assets/icons/fluent_arrow-swap-20-regular.svg"
 import {type FormEvent} from "react";
 import {availableCurrency, availableTokens, type TradeParamDisplay} from "../../../types/global.type.tsx";
 import TradeInputDropdown from "../TradeInputDropdown.tsx";
@@ -95,7 +95,7 @@ export default function TradeStep1({setAmountToBuy, fee, amountToReceive, rate, 
                 <TradeAdditionalInfo heading={"Order details"} additionalInfo={orderDetails} />
             </div>
 
-            <div className={`w-1/2 mx-auto`}>
+            <div className={`md:w-1/2 w-full mx-auto px-5 md:px-0`}>
                 <CustomButton
                     className="w-full"
                     buttonText="Proceed to payment"
