@@ -14,9 +14,9 @@ interface TradeStepProps {
 
 export default function TradeSuccess ({type, amount, status, dateTime, token, orderId}: TradeStepProps) {
     return(
-        <div className="space-y-10 w-3xl mx-auto">
+        <div className="space-y-14 md:space-y-10 w-full md:w-3xl mx-auto">
             {/*Heading & info*/}
-            <div className={`space-y-3 text-center`}>
+            <div className={`space-y-7 md:space-y-3 text-center`}>
                 <img src={CompleteIcon} alt={"complete icon"} className={`mx-auto`} />
 
                 <h4 className={`text-2xl font-medium`}>Transaction completed successfully</h4>
@@ -35,7 +35,7 @@ export default function TradeSuccess ({type, amount, status, dateTime, token, or
                 </div>
             </div>
 
-            <div className="flex gap-4 w-4/5 mx-auto">
+            <div className="flex flex-col md:flex-row gap-4 w-4/5 mx-auto">
                 <button
                     type="button"
                     // onClick={handleChangeAccount}
@@ -47,7 +47,7 @@ export default function TradeSuccess ({type, amount, status, dateTime, token, or
                 <Link
                     to={`/`}
                     type="button"
-                    className={`py-2 rounded-full w-1/2 text-lg text-center font-semibold bg-primary text-white disabled:bg-gray-300 disabled:text-gray-500`}
+                    className={`py-2 rounded-full order-first md:order-2 w-full md:w-1/2 text-lg text-center font-semibold bg-primary text-white disabled:bg-gray-300 disabled:text-gray-500`}
                 >
                     Go to Wallet Dashboard
                 </Link>

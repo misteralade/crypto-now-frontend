@@ -95,7 +95,7 @@ export default function TradeStep1({setAmountToBuy, fee, amountToReceive, rate, 
                 <TradeAdditionalInfo heading={"Order details"} additionalInfo={orderDetails} />
             </div>
 
-            <div className={`w-1/2 mx-auto`}>
+            <div className={`md:w-1/2 w-full mx-auto px-5 md:px-0`}>
                 <CustomButton
                     className="w-full"
                     buttonText="Proceed to payment"

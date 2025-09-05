@@ -86,12 +86,12 @@ export default function TradeStep2({setStep, additionalInfo, accountDetails, set
             {/*form*/}
             {!useStep3 &&  <form className={`space-y-10`} onSubmit={handleSubmit}>
                 {/*Image input*/}
-                <div className={`w-3/4 mx-auto`}>
+                <div className={`w-full md:w-3/4 mx-auto`}>
                     <TradePaymentUpload onFilesChange={setFiles} maxFiles={5} acceptedTypes={[".jpg", ".png", ".pdf"]} />
                 </div>
 
 
-                <div className={`w-1/2 mx-auto`}>
+                <div className={`md:w-1/2 w-full mx-auto px-5 md:px-0`}>
                     <CustomButton
                         className="w-full"
                         buttonText="Proceed to payment"
@@ -102,11 +102,11 @@ export default function TradeStep2({setStep, additionalInfo, accountDetails, set
             </form>}
 
             {useStep3 &&
-                <div className={`flex items-center justify-between`}>
+                <div className={`flex flex-col md:flex-row gap-5 items-center justify-between`}>
                     <MakeDispute />
 
                     <CustomButton
-                        className="w-1/2"
+                        className="w-full md:w-1/2 order-first md:order-2"
                         buttonText="I've received payment"
                         type="button"
                         onClick={() => {

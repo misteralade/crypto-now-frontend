@@ -19,8 +19,8 @@ export default function CopyAccountDetails({accountNumber}: CopyAccountDetails) 
             });
     };
     return(
-            <div className={`flex gap-2 items-center relative`}>
-                <p>{accountNumber}</p>
+            <div className={`flex gap-2 items-center relative w-3/4 md:w-fit`}>
+                <p className={`text-black overflow-hidden whitespace-nowrap text-ellipsis`}>{accountNumber}</p>
 
                 <img src={Copy} alt="copy" onClick={handleCopy} className={`cursor-pointer`} />
 
