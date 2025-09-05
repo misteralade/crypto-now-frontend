@@ -1,4 +1,4 @@
-import Copy from "../../assets/icons/fluent_copy-16-regular.png"
+import Copy from "../../assets/icons/fluent_copy-16-regular.svg"
 import {useState} from "react";
 
 interface CopyAccountDetails {

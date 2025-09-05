@@ -1,6 +1,6 @@
 interface DetailDisplayProp{
     title: string;
-    value: string;
+    value: string | number;
 }
 
 export default function DetailDisplay({title, value}: DetailDisplayProp){

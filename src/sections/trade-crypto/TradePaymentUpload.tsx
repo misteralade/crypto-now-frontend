@@ -1,6 +1,6 @@
 import { useState, useRef } from "react"
-import Upload from "../../assets/icons/upload.png"
-import Cancel from "../../assets/icons/highlight_off.png"
+import Upload from "../../assets/icons/upload.svg"
+import Cancel from "../../assets/icons/hightlight_off.svg"
 import {FileText} from "lucide-react";
 
 interface FileUploadProps {

@@ -1,8 +1,8 @@
 import type {ReactNode} from "react";
-import TokenBTC from "../../src/assets/icons/cryptocurrency-color_btc.png";
-import TokenUSDT from "../../src/assets/icons/cryptocurrency-color_usdt.png";
-import NGNIcon from "../../src/assets/icons/ngn-icon.png";
-import USDIcon from "../../src/assets/icons/usd-icon.png";
+import TokenBTC from "../../src/assets/icons/btc_icon.svg";
+import TokenUSDT from "../../src/assets/icons/cryptocurrency-color_usdt.svg";
+import NGNIcon from "../../src/assets/icons/ngn-icon.svg";
+import USDIcon from "../../src/assets/icons/usd-icon.svg";
 
 export interface TradeParamDisplay {
     symbol: ReactNode,
