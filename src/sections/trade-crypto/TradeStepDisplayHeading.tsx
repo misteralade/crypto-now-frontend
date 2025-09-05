@@ -1,13 +1,12 @@
 import type {TradeType} from "../../types/trade.types.ts";
 
 interface TradeStepDisplayHeadingProps {
-    tradeType: TradeType;
     step: number;
     activeTab: TradeType;
     setActiveTab: (activeTab: TradeType) => void;
 }
 
-export default function TradeStepDisplayHeading({ tradeType, step, activeTab, setActiveTab }: TradeStepDisplayHeadingProps) {
+export default function TradeStepDisplayHeading({  step, activeTab, setActiveTab }: TradeStepDisplayHeadingProps) {
     const desc = step === 2 ? `To process your order, make payment to the account details provided below.
      After making payment, please upload your payment receipt for quicker processing`: `Your order is been processed. You’ll get notified when we make your payment into your account via email.`;
 
@@ -15,7 +14,7 @@ export default function TradeStepDisplayHeading({ tradeType, step, activeTab, se
         <div className={`space-y-2`}>
          {/*heading*/}
             <div className={`flex justify-between items-center`}>
-                <h2 className={`capitalize text-2xl font-semibold`}>{tradeType} crypto</h2>
+                <h2 className={`capitalize text-2xl font-semibold`}>{activeTab} crypto</h2>
 
                 {step === 1 ?
                     <div className=" flex items-center justify-center">

@@ -7,8 +7,11 @@
     --color-greyBg: #F5F5FF;
     --color-greyBg2: #D5D3F8;
     --color-grey2: #828282;
+    --color-grey3: #828282;
     --color-accent: #948EEE;
     --color-accent1: #575AE5;
+    --color-accent2: #948EEE;
+    --color-accent3: #FF4F64;
     --color-fadeBg: #F2F2FD;
     --color-fadeText: #A0A3BD;
     --color-black: #0E0F0C;
@@ -18,6 +21,8 @@
     --color-formGroupBg: #F0F0FF;
     --color-border: #ECECEC;
     --color-placeholder: #97A0B2;
+    --color-strokeLightGrey:#E7E7E7;
+    --color-textSec: #6D6D6D;
 }
 
 body {
