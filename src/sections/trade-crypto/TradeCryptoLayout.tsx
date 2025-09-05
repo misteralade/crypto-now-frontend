@@ -49,7 +49,6 @@ export default function TradeCryptoLayout({ currency, token, option }: TradeCryp
                         </div>
 
                         <div className={`md:basis-3/4 w-full`}>
-
                             <TradeStepDisplay
                                 step={step}
                                 tradeType={option}
