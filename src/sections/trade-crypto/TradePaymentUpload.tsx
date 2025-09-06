@@ -2,6 +2,7 @@ import { useState, useRef } from "react"
 import Upload from "../../assets/icons/upload.svg"
 import Cancel from "../../assets/icons/hightlight_off.svg"
 import {FileText} from "lucide-react";
+import {transactionServiceApi} from "../../api/transaction.api.ts";
 
 interface FileUploadProps {
     onFilesChange?: (files: File[]) => void
@@ -18,6 +19,8 @@ export default function TradePaymentUpload({
     const [isDragOver, setIsDragOver] = useState(false)
     const [filePreviews, setFilePreviews] = useState<{ [key: string]: string }>({})
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const [, setIsUploading] = useState(false)
+    const [, setUploadError] = useState<string | null>(null)
 
     const createFilePreview = (file: File) => {
         const extension = "." + file.name.split(".").pop()?.toLowerCase()
@@ -25,6 +28,27 @@ export default function TradePaymentUpload({
             return URL.createObjectURL(file)
         }
         return null
+    }
+
+    const handleFileUpload = async (file: File) => {
+        setIsUploading(true)
+        setUploadError(null)
+
+        try {
+            const formData = new FormData()
+            formData.append('file', file)
+
+            await transactionServiceApi.uploadTransactionReceipt(formData);
+        } catch (error: any) {
+            console.error('Upload error:', error)
+            setUploadError(
+              error.response?.data?.message ||
+              error.message ||
+              'An error occurred during upload'
+            )
+        } finally {
+            setIsUploading(false)
+        }
     }
 
     const handleFileSelect = (selectedFiles: FileList | null) => {
@@ -44,10 +68,12 @@ export default function TradePaymentUpload({
                 newPreviews[file.name] = previewUrl
             }
         })
+        const file = newFiles[0];
 
         setFiles(updatedFiles)
         setFilePreviews(newPreviews)
         onFilesChange?.(updatedFiles)
+        handleFileUpload(file)
     }
 
     const removeFile = (index: number) => {
