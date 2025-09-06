@@ -32,7 +32,7 @@ export default function TradeCryptoLayout({ currency, token, option }: TradeCryp
 
     return (
         <>
-            <div className="max-w-6xl mx-auto md:px-6 flex flex-col md:flex-row gap-7 items-start">
+            <div className="max-w-6xl mx-auto md:px-6 flex flex-col md:flex-row gap-14 md:gap-7 items-start">
                 {step === 4 ?
                     <TradeSuccess
                         type={activeTab}
@@ -49,7 +49,6 @@ export default function TradeCryptoLayout({ currency, token, option }: TradeCryp
                         </div>
 
                         <div className={`md:basis-3/4 w-full`}>
-
                             <TradeStepDisplay
                                 step={step}
                                 tradeType={option}
@@ -64,7 +63,6 @@ export default function TradeCryptoLayout({ currency, token, option }: TradeCryp
                         </div>
                     </>
                 }
-
             </div>
 
             <PaymentConfirmationModal isOpen={showModal} />
