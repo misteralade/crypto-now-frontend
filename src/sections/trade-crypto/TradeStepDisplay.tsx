@@ -132,7 +132,7 @@ export default function TradeStepDisplay({activeTab, setActiveTab, tradeType, st
             value: `${amountToBuy} ${selectedCurrency.name}`
         }
     ]
-    const AccountDetails: TradeAdditionalInfoInterface[] = tradeType === "sell" ? sellAccountDetails : buyAccountDetails;
+    const AccountDetails: TradeAdditionalInfoInterface[] = tradeType === "sell" ? buyAccountDetails : sellAccountDetails;
 
     return (
         <div className={`bg-greyBg rounded-2xl p-5 space-y-5`}>
