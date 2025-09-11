@@ -45,7 +45,7 @@ export default function TradeSuccess ({type, amount, status, dateTime, token, or
                 </button>
 
                 <Link
-                    to={`/`}
+                    to={`/dashboard`}
                     type="button"
                     className={`py-2 rounded-full order-first md:order-2 w-full md:w-1/2 text-lg text-center font-semibold bg-primary text-white disabled:bg-gray-300 disabled:text-gray-500`}
                 >

@@ -126,7 +126,7 @@ export default function ConfirmBankDetailsModal({
 
     return (
         <div className="fixed inset-0 h-full bg-black/20 bg-opacity-50 flex items-center justify-center z-50 px-2 md:px-0">
-            <div className="bg-white rounded-lg md:px-8 px-3 pt-14 pb-5 w-full md:min-w-md relative space-y-10">
+            <div className="bg-white rounded-lg md:px-8 px-3 pt-14 pb-5 w-full md:max-w-md relative space-y-10">
                 {renderContent()}
 
                 {/* Action Buttons - only show when viewing details */}
