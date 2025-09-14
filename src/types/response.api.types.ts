@@ -3,3 +3,11 @@ export type BaseApiResponse<T> = {
   message: string;
   data: T;
 };
+
+export type SupportedCryptoOrCurrencyResponse = {
+  id: string;
+  name: string;
+  code: string;
+  symbol: string;
+  logoUrl: string;
+}

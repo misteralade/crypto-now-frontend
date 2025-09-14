@@ -3,7 +3,8 @@ import {ChevronRight} from "lucide-react";
 import {useState} from "react";
 import NavTokenDrop from "./NavTradeDrop.tsx";
 import {useNavigate} from "@tanstack/react-router";
-import {availableCurrency, availableTokens} from "../../../types/global.type.tsx";
+import {useCryptoQuery} from "../../../queries/crypto.query.ts";
+import {useCurrencyQuery} from "../../../queries/currency.query.ts";
 
 interface NavbarDropdownProp {
     dropItems: DropItem[];
@@ -14,6 +15,8 @@ interface NavbarDropdownProp {
 
 export default function NavbarDropdown({dropItems, isMobile, isDropdownOpen, handleMenuItemClick}: NavbarDropdownProp) {
     const navigate = useNavigate()
+    const { supportedCryptoCurrencies } = useCryptoQuery();
+    const { supportedCurrencies } = useCurrencyQuery();
     const [activeDropOption, setActiveDropOption] = useState<TradeOption>("")
     const [dropStep, setDropStep] = useState<number>(0);
     const [selectedToken, setSelectedToken] = useState<string>("");
@@ -61,9 +64,9 @@ export default function NavbarDropdown({dropItems, isMobile, isDropdownOpen, han
 
                             {activeDropOption === item.text && showTradeDrop && (
                                 <>
-                                    {dropStep === 1 && <NavTokenDrop items={availableTokens} action={handleNextStep} isMobile={isMobile}/>}
+                                    {dropStep === 1 && <NavTokenDrop items={supportedCryptoCurrencies || []} action={handleNextStep} isMobile={isMobile}/>}
 
-                                    {dropStep === 2 && <NavTokenDrop items={availableCurrency}  action={handleRouting} isMobile={isMobile}/>}
+                                    {dropStep === 2 && <NavTokenDrop items={supportedCurrencies || []}  action={handleRouting} isMobile={isMobile}/>}
                                 </>
                             )}
                         </span>
@@ -85,9 +88,9 @@ export default function NavbarDropdown({dropItems, isMobile, isDropdownOpen, han
 
                     {activeDropOption === item.text && showTradeDrop && (
                         <>
-                            {dropStep === 1 && <NavTokenDrop items={availableTokens} action={handleNextStep}/>}
+                            {dropStep === 1 && <NavTokenDrop items={supportedCryptoCurrencies || []} action={handleNextStep}/>}
 
-                            {dropStep === 2 && <NavTokenDrop items={availableCurrency}  action={handleRouting}/>}
+                            {dropStep === 2 && <NavTokenDrop items={supportedCurrencies || []}  action={handleRouting}/>}
                         </>
                     )}
                 </div>
