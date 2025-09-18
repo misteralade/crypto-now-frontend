@@ -1,10 +1,7 @@
-import type {DropItem, TradeOption} from "../../../types/navbar.types.ts";
+import type {DropItem} from "../../../types/navbar.types.ts";
 import {ChevronRight} from "lucide-react";
-import {useState} from "react";
 import NavTokenDrop from "./NavTradeDrop.tsx";
-import {useNavigate} from "@tanstack/react-router";
-import {useCryptoQuery} from "../../../queries/crypto.query.ts";
-import {useCurrencyQuery} from "../../../queries/currency.query.ts";
+import {useNavbarDropdown} from "../../../hooks/components/useNavbarDropdown.ts";
 
 interface NavbarDropdownProp {
     dropItems: DropItem[];
@@ -14,38 +11,19 @@ interface NavbarDropdownProp {
 }
 
 export default function NavbarDropdown({dropItems, isMobile, isDropdownOpen, handleMenuItemClick}: NavbarDropdownProp) {
-    const navigate = useNavigate()
-    const { supportedCryptoCurrencies } = useCryptoQuery();
-    const { supportedCurrencies } = useCurrencyQuery();
-    const [activeDropOption, setActiveDropOption] = useState<TradeOption>("")
-    const [dropStep, setDropStep] = useState<number>(0);
-    const [selectedToken, setSelectedToken] = useState<string>("");
-    const [showTradeDrop, setShowTradeDrop] = useState<boolean>(false);
+    const {
+        // Values
+        supportedCurrencies,
+        supportedCryptoCurrencies,
+        dropStep,
+        activeDropOption,
+        showTradeDrop,
 
-    const handleDropClick = (option: TradeOption) => {
-        if (activeDropOption === option) {
-            setShowTradeDrop(!showTradeDrop);
-        } else {
-            setActiveDropOption(option);
-            setShowTradeDrop(true);
-            setDropStep(1);
-        }
-
-        setSelectedToken("");
-    }
-
-    const handleNextStep = (token: string) => {
-        setSelectedToken(token);
-        setDropStep(2);
-    }
-
-    const handleRouting = (currency: string) => {
-        navigate({to: `/trade-crypto?option=${activeDropOption}&currency=${currency}&token=${selectedToken}`})
-
-        if(isMobile && handleMenuItemClick){
-            handleMenuItemClick();
-        }
-    }
+        // Functions
+        handleDropClick,
+        handleNextStep,
+        handleRouting,
+    } = useNavbarDropdown(handleMenuItemClick, isMobile);
 
     if(isMobile){
         return (
