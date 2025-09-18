@@ -1,5 +1,18 @@
 import type {ReactNode} from "react";
 
+// Interfaces
+export interface TradeCryptoPageProps {
+    tradeType: TradeType;
+    step: number;
+    currency: string;
+    token: string;
+    setStep: (value: number) => void
+    setShowModal: (value: boolean) => void
+    setShowBankDetailsModal: (value: boolean) => void;
+    activeTab: TradeType;
+    setActiveTab: (value: TradeType) => void;
+}
+
 export interface TradeStep {
     id: number;
     heading: string;

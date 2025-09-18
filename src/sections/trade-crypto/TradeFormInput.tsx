@@ -1,5 +1,5 @@
 import type {TradeType} from "../../types/trade.types.ts";
-import type {ReactNode} from "react";
+import type {ChangeEvent, ReactNode} from "react";
 
 interface TradeFormInputProps {
     label: string;
@@ -12,7 +12,7 @@ interface TradeFormInputProps {
 }
 
 export default function TradeFormInput({ label, name, value, onInputChange, children, isReadOnly, }: TradeFormInputProps) {
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
         const {value} = e.target
 
         if(onInputChange){

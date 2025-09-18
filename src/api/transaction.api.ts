@@ -32,6 +32,15 @@ class TransactionServiceApi {
       toast.error(response.message);
     }
   }
+
+  async calculateAmountToReceive(exchangeRateId: string, amountToSend: number) {
+    const { data, success }: { data: string, success: boolean} = await axiosPostRequestHandler(
+      `/transaction/calculate/amount/${exchangeRateId}`,
+      { amountToSend }
+    )
+
+    return { data, success };
+  }
 }
 
 export const transactionServiceApi = TransactionServiceApi.getInstance();

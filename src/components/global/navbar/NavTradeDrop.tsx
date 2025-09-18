@@ -27,7 +27,7 @@ export default function NavTradeDrop({items, action, isMobile}: NavTokenTradePro
             {items.map((item, index) => (
                 <button key={index} className="flex items-center w-full gap-2
                 justify-center py-2 rounded-lg hover:bg-accent/50"
-                        onClick={(e: MouseEvent<HTMLButtonElement>) => handleClick(item.name, e)}
+                        onClick={(e: MouseEvent<HTMLButtonElement>) => handleClick(item.id, e)}
                 >
                     <img src={item.logoUrl} alt={item.logoUrl} width={25} height={25}/>
                     <span className="text-lg font-medium">{item.code || item.symbol}</span>
