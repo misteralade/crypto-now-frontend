@@ -1,11 +1,29 @@
-import {useEffect, useState} from "react";
+import {useEffect, useState, useMemo} from "react";
 import type {TradeAdditionalInfoInterface, TradeType} from "../../../types/trade.types.ts";
 import {useCurrencyQuery} from "../../../queries/currency.query.ts";
 import type {SupportedCryptoOrCurrencyResponse} from "../../../types/response.api.types.ts";
 import {useCryptoQuery} from "../../../queries/crypto.query.ts";
 import {useRateQuery} from "../../../queries/rate.query.ts";
+import {useTransactionQuery} from "../../../queries/transaction.query.ts";
 import {useQueryClient} from "@tanstack/react-query";
 import {QUERY_KEYS} from "../../../queries/query.keys.ts";
+
+// Custom debounce hook
+const useDebounce = (value: any, delay: number) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
 
 export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeTab: TradeType, currency: string) => {
   const [selectedToken, setSelectedToken] = useState<SupportedCryptoOrCurrencyResponse>();
@@ -21,6 +39,18 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
   const [exchangeRateId, setExchangeRateId] = useState("");
   const [validUntil, setValidUntil] = useState<Date>();
   const [amountToBuy, setAmountToBuy] = useState<string | number>("");
+
+  // Get the amount to send for the transaction query
+  const amountToSend = activeTab === "sell" ? Number(numberOfToken) : Number(amountToBuy);
+
+  // Debounce the amount to send to prevent excessive API calls (500ms delay)
+  const debouncedAmountToSend = useDebounce(amountToSend, 500);
+
+  // Use transaction query to calculate amount to receive with debounced value
+  const { calculatedAmount, loadingCalculation } = useTransactionQuery(
+    exchangeRateId,
+    debouncedAmountToSend > 0 ? debouncedAmountToSend : undefined
+  );
 
   // Countdown timer effect
   useEffect(() => {
@@ -65,15 +95,20 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
     return () => clearInterval(interval);
   }, [validUntil, selectedToken?.id, selectedCurrency?.id, queryClient]);
 
-  // useEffect(() => {
-  //   if (activeTab === "sell" && numberOfToken !== "" && rate !== 0) {
-  //     setAmountToBuy((Number(numberOfToken) * rate).toFixed(5));
-  //   }
-  //
-  //   if(activeTab === "buy" && amountToBuy !== "" && rate !== 0) {
-  //     setNumberOfToken((Number(amountToBuy) / rate).toFixed(5));
-  //   }
-  // }, [numberOfToken, amountToBuy, tradeType, rate]);
+  // Auto-calculate the opposite field based on exchange rate
+  useEffect(() => {
+    if (!exchangeRate?.fiatRate || loadingExchangeRate) return;
+
+    if (activeTab === "sell" && numberOfToken !== "" && Number(numberOfToken) > 0) {
+      const calculatedAmount = (Number(numberOfToken) * exchangeRate.fiatRate).toFixed(5);
+      setAmountToBuy(calculatedAmount);
+    }
+
+    if (activeTab === "buy" && amountToBuy !== "" && Number(amountToBuy) > 0) {
+      const calculatedTokens = (Number(amountToBuy) / exchangeRate.fiatRate).toFixed(8);
+      setNumberOfToken(calculatedTokens);
+    }
+  }, [numberOfToken, amountToBuy, activeTab, exchangeRate?.fiatRate, loadingExchangeRate]);
 
   useEffect(() => {
     // Find the selected token from the supportedCryptoCurrencies array
@@ -87,30 +122,57 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
       (curr) => curr.id === currency
     );
     setSelectedCurrency(foundCurrency);
-  }, [supportedCurrencies, supportedCryptoCurrencies])
+  }, [supportedCurrencies, supportedCryptoCurrencies, token, currency])
 
   useEffect(() => {
     setExchangeRateId(exchangeRate?.rateId || "");
     setValidUntil(exchangeRate?.validUntil ? new Date(exchangeRate.validUntil) : undefined);
-  }, [exchangeRate, loadingExchangeRate]);
 
+    // Store exchange rate ID in session storage
+    if (exchangeRate?.rateId) {
+      sessionStorage.setItem("exchangeRateId", exchangeRate.rateId);
+    }
+  }, [exchangeRate]);
 
+  // Reset form when switching between buy/sell tabs
+  useEffect(() => {
+    setNumberOfToken("");
+    setAmountToBuy("");
+  }, [activeTab]);
 
-  const amountToReceive: number = tradeType === "sell" ? Number(amountToBuy) : Number(numberOfToken);
+  // Check if we're currently waiting for debounce (user is still typing)
+  const isDebouncing = amountToSend !== debouncedAmountToSend && amountToSend > 0;
+
+  // Get the calculated amount to receive from the API or fallback to local calculation
+  const amountToReceive: number = useMemo(() => {
+    // If we have API response, use it
+    if (calculatedAmount && !loadingCalculation && !isDebouncing) {
+      return Number(calculatedAmount);
+    }
+
+    // Fallback to local calculation while API is loading or debouncing
+    if (exchangeRate?.fiatRate && amountToSend > 0) {
+      if (activeTab === "sell") {
+        // Selling: convert tokens to currency
+        return Number(amountToBuy) || 0;
+      } else {
+        // Buying: convert currency to tokens
+        return Number(numberOfToken) || 0;
+      }
+    }
+
+    return 0;
+  }, [calculatedAmount, loadingCalculation, isDebouncing, exchangeRate?.fiatRate, amountToSend, activeTab, amountToBuy, numberOfToken]);
 
   const AdditionalInfo: TradeAdditionalInfoInterface[] = [
     {
       title: "Rate",
-      value: loadingExchangeRate ? '' : `1 ${selectedToken?.symbol} = ${exchangeRate?.fiatRate?.toLocaleString() || 0} ${selectedCurrency?.code}`,
+      value: loadingExchangeRate ? 'Loading...' : `1 ${selectedToken?.symbol} = ${exchangeRate?.fiatRate?.toLocaleString() || 0} ${selectedCurrency?.code}`,
     },
     {
       title: "Valid until",
-      value: loadingExchangeRate ? '' : countdown || "Loading...",
+      value: loadingExchangeRate ? 'Loading...' : countdown || "Loading...",
     },
-    {
-      title: "You will receive",
-      value: `${amountToReceive} ${tradeType === "sell"? `${selectedCurrency?.name}`: `${selectedToken?.name}`}`,
-    }
   ]
 
   return {
@@ -124,6 +186,9 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
     supportedCurrencies,
     supportedCryptoCurrencies,
     countdown,
+    exchangeRateId,
+    loadingCalculation,
+    isDebouncing,
 
     // Functions
     setAmountToBuy,

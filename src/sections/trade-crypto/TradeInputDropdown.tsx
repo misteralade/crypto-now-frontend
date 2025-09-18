@@ -24,7 +24,7 @@ export default function TradeInputDropdown({ currentValue, setCurrentValue, item
                 type={`button`}
                 className="flex cursor-pointer items-center gap-3 px-2 border-2 border-placeholder rounded-full transition-colors min-w-[120px]"
             >
-                {currentValue?.symbol}
+                <img src={currentValue?.logoUrl} alt={currentValue?.logoUrl} width={20} height={20}/>
                 <span className="font-medium text-black text-lg">{currentValue?.name}</span>
                 {!isOpen ? (
                     <ChevronDown className="w-12 h-12 text-gray-600 ml-auto" />

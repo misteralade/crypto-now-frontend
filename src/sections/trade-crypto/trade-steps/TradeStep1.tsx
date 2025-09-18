@@ -56,8 +56,8 @@ export default function TradeStep1({setAmountToBuy, amountToReceive, numberOfTok
                         <TradeFormInput
                             name={`${tradeType === "sell" ? "token": "currency"}`}
                             label={`enter amount`}
-                            value={`${tradeType === "sell" ? numberOfToken: amountToBuy}`}
-                            onInputChange={tradeType === "sell"? setNumberOfToken: setAmountToBuy}
+                            value={`${tradeType === "sell" ? numberOfToken : amountToBuy}`}
+                            onInputChange={tradeType === "sell" ? setNumberOfToken: setAmountToBuy}
                             tradeType={tradeType}
                             isReadOnly={false}
                         >
@@ -75,7 +75,7 @@ export default function TradeStep1({setAmountToBuy, amountToReceive, numberOfTok
                         <TradeFormInput
                             name={`${tradeType === "sell" ? "currency": "token"}`}
                             label={`You will receive`}
-                            value={`${tradeType === "sell" ? amountToBuy: numberOfToken}`}
+                            value={`${tradeType === "sell" ? amountToBuy : numberOfToken}`}
                             isReadOnly={true}
                             tradeType={tradeType}
                         >
