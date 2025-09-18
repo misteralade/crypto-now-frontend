@@ -1,17 +1,17 @@
 import { useState } from "react"
 import { ChevronUp, ChevronDown } from "lucide-react"
-import type {TradeParamDisplay} from "../../types/global.type.tsx";
+import type {SupportedCryptoOrCurrencyResponse} from "../../types/response.api.types.ts";
 
 interface CurrencyDropdownProps {
-    currentValue: TradeParamDisplay
-    setCurrentValue: (value: TradeParamDisplay) => void
-    items: TradeParamDisplay[],
+    currentValue: SupportedCryptoOrCurrencyResponse | undefined;
+    setCurrentValue: (value: SupportedCryptoOrCurrencyResponse) => void
+    items: SupportedCryptoOrCurrencyResponse[],
 }
 
 export default function TradeInputDropdown({ currentValue, setCurrentValue, items }: CurrencyDropdownProps) {
     const [isOpen, setIsOpen] = useState(false)
 
-    const handleSelect = (item: TradeParamDisplay) => {
+    const handleSelect = (item: SupportedCryptoOrCurrencyResponse) => {
         setCurrentValue(item)
         setIsOpen(false)
     }
@@ -24,8 +24,8 @@ export default function TradeInputDropdown({ currentValue, setCurrentValue, item
                 type={`button`}
                 className="flex cursor-pointer items-center gap-3 px-2 border-2 border-placeholder rounded-full transition-colors min-w-[120px]"
             >
-                {currentValue.symbol}
-                <span className="font-medium text-black text-lg">{currentValue.name}</span>
+                {currentValue?.symbol}
+                <span className="font-medium text-black text-lg">{currentValue?.name}</span>
                 {!isOpen ? (
                     <ChevronDown className="w-12 h-12 text-gray-600 ml-auto" />
                 ) : (
@@ -43,8 +43,8 @@ export default function TradeInputDropdown({ currentValue, setCurrentValue, item
                             onClick={() => handleSelect(item)}
                             className={`w-full flex items-center gap-3 py-3 px-5 hover:bg-formGroupBg transition-colors`}
                         >
-                            {item.symbol}
-                            <span className="font-semibold text-gray-900">{item.name}</span>
+                          <img src={item.logoUrl} alt={item.logoUrl} width={20} height={20}/>
+                          <span className="font-semibold text-gray-900 text-sm">{item.name}</span>
                         </button>
                     ))}
                 </div>

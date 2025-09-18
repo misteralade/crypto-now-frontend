@@ -11,3 +11,10 @@ export type SupportedCryptoOrCurrencyResponse = {
   symbol: string;
   logoUrl: string;
 }
+
+export type SupportedExchangeRateResponse = {
+  fiatRate: number;
+  coinGeckoRate: number;
+  validUntil: string; // ISO date string
+  rateId: string;
+}
