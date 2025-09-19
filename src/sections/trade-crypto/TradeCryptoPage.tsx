@@ -11,7 +11,7 @@ export default function TradeCryptoPage() {
     const { option, currency, token } = searchParams;
 
     return (
-        <div className={`space-y-20`}>
+        <div className={`space-y-10 md:space-y-20`}>
             <Navbar />
             <TradeCryptoLayout option={option as tradeType} currency={currency} token={token} />
             <Footer />

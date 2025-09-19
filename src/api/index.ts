@@ -4,13 +4,13 @@ import {BASIC} from "../config/index.config.ts";
 import {ROUTES} from "../util/constants.ts";
 import type {BaseApiResponse} from "../types/response.api.types.ts";
 
-export const userInstance = axios.create({
+export const API_KIT = axios.create({
   baseURL: BASIC.API_BASE_URL,
   // timeout: 20000,
   // withCredentials: true,
 });
 
-userInstance.interceptors.request.use(async (config) => {
+API_KIT.interceptors.request.use(async (config) => {
   const token = localStorage.getItem("accessToken");
   if (token) {
     config.headers = {
@@ -21,7 +21,7 @@ userInstance.interceptors.request.use(async (config) => {
   return config;
 });
 
-userInstance.interceptors.response.use(
+API_KIT.interceptors.response.use(
   (response) => {
     const accessToken = response.headers["x-api-key"];
     if (
@@ -51,10 +51,10 @@ export const axiosPostRequestHandler = async (
   config?: any
 ) => {
   try {
-    const request = await userInstance.post(url, data, {
+    const request = await API_KIT.post(url, data, {
       ...config,
     });
-    return request.data;
+    return request.data as BaseApiResponse<any>;
   } catch (error) {
     if (axios.isAxiosError(error)) {
       throw error;
@@ -66,7 +66,7 @@ export const axiosPostRequestHandler = async (
 
 export const axiosPutRequestHandler = async (url: string, data: any) => {
   try {
-    const request = await userInstance.put(url, data);
+    const request = await API_KIT.put(url, data);
 
     return request.data as BaseApiResponse<any>;
   } catch (error) {
@@ -80,7 +80,7 @@ export const axiosPutRequestHandler = async (url: string, data: any) => {
 
 export const axiosDeleteRequestHandler = async (url: string) => {
   try {
-    const request = await userInstance.delete(url);
+    const request = await API_KIT.delete(url);
 
     return request.data;
   } catch (error) {
@@ -94,7 +94,7 @@ export const axiosDeleteRequestHandler = async (url: string) => {
 
 export const axiosGetRequestHandler = async (url: string, params?: any) => {
   try {
-    const request = await userInstance.get(url, {
+    const request = await API_KIT.get(url, {
       params,
     });
 
