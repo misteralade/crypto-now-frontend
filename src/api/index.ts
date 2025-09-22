@@ -107,3 +107,19 @@ export const axiosGetRequestHandler = async (url: string, params?: any) => {
     }
   }
 };
+
+export const axiosPatchRequestHandler = async (url: string, params?: any) => {
+  try{
+    const request = await API_KIT.patch(url, {
+      params,
+    });
+
+    return request.data as BaseApiResponse<any>;
+  }catch(error){
+    if(axios.isAxiosError(error)){
+      throw error;
+    }else{
+      throw new Error("An unexpected error occurred");
+    }
+  }
+};

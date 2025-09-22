@@ -1,12 +1,41 @@
 import { useState } from "react";
 import CustomButton from "../../components/global/Button";
 import AuthLayout from "../../layouts/AuthLayout";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { authServiceApi } from "../../api/auth.api";
 
 export default function SignInPage() {
+  const navigate = useNavigate()
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState("jonas@gmail.com");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [keepLoggedIn, setKeepLoggedIn] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const[error, setError] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setIsLoading(true);
+      setError("");
+  
+      if (!email || !password) {
+        setError("Please fill in all fields");
+        setIsLoading(false);
+        return;
+      }
+      try {
+        await authServiceApi.signup({
+          email,
+          password,
+          keepLoggedIn
+        });
+
+        navigate({ to: '/dashboard' });
+      } catch (error: any) {
+      setError(error.message || 'Sign-Up failed. Please check your credentials.');
+    } finally {
+      setIsLoading(false);
+    }};
 
   return (
     <AuthLayout layoutType={2}>
@@ -21,7 +50,7 @@ export default function SignInPage() {
       </div>
 
       {/* Form */}
-      <form className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {/* Email Field */}
         <div>
           <input
@@ -97,7 +126,13 @@ export default function SignInPage() {
 
         {/* Sign Up Button */}
         <div className="pt-2">
-          <CustomButton className="w-full" buttonText="Sign up" />
+          <CustomButton 
+            type="submit"
+            className="w-full cursor-pointer"
+            buttonText={isLoading ? "Creating account..." : "Sign up"}
+            disabled={isLoading}
+          />
+
         </div>
 
         {/* Divider */}
@@ -138,7 +173,7 @@ export default function SignInPage() {
 
         {/* Sign In Link */}
         <p className="text-center text-[14px] leading-[20px] text-[#6B7280] pt-2">
-          Already have an account?{" "}
+          Already have an account?{""}
           <Link
             to="/sign-in"
             className="font-semibold text-[#1E1B4B] hover:text-[#2D2A5A] underline transition-colors duration-200"

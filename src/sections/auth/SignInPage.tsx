@@ -1,14 +1,44 @@
 import { useState } from "react";
 import CustomButton from "../../components/global/Button";
 import AuthLayout from "../../layouts/AuthLayout";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { authServiceApi } from "../../api/auth.api";
 
 export default function SignInPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState("jonas@gmail.com");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [keepLoggedIn, setKeepLoggedIn] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
+
+    const navigate = useNavigate()
+
+    const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+
+    if (!email || !password) {
+      setError("Please fill in all fields");
+      setIsLoading(false);
+      return;
+    }
+    try {
+      const response = await authServiceApi.login({
+        email,
+        password,
+        keepLoggedIn
+      });
+
+      navigate({ to: '/dashboard' });
+    } catch (error: any) {
+      setError(error.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
   return (
     <AuthLayout layoutType={2}>
       {/* Form Header */}
@@ -22,7 +52,8 @@ export default function SignInPage() {
       </div>
 
       {/* Form */}
-      <form className="space-y-6">
+      <p className="text-red-500">{error}</p>
+      <form onSubmit={handleSubmit} className="space-y-6">
         {/* Email Field */}
         <div>
           <label
@@ -128,7 +159,12 @@ export default function SignInPage() {
 
         {/* Sign In Button */}
         <div className="pt-2">
-          <CustomButton className="w-full" buttonText="Sign in" />
+        <CustomButton 
+          type="submit"
+          className="w-full cursor-pointer"
+          buttonText={isLoading ? "Signing in..." : "Sign in"}
+          disabled={isLoading}
+        />
         </div>
 
         {/* Divider */}
