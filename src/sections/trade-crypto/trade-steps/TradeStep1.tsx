@@ -19,30 +19,24 @@ interface TradeStep1Props {
     setSelectedCurrency: (currency: SupportedCryptoOrCurrencyResponse) => void
     numberOfToken: string | number;
     amountToBuy: string | number;
-    amountToReceive: number;
     setNumberOfToken: (token: string | number) => void;
     setAmountToBuy: (amountToBuy: string | number) => void;
     availableCurrencies: SupportedCryptoOrCurrencyResponse[];
     availableTokens: SupportedCryptoOrCurrencyResponse[];
 }
 
-export default function TradeStep1({setAmountToBuy, amountToReceive, numberOfToken, setNumberOfToken, amountToBuy,selectedCurrency, setSelectedCurrency, setSelectedToken,selectedToken, tradeType, setStep, orderDetails, availableCurrencies, availableTokens}: TradeStep1Props) {
+export default function TradeStep1({setAmountToBuy, numberOfToken, setNumberOfToken, amountToBuy,selectedCurrency, setSelectedCurrency, setSelectedToken,selectedToken, tradeType, setStep, orderDetails, availableCurrencies, availableTokens}: TradeStep1Props) {
 
     const submitInvalid = numberOfToken === "" || amountToBuy === "";
+    console.log({
+        numberOfToken,
+        amountToBuy,
+    })
 
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
 
         setStep(2)
-
-        const data = {
-            token: selectedToken?.name,
-            currency: selectedCurrency?.name,
-            amount: tradeType === "sell"? numberOfToken: amountToBuy,
-            amountToReceive: amountToReceive,
-        }
-
-        console.log("Data to be submitted", data)
     }
 
     return (

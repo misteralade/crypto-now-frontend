@@ -7,6 +7,7 @@ import {useRateQuery} from "../../../queries/rate.query.ts";
 import {useTransactionQuery} from "../../../queries/transaction.query.ts";
 import {useQueryClient} from "@tanstack/react-query";
 import {QUERY_KEYS} from "../../../queries/query.keys.ts";
+import type {InitiateTransactionRequestPayload} from "../../../types/request.payload.types.ts";
 
 // Custom debounce hook
 const useDebounce = (value: any, delay: number) => {
@@ -29,6 +30,7 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
   const [selectedToken, setSelectedToken] = useState<SupportedCryptoOrCurrencyResponse>();
   const [selectedCurrency, setSelectedCurrency] = useState<SupportedCryptoOrCurrencyResponse>();
   const [countdown, setCountdown] = useState<string>("");
+  const [transactionForm, setTransactionForm] = useState<InitiateTransactionRequestPayload>()
 
   const queryClient = useQueryClient();
   const { supportedCurrencies } = useCurrencyQuery();
@@ -39,6 +41,8 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
   const [exchangeRateId, setExchangeRateId] = useState("");
   const [validUntil, setValidUntil] = useState<Date>();
   const [amountToBuy, setAmountToBuy] = useState<string | number>("");
+
+  // Step 2: Payment upload
 
   // Get the amount to send for the transaction query
   const amountToSend = activeTab === "sell" ? Number(numberOfToken) : Number(amountToBuy);
@@ -108,6 +112,12 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
       const calculatedTokens = (Number(amountToBuy) / exchangeRate.fiatRate).toFixed(8);
       setNumberOfToken(calculatedTokens);
     }
+
+    setTransactionForm((prev) => ({
+      ...prev,
+      amountToReceive: activeTab.toUpperCase() === "SELL" ? Number(amountToBuy) : Number(numberOfToken),
+      amountToSend: activeTab.toUpperCase() === "SELL" ? Number(numberOfToken) : Number(amountToBuy),
+    }))
   }, [numberOfToken, amountToBuy, activeTab, exchangeRate?.fiatRate, loadingExchangeRate]);
 
   useEffect(() => {
@@ -122,11 +132,21 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
       (curr) => curr.id === currency
     );
     setSelectedCurrency(foundCurrency);
+
+    setTransactionForm((prev) => ({
+      ...prev,
+      tokenId: foundToken?.id,
+      currencyId: foundCurrency?.id,
+    }))
   }, [supportedCurrencies, supportedCryptoCurrencies, token, currency])
 
   useEffect(() => {
     setExchangeRateId(exchangeRate?.rateId || "");
     setValidUntil(exchangeRate?.validUntil ? new Date(exchangeRate.validUntil) : undefined);
+    setTransactionForm((val) => ({
+      ...val,
+      exchangeRateId: exchangeRate?.rateId as string,
+    }));
 
     // Store exchange rate ID in session storage
     if (exchangeRate?.rateId) {
@@ -136,6 +156,10 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
 
   // Reset form when switching between buy/sell tabs
   useEffect(() => {
+    setTransactionForm((prev) => ({
+      ...prev,
+      type: activeTab.toUpperCase() === "BUY" ? "BUY" : "SELL",
+    }));
     setNumberOfToken("");
     setAmountToBuy("");
   }, [activeTab]);
@@ -173,6 +197,16 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
       title: "Valid until",
       value: loadingExchangeRate ? 'Loading...' : countdown || "Loading...",
     },
+    // {
+    //   title: "You will receive",
+    //   value: isDebouncing
+    //     ? 'Typing...'
+    //     : loadingCalculation
+    //       ? 'Calculating...'
+    //       : amountToReceive > 0
+    //         ? `${amountToReceive.toLocaleString()} ${activeTab === "sell" ? selectedCurrency?.name : selectedToken?.name}`
+    //         : `0 ${activeTab === "sell" ? selectedCurrency?.name : selectedToken?.name}`,
+    // }
   ]
 
   return {
@@ -189,6 +223,7 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
     exchangeRateId,
     loadingCalculation,
     isDebouncing,
+    transactionForm,
 
     // Functions
     setAmountToBuy,

@@ -12,17 +12,21 @@ export default function TradeStepDisplay({activeTab, setActiveTab, tradeType, st
     numberOfToken,
     AdditionalInfo,
     amountToBuy,
-    amountToReceive,
     selectedCurrency,
     supportedCurrencies,
     supportedCryptoCurrencies,
+    transactionForm,
 
     // Functions
     setAmountToBuy,
     setNumberOfToken,
     setSelectedCurrency,
     setSelectedToken,
-  } = useTradeStepDisplay(token, tradeType, activeTab, currency)
+  } = useTradeStepDisplay(token, tradeType, activeTab, currency);
+
+  console.log({
+    transactionForm,
+  });
 
   const buyAccountDetails: TradeAdditionalInfoInterface[] = [
     {
@@ -84,7 +88,6 @@ export default function TradeStepDisplay({activeTab, setActiveTab, tradeType, st
           setSelectedToken={setSelectedToken}
           selectedCurrency={selectedCurrency}
           selectedToken={selectedToken}
-          amountToReceive={amountToReceive}
           availableCurrencies={supportedCurrencies || []}
           availableTokens={supportedCryptoCurrencies || []}
         />
