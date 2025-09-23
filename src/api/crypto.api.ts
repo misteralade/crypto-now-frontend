@@ -1,5 +1,5 @@
 import {axiosGetRequestHandler} from "./index.ts";
-import type {SupportedCryptoOrCurrencyResponse} from "../types/response.api.types.ts";
+import type {SupportedCryptoOrCurrencyResponse} from "../types/response.payload.types.ts";
 
 class CryptoServiceApi {
   private static instance: CryptoServiceApi;

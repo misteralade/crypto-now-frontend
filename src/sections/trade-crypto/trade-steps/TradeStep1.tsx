@@ -5,7 +5,7 @@ import SwapIcon from "../../../assets/icons/fluent_arrow-swap-20-regular.svg"
 import {type FormEvent} from "react";
 import TradeInputDropdown from "../TradeInputDropdown.tsx";
 import TradeAdditionalInfo from "../TradeAdditionalInfo.tsx";
-import type {SupportedCryptoOrCurrencyResponse} from "../../../types/response.api.types.ts";
+import type {SupportedCryptoOrCurrencyResponse} from "../../../types/response.payload.types.ts";
 
 interface TradeStep1Props {
     token: string;
