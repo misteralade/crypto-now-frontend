@@ -1,6 +1,7 @@
 export type BaseApiResponse<T> = {
   success: boolean;
   message: string;
+  error: any;
   data: T;
 };
 

@@ -17,12 +17,15 @@ export default function TradeStepDisplay({activeTab, setActiveTab, tradeType, st
     supportedCryptoCurrencies,
     transactionForm,
 
+    // Mutations
+    initiateTransactionMutation,
+
     // Functions
     setAmountToBuy,
     setNumberOfToken,
     setSelectedCurrency,
     setSelectedToken,
-  } = useTradeStepDisplay(token, tradeType, activeTab, currency);
+  } = useTradeStepDisplay(token, tradeType, activeTab, currency, setStep);
 
   console.log({
     transactionForm,
@@ -78,7 +81,7 @@ export default function TradeStepDisplay({activeTab, setActiveTab, tradeType, st
           token={token}
           currency={currency}
           tradeType={activeTab}
-          setStep={setStep}
+          handleProceedToPayment={() => initiateTransactionMutation.mutate()}
           orderDetails={AdditionalInfo}
           numberOfToken={numberOfToken}
           amountToBuy={amountToBuy}

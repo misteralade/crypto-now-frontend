@@ -11,7 +11,7 @@ interface TradeStep1Props {
     token: string;
     currency: string;
     tradeType: TradeType;
-    setStep: (value: number) => void
+    handleProceedToPayment: () => void
     orderDetails: TradeAdditionalInfoInterface[],
     selectedToken: SupportedCryptoOrCurrencyResponse | undefined,
     setSelectedToken: (token: SupportedCryptoOrCurrencyResponse) => void,
@@ -25,18 +25,13 @@ interface TradeStep1Props {
     availableTokens: SupportedCryptoOrCurrencyResponse[];
 }
 
-export default function TradeStep1({setAmountToBuy, numberOfToken, setNumberOfToken, amountToBuy,selectedCurrency, setSelectedCurrency, setSelectedToken,selectedToken, tradeType, setStep, orderDetails, availableCurrencies, availableTokens}: TradeStep1Props) {
+export default function TradeStep1({setAmountToBuy, numberOfToken, setNumberOfToken, amountToBuy,selectedCurrency, setSelectedCurrency, setSelectedToken,selectedToken, tradeType, handleProceedToPayment, orderDetails, availableCurrencies, availableTokens}: TradeStep1Props) {
 
     const submitInvalid = numberOfToken === "" || amountToBuy === "";
-    console.log({
-        numberOfToken,
-        amountToBuy,
-    })
-
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
 
-        setStep(2)
+        handleProceedToPayment();
     }
 
     return (

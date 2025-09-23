@@ -41,6 +41,25 @@ class TransactionServiceApi {
 
     return { data, success };
   }
+
+  async initiateTransaction(transactionData: Record<string, any>) {
+    const {data, message, success, error}: {
+      data: { sessionId: string },
+      message: string,
+      success: boolean,
+      error: any
+    } = await axiosPostRequestHandler(
+      '/transaction/initiate',
+      transactionData
+    )
+
+    if (!success || error) {
+      toast.error(error.message || message || error || "Failed to initiate transaction");
+      return;
+    }
+
+    return data.sessionId;
+  }
 }
 
 export const transactionServiceApi = TransactionServiceApi.getInstance();

@@ -5,9 +5,10 @@ import type {SupportedCryptoOrCurrencyResponse} from "../../../types/response.ap
 import {useCryptoQuery} from "../../../queries/crypto.query.ts";
 import {useRateQuery} from "../../../queries/rate.query.ts";
 import {useTransactionQuery} from "../../../queries/transaction.query.ts";
-import {useQueryClient} from "@tanstack/react-query";
+import {useMutation, useQueryClient} from "@tanstack/react-query";
 import {QUERY_KEYS} from "../../../queries/query.keys.ts";
 import type {InitiateTransactionRequestPayload} from "../../../types/request.payload.types.ts";
+import {transactionServiceApi} from "../../../api/transaction.api.ts";
 
 // Custom debounce hook
 const useDebounce = (value: any, delay: number) => {
@@ -26,7 +27,8 @@ const useDebounce = (value: any, delay: number) => {
   return debouncedValue;
 };
 
-export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeTab: TradeType, currency: string) => {
+export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeTab: TradeType, currency: string, setStep: (value: number) => void) => {
+  const [transactionSessionId, setTransactionSessionId] = useState<string>();
   const [selectedToken, setSelectedToken] = useState<SupportedCryptoOrCurrencyResponse>();
   const [selectedCurrency, setSelectedCurrency] = useState<SupportedCryptoOrCurrencyResponse>();
   const [countdown, setCountdown] = useState<string>("");
@@ -55,6 +57,28 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
     exchangeRateId,
     debouncedAmountToSend > 0 ? debouncedAmountToSend : undefined
   );
+
+  const initiateTransactionMutation = useMutation({
+    mutationKey: [QUERY_KEYS.TRANSACTION.INITIATE_TRANSACTION],
+    mutationFn: async () => {
+      const payload = {
+        ...transactionForm,
+        coinId: transactionForm?.tokenId,
+        // type: transactionForm?.action,
+      }
+
+      console.log({
+        payload,
+      });
+
+      const sessionId = await transactionServiceApi.initiateTransaction(payload);
+      setTransactionSessionId(sessionId)
+      sessionStorage.setItem("transactionSessionId", sessionId as string);
+    },
+    onMutate: () => {
+      setStep(2);
+    }
+  })
 
   // Countdown timer effect
   useEffect(() => {
@@ -224,6 +248,9 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
     loadingCalculation,
     isDebouncing,
     transactionForm,
+
+    // Mutations
+    initiateTransactionMutation,
 
     // Functions
     setAmountToBuy,
