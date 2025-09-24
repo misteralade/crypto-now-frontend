@@ -91,16 +91,10 @@ export const useTradeStepTwo = ({ tradeType, exchangeRateId, amountToBuy, number
     }
   };
 
-  // Handle file upload completion
-  const handleFileUploaded = (file: File, url: string) => {
-    setUploadedFileUrl(url);
-    console.log('File uploaded with URL:', url);
-  };
-
   // Validation based on trade type
   const submitInvalid = tradeType === "sell"
-    ? (files.length === 0 || transactionHash.trim() === "" || !uploadedFileUrl)
-    : (files.length === 0 || !uploadedFileUrl);
+    ? (transactionHash.trim() === "" || !uploadedFileUrl)
+    : (!uploadedFileUrl);
 
   // Generate account details based on API response
   const generateAccountDetails = (): TradeAdditionalInfoInterface[] => {
@@ -219,7 +213,7 @@ export const useTradeStepTwo = ({ tradeType, exchangeRateId, amountToBuy, number
     setFiles,
     setTransactionHash,
     handleSubmit,
-    handleFileUploaded,
+    setUploadedFileUrl,
     oldGenerateAccountDetails,
   };
 };

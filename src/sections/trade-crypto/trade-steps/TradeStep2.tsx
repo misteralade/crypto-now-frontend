@@ -33,10 +33,9 @@ export default function TradeStep2({ amountToBuy, tradeType, numberOfToken, addi
     walletDetails,
 
     // Functions
-    // setFiles,
     setTransactionHash,
     handleSubmit,
-    // handleFileUploaded,
+    setUploadedFileUrl,
   } = useTradeStepTwo({tradeType, exchangeRateId, amountToBuy, numberOfToken, selectedToken, selectedCurrency, setShowModal, setShowBankDetailsModal, setStep, onSubmitPaymentProof});
 
   // Loading state
@@ -170,6 +169,7 @@ export default function TradeStep2({ amountToBuy, tradeType, numberOfToken, addi
             maxFiles={1}
             acceptedTypes={[".jpg", ".jpeg", ".png", ".pdf"]}
             onFileUploaded={handleReceiptUrl}
+            setUploadedFileUrl={setUploadedFileUrl}
           />
         </div>
 
