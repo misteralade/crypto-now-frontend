@@ -7,8 +7,6 @@ export interface TradeCryptoPageProps {
     currency: string;
     token: string;
     setStep: (value: number) => void
-    setShowModal: (value: boolean) => void
-    setShowBankDetailsModal: (value: boolean) => void;
     activeTab: TradeType;
     setActiveTab: (value: TradeType) => void;
 }

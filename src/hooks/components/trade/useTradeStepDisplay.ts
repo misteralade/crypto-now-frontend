@@ -1,5 +1,10 @@
 import {useEffect, useState, useMemo, useRef} from "react";
-import type {TradeAdditionalInfoInterface, TradeType} from "../../../types/trade.types.ts";
+import type {
+  BankDetailsData,
+  TradeAdditionalInfoInterface,
+  TradeType,
+  WalletDetailsData
+} from "../../../types/trade.types.ts";
 import {useCurrencyQuery} from "../../../queries/currency.query.ts";
 import type {SupportedCryptoOrCurrencyResponse} from "../../../types/response.payload.types.ts";
 import {useCryptoQuery} from "../../../queries/crypto.query.ts";
@@ -28,23 +33,38 @@ const useDebounce = (value: any, delay: number) => {
 };
 
 export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeTab: TradeType, currency: string, setStep: (value: number) => void) => {
+  const countdownIntervalRef = useRef<any>();
+  const queryClient = useQueryClient();
+  const { supportedCurrencies } = useCurrencyQuery();
+  const { supportedCryptoCurrencies } = useCryptoQuery();
+  const BankDetails: BankDetailsData = {
+    bankName: "Providus Bank",
+    accountName: "JCole Adeniyi",
+    accountNumber: "2411793421"
+  }
+
+  const WalletDetails: WalletDetailsData = {
+    coinType: "USDT",
+    walletAddress: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+    networkType: "BEP20"
+  }
+
   const [transactionSessionId, setTransactionSessionId] = useState<string>();
   const [selectedToken, setSelectedToken] = useState<SupportedCryptoOrCurrencyResponse>();
   const [selectedCurrency, setSelectedCurrency] = useState<SupportedCryptoOrCurrencyResponse>();
   const [countdown, setCountdown] = useState<string>("");
   const [transactionForm, setTransactionForm] = useState<InitiateTransactionRequestPayload>()
   const [isCountdownLocked, setIsCountdownLocked] = useState(false); // New state to lock countdown
-  const countdownIntervalRef = useRef<any>();
-
-  const queryClient = useQueryClient();
-  const { supportedCurrencies } = useCurrencyQuery();
-  const { supportedCryptoCurrencies } = useCryptoQuery();
   const { exchangeRate, loadingExchangeRate } = useRateQuery(selectedToken?.id || '', selectedCurrency?.id || '', tradeType.toUpperCase() === 'BUY' ? 'BUY' : 'SELL');
 
   const [numberOfToken, setNumberOfToken] = useState<string | number>("");
   const [exchangeRateId, setExchangeRateId] = useState("");
   const [validUntil, setValidUntil] = useState<Date>();
   const [amountToBuy, setAmountToBuy] = useState<string | number>("");
+
+  // Modals
+  const [showPaymentReceivingModal, setShowPaymentReceivingModal] = useState(false)
+  const [showConfirmBankDetails, setShowConfirmBankDetails] = useState<boolean>(false)
 
   // Get the amount to send for the transaction query
   const amountToSend = activeTab === "sell" ? Number(numberOfToken) : Number(amountToBuy);
@@ -91,7 +111,7 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
       if (countdownIntervalRef.current) {
         clearInterval(countdownIntervalRef.current);
       }
-      console.log('Payment transaction completed - countdown locked and exchange rate frozen');
+      togglePaymentReceivingModal();
     }
   })
 
@@ -275,6 +295,10 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
     }))
   };
 
+  const togglePaymentReceivingModal = () => setShowPaymentReceivingModal((prev) => !prev);
+
+  const toggleConfirmBankDetails = () => setShowConfirmBankDetails((prev) => !prev);
+
   return {
     // Values
     selectedToken,
@@ -292,7 +316,10 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
     isDebouncing,
     transactionForm,
     transactionSessionId,
-    isCountdownLocked, // New value to indicate if rates are locked
+    isCountdownLocked,
+    showPaymentReceivingModal,
+    BankDetails,
+    WalletDetails,
 
     // Mutations
     initiateTransactionMutation,
@@ -305,5 +332,6 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
     setSelectedToken,
     handleReceiptUrl,
     handleTransactionHash,
+    toggleConfirmBankDetails,
   };
 }
