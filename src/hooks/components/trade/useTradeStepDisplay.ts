@@ -64,12 +64,7 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
       const payload = {
         ...transactionForm,
         coinId: transactionForm?.tokenId,
-        // type: transactionForm?.action,
       }
-
-      console.log({
-        payload,
-      });
 
       const sessionId = await transactionServiceApi.initiateTransaction(payload);
       setTransactionSessionId(sessionId)
@@ -77,6 +72,13 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
     },
     onMutate: () => {
       setStep(2);
+    }
+  })
+
+  const makePaymentTransactionMutation = useMutation({
+    mutationKey: [QUERY_KEYS.TRANSACTION.MAKE_PAYMENT_TRANSACTION],
+    mutationFn: async () => {
+
     }
   })
 
@@ -267,6 +269,7 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
 
     // Mutations
     initiateTransactionMutation,
+    makePaymentTransactionMutation,
 
     // Functions
     setAmountToBuy,

@@ -1,4 +1,4 @@
-import {useState, type FormEvent} from "react";
+import { useState } from "react";
 import {useQuery} from "@tanstack/react-query";
 import {QUERY_KEYS} from "../../../queries/query.keys.ts";
 import type {TradeType} from "../../../types/trade.types.ts";
@@ -18,13 +18,9 @@ interface UseTradeStepTwoProps {
   numberOfToken: number;
   selectedToken?: SupportedCryptoOrCurrencyResponse;
   selectedCurrency?: SupportedCryptoOrCurrencyResponse;
-  setShowModal: (value: boolean) => void;
-  setShowBankDetailsModal: (value: boolean) => void;
-  setStep?: (value: number) => void;
-  onSubmitPaymentProof?: (files: File[], transactionHash?: string) => void;
 }
 
-export const useTradeStepTwo = ({ tradeType, exchangeRateId, amountToBuy, numberOfToken, selectedToken, selectedCurrency, setShowModal, setShowBankDetailsModal, setStep, onSubmitPaymentProof }: UseTradeStepTwoProps) => {
+export const useTradeStepTwo = ({ tradeType, exchangeRateId, amountToBuy, numberOfToken, selectedToken, selectedCurrency }: UseTradeStepTwoProps) => {
   const [files, setFiles] = useState<File[]>([]);
   const [uploadedFileUrl, setUploadedFileUrl] = useState<string | undefined>();
   const [transactionHash, setTransactionHash] = useState<string>("");
@@ -47,49 +43,6 @@ export const useTradeStepTwo = ({ tradeType, exchangeRateId, amountToBuy, number
     },
     enabled: !!exchangeRateId
   });
-
-  // Form submission handler
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-
-    if (files.length === 0 || !uploadedFileUrl) {
-      alert("Please upload a file before proceeding.");
-      return;
-    }
-
-    setShowModal(true);
-
-    try {
-      // Create submission data
-      const submissionData = {
-        exchangeRateId,
-        tradeType,
-        fileUrl: uploadedFileUrl,
-        fileName: files[0]?.name,
-        ...(tradeType === "sell" && { transactionHash })
-      };
-
-      console.log('Submitting payment proof:', submissionData);
-
-      // Call centralized submit handler
-      if (onSubmitPaymentProof) {
-        onSubmitPaymentProof(files, tradeType === "sell" ? transactionHash : undefined);
-      }
-
-      setTimeout(() => {
-        setShowModal(false);
-        setShowBankDetailsModal(true);
-        if (setStep) {
-          setStep(3);
-        }
-      }, 1000);
-
-    } catch (error) {
-      console.error("[TradeStep2] Error submitting payment proof:", error);
-      setShowModal(false);
-      alert("Failed to submit payment proof. Please try again.");
-    }
-  };
 
   // Validation based on trade type
   const submitInvalid = tradeType === "sell"
@@ -212,7 +165,6 @@ export const useTradeStepTwo = ({ tradeType, exchangeRateId, amountToBuy, number
     // Functions
     setFiles,
     setTransactionHash,
-    handleSubmit,
     setUploadedFileUrl,
     oldGenerateAccountDetails,
   };

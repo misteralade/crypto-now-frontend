@@ -11,19 +11,16 @@ interface TradeStepTwoProps {
   tradeType: TradeType;
   numberOfToken: number;
   additionalInfo: TradeAdditionalInfoInterface[];
-  setShowModal: (value: boolean) => void;
-  setShowBankDetailsModal: (value: boolean) => void;
   handleReceiptUrl: (value: string) => void;
-  setStep?: (value: number) => void;
   selectedToken?: SupportedCryptoOrCurrencyResponse;
   selectedCurrency?: SupportedCryptoOrCurrencyResponse;
   exchangeRateId: string;
   transactionRef: string | undefined;
   handleTransactionHash: (string: string) => void;
-  onSubmitPaymentProof?: (files: File[], transactionHash?: string) => void;
+  handleSubmitPaymentProof: () => void;
 }
 
-export default function TradeStepTwo({ amountToBuy, tradeType, numberOfToken, additionalInfo, setShowModal, setShowBankDetailsModal, handleReceiptUrl, setStep, selectedToken, selectedCurrency, exchangeRateId, transactionRef, handleTransactionHash, onSubmitPaymentProof }: TradeStepTwoProps) {
+export default function TradeStepTwo({ amountToBuy, tradeType, numberOfToken, additionalInfo, handleReceiptUrl, selectedToken, selectedCurrency, exchangeRateId, transactionRef, handleTransactionHash, handleSubmitPaymentProof }: TradeStepTwoProps) {
   const {
     // Values
     // files,
@@ -36,9 +33,8 @@ export default function TradeStepTwo({ amountToBuy, tradeType, numberOfToken, ad
 
     // Functions
     setTransactionHash,
-    handleSubmit,
     setUploadedFileUrl,
-  } = useTradeStepTwo({tradeType, exchangeRateId, amountToBuy, numberOfToken, selectedToken, selectedCurrency, setShowModal, setShowBankDetailsModal, setStep, onSubmitPaymentProof});
+  } = useTradeStepTwo({tradeType, exchangeRateId, amountToBuy, numberOfToken, selectedToken, selectedCurrency });
 
   // Loading state
   if (paymentDetailsLoading) {
@@ -138,7 +134,7 @@ export default function TradeStepTwo({ amountToBuy, tradeType, numberOfToken, ad
       </div>
 
       {/* Form */}
-      <form className="space-y-10" onSubmit={handleSubmit}>
+      <form className="space-y-10" onSubmit={handleSubmitPaymentProof}>
         {/* Transaction Hash Input for Sell Orders */}
         {tradeType === "sell" && (
           <div className="w-full md:w-3/4 mx-auto">
@@ -189,7 +185,7 @@ export default function TradeStepTwo({ amountToBuy, tradeType, numberOfToken, ad
           <CustomButton
             className="w-full"
             buttonText={tradeType === "buy" ? "Submit Payment Proof" : "Submit Transaction Proof"}
-            type="submit"
+            type={"submit"}
             disabled={submitInvalid}
           />
           {submitInvalid && (

@@ -19,6 +19,7 @@ export default function TradeStepDisplay({activeTab, setActiveTab, tradeType, st
 
     // Mutations
     initiateTransactionMutation,
+    makePaymentTransactionMutation,
 
     // Functions
     setAmountToBuy,
@@ -69,8 +70,7 @@ export default function TradeStepDisplay({activeTab, setActiveTab, tradeType, st
           handleReceiptUrl={handleReceiptUrl}
           transactionRef={transactionSessionId}
           handleTransactionHash={handleTransactionHash}
-          // accountDetails={AccountDetails}
-          // useStep3={false}
+          handleSubmitPaymentProof={() => makePaymentTransactionMutation.mutate()}
         />
       }
     </div>
