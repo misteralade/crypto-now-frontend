@@ -123,7 +123,7 @@ export const useTradeStepTwo = ({ tradeType, exchangeRateId, amountToBuy, number
         },
         {
           title: "Amount to Pay",
-          value: `${amountToBuy} ${selectedCurrency?.code}`
+          value: `${amountToBuy.toLocaleString()} ${selectedCurrency?.code}`
         }
       ];
     }

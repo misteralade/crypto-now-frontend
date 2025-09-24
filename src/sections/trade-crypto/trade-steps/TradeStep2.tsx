@@ -102,7 +102,7 @@ export default function TradeStep2({ amountToBuy, tradeType, numberOfToken, addi
           <>
             <p className="text-sm">
               <span className="text-gray-600">You pay:</span>
-              <span className="font-semibold ml-2">{amountToBuy} {selectedCurrency?.code}</span>
+              <span className="font-semibold ml-2">{amountToBuy.toLocaleString()} {selectedCurrency?.code}</span>
             </p>
             <p className="text-sm">
               <span className="text-gray-600">You receive:</span>
