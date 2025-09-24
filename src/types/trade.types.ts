@@ -24,12 +24,6 @@ export interface TradeAdditionalInfoInterface {
     value: string | ReactNode;
 }
 
-export interface BankDetailsData {
-    bankName: string
-    accountName: string
-    accountNumber: string
-}
-
 export interface WalletDetailsData {
     coinType: string
     walletAddress: string

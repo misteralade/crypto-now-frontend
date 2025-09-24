@@ -20,8 +20,8 @@ export default function TradeStepDisplay({activeTab, setActiveTab, tradeType, st
     transactionForm,
     transactionSessionId,
     showPaymentReceivingModal,
-    BankDetails,
     WalletDetails,
+    userBankAccounts,
 
     // Mutations
     initiateTransactionMutation,
@@ -92,8 +92,8 @@ export default function TradeStepDisplay({activeTab, setActiveTab, tradeType, st
       {/*<PaymentConfirmationModal isOpen={showPaymentReceivingModal} />*/}
       <ConfirmBankDetailsModal
         isOpen={showPaymentReceivingModal}
+        bankAccounts={userBankAccounts || []}
         tradeType={activeTab}
-        bankData={BankDetails}
         walletData={WalletDetails}
         onProceed={setStep}
         setShowConfirmBankDetails={toggleConfirmBankDetails}

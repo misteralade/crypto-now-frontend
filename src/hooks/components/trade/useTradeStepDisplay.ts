@@ -1,6 +1,5 @@
 import {useEffect, useState, useMemo, useRef} from "react";
 import type {
-  BankDetailsData,
   TradeAdditionalInfoInterface,
   TradeType,
   WalletDetailsData
@@ -14,6 +13,7 @@ import {useMutation, useQueryClient} from "@tanstack/react-query";
 import {QUERY_KEYS} from "../../../queries/query.keys.ts";
 import type {InitiateTransactionRequestPayload} from "../../../types/request.payload.types.ts";
 import {transactionServiceApi} from "../../../api/transaction.api.ts";
+import {useBankQuery} from "../../../queries/bank.query.ts";
 
 // Custom debounce hook
 const useDebounce = (value: any, delay: number) => {
@@ -37,12 +37,7 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
   const queryClient = useQueryClient();
   const { supportedCurrencies } = useCurrencyQuery();
   const { supportedCryptoCurrencies } = useCryptoQuery();
-
-  const BankDetails: BankDetailsData = {
-    bankName: "Providus Bank",
-    accountName: "JCole Adeniyi",
-    accountNumber: "2411793421"
-  }
+  const { userBankAccounts } = useBankQuery();
 
   const WalletDetails: WalletDetailsData = {
     coinType: "USDT",
@@ -319,8 +314,8 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
     transactionSessionId,
     isCountdownLocked,
     showPaymentReceivingModal,
-    BankDetails,
     WalletDetails,
+    userBankAccounts,
 
     // Mutations
     initiateTransactionMutation,
