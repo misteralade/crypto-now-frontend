@@ -1,7 +1,6 @@
 import type {TradeAdditionalInfoInterface, TradeType} from "../../../types/trade.types.ts";
 import TradeAdditionalInfo from "../TradeAdditionalInfo.tsx";
 import CustomButton from "../../../components/global/Button.tsx";
-// import TradePaymentUpload from "../TradePaymentUpload.tsx";
 import {useTradeStepTwo} from "../../../hooks/components/trade/useTradeStepTwo.ts";
 import type {SupportedCryptoOrCurrencyResponse} from "../../../types/response.payload.types.ts";
 import TradePaymentUpload from "../TradePaymentUpload.tsx";
@@ -19,11 +18,12 @@ interface TradeStep2Props {
   selectedToken?: SupportedCryptoOrCurrencyResponse;
   selectedCurrency?: SupportedCryptoOrCurrencyResponse;
   exchangeRateId: string;
-  transactionRef: string;
+  transactionRef: string | undefined;
+  handleTransactionHash: (string: string) => void;
   onSubmitPaymentProof?: (files: File[], transactionHash?: string) => void;
 }
 
-export default function TradeStep2({ amountToBuy, tradeType, numberOfToken, additionalInfo, setShowModal, setShowBankDetailsModal, handleReceiptUrl, setStep, selectedToken, selectedCurrency, exchangeRateId, transactionRef, onSubmitPaymentProof }: TradeStep2Props) {
+export default function TradeStep2({ amountToBuy, tradeType, numberOfToken, additionalInfo, setShowModal, setShowBankDetailsModal, handleReceiptUrl, setStep, selectedToken, selectedCurrency, exchangeRateId, transactionRef, handleTransactionHash, onSubmitPaymentProof }: TradeStep2Props) {
   const {
     // Values
     // files,
@@ -127,7 +127,7 @@ export default function TradeStep2({ amountToBuy, tradeType, numberOfToken, addi
         <div className="flex w-full justify-between">
           <h1>Transaction Ref:</h1>
 
-          <CopyAccountDetails accountNumber={transactionRef}/>
+          <CopyAccountDetails accountNumber={transactionRef || ''}/>
         </div>
 
         <TradeAdditionalInfo
@@ -149,7 +149,10 @@ export default function TradeStep2({ amountToBuy, tradeType, numberOfToken, addi
               type="text"
               id="transactionHash"
               value={transactionHash}
-              onChange={(e) => setTransactionHash(e.target.value)}
+              onChange={(e) => {
+                setTransactionHash(e.target.value)
+                handleTransactionHash(e.target.value)
+              }}
               placeholder="Enter blockchain transaction hash (e.g., 0x123abc...)"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               required

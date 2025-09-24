@@ -238,7 +238,14 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
       ...prev,
         receiptUrl: url
     }))
-  }
+  };
+
+  const handleTransactionHash = (hash: string) => {
+    setTransactionForm((prev) => ({
+      ...prev,
+        transactionHash: hash
+    }))
+  };
 
   return {
     // Values
@@ -267,5 +274,6 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
     setSelectedCurrency,
     setSelectedToken,
     handleReceiptUrl,
+    handleTransactionHash,
   };
 }

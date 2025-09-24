@@ -6,4 +6,5 @@ export type InitiateTransactionRequestPayload = {
   amountToReceive?: number;
   amountToSend?: number;
   receiptUrl?: string;
+  transactionHash?: string;
 }

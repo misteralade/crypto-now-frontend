@@ -26,6 +26,7 @@ export default function TradeStepDisplay({activeTab, setActiveTab, tradeType, st
     setSelectedCurrency,
     setSelectedToken,
     handleReceiptUrl,
+    handleTransactionHash,
   } = useTradeStepDisplay(token, tradeType, activeTab, currency, setStep);
 
   return (
@@ -67,6 +68,7 @@ export default function TradeStepDisplay({activeTab, setActiveTab, tradeType, st
           exchangeRateId={exchangeRateId}
           handleReceiptUrl={handleReceiptUrl}
           transactionRef={transactionSessionId}
+          handleTransactionHash={handleTransactionHash}
           // accountDetails={AccountDetails}
           // useStep3={false}
         />
