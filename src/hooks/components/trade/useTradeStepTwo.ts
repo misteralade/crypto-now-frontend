@@ -26,7 +26,7 @@ interface UseTradeStepTwoProps {
 
 export const useTradeStepTwo = ({ tradeType, exchangeRateId, amountToBuy, numberOfToken, selectedToken, selectedCurrency, setShowModal, setShowBankDetailsModal, setStep, onSubmitPaymentProof }: UseTradeStepTwoProps) => {
   const [files, setFiles] = useState<File[]>([]);
-  const [uploadedFileUrl, setUploadedFileUrl] = useState<string>("");
+  const [uploadedFileUrl, setUploadedFileUrl] = useState<string | undefined>();
   const [transactionHash, setTransactionHash] = useState<string>("");
   const [bankDetails, setBankDetails] = useState<SupportedPlatformBankAccountResponse[] | null>(null);
   const [walletDetails, setWalletDetails] = useState<SupportedPlatformCryptoWalletResponse[] | null>(null);

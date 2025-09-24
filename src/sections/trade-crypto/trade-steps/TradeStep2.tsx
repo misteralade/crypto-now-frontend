@@ -5,6 +5,7 @@ import CustomButton from "../../../components/global/Button.tsx";
 import {useTradeStepTwo} from "../../../hooks/components/trade/useTradeStepTwo.ts";
 import type {SupportedCryptoOrCurrencyResponse} from "../../../types/response.payload.types.ts";
 import TradePaymentUpload from "../TradePaymentUpload.tsx";
+import CopyAccountDetails from "../CopyAccountDetails.tsx";
 
 interface TradeStep2Props {
   amountToBuy: number;
@@ -18,10 +19,11 @@ interface TradeStep2Props {
   selectedToken?: SupportedCryptoOrCurrencyResponse;
   selectedCurrency?: SupportedCryptoOrCurrencyResponse;
   exchangeRateId: string;
+  transactionRef: string;
   onSubmitPaymentProof?: (files: File[], transactionHash?: string) => void;
 }
 
-export default function TradeStep2({ amountToBuy, tradeType, numberOfToken, additionalInfo, setShowModal, setShowBankDetailsModal, handleReceiptUrl, setStep, selectedToken, selectedCurrency, exchangeRateId, onSubmitPaymentProof }: TradeStep2Props) {
+export default function TradeStep2({ amountToBuy, tradeType, numberOfToken, additionalInfo, setShowModal, setShowBankDetailsModal, handleReceiptUrl, setStep, selectedToken, selectedCurrency, exchangeRateId, transactionRef, onSubmitPaymentProof }: TradeStep2Props) {
   const {
     // Values
     // files,
@@ -122,6 +124,12 @@ export default function TradeStep2({ amountToBuy, tradeType, numberOfToken, addi
 
       {/* Account Details & Order Info */}
       <div className="space-y-3">
+        <div className="flex w-full justify-between">
+          <h1>Transaction Ref:</h1>
+
+          <CopyAccountDetails accountNumber={transactionRef}/>
+        </div>
+
         <TradeAdditionalInfo
           heading={tradeType === "buy" ? "Bank Account Details" : "Crypto Wallet Details"}
           additionalInfo={accountDetails}

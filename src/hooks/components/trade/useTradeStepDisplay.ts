@@ -256,6 +256,7 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
     loadingCalculation,
     isDebouncing,
     transactionForm,
+    transactionSessionId,
 
     // Mutations
     initiateTransactionMutation,
