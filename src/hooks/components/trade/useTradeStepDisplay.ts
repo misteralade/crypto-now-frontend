@@ -37,6 +37,7 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
   const queryClient = useQueryClient();
   const { supportedCurrencies } = useCurrencyQuery();
   const { supportedCryptoCurrencies } = useCryptoQuery();
+
   const BankDetails: BankDetailsData = {
     bankName: "Providus Bank",
     accountName: "JCole Adeniyi",
@@ -93,7 +94,7 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
     onSettled: () => {
       setStep(2);
     }
-  })
+  });
 
   const makePaymentTransactionMutation = useMutation({
     mutationKey: [QUERY_KEYS.TRANSACTION.MAKE_PAYMENT_TRANSACTION],
@@ -113,7 +114,7 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
       }
       togglePaymentReceivingModal();
     }
-  })
+  });
 
   // Countdown timer effect
   useEffect(() => {

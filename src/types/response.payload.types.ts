@@ -34,3 +34,9 @@ export type SupportedPlatformCryptoWalletResponse = {
   walletAddress: string;
   network: string;
 }
+
+export type AllBanksResponse = {
+  id: string;
+  name: string;
+  logoUrl: string;
+}

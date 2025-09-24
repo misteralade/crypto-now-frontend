@@ -1,7 +1,8 @@
 import { useState } from "react"
 import {CustomInput} from "../../components/global/CustomInput.tsx";
-import {CustomSelect} from "../../components/global/CustomSelect.tsx";
 import type {BankDetailsData} from "../../types/trade.types.ts";
+import {useBankQuery} from "../../queries/bank.query.ts";
+import BankSelector from "../../components/global/BankSelector.tsx";
 
 interface BankDetailsProps {
     onConfirm: (data: BankDetailsData) => void
@@ -9,18 +10,9 @@ interface BankDetailsProps {
     canGoBack?: boolean // Optional prop to control go back availability
 }
 
-const banks = [
-    "Access Bank",
-    "GTBank",
-    "First Bank",
-    "UBA",
-    "Zenith Bank",
-    "Providus Bank",
-    "Fidelity Bank",
-    "Sterling Bank",
-]
-
 export default function ChangeBankDetails({ onConfirm, onGoBack, canGoBack = true }: BankDetailsProps) {
+    const { allBanks, loadingAllBanks } = useBankQuery();
+
     const [selectedBank, setSelectedBank] = useState("")
     const [accountName, setAccountName] = useState("")
     const [accountNumber, setAccountNumber] = useState("")
@@ -42,10 +34,10 @@ export default function ChangeBankDetails({ onConfirm, onGoBack, canGoBack = tru
             <h2 className="text-xl font-semibold text-center">Bank details</h2>
 
             <div className="space-y-7">
-                <CustomSelect
+                <BankSelector
                     label="Select Bank"
                     placeholder="Select option"
-                    options={banks}
+                    options={!loadingAllBanks ? allBanks : []}
                     value={selectedBank}
                     onValueChange={setSelectedBank}
                 />

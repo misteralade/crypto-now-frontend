@@ -12,5 +12,3 @@ export const ROUTES = {
 export const QUERY_KEYS = {
   LOGIN: "admin-login",
 }
-
-

@@ -1,5 +1,6 @@
 import {axiosGetRequestHandler} from "./index.ts";
 import type {
+  AllBanksResponse,
   SupportedPlatformBankAccountResponse
 } from "../types/response.payload.types.ts";
 
@@ -18,6 +19,12 @@ class BankServiceApi {
 
   async getPlatformBankDetails() {
     const { data, message, success }: { data: SupportedPlatformBankAccountResponse[], message: string, success: boolean} = await axiosGetRequestHandler(`/bank/supported-bank/platform`);
+
+    return { data, message, success };
+  }
+
+  async getAllBanks() {
+    const { data, message, success }: { data: AllBanksResponse[], message: string, success: boolean} = await axiosGetRequestHandler(`/bank/supported-bank/all`);
 
     return { data, message, success };
   }
