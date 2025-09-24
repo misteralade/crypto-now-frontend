@@ -33,6 +33,8 @@ export default function TradeStepDisplay({activeTab, setActiveTab, tradeType, st
 
   console.log({
     transactionForm,
+    amountToBuy,
+    numberOfToken,
   })
 
   return (

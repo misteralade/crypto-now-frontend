@@ -1,4 +1,4 @@
-import {useEffect, useState, useMemo} from "react";
+import {useEffect, useState, useMemo, useRef} from "react";
 import type {TradeAdditionalInfoInterface, TradeType} from "../../../types/trade.types.ts";
 import {useCurrencyQuery} from "../../../queries/currency.query.ts";
 import type {SupportedCryptoOrCurrencyResponse} from "../../../types/response.payload.types.ts";
@@ -33,6 +33,8 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
   const [selectedCurrency, setSelectedCurrency] = useState<SupportedCryptoOrCurrencyResponse>();
   const [countdown, setCountdown] = useState<string>("");
   const [transactionForm, setTransactionForm] = useState<InitiateTransactionRequestPayload>()
+  const [isCountdownLocked, setIsCountdownLocked] = useState(false); // New state to lock countdown
+  const countdownIntervalRef = useRef<any>();
 
   const queryClient = useQueryClient();
   const { supportedCurrencies } = useCurrencyQuery();
@@ -82,12 +84,20 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
         sessionId: transactionSessionId,
         coinId: transactionForm?.tokenId,
       });
+    },
+    onSuccess: () => {
+      // Lock the countdown and exchange rate when payment is made
+      setIsCountdownLocked(true);
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+      }
+      console.log('Payment transaction completed - countdown locked and exchange rate frozen');
     }
   })
 
   // Countdown timer effect
   useEffect(() => {
-    if (!validUntil) return;
+    if (!validUntil || isCountdownLocked) return;
 
     const updateCountdown = () => {
       const now = new Date().getTime();
@@ -96,7 +106,16 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
 
       if (timeDifference <= 0) {
         setCountdown("Expired");
-        // Refetch exchange rate when expired
+
+        // Clear the interval
+        if (countdownIntervalRef.current) {
+          clearInterval(countdownIntervalRef.current);
+        }
+
+        // Don't reset amounts - just unlock countdown and refresh rates
+        setIsCountdownLocked(false);
+
+        // Refetch exchange rate when expired to get new rates
         if (selectedToken?.id && selectedCurrency?.id) {
           queryClient.invalidateQueries({
             queryKey: [QUERY_KEYS.EXCHANGE_RATE.GET_CRYPTO_TO_CURRENCY_EXCHANGE_RATE, selectedToken.id, selectedCurrency.id]
@@ -121,16 +140,22 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
     // Update immediately
     updateCountdown();
 
-    // Set up interval to update every second
-    const interval = setInterval(updateCountdown, 1000);
+    // Set up interval to update every second only if countdown is not locked
+    if (!isCountdownLocked) {
+      countdownIntervalRef.current = setInterval(updateCountdown, 1000);
+    }
 
-    // Cleanup interval on unmount or when validUntil changes
-    return () => clearInterval(interval);
-  }, [validUntil, selectedToken?.id, selectedCurrency?.id, queryClient]);
+    // Cleanup interval on unmount or when dependencies change
+    return () => {
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+      }
+    };
+  }, [validUntil, selectedToken?.id, selectedCurrency?.id, queryClient, isCountdownLocked]);
 
-  // Auto-calculate the opposite field based on exchange rate
+  // Auto-calculate the opposite field based on exchange rate (only if countdown is not locked)
   useEffect(() => {
-    if (!exchangeRate?.fiatRate || loadingExchangeRate) return;
+    if (!exchangeRate?.fiatRate || loadingExchangeRate || isCountdownLocked) return;
 
     if (activeTab === "sell" && numberOfToken !== "" && Number(numberOfToken) > 0) {
       const calculatedAmount = (Number(numberOfToken) * exchangeRate.fiatRate).toFixed(5);
@@ -147,7 +172,7 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
       amountToReceive: activeTab.toUpperCase() === "SELL" ? Number(amountToBuy) : Number(numberOfToken),
       amountToSend: activeTab.toUpperCase() === "SELL" ? Number(numberOfToken) : Number(amountToBuy),
     }))
-  }, [numberOfToken, amountToBuy, activeTab, exchangeRate?.fiatRate, loadingExchangeRate]);
+  }, [numberOfToken, amountToBuy, activeTab, exchangeRate?.fiatRate, loadingExchangeRate, isCountdownLocked]);
 
   useEffect(() => {
     // Find the selected token from the supportedCryptoCurrencies array
@@ -181,6 +206,11 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
     if (exchangeRate?.rateId) {
       sessionStorage.setItem("exchangeRateId", exchangeRate.rateId);
     }
+
+    // Reset countdown lock when new exchange rate is received
+    if (exchangeRate?.rateId && isCountdownLocked) {
+      setIsCountdownLocked(false);
+    }
   }, [exchangeRate]);
 
   // Reset form when switching between buy/sell tabs
@@ -191,6 +221,9 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
     }));
     setNumberOfToken("");
     setAmountToBuy("");
+
+    // Reset countdown lock when switching tabs
+    setIsCountdownLocked(false);
   }, [activeTab]);
 
   // Check if we're currently waiting for debounce (user is still typing)
@@ -224,31 +257,21 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
     },
     {
       title: "Valid until",
-      value: loadingExchangeRate ? 'Loading...' : countdown || "Loading...",
+      value: loadingExchangeRate ? 'Loading...' : isCountdownLocked ? 'Rate Locked' : countdown || "Loading...",
     },
-    // {
-    //   title: "You will receive",
-    //   value: isDebouncing
-    //     ? 'Typing...'
-    //     : loadingCalculation
-    //       ? 'Calculating...'
-    //       : amountToReceive > 0
-    //         ? `${amountToReceive.toLocaleString()} ${activeTab === "sell" ? selectedCurrency?.name : selectedToken?.name}`
-    //         : `0 ${activeTab === "sell" ? selectedCurrency?.name : selectedToken?.name}`,
-    // }
   ]
 
   const handleReceiptUrl = (url: string) => {
     setTransactionForm((prev) => ({
       ...prev,
-        receiptUrl: url
+      receiptUrl: url
     }))
   };
 
   const handleTransactionHash = (hash: string) => {
     setTransactionForm((prev) => ({
       ...prev,
-        transactionHash: hash
+      transactionHash: hash
     }))
   };
 
@@ -269,6 +292,7 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
     isDebouncing,
     transactionForm,
     transactionSessionId,
+    isCountdownLocked, // New value to indicate if rates are locked
 
     // Mutations
     initiateTransactionMutation,
