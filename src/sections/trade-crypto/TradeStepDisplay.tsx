@@ -15,6 +15,7 @@ export default function TradeStepDisplay({activeTab, setActiveTab, tradeType, st
     supportedCurrencies,
     supportedCryptoCurrencies,
     exchangeRateId,
+    transactionForm,
     transactionSessionId,
 
     // Mutations
@@ -29,6 +30,10 @@ export default function TradeStepDisplay({activeTab, setActiveTab, tradeType, st
     handleReceiptUrl,
     handleTransactionHash,
   } = useTradeStepDisplay(token, tradeType, activeTab, currency, setStep);
+
+  console.log({
+    transactionForm,
+  })
 
   return (
     <div className={`bg-greyBg rounded-2xl p-5 space-y-5`}>
@@ -61,9 +66,9 @@ export default function TradeStepDisplay({activeTab, setActiveTab, tradeType, st
           tradeType={activeTab}
           numberOfToken={Number(numberOfToken)}
           additionalInfo={AdditionalInfo}
-          setShowModal={setShowModal}
-          setShowBankDetailsModal={setShowBankDetailsModal}
-          setStep={(value) => console.log(value)}
+          // setShowModal={setShowModal}
+          // setShowBankDetailsModal={setShowBankDetailsModal}
+          // setStep={(value) => console.log(value)}
           selectedToken={selectedToken}
           selectedCurrency={selectedCurrency}
           exchangeRateId={exchangeRateId}

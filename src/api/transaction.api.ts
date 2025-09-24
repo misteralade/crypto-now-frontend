@@ -1,5 +1,5 @@
 import {toast} from "react-toastify";
-import {axiosPostRequestHandler} from "./index.ts";
+import {axiosPostRequestHandler, axiosPutRequestHandler} from "./index.ts";
 
 class TransactionServiceApi {
   private static instance: TransactionServiceApi;
@@ -51,6 +51,25 @@ class TransactionServiceApi {
     } = await axiosPostRequestHandler(
       '/transaction/initiate',
       transactionData
+    )
+
+    if (!success || error) {
+      toast.error(error.message || message || error || "Failed to initiate transaction");
+      return;
+    }
+
+    return data.sessionId;
+  }
+
+  async makeTransactionPayment(paymentData: Record<string, any>) {
+    const {data, message, success, error}: {
+      data: { sessionId: string },
+      message: string,
+      success: boolean,
+      error: any
+    } = await axiosPutRequestHandler(
+      `/transaction/make-payment/${paymentData.sessionId}`,
+      paymentData
     )
 
     if (!success || error) {

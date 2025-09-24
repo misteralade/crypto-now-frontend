@@ -44,8 +44,6 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
   const [validUntil, setValidUntil] = useState<Date>();
   const [amountToBuy, setAmountToBuy] = useState<string | number>("");
 
-  // Step 2: Payment upload
-
   // Get the amount to send for the transaction query
   const amountToSend = activeTab === "sell" ? Number(numberOfToken) : Number(amountToBuy);
 
@@ -70,7 +68,7 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
       setTransactionSessionId(sessionId)
       sessionStorage.setItem("transactionSessionId", sessionId as string);
     },
-    onMutate: () => {
+    onSettled: () => {
       setStep(2);
     }
   })
@@ -78,7 +76,12 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
   const makePaymentTransactionMutation = useMutation({
     mutationKey: [QUERY_KEYS.TRANSACTION.MAKE_PAYMENT_TRANSACTION],
     mutationFn: async () => {
-
+      if (!transactionSessionId) return;
+      await transactionServiceApi.makeTransactionPayment({
+        ...transactionForm,
+        sessionId: transactionSessionId,
+        coinId: transactionForm?.tokenId,
+      });
     }
   })
 

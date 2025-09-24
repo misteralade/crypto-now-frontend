@@ -134,7 +134,7 @@ export default function TradeStepTwo({ amountToBuy, tradeType, numberOfToken, ad
       </div>
 
       {/* Form */}
-      <form className="space-y-10" onSubmit={handleSubmitPaymentProof}>
+      <div className="space-y-10">
         {/* Transaction Hash Input for Sell Orders */}
         {tradeType === "sell" && (
           <div className="w-full md:w-3/4 mx-auto">
@@ -185,8 +185,8 @@ export default function TradeStepTwo({ amountToBuy, tradeType, numberOfToken, ad
           <CustomButton
             className="w-full"
             buttonText={tradeType === "buy" ? "Submit Payment Proof" : "Submit Transaction Proof"}
-            type={"submit"}
             disabled={submitInvalid}
+            onClick={handleSubmitPaymentProof}
           />
           {submitInvalid && (
             <p className="text-xs text-red-500 mt-2 text-center">
@@ -197,7 +197,7 @@ export default function TradeStepTwo({ amountToBuy, tradeType, numberOfToken, ad
             </p>
           )}
         </div>
-      </form>
+      </div>
 
       {/* Important Notice */}
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
@@ -206,7 +206,7 @@ export default function TradeStepTwo({ amountToBuy, tradeType, numberOfToken, ad
           {tradeType === "buy" ? (
             <>
               <li>• Double-check the bank details before making the transfer</li>
-              <li>• Use the exact amount: <strong>{amountToBuy} {selectedCurrency?.code}</strong></li>
+              <li>• Use the exact amount: <strong>{amountToBuy.toLocaleString()} {selectedCurrency?.code}</strong></li>
               <li>• Include your order reference if requested by your bank</li>
               <li>• Keep your payment receipt for verification</li>
             </>
