@@ -7,7 +7,7 @@ import TradeInputDropdown from "../TradeInputDropdown.tsx";
 import TradeAdditionalInfo from "../TradeAdditionalInfo.tsx";
 import type {SupportedCryptoOrCurrencyResponse} from "../../../types/response.payload.types.ts";
 
-interface TradeStep1Props {
+interface TradeStepOneProps {
     token: string;
     currency: string;
     tradeType: TradeType;
@@ -25,7 +25,7 @@ interface TradeStep1Props {
     availableTokens: SupportedCryptoOrCurrencyResponse[];
 }
 
-export default function TradeStep1({setAmountToBuy, numberOfToken, setNumberOfToken, amountToBuy,selectedCurrency, setSelectedCurrency, setSelectedToken,selectedToken, tradeType, handleProceedToPayment, orderDetails, availableCurrencies, availableTokens}: TradeStep1Props) {
+export default function TradeStepOne({setAmountToBuy, numberOfToken, setNumberOfToken, amountToBuy,selectedCurrency, setSelectedCurrency, setSelectedToken,selectedToken, tradeType, handleProceedToPayment, orderDetails, availableCurrencies, availableTokens}: TradeStepOneProps) {
 
     const submitInvalid = numberOfToken === "" || amountToBuy === "";
     const handleSubmit = (e: FormEvent) => {

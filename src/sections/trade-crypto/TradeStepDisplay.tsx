@@ -1,7 +1,7 @@
 import type { TradeCryptoPageProps} from "../../types/trade.types.ts";
 import TradeStepDisplayHeading from "./TradeStepDisplayHeading.tsx";
-import TradeStep1 from "./trade-steps/TradeStep1.tsx";
-import TradeStep2 from "./trade-steps/TradeStep2.tsx";
+import TradeStepOne from "./trade-steps/TradeStepOne.tsx";
+import TradeStepTwo from "./trade-steps/TradeStepTwo.tsx";
 import {useTradeStepDisplay} from "../../hooks/components/trade/useTradeStepDisplay.ts";
 
 export default function TradeStepDisplay({activeTab, setActiveTab, tradeType, step, currency, token, setStep, setShowModal, setShowBankDetailsModal }: TradeCryptoPageProps) {
@@ -36,7 +36,7 @@ export default function TradeStepDisplay({activeTab, setActiveTab, tradeType, st
 
       {/* Content*/}
       {step === 1 &&
-        <TradeStep1
+        <TradeStepOne
           token={token}
           currency={currency}
           tradeType={activeTab}
@@ -55,7 +55,7 @@ export default function TradeStepDisplay({activeTab, setActiveTab, tradeType, st
         />
       }
       {step === 2 &&
-        <TradeStep2
+        <TradeStepTwo
           amountToBuy={Number(amountToBuy)}
           tradeType={activeTab}
           numberOfToken={Number(numberOfToken)}

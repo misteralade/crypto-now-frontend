@@ -6,7 +6,7 @@ import type {SupportedCryptoOrCurrencyResponse} from "../../../types/response.pa
 import TradePaymentUpload from "../TradePaymentUpload.tsx";
 import CopyAccountDetails from "../CopyAccountDetails.tsx";
 
-interface TradeStep2Props {
+interface TradeStepTwoProps {
   amountToBuy: number;
   tradeType: TradeType;
   numberOfToken: number;
@@ -23,7 +23,7 @@ interface TradeStep2Props {
   onSubmitPaymentProof?: (files: File[], transactionHash?: string) => void;
 }
 
-export default function TradeStep2({ amountToBuy, tradeType, numberOfToken, additionalInfo, setShowModal, setShowBankDetailsModal, handleReceiptUrl, setStep, selectedToken, selectedCurrency, exchangeRateId, transactionRef, handleTransactionHash, onSubmitPaymentProof }: TradeStep2Props) {
+export default function TradeStepTwo({ amountToBuy, tradeType, numberOfToken, additionalInfo, setShowModal, setShowBankDetailsModal, handleReceiptUrl, setStep, selectedToken, selectedCurrency, exchangeRateId, transactionRef, handleTransactionHash, onSubmitPaymentProof }: TradeStepTwoProps) {
   const {
     // Values
     // files,
