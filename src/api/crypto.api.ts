@@ -1,5 +1,8 @@
 import {axiosGetRequestHandler} from "./index.ts";
-import type {SupportedCryptoOrCurrencyResponse} from "../types/response.payload.types.ts";
+import type {
+  SupportedCryptoOrCurrencyResponse,
+  SupportedPlatformCryptoWalletResponse
+} from "../types/response.payload.types.ts";
 
 class CryptoServiceApi {
   private static instance: CryptoServiceApi;
@@ -16,6 +19,12 @@ class CryptoServiceApi {
 
   async getSupportedCrypto() {
     const { data, message, success }: { data: SupportedCryptoOrCurrencyResponse[], message: string, success: boolean} = await axiosGetRequestHandler("/crypto/supported-cryptos");
+
+    return { data, message, success };
+  }
+
+  async getPlatformWallets() {
+    const { data, message, success }: { data: SupportedPlatformCryptoWalletResponse[], message: string, success: boolean} = await axiosGetRequestHandler("/crypto/supported-cryptos/platform/receiving");
 
     return { data, message, success };
   }

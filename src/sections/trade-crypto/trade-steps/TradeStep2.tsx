@@ -1,122 +1,220 @@
-import type {TradeAdditionalInfoInterface} from "../../../types/trade.types.ts";
-import {useEffect, useState} from "react";
+import type {TradeAdditionalInfoInterface, TradeType} from "../../../types/trade.types.ts";
 import TradeAdditionalInfo from "../TradeAdditionalInfo.tsx";
 import CustomButton from "../../../components/global/Button.tsx";
-import TradePaymentUpload from "../TradePaymentUpload.tsx";
-import {formatTime} from "../../../util/utils.ts";
-import MakeDispute from "../MakeDispute.tsx";
+// import TradePaymentUpload from "../TradePaymentUpload.tsx";
+import {useTradeStepTwo} from "../../../hooks/components/trade/useTradeStepTwo.ts";
+import type {SupportedCryptoOrCurrencyResponse} from "../../../types/response.payload.types.ts";
 
-interface TradeStep2Props{
-    additionalInfo: TradeAdditionalInfoInterface[],
-    accountDetails: TradeAdditionalInfoInterface[],
-    setShowModal: (value: boolean) => void,
-    setShowBankDetailsModal: (value: boolean) => void,
-    useStep3: boolean,
-    setStep?: (value: number) => void,
+interface TradeStep2Props {
+  amountToBuy: number;
+  tradeType: TradeType;
+  numberOfToken: number;
+  additionalInfo: TradeAdditionalInfoInterface[];
+  setShowModal: (value: boolean) => void;
+  setShowBankDetailsModal: (value: boolean) => void;
+  setStep?: (value: number) => void;
+  selectedToken?: SupportedCryptoOrCurrencyResponse;
+  selectedCurrency?: SupportedCryptoOrCurrencyResponse;
+  exchangeRateId: string;
+  onSubmitPaymentProof?: (files: File[], transactionHash?: string) => void;
 }
 
-export default function TradeStep2({setStep, additionalInfo, accountDetails, setShowModal, setShowBankDetailsModal, useStep3}: TradeStep2Props){
-    const [files, setFiles] = useState<File[]>([])
+export default function TradeStep2({ amountToBuy, tradeType, numberOfToken, additionalInfo, setShowModal, setShowBankDetailsModal, setStep, selectedToken, selectedCurrency, exchangeRateId, onSubmitPaymentProof }: TradeStep2Props) {
+  const {
+    // Values
+    // files,
+    transactionHash,
+    paymentDetailsLoading,
+    paymentDetailsError,
+    submitInvalid,
+    accountDetails,
+    walletDetails,
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        setShowModal(true)
+    // Functions
+    // setFiles,
+    setTransactionHash,
+    handleSubmit,
+    // handleFileUploaded,
+  } = useTradeStepTwo({tradeType, exchangeRateId, amountToBuy, numberOfToken, selectedToken, selectedCurrency, setShowModal, setShowBankDetailsModal, setStep, onSubmitPaymentProof});
 
-        try {
-            // Create FormData to handle file uploads
-            const formData = new FormData()
+  console.log({
+    accountDetails,
+  })
 
-            // Add files to FormData
-            files.forEach((file, index) => {
-                formData.append(`file_${index}`, file)
-            })
+  // Loading state
+  if (paymentDetailsLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+        <span className="ml-3 text-gray-600">Loading payment details...</span>
+      </div>
+    );
+  }
 
-            // Add other form data as needed
-            formData.append("fileCount", files.length.toString())
+  // Error state
+  if (paymentDetailsError) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+        <h3 className="font-semibold text-red-800 mb-2">Error Loading Payment Details</h3>
+        <p className="text-red-700 text-sm mb-4">
+          {paymentDetailsError?.message || 'Failed to load payment details'}
+        </p>
+        <CustomButton
+          buttonText="Retry"
+          onClick={() => window.location.reload()}
+          className="bg-red-600 hover:bg-red-700"
+        />
+      </div>
+    );
+  }
 
-            console.log(formData)
+  return (
+    <div className="space-y-7">
+      {/* Trade Type Specific Instructions */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        {tradeType === "buy" ? (
+          <div>
+            <h3 className="font-semibold text-blue-800 mb-2">
+              💳 Payment Instructions (Buy Order)
+            </h3>
+            <p className="text-blue-700 text-sm">
+              Please transfer <strong>{amountToBuy} {selectedCurrency?.code}</strong> to the bank account details below,
+              then upload your payment receipt/proof.
+            </p>
+          </div>
+        ) : (
+          <div>
+            <h3 className="font-semibold text-orange-800 mb-2">
+              🔗 Crypto Transfer Instructions (Sell Order)
+            </h3>
+            <p className="text-orange-700 text-sm">
+              Please send <strong>{numberOfToken} {selectedToken?.symbol}</strong> to the wallet address below
+              on the <strong>{walletDetails?.[0]?.network}</strong> network, then upload proof and provide the transaction hash.
+            </p>
+          </div>
+        )}
+      </div>
 
-            setTimeout(() => {
-                setShowModal(false)
-                setShowBankDetailsModal(true)
-            }, 1000)
+      {/* Transaction Summary */}
+      <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+        <h4 className="font-semibold text-gray-800">Transaction Summary</h4>
+        {tradeType === "buy" ? (
+          <>
+            <p className="text-sm">
+              <span className="text-gray-600">You pay:</span>
+              <span className="font-semibold ml-2">{amountToBuy} {selectedCurrency?.code}</span>
+            </p>
+            <p className="text-sm">
+              <span className="text-gray-600">You receive:</span>
+              <span className="font-semibold ml-2">{numberOfToken} {selectedToken?.symbol}</span>
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="text-sm">
+              <span className="text-gray-600">You send:</span>
+              <span className="font-semibold ml-2">{numberOfToken} {selectedToken?.symbol}</span>
+            </p>
+            <p className="text-sm">
+              <span className="text-gray-600">You receive:</span>
+              <span className="font-semibold ml-2">{amountToBuy} {selectedCurrency?.code}</span>
+            </p>
+          </>
+        )}
+      </div>
 
-        } catch (error) {
-            console.error("[v0] Error uploading files:", error)
-        }
-    }
+      {/* Account Details & Order Info */}
+      <div className="space-y-3">
+        <TradeAdditionalInfo
+          heading={tradeType === "buy" ? "Bank Account Details" : "Crypto Wallet Details"}
+          additionalInfo={accountDetails}
+        />
+        <TradeAdditionalInfo heading="Order Details" additionalInfo={additionalInfo} />
+      </div>
 
-    const submitInvalid = files.length === 0 ;
+      {/* Form */}
+      <form className="space-y-10" onSubmit={handleSubmit}>
+        {/* Transaction Hash Input for Sell Orders */}
+        {tradeType === "sell" && (
+          <div className="w-full md:w-3/4 mx-auto">
+            <label htmlFor="transactionHash" className="block text-sm font-medium text-gray-700 mb-2">
+              Transaction Hash *
+            </label>
+            <input
+              type="text"
+              id="transactionHash"
+              value={transactionHash}
+              onChange={(e) => setTransactionHash(e.target.value)}
+              placeholder="Enter blockchain transaction hash (e.g., 0x123abc...)"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              required
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Provide the transaction hash from your crypto wallet after sending the {selectedToken?.symbol}
+            </p>
+          </div>
+        )}
 
-    const [countdown, setCountdown] = useState(600) // 3 minutes in seconds
-
-    useEffect(() => {
-        if (!useStep3) return
-
-        const timer = setInterval(() => {
-            setCountdown((prev) => {
-                if (prev <= 1) {
-                    clearInterval(timer)
-                    return 0
-                }
-                return prev - 1
-            })
-        }, 1000)
-
-        return () => clearInterval(timer)
-    }, [useStep3])
-
-    return(
-        <div className={`space-y-7`}>
-            {useStep3 &&
-                <h4 className={`text-2xl text-body font-medium`}>
-                    You'll receive payment withing {" "}
-                    <span className={`text-accent3`}>
-                        {formatTime(countdown)}
-                    </span>
-                </h4>
-            }
-
-            {/*Info*/}
-            <div className={`space-y-3`}>
-                <TradeAdditionalInfo heading={`account details`} additionalInfo={accountDetails} />
-                <TradeAdditionalInfo heading={"Order details"} additionalInfo={additionalInfo} />
-            </div>
-
-            {/*form*/}
-            {!useStep3 &&  <form className={`space-y-10`} onSubmit={handleSubmit}>
-                {/*Image input*/}
-                <div className={`w-full md:w-3/4 mx-auto`}>
-                    <TradePaymentUpload onFilesChange={setFiles} maxFiles={5} acceptedTypes={[".jpg", ".png", ".pdf"]} />
-                </div>
-
-
-                <div className={`md:w-1/2 w-full mx-auto px-5 md:px-0`}>
-                    <CustomButton
-                        className="w-full"
-                        buttonText="Proceed to payment"
-                        type="submit"
-                        disabled={submitInvalid}
-                    />
-                </div>
-            </form>}
-
-            {useStep3 &&
-                <div className={`flex flex-col md:flex-row gap-5 items-center justify-between`}>
-                    <MakeDispute />
-
-                    <CustomButton
-                        className="w-full md:w-1/2 order-first md:order-2"
-                        buttonText="I've received payment"
-                        type="button"
-                        onClick={() => {
-                            if(setStep) {
-                                setStep(4)
-                            }
-                        }}
-                    />
-                </div>
-            }
+        {/* Payment Proof Upload */}
+        <div className="w-full md:w-3/4 mx-auto">
+          <div className="mb-2">
+            <label className="block text-sm font-medium text-gray-700">
+              {tradeType === "buy" ? "Payment Receipt/Proof *" : "Transaction Proof *"}
+            </label>
+            <p className="text-xs text-gray-500">
+              {tradeType === "buy"
+                ? "Upload bank transfer receipt, screenshot, or payment confirmation"
+                : "Upload screenshot of transaction confirmation from your wallet or block explorer"
+              }
+            </p>
+          </div>
+          {/*<TradePaymentUpload*/}
+          {/*  onFilesChange={setFiles}*/}
+          {/*  onFileUploaded={handleFileUploaded}*/}
+          {/*  acceptedTypes={[".jpg", ".jpeg", ".png", ".pdf"]}*/}
+          {/*/>*/}
         </div>
-    )
+
+        {/* Submit Button */}
+        <div className="md:w-1/2 w-full mx-auto px-5 md:px-0">
+          <CustomButton
+            className="w-full"
+            buttonText={tradeType === "buy" ? "Submit Payment Proof" : "Submit Transaction Proof"}
+            type="submit"
+            disabled={submitInvalid}
+          />
+          {submitInvalid && (
+            <p className="text-xs text-red-500 mt-2 text-center">
+              {tradeType === "sell"
+                ? "Please provide transaction hash and upload proof (file must be successfully uploaded)"
+                : "Please upload payment proof (file must be successfully uploaded)"
+              }
+            </p>
+          )}
+        </div>
+      </form>
+
+      {/* Important Notice */}
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <h4 className="font-semibold text-yellow-800 mb-2">⚠️ Important Notice</h4>
+        <ul className="text-yellow-700 text-sm space-y-1">
+          {tradeType === "buy" ? (
+            <>
+              <li>• Double-check the bank details before making the transfer</li>
+              <li>• Use the exact amount: <strong>{amountToBuy} {selectedCurrency?.code}</strong></li>
+              <li>• Include your order reference if requested by your bank</li>
+              <li>• Keep your payment receipt for verification</li>
+            </>
+          ) : (
+            <>
+              <li>• Verify the wallet address and network before sending</li>
+              <li>• Send exactly: <strong>{numberOfToken} {selectedToken?.symbol}</strong></li>
+              <li>• Use the <strong>{walletDetails?.[0]?.network}</strong> network only</li>
+              <li>• Double-check the transaction hash before submitting</li>
+            </>
+          )}
+        </ul>
+      </div>
+    </div>
+  );
 }

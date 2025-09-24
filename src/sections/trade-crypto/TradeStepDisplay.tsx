@@ -1,8 +1,7 @@
-import type { TradeAdditionalInfoInterface, TradeCryptoPageProps} from "../../types/trade.types.ts";
+import type { TradeCryptoPageProps} from "../../types/trade.types.ts";
 import TradeStepDisplayHeading from "./TradeStepDisplayHeading.tsx";
 import TradeStep1 from "./trade-steps/TradeStep1.tsx";
 import TradeStep2 from "./trade-steps/TradeStep2.tsx";
-import CopyAccountDetails from "./CopyAccountDetails.tsx";
 import {useTradeStepDisplay} from "../../hooks/components/trade/useTradeStepDisplay.ts";
 
 export default function TradeStepDisplay({activeTab, setActiveTab, tradeType, step, currency, token, setStep, setShowModal, setShowBankDetailsModal }: TradeCryptoPageProps) {
@@ -15,7 +14,7 @@ export default function TradeStepDisplay({activeTab, setActiveTab, tradeType, st
     selectedCurrency,
     supportedCurrencies,
     supportedCryptoCurrencies,
-    transactionForm,
+    exchangeRateId,
 
     // Mutations
     initiateTransactionMutation,
@@ -27,48 +26,44 @@ export default function TradeStepDisplay({activeTab, setActiveTab, tradeType, st
     setSelectedToken,
   } = useTradeStepDisplay(token, tradeType, activeTab, currency, setStep);
 
-  console.log({
-    transactionForm,
-  });
-
-  const buyAccountDetails: TradeAdditionalInfoInterface[] = [
-    {
-      title: "Address",
-      value: <CopyAccountDetails accountNumber={`0xdAC17F958D2ee523a2206206994597C13D831ec7`} /> ,
-    },
-    {
-      title: "Coin type",
-      value: `${selectedToken?.name}`,
-    },
-    {
-      title: "Network type",
-      value: "BEP20"
-    },
-    {
-      title: "Amount",
-      value: `${numberOfToken} ${selectedToken?.name}`
-    }
-  ]
-
-  const sellAccountDetails: TradeAdditionalInfoInterface[] = [
-    {
-      title: "Account number",
-      value:  <CopyAccountDetails accountNumber={`0003450953`} />
-    },
-    {
-      title: "Account name",
-      value: "CrytoNow Limited"
-    },
-    {
-      title: "Bank name",
-      value: "Sterling Bank"
-    },
-    {
-      title: "Amount",
-      value: `${amountToBuy} ${selectedCurrency?.name}`
-    }
-  ]
-  const AccountDetails: TradeAdditionalInfoInterface[] = tradeType === "sell" ? buyAccountDetails : sellAccountDetails;
+  // const buyAccountDetails: TradeAdditionalInfoInterface[] = [
+  //   {
+  //     title: "Address",
+  //     value: <CopyAccountDetails accountNumber={`0xdAC17F958D2ee523a2206206994597C13D831ec7`} /> ,
+  //   },
+  //   {
+  //     title: "Coin type",
+  //     value: `${selectedToken?.name}`,
+  //   },
+  //   {
+  //     title: "Network type",
+  //     value: "BEP20"
+  //   },
+  //   {
+  //     title: "Amount",
+  //     value: `${numberOfToken} ${selectedToken?.name}`
+  //   }
+  // ]
+  //
+  // const sellAccountDetails: TradeAdditionalInfoInterface[] = [
+  //   {
+  //     title: "Account number",
+  //     value:  <CopyAccountDetails accountNumber={`0003450953`} />
+  //   },
+  //   {
+  //     title: "Account name",
+  //     value: "CrytoNow Limited"
+  //   },
+  //   {
+  //     title: "Bank name",
+  //     value: "Sterling Bank"
+  //   },
+  //   {
+  //     title: "Amount",
+  //     value: `${amountToBuy} ${selectedCurrency?.name}`
+  //   }
+  // ]
+  // const AccountDetails: TradeAdditionalInfoInterface[] = tradeType === "sell" ? buyAccountDetails : sellAccountDetails;
 
   return (
     <div className={`bg-greyBg rounded-2xl p-5 space-y-5`}>
@@ -97,21 +92,18 @@ export default function TradeStepDisplay({activeTab, setActiveTab, tradeType, st
       }
       {step === 2 &&
         <TradeStep2
+          amountToBuy={Number(amountToBuy)}
+          tradeType={activeTab}
+          numberOfToken={Number(numberOfToken)}
           additionalInfo={AdditionalInfo}
-          accountDetails={AccountDetails}
           setShowModal={setShowModal}
           setShowBankDetailsModal={setShowBankDetailsModal}
-          useStep3={false}
-        />
-      }
-      {step === 3 &&
-        <TradeStep2
-          additionalInfo={AdditionalInfo}
-          accountDetails={AccountDetails}
-          setShowModal={setShowModal}
-          setShowBankDetailsModal={setShowBankDetailsModal}
-          useStep3={true}
-          setStep={setStep}
+          setStep={(value) => console.log(value)}
+          selectedToken={selectedToken}
+          selectedCurrency={selectedCurrency}
+          exchangeRateId={exchangeRateId}
+          // accountDetails={AccountDetails}
+          // useStep3={false}
         />
       }
     </div>

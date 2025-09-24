@@ -1,7 +1,7 @@
 import {useEffect, useState, useMemo} from "react";
 import type {TradeAdditionalInfoInterface, TradeType} from "../../../types/trade.types.ts";
 import {useCurrencyQuery} from "../../../queries/currency.query.ts";
-import type {SupportedCryptoOrCurrencyResponse} from "../../../types/response.api.types.ts";
+import type {SupportedCryptoOrCurrencyResponse} from "../../../types/response.payload.types.ts";
 import {useCryptoQuery} from "../../../queries/crypto.query.ts";
 import {useRateQuery} from "../../../queries/rate.query.ts";
 import {useTransactionQuery} from "../../../queries/transaction.query.ts";
@@ -240,6 +240,7 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
     AdditionalInfo,
     amountToBuy,
     amountToReceive,
+    amountToSend,
     selectedCurrency,
     supportedCurrencies,
     supportedCryptoCurrencies,

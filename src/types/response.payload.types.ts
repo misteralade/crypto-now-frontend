@@ -28,3 +28,9 @@ export type SupportedPlatformBankAccountResponse = {
   accountNumber: string;
   accountHolderName: string;
 }
+
+export type SupportedPlatformCryptoWalletResponse = {
+  id: string;
+  walletAddress: string;
+  network: string;
+}
