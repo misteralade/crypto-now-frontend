@@ -40,3 +40,12 @@ export type AllBanksResponse = {
   name: string;
   logoUrl: string;
 }
+
+export type UserBankAccountResponse = {
+  id: string;
+  bankName: string;
+  bankLogo: string;
+  accountNumber: string;
+  accountName: string;
+  createdAt: Date;
+}

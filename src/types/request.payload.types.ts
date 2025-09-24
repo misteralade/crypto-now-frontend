@@ -8,3 +8,9 @@ export type InitiateTransactionRequestPayload = {
   receiptUrl?: string;
   transactionHash?: string;
 }
+
+export type CreateBankAccountRequestPayload = {
+  bankId: string | null;
+  accountName: string | null;
+  accountNumber: string | null;
+}

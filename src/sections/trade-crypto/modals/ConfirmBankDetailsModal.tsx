@@ -5,6 +5,7 @@ import CustomButton from "../../../components/global/Button.tsx";
 import {useState, useEffect} from "react";
 import ChangeBankDetails from "../ChangeBankDetails.tsx";
 import ChangeWalletDetails from "../ChangeWalletDetails.tsx";
+import {useBankQuery} from "../../../queries/bank.query.ts";
 
 interface ConfirmBankDetailsModalProps {
     isOpen: boolean;
@@ -17,14 +18,8 @@ interface ConfirmBankDetailsModalProps {
 
 type ViewState = 'details' | 'change';
 
-export default function ConfirmBankDetailsModal({
-                                                    isOpen,
-                                                    tradeType,
-                                                    bankData,
-                                                    walletData,
-                                                    onProceed,
-                                                    setShowConfirmBankDetails
-                                                }: ConfirmBankDetailsModalProps) {
+export default function ConfirmBankDetailsModal({ isOpen, tradeType, bankData, walletData, onProceed, setShowConfirmBankDetails }: ConfirmBankDetailsModalProps) {
+    const { createUserBankAccountMutation } = useBankQuery();
 
     // Local state to track current data and view
     const [currentBankData, setCurrentBankData] = useState<BankDetailsData | undefined>(bankData);
@@ -48,9 +43,10 @@ export default function ConfirmBankDetailsModal({
         }
     }, [tradeType, currentBankData, currentWalletData]);
 
-    const handleSubmitBankDetails = (data: BankDetailsData) => {
-        console.log(data);
-        setCurrentBankData(data);
+    const handleSubmitBankDetails = () => {
+        createUserBankAccountMutation.mutate();
+        // console.log(data);
+        // setCurrentBankData(data);
         setViewState('details');
     }
 
