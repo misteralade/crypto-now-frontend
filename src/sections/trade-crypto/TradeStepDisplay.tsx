@@ -11,6 +11,7 @@ export default function TradeStepDisplay({activeTab, setActiveTab, tradeType, st
     numberOfToken,
     AdditionalInfo,
     amountToBuy,
+    transactionForm,
     selectedCurrency,
     supportedCurrencies,
     supportedCryptoCurrencies,
@@ -24,46 +25,12 @@ export default function TradeStepDisplay({activeTab, setActiveTab, tradeType, st
     setNumberOfToken,
     setSelectedCurrency,
     setSelectedToken,
+    handleReceiptUrl,
   } = useTradeStepDisplay(token, tradeType, activeTab, currency, setStep);
 
-  // const buyAccountDetails: TradeAdditionalInfoInterface[] = [
-  //   {
-  //     title: "Address",
-  //     value: <CopyAccountDetails accountNumber={`0xdAC17F958D2ee523a2206206994597C13D831ec7`} /> ,
-  //   },
-  //   {
-  //     title: "Coin type",
-  //     value: `${selectedToken?.name}`,
-  //   },
-  //   {
-  //     title: "Network type",
-  //     value: "BEP20"
-  //   },
-  //   {
-  //     title: "Amount",
-  //     value: `${numberOfToken} ${selectedToken?.name}`
-  //   }
-  // ]
-  //
-  // const sellAccountDetails: TradeAdditionalInfoInterface[] = [
-  //   {
-  //     title: "Account number",
-  //     value:  <CopyAccountDetails accountNumber={`0003450953`} />
-  //   },
-  //   {
-  //     title: "Account name",
-  //     value: "CrytoNow Limited"
-  //   },
-  //   {
-  //     title: "Bank name",
-  //     value: "Sterling Bank"
-  //   },
-  //   {
-  //     title: "Amount",
-  //     value: `${amountToBuy} ${selectedCurrency?.name}`
-  //   }
-  // ]
-  // const AccountDetails: TradeAdditionalInfoInterface[] = tradeType === "sell" ? buyAccountDetails : sellAccountDetails;
+  console.log({
+    transactionForm,
+  })
 
   return (
     <div className={`bg-greyBg rounded-2xl p-5 space-y-5`}>
@@ -102,6 +69,7 @@ export default function TradeStepDisplay({activeTab, setActiveTab, tradeType, st
           selectedToken={selectedToken}
           selectedCurrency={selectedCurrency}
           exchangeRateId={exchangeRateId}
+          handleReceiptUrl={handleReceiptUrl}
           // accountDetails={AccountDetails}
           // useStep3={false}
         />

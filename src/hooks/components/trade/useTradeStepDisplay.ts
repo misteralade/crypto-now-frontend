@@ -233,6 +233,13 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
     // }
   ]
 
+  const handleReceiptUrl = (url: string) => {
+    setTransactionForm((prev) => ({
+      ...prev,
+        receiptUrl: url
+    }))
+  }
+
   return {
     // Values
     selectedToken,
@@ -258,5 +265,6 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
     setNumberOfToken,
     setSelectedCurrency,
     setSelectedToken,
+    handleReceiptUrl,
   };
 }

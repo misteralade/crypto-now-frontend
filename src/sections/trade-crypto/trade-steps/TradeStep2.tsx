@@ -4,6 +4,7 @@ import CustomButton from "../../../components/global/Button.tsx";
 // import TradePaymentUpload from "../TradePaymentUpload.tsx";
 import {useTradeStepTwo} from "../../../hooks/components/trade/useTradeStepTwo.ts";
 import type {SupportedCryptoOrCurrencyResponse} from "../../../types/response.payload.types.ts";
+import TradePaymentUpload from "../TradePaymentUpload.tsx";
 
 interface TradeStep2Props {
   amountToBuy: number;
@@ -12,6 +13,7 @@ interface TradeStep2Props {
   additionalInfo: TradeAdditionalInfoInterface[];
   setShowModal: (value: boolean) => void;
   setShowBankDetailsModal: (value: boolean) => void;
+  handleReceiptUrl: (value: string) => void;
   setStep?: (value: number) => void;
   selectedToken?: SupportedCryptoOrCurrencyResponse;
   selectedCurrency?: SupportedCryptoOrCurrencyResponse;
@@ -19,7 +21,7 @@ interface TradeStep2Props {
   onSubmitPaymentProof?: (files: File[], transactionHash?: string) => void;
 }
 
-export default function TradeStep2({ amountToBuy, tradeType, numberOfToken, additionalInfo, setShowModal, setShowBankDetailsModal, setStep, selectedToken, selectedCurrency, exchangeRateId, onSubmitPaymentProof }: TradeStep2Props) {
+export default function TradeStep2({ amountToBuy, tradeType, numberOfToken, additionalInfo, setShowModal, setShowBankDetailsModal, handleReceiptUrl, setStep, selectedToken, selectedCurrency, exchangeRateId, onSubmitPaymentProof }: TradeStep2Props) {
   const {
     // Values
     // files,
@@ -36,10 +38,6 @@ export default function TradeStep2({ amountToBuy, tradeType, numberOfToken, addi
     handleSubmit,
     // handleFileUploaded,
   } = useTradeStepTwo({tradeType, exchangeRateId, amountToBuy, numberOfToken, selectedToken, selectedCurrency, setShowModal, setShowBankDetailsModal, setStep, onSubmitPaymentProof});
-
-  console.log({
-    accountDetails,
-  })
 
   // Loading state
   if (paymentDetailsLoading) {
@@ -168,11 +166,11 @@ export default function TradeStep2({ amountToBuy, tradeType, numberOfToken, addi
               }
             </p>
           </div>
-          {/*<TradePaymentUpload*/}
-          {/*  onFilesChange={setFiles}*/}
-          {/*  onFileUploaded={handleFileUploaded}*/}
-          {/*  acceptedTypes={[".jpg", ".jpeg", ".png", ".pdf"]}*/}
-          {/*/>*/}
+          <TradePaymentUpload
+            maxFiles={1}
+            acceptedTypes={[".jpg", ".jpeg", ".png", ".pdf"]}
+            onFileUploaded={handleReceiptUrl}
+          />
         </div>
 
         {/* Submit Button */}

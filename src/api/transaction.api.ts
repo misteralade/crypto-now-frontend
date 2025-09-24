@@ -27,7 +27,7 @@ class TransactionServiceApi {
 
     if (response.success) {
       toast.success(response.message);
-      console.log(response.data);
+      return response.data;
     } else {
       toast.error(response.message);
     }

@@ -5,4 +5,5 @@ export type InitiateTransactionRequestPayload = {
   currencyId?: string;
   amountToReceive?: number;
   amountToSend?: number;
+  receiptUrl?: string;
 }

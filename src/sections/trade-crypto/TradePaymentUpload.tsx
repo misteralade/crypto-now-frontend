@@ -5,16 +5,12 @@ import {FileText} from "lucide-react";
 import {transactionServiceApi} from "../../api/transaction.api.ts";
 
 interface FileUploadProps {
-    onFilesChange?: (files: File[]) => void
+    onFileUploaded: (value: string) => void
     maxFiles?: number
     acceptedTypes?: string[]
 }
 
-export default function TradePaymentUpload({
-                                               onFilesChange,
-                                               maxFiles = 5,
-                                               acceptedTypes = [".jpg", ".png", ".pdf"],
-                                           }: FileUploadProps) {
+export default function TradePaymentUpload({onFileUploaded, maxFiles = 5, acceptedTypes = [".jpg", ".png", ".pdf"] }: FileUploadProps) {
     const [files, setFiles] = useState<File[]>([])
     const [isDragOver, setIsDragOver] = useState(false)
     const [filePreviews, setFilePreviews] = useState<{ [key: string]: string }>({})
@@ -38,7 +34,8 @@ export default function TradePaymentUpload({
             const formData = new FormData()
             formData.append('file', file)
 
-            await transactionServiceApi.uploadTransactionReceipt(formData);
+            const { url } = await transactionServiceApi.uploadTransactionReceipt(formData);
+            onFileUploaded(url || "")
         } catch (error: any) {
             console.error('Upload error:', error)
             setUploadError(
@@ -72,7 +69,6 @@ export default function TradePaymentUpload({
 
         setFiles(updatedFiles)
         setFilePreviews(newPreviews)
-        onFilesChange?.(updatedFiles)
         handleFileUpload(file)
     }
 
@@ -88,7 +84,7 @@ export default function TradePaymentUpload({
         }
 
         setFiles(updatedFiles)
-        onFilesChange?.(updatedFiles)
+        onFileUploaded("")
     }
 
     const handleDragOver = (e: React.DragEvent) => {
@@ -104,7 +100,7 @@ export default function TradePaymentUpload({
     const handleDrop = (e: React.DragEvent) => {
         e.preventDefault()
         setIsDragOver(false)
-        handleFileSelect(e.dataTransfer.files)
+        // handleFileSelect(e.dataTransfer.files)
     }
 
     const formatFileSize = (bytes: number) => {
