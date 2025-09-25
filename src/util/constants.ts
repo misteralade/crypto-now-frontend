@@ -12,3 +12,7 @@ export const ROUTES = {
 export const QUERY_KEYS = {
   LOGIN: "admin-login",
 }
+
+export const SESSION_STORAGE_KEYS = {
+  SESSION_ID: "transactionSessionId"
+}

@@ -1,4 +1,7 @@
 import {useEffect, useState, useMemo, useRef} from "react";
+import { useQueryClient} from "@tanstack/react-query";
+import { useDispatch } from "react-redux";
+
 import type {
   TradeAdditionalInfoInterface,
   TradeType,
@@ -9,11 +12,11 @@ import type {SupportedCryptoOrCurrencyResponse} from "../../../types/response.pa
 import {useCryptoQuery} from "../../../queries/crypto.query.ts";
 import {useRateQuery} from "../../../queries/rate.query.ts";
 import {useTransactionQuery} from "../../../queries/transaction.query.ts";
-import {useMutation, useQueryClient} from "@tanstack/react-query";
 import {QUERY_KEYS} from "../../../queries/query.keys.ts";
 import type {InitiateTransactionRequestPayload} from "../../../types/request.payload.types.ts";
-import {transactionServiceApi} from "../../../api/transaction.api.ts";
 import {useBankQuery} from "../../../queries/bank.query.ts";
+import { setExchangeRateId as setReduxExchangeRateId, setInitiateTransaction, setAmountToSend } from '../../../redux/transaction.slice.ts'
+import {SESSION_STORAGE_KEYS} from "../../../util/constants.ts";
 
 // Custom debounce hook
 const useDebounce = (value: any, delay: number) => {
@@ -35,9 +38,11 @@ const useDebounce = (value: any, delay: number) => {
 export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeTab: TradeType, currency: string, setStep: (value: number) => void) => {
   const countdownIntervalRef = useRef<any>();
   const queryClient = useQueryClient();
+  const dispatch = useDispatch();
+  const { userBankAccounts } = useBankQuery();
   const { supportedCurrencies } = useCurrencyQuery();
   const { supportedCryptoCurrencies } = useCryptoQuery();
-  const { userBankAccounts } = useBankQuery();
+  const { calculatedAmount, loadingCalculation, initiateTransactionMutation, makePaymentTransactionMutation } = useTransactionQuery();
 
   const WalletDetails: WalletDetailsData = {
     coinType: "USDT",
@@ -67,49 +72,7 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
 
   // Debounce the amount to send to prevent excessive API calls (500ms delay)
   const debouncedAmountToSend = useDebounce(amountToSend, 500);
-
-  // Use transaction query to calculate amount to receive with debounced value
-  const { calculatedAmount, loadingCalculation } = useTransactionQuery(
-    exchangeRateId,
-    debouncedAmountToSend > 0 ? debouncedAmountToSend : undefined
-  );
-
-  const initiateTransactionMutation = useMutation({
-    mutationKey: [QUERY_KEYS.TRANSACTION.INITIATE_TRANSACTION],
-    mutationFn: async () => {
-      const payload = {
-        ...transactionForm,
-        coinId: transactionForm?.tokenId,
-      }
-
-      const sessionId = await transactionServiceApi.initiateTransaction(payload);
-      setTransactionSessionId(sessionId)
-      sessionStorage.setItem("transactionSessionId", sessionId as string);
-    },
-    onSettled: () => {
-      setStep(2);
-    }
-  });
-
-  const makePaymentTransactionMutation = useMutation({
-    mutationKey: [QUERY_KEYS.TRANSACTION.MAKE_PAYMENT_TRANSACTION],
-    mutationFn: async () => {
-      if (!transactionSessionId) return;
-      await transactionServiceApi.makeTransactionPayment({
-        ...transactionForm,
-        sessionId: transactionSessionId,
-        coinId: transactionForm?.tokenId,
-      });
-    },
-    onSuccess: () => {
-      // Lock the countdown and exchange rate when payment is made
-      setIsCountdownLocked(true);
-      if (countdownIntervalRef.current) {
-        clearInterval(countdownIntervalRef.current);
-      }
-      togglePaymentReceivingModal();
-    }
-  });
+  dispatch(setAmountToSend(debouncedAmountToSend > 0 ? debouncedAmountToSend : undefined))
 
   // Countdown timer effect
   useEffect(() => {
@@ -188,6 +151,11 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
       amountToReceive: activeTab.toUpperCase() === "SELL" ? Number(amountToBuy) : Number(numberOfToken),
       amountToSend: activeTab.toUpperCase() === "SELL" ? Number(numberOfToken) : Number(amountToBuy),
     }))
+    dispatch(setInitiateTransaction({
+      ...transactionForm,
+      amountToReceive: activeTab.toUpperCase() === "SELL" ? Number(amountToBuy) : Number(numberOfToken),
+      amountToSend: activeTab.toUpperCase() === "SELL" ? Number(numberOfToken) : Number(amountToBuy),
+    }));
   }, [numberOfToken, amountToBuy, activeTab, exchangeRate?.fiatRate, loadingExchangeRate, isCountdownLocked]);
 
   useEffect(() => {
@@ -208,33 +176,42 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
       tokenId: foundToken?.id,
       currencyId: foundCurrency?.id,
     }))
+    dispatch(setInitiateTransaction({
+      ...transactionForm,
+      tokenId: foundToken?.id,
+      currencyId: foundCurrency?.id,
+    }));
   }, [supportedCurrencies, supportedCryptoCurrencies, token, currency])
 
   useEffect(() => {
-    setExchangeRateId(exchangeRate?.rateId || "");
+    const rateId = exchangeRate?.rateId || '';
+
+    setExchangeRateId(rateId);
+    dispatch(setReduxExchangeRateId(rateId))
     setValidUntil(exchangeRate?.validUntil ? new Date(exchangeRate.validUntil) : undefined);
+
     setTransactionForm((val) => ({
       ...val,
-      exchangeRateId: exchangeRate?.rateId as string,
+      exchangeRateId: rateId,
+    }));
+    dispatch(setInitiateTransaction({
+      ...transactionForm,
+      exchangeRateId: rateId,
     }));
 
     // Store exchange rate ID in session storage
-    if (exchangeRate?.rateId) {
-      sessionStorage.setItem("exchangeRateId", exchangeRate.rateId);
+    if (rateId) {
+      sessionStorage.setItem("exchangeRateId", rateId);
     }
 
     // Reset countdown lock when new exchange rate is received
-    if (exchangeRate?.rateId && isCountdownLocked) {
+    if (rateId && isCountdownLocked) {
       setIsCountdownLocked(false);
     }
   }, [exchangeRate]);
 
   // Reset form when switching between buy/sell tabs
   useEffect(() => {
-    setTransactionForm((prev) => ({
-      ...prev,
-      type: activeTab.toUpperCase() === "BUY" ? "BUY" : "SELL",
-    }));
     setNumberOfToken("");
     setAmountToBuy("");
 
@@ -282,6 +259,10 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
       ...prev,
       receiptUrl: url
     }))
+    dispatch(setInitiateTransaction({
+      ...transactionForm,
+      receiptUrl: url
+    }))
   };
 
   const handleTransactionHash = (hash: string) => {
@@ -289,11 +270,30 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
       ...prev,
       transactionHash: hash
     }))
+    dispatch(setInitiateTransaction({
+      ...transactionForm,
+      transactionHash: hash
+    }))
   };
 
   const togglePaymentReceivingModal = () => setShowPaymentReceivingModal((prev) => !prev);
 
   const toggleConfirmBankDetails = () => setShowConfirmBankDetails((prev) => !prev);
+
+  const initiateTransaction = async () => {
+    await initiateTransactionMutation.mutateAsync()
+    setTransactionSessionId(sessionStorage.getItem(SESSION_STORAGE_KEYS.SESSION_ID) || "")
+    setStep(2);
+  }
+
+  const makePaymentTransaction = async () => {
+    await makePaymentTransactionMutation.mutateAsync();
+    setIsCountdownLocked(true);
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+    }
+    togglePaymentReceivingModal();
+  }
 
   return {
     // Values
@@ -317,10 +317,6 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
     WalletDetails,
     userBankAccounts,
 
-    // Mutations
-    initiateTransactionMutation,
-    makePaymentTransactionMutation,
-
     // Functions
     setAmountToBuy,
     setNumberOfToken,
@@ -329,5 +325,7 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
     handleReceiptUrl,
     handleTransactionHash,
     toggleConfirmBankDetails,
+    initiateTransaction,
+    makePaymentTransaction,
   };
 }

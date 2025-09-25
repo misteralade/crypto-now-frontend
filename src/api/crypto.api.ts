@@ -28,6 +28,12 @@ class CryptoServiceApi {
 
     return { data, message, success };
   }
+
+  async getSupportedCryptoById(selectedCryptoId: string) {
+    const { data, message, success }: { data: SupportedCryptoOrCurrencyResponse, message: string, success: boolean} = await axiosGetRequestHandler(`/crypto/supported-crypto/${selectedCryptoId}`);
+
+    return { data, message, success };
+  }
 }
 
 export const cryptoServiceApi = CryptoServiceApi.getInstance();

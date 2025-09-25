@@ -18,14 +18,7 @@ interface ConfirmBankDetailsModalProps {
 
 type ViewState = 'select-bank' | 'create-bank' | 'bank-details' | 'wallet-details' | 'create-wallet';
 
-export default function ConfirmBankDetailsModal({
-                                                  isOpen,
-                                                  tradeType,
-                                                  walletData,
-                                                  bankAccounts,
-                                                  onProceed,
-                                                  setShowConfirmBankDetails
-                                                }: ConfirmBankDetailsModalProps) {
+export default function ConfirmBankDetailsModal({ isOpen, tradeType, walletData, bankAccounts, onProceed, setShowConfirmBankDetails }: ConfirmBankDetailsModalProps) {
   const { createUserBankAccountMutation } = useBankQuery();
 
   // Local state to track current data and view

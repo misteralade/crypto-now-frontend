@@ -17,15 +17,10 @@ export default function TradeStepDisplay({activeTab, setActiveTab, tradeType, st
     supportedCurrencies,
     supportedCryptoCurrencies,
     exchangeRateId,
-    transactionForm,
     transactionSessionId,
     showPaymentReceivingModal,
     WalletDetails,
     userBankAccounts,
-
-    // Mutations
-    initiateTransactionMutation,
-    makePaymentTransactionMutation,
 
     // Functions
     setAmountToBuy,
@@ -35,13 +30,9 @@ export default function TradeStepDisplay({activeTab, setActiveTab, tradeType, st
     handleReceiptUrl,
     handleTransactionHash,
     toggleConfirmBankDetails,
+    initiateTransaction,
+    makePaymentTransaction,
   } = useTradeStepDisplay(token, tradeType, activeTab, currency, setStep);
-
-  console.log({
-    transactionForm,
-    amountToBuy,
-    numberOfToken,
-  })
 
   return (
     <Fragment>
@@ -55,7 +46,7 @@ export default function TradeStepDisplay({activeTab, setActiveTab, tradeType, st
             token={token}
             currency={currency}
             tradeType={activeTab}
-            handleProceedToPayment={() => initiateTransactionMutation.mutate()}
+            handleProceedToPayment={initiateTransaction}
             orderDetails={AdditionalInfo}
             numberOfToken={numberOfToken}
             amountToBuy={amountToBuy}
@@ -84,7 +75,7 @@ export default function TradeStepDisplay({activeTab, setActiveTab, tradeType, st
             handleReceiptUrl={handleReceiptUrl}
             transactionRef={transactionSessionId}
             handleTransactionHash={handleTransactionHash}
-            handleSubmitPaymentProof={() => makePaymentTransactionMutation.mutate()}
+            handleSubmitPaymentProof={makePaymentTransaction}
           />
         }
       </div>
