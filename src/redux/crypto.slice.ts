@@ -14,7 +14,8 @@ const cryptoSlice = createSlice({
   initialState: {
     tradeCrypto: {
       selectedCryptoId: null as string | null,
-      userCreateCrypto: userCreateWalletInitialState
+      userCreateCrypto: userCreateWalletInitialState,
+      selectedWalletId: null as string | null,
     }
   },
   reducers: {
@@ -24,11 +25,19 @@ const cryptoSlice = createSlice({
     setUserCreateCrypto(state, action: PayloadAction<UserCreateCryptoWalletRequestPayload>) {
       state.tradeCrypto.userCreateCrypto = action.payload;
     },
+    setSelectedWalletId(state, action: PayloadAction<string>) {
+      state.tradeCrypto.selectedWalletId = action.payload;
+    },
+
+    // Clears
     clearSelectedCryptoId(state) {
       state.tradeCrypto.selectedCryptoId = null;
     },
     clearUserCreateCrypto(state) {
       state.tradeCrypto.userCreateCrypto = userCreateWalletInitialState;
+    },
+    clearSelectedWalletId(state) {
+      state.tradeCrypto.selectedWalletId = null;
     },
   },
 });
@@ -36,7 +45,9 @@ const cryptoSlice = createSlice({
 export const {
   setSelectedCryptoId,
   setUserCreateCrypto,
+  setSelectedWalletId,
   clearSelectedCryptoId,
   clearUserCreateCrypto,
+  clearSelectedWalletId,
 } = cryptoSlice.actions;
 export default cryptoSlice.reducer;
