@@ -49,3 +49,13 @@ export type UserBankAccountResponse = {
   accountName: string;
   createdAt: Date;
 }
+
+export type UserCryptoWalletResponse = {
+  id: string;
+  walletAddress: string;
+  network: string;
+  walletLabel: string | null;
+  isPrimary: boolean;
+  isVerified: boolean;
+  createdAt: Date;
+}

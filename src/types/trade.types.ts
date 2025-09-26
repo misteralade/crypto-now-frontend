@@ -23,9 +23,3 @@ export interface TradeAdditionalInfoInterface {
     title: string;
     value: string | ReactNode;
 }
-
-export interface WalletDetailsData {
-    coinType: string
-    walletAddress: string
-    networkType: string
-}

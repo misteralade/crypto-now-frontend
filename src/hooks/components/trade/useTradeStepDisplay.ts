@@ -5,7 +5,6 @@ import { useDispatch } from "react-redux";
 import type {
   TradeAdditionalInfoInterface,
   TradeType,
-  WalletDetailsData
 } from "../../../types/trade.types.ts";
 import {useCurrencyQuery} from "../../../queries/currency.query.ts";
 import type {SupportedCryptoOrCurrencyResponse} from "../../../types/response.payload.types.ts";
@@ -16,6 +15,7 @@ import {QUERY_KEYS} from "../../../queries/query.keys.ts";
 import type {InitiateTransactionRequestPayload} from "../../../types/request.payload.types.ts";
 import {useBankQuery} from "../../../queries/bank.query.ts";
 import { setExchangeRateId as setReduxExchangeRateId, setInitiateTransaction, setAmountToSend } from '../../../redux/transaction.slice.ts'
+import { setSelectedCryptoId } from '../../../redux/crypto.slice.ts'
 import {SESSION_STORAGE_KEYS} from "../../../util/constants.ts";
 
 // Custom debounce hook
@@ -41,14 +41,8 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
   const dispatch = useDispatch();
   const { userBankAccounts } = useBankQuery();
   const { supportedCurrencies } = useCurrencyQuery();
-  const { supportedCryptoCurrencies } = useCryptoQuery();
+  const { supportedCryptoCurrencies, userCryptoWallets } = useCryptoQuery();
   const { calculatedAmount, loadingCalculation, initiateTransactionMutation, makePaymentTransactionMutation } = useTransactionQuery();
-
-  const WalletDetails: WalletDetailsData = {
-    coinType: "USDT",
-    walletAddress: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
-    networkType: "BEP20"
-  }
 
   const [transactionSessionId, setTransactionSessionId] = useState<string>();
   const [selectedToken, setSelectedToken] = useState<SupportedCryptoOrCurrencyResponse>();
@@ -115,6 +109,8 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
         setCountdown(`${seconds}s`);
       }
     };
+
+    dispatch(setSelectedCryptoId(selectedToken?.id || ""))
 
     // Update immediately
     updateCountdown();
@@ -314,8 +310,8 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
     transactionSessionId,
     isCountdownLocked,
     showPaymentReceivingModal,
-    WalletDetails,
     userBankAccounts,
+    userCryptoWallets,
 
     // Functions
     setAmountToBuy,

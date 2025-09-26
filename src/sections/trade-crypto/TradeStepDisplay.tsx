@@ -19,8 +19,8 @@ export default function TradeStepDisplay({activeTab, setActiveTab, tradeType, st
     exchangeRateId,
     transactionSessionId,
     showPaymentReceivingModal,
-    WalletDetails,
     userBankAccounts,
+    userCryptoWallets,
 
     // Functions
     setAmountToBuy,
@@ -33,6 +33,10 @@ export default function TradeStepDisplay({activeTab, setActiveTab, tradeType, st
     initiateTransaction,
     makePaymentTransaction,
   } = useTradeStepDisplay(token, tradeType, activeTab, currency, setStep);
+
+  // console.log({
+  //   userCryptoWallets,
+  // })
 
   return (
     <Fragment>
@@ -83,9 +87,9 @@ export default function TradeStepDisplay({activeTab, setActiveTab, tradeType, st
       {/*<PaymentConfirmationModal isOpen={showPaymentReceivingModal} />*/}
       <ConfirmBankDetailsModal
         isOpen={showPaymentReceivingModal}
-        bankAccounts={userBankAccounts || []}
+        bankAccounts={userBankAccounts}
+        cryptoAccounts={userCryptoWallets}
         tradeType={activeTab}
-        walletData={WalletDetails}
         onProceed={setStep}
         setShowConfirmBankDetails={toggleConfirmBankDetails}
       />

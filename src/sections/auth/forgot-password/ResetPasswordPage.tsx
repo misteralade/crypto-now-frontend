@@ -17,7 +17,6 @@ export default function ResetPasswordPage() {
     }
 
     const handleConfirmPasswordChange = (value: string)=> {
-        console.log("value")
         if (value !== newPassword) {
             setIsPasswordMatch(false)
         } else {
@@ -28,7 +27,6 @@ export default function ResetPasswordPage() {
     }
 
     const handleNewPassword = () => {
-        console.log(newPassword)
         setIsPasswordChanged(true)
     }
 
