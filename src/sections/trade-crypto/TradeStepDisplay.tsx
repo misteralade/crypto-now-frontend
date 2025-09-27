@@ -32,6 +32,7 @@ export default function TradeStepDisplay({activeTab, setActiveTab, tradeType, st
     toggleConfirmBankDetails,
     initiateTransaction,
     makePaymentTransaction,
+    handleConfirmBankDetails,
   } = useTradeStepDisplay(token, tradeType, activeTab, currency, setStep);
 
   // console.log({
@@ -90,7 +91,7 @@ export default function TradeStepDisplay({activeTab, setActiveTab, tradeType, st
         bankAccounts={userBankAccounts}
         cryptoAccounts={userCryptoWallets}
         tradeType={activeTab}
-        onProceed={setStep}
+        onProceed={handleConfirmBankDetails}
         setShowConfirmBankDetails={toggleConfirmBankDetails}
       />
     </Fragment>

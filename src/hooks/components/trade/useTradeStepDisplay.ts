@@ -36,6 +36,8 @@ const useDebounce = (value: any, delay: number) => {
 };
 
 export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeTab: TradeType, currency: string, setStep: (value: number) => void) => {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-expect-error
   const countdownIntervalRef = useRef<any>();
   const queryClient = useQueryClient();
   const dispatch = useDispatch();
@@ -59,7 +61,7 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
 
   // Modals
   const [showPaymentReceivingModal, setShowPaymentReceivingModal] = useState(false)
-  const [showConfirmBankDetails, setShowConfirmBankDetails] = useState<boolean>(false)
+  const [, setShowConfirmBankDetails] = useState<boolean>(false)
 
   // Get the amount to send for the transaction query
   const amountToSend = activeTab === "sell" ? Number(numberOfToken) : Number(amountToBuy);
@@ -291,6 +293,12 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
     togglePaymentReceivingModal();
   }
 
+  const handleConfirmBankDetails = (step: number) => {
+    toggleConfirmBankDetails();
+    togglePaymentReceivingModal();
+    setStep(step);
+  }
+
   return {
     // Values
     selectedToken,
@@ -323,5 +331,6 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
     toggleConfirmBankDetails,
     initiateTransaction,
     makePaymentTransaction,
+    handleConfirmBankDetails,
   };
 }
