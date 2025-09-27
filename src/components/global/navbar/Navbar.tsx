@@ -4,13 +4,14 @@ import {useState} from "react";
 import {Menu} from "lucide-react";
 import Button from "../Button.tsx";
 import Logo from "../../../assets/logo/logo.svg";
-import {Link} from "@tanstack/react-router";
+import {Link, useNavigate} from "@tanstack/react-router";
 import NavbarDropdown from "./NavbarDropdown.tsx";
 import {ChevronDown} from "lucide-react";
 import type {DropItem} from "../../../types/navbar.types.ts";
 import ProfileNav from "./ProfileNav.tsx";
 
 export default function Navbar() {
+    const navigate = useNavigate();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const isLoggedIn = localStorage.getItem("accessToken") !== null;
