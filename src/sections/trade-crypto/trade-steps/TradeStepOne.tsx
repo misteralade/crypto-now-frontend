@@ -5,13 +5,13 @@ import SwapIcon from "../../../assets/icons/fluent_arrow-swap-20-regular.svg"
 import {type FormEvent} from "react";
 import TradeInputDropdown from "../TradeInputDropdown.tsx";
 import TradeAdditionalInfo from "../TradeAdditionalInfo.tsx";
-import type {SupportedCryptoOrCurrencyResponse} from "../../../types/response.api.types.ts";
+import type {SupportedCryptoOrCurrencyResponse} from "../../../types/response.payload.types.ts";
 
-interface TradeStep1Props {
+interface TradeStepOneProps {
     token: string;
     currency: string;
     tradeType: TradeType;
-    setStep: (value: number) => void
+    handleProceedToPayment: () => void
     orderDetails: TradeAdditionalInfoInterface[],
     selectedToken: SupportedCryptoOrCurrencyResponse | undefined,
     setSelectedToken: (token: SupportedCryptoOrCurrencyResponse) => void,
@@ -19,30 +19,19 @@ interface TradeStep1Props {
     setSelectedCurrency: (currency: SupportedCryptoOrCurrencyResponse) => void
     numberOfToken: string | number;
     amountToBuy: string | number;
-    amountToReceive: number;
     setNumberOfToken: (token: string | number) => void;
     setAmountToBuy: (amountToBuy: string | number) => void;
     availableCurrencies: SupportedCryptoOrCurrencyResponse[];
     availableTokens: SupportedCryptoOrCurrencyResponse[];
 }
 
-export default function TradeStep1({setAmountToBuy, amountToReceive, numberOfToken, setNumberOfToken, amountToBuy,selectedCurrency, setSelectedCurrency, setSelectedToken,selectedToken, tradeType, setStep, orderDetails, availableCurrencies, availableTokens}: TradeStep1Props) {
+export default function TradeStepOne({setAmountToBuy, numberOfToken, setNumberOfToken, amountToBuy,selectedCurrency, setSelectedCurrency, setSelectedToken,selectedToken, tradeType, handleProceedToPayment, orderDetails, availableCurrencies, availableTokens}: TradeStepOneProps) {
 
     const submitInvalid = numberOfToken === "" || amountToBuy === "";
-
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
 
-        setStep(2)
-
-        const data = {
-            token: selectedToken?.name,
-            currency: selectedCurrency?.name,
-            amount: tradeType === "sell"? numberOfToken: amountToBuy,
-            amountToReceive: amountToReceive,
-        }
-
-        console.log("Data to be submitted", data)
+        handleProceedToPayment();
     }
 
     return (

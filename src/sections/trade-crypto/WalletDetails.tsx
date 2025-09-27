@@ -1,8 +1,8 @@
-import type {WalletDetailsData} from "../../types/trade.types.ts";
 import DetailDisplay from "./DetailDisplay.tsx";
+import type {UserCryptoWalletResponse} from "../../types/response.payload.types.ts";
 
 interface WalletDetailsProps {
-    walletData: WalletDetailsData;
+    walletData: UserCryptoWalletResponse;
 }
 
 export default function WalletDetails({walletData}: WalletDetailsProps) {
@@ -12,8 +12,7 @@ export default function WalletDetails({walletData}: WalletDetailsProps) {
 
             <div className="space-y-4">
                 <DetailDisplay title={`Address`} value={walletData.walletAddress} />
-                <DetailDisplay title={'coin type'} value={walletData.coinType} />
-                <DetailDisplay title={'network type'} value={walletData.networkType} />
+                <DetailDisplay title={'network type'} value={walletData.network} />
             </div>
         </div>
     )

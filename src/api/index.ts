@@ -2,7 +2,7 @@
 import axios, { type AxiosRequestHeaders } from "axios";
 import {BASIC} from "../config/index.config.ts";
 import {ROUTES} from "../util/constants.ts";
-import type {BaseApiResponse} from "../types/response.api.types.ts";
+import type {BaseApiResponse} from "../types/response.payload.types.ts";
 
 export const API_KIT = axios.create({
   baseURL: BASIC.API_BASE_URL,
@@ -23,7 +23,7 @@ API_KIT.interceptors.request.use(async (config) => {
 
 API_KIT.interceptors.response.use(
   (response) => {
-    const accessToken = response.headers["x-api-key"];
+    const accessToken = response.headers["x-access-token"];
     if (
       accessToken &&
       typeof accessToken === "string" &&
@@ -67,6 +67,20 @@ export const axiosPostRequestHandler = async (
 export const axiosPutRequestHandler = async (url: string, data: any) => {
   try {
     const request = await API_KIT.put(url, data);
+
+    return request.data as BaseApiResponse<any>;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw error;
+    } else {
+      throw new Error("An unexpected error occurred");
+    }
+  }
+};
+
+export const axiosPatchRequestHandler = async (url: string, data: any) => {
+  try {
+    const request = await API_KIT.patch(url, data);
 
     return request.data as BaseApiResponse<any>;
   } catch (error) {

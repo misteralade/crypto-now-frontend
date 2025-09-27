@@ -1,9 +1,7 @@
 import TradeSteps from "./TradeSteps.tsx";
 import TradeStepDisplay from "./TradeStepDisplay.tsx";
-import type {TradeType, BankDetailsData, WalletDetailsData} from "../../types/trade.types.ts";
-import {useState} from "react";
-import {PaymentConfirmationModal} from "./modals/PaymentConfirmationModal.tsx";
-import ConfirmBankDetailsModal from "./modals/ConfirmBankDetailsModal.tsx";
+import type { TradeType } from "../../types/trade.types.ts";
+import {Fragment, useState} from "react";
 import TradeSuccess from "./TradeSuccess.tsx";
 
 interface TradeCryptoLayoutProps {
@@ -14,24 +12,11 @@ interface TradeCryptoLayoutProps {
 
 export default function TradeCryptoLayout({ currency, token, option }: TradeCryptoLayoutProps) {
     const [step, setStep] = useState<number>(1)
-    const [showModal, setShowModal] = useState<boolean>(false)
-    const [showConfirmBankDetails, setShowConfirmBankDetails] = useState<boolean>(false)
     const [activeTab, setActiveTab] = useState<TradeType>(option);
-    const BankDetails: BankDetailsData = {
-        bankName: "Providus Bank",
-        accountName: "JCole Adeniyi",
-        accountNumber: "2411793421"
-    }
-
-    const WalletDetails: WalletDetailsData = {
-        coinType: "USDT",
-        walletAddress: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
-        networkType: "BEP20"
-    }
 
 
     return (
-        <>
+        <Fragment>
             <div className="max-w-6xl mx-auto md:px-6 flex flex-col md:flex-row gap-14 md:gap-7 items-start">
                 {step === 4 ?
                     <TradeSuccess
@@ -55,8 +40,6 @@ export default function TradeCryptoLayout({ currency, token, option }: TradeCryp
                                 currency={currency}
                                 token={token}
                                 setStep={setStep}
-                                setShowModal={setShowModal}
-                                setShowBankDetailsModal={setShowConfirmBankDetails}
                                 activeTab={activeTab}
                                 setActiveTab={setActiveTab}
                             />
@@ -64,16 +47,6 @@ export default function TradeCryptoLayout({ currency, token, option }: TradeCryp
                     </>
                 }
             </div>
-
-            <PaymentConfirmationModal isOpen={showModal} />
-            <ConfirmBankDetailsModal
-                isOpen={showConfirmBankDetails}
-                tradeType={activeTab}
-                bankData={BankDetails}
-                walletData={WalletDetails}
-                onProceed={setStep}
-                setShowConfirmBankDetails={setShowConfirmBankDetails}
-            />
-        </>
+        </Fragment>
     )
 }

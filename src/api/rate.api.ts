@@ -1,5 +1,5 @@
 import {axiosGetRequestHandler} from "./index.ts";
-import type { SupportedExchangeRateResponse } from "../types/response.api.types.ts";
+import type { SupportedExchangeRateResponse } from "../types/response.payload.types.ts";
 
 class ExchangeRateServiceApi {
   private static instance: ExchangeRateServiceApi;

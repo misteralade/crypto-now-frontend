@@ -16,7 +16,6 @@ export default function ForgotPasswordPage({setStep}: ForgotPasswordPageProp) {
 
   const handleResetPassword = () => {
     // Handle reset password logic
-    console.log("Sending reset link to:", email);
     setStep(1);
   };
 
