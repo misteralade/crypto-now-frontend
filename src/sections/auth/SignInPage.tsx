@@ -41,9 +41,8 @@ export default function SignInPage() {
                 navigate({to: '/dashboard'});
             }
 
-
         } catch (error: any) {
-            setError(error.message || 'Login failed. Please check your credentials.');
+            setError(error.response.data.message || 'Login failed. Please check your credentials.');
         } finally {
             setIsLoading(false);
         }

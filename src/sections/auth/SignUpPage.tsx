@@ -39,7 +39,7 @@ export default function SignUpPage() {
             }
 
         } catch (error: any) {
-            setError(error.message || 'Sign-Up failed. Please check your credentials.');
+            setError(error.response.data.message || 'Sign-Up failed. Please check your credentials.');
         } finally {
             setIsLoading(false);
         }

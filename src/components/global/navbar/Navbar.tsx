@@ -8,10 +8,12 @@ import {Link} from "@tanstack/react-router";
 import NavbarDropdown from "./NavbarDropdown.tsx";
 import {ChevronDown} from "lucide-react";
 import type {DropItem} from "../../../types/navbar.types.ts";
+import ProfileNav from "./ProfileNav.tsx";
 
 export default function Navbar() {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const isLoggedIn = localStorage.getItem("accessToken") !== null;
 
     const dropItems: DropItem[] = [
         {
@@ -31,6 +33,11 @@ export default function Navbar() {
         setIsDropdownOpen(false);
         closeDrawer();
     };
+
+    const handleLogout = () => {
+        localStorage.removeItem("accessToken");
+        navigate({to: '/sign-in'})
+    }
 
     return (
         <>
@@ -87,26 +94,41 @@ export default function Navbar() {
 
                     {/* Auth Buttons */}
                     {/* TODO: Show a different UI when user is logged in */}
-                    <div className="hidden md:flex items-center space-x-4">
-                        <Link
-                            to="/sign-in"
-                            className="text-gray-700 hover:text-gray-900 font-medium"
-                        >
-                            Login
-                        </Link>
-                        <Link to={`/sign-up`}>
-                            <Button buttonText="Create Account"/>
-                        </Link>
-                    </div>
+                    {isLoggedIn ?
+                        <div className={`hidden md:block`}>
+                            <ProfileNav />
+                        </div>
+                        :
+                        (
+                        <>
+                            <div className="hidden md:flex items-center space-x-4">
+                                <Link
+                                    to="/sign-in"
+                                    className="text-gray-700 hover:text-gray-900 font-medium"
+                                >
+                                    Login
+                                </Link>
+                                <Link to={`/sign-up`}>
+                                    <Button buttonText="Create Account"/>
+                                </Link>
+                            </div>
+                        </>
+                    )}
 
                     {/* Mobile menu button */}
-                    <div className="md:hidden">
-                        <button
-                            onClick={openDrawer}
-                            className="text-gray-700 hover:text-gray-900"
-                        >
-                            <Menu className="h-6 w-6"/>
-                        </button>
+                    <div className={`flex gap-2 items-center md:hidden`}>
+                        {isLoggedIn &&
+                            <ProfileNav />
+                        }
+
+                        <div >
+                            <button
+                                onClick={openDrawer}
+                                className="text-gray-700 hover:text-gray-900"
+                            >
+                                <Menu className="h-6 w-6"/>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </nav>
@@ -209,7 +231,15 @@ export default function Navbar() {
                         </a>
 
                         {/* Auth Buttons in Mobile Drawer */}
-                        <div className="pt-4 space-y-3">
+                        {isLoggedIn ?
+                            <div className={`absolute bottom-5`}>
+                                <button type={`button`} className={`text-lg cursor-pointer text-grey font-bold`}
+                                        onClick={handleLogout}
+                                >
+                                    Sign Out
+                                </button>
+                            </div>
+                            :  <div className="pt-4 space-y-3">
                             <button
                                 className="text-gray-700 hover:text-gray-900 font-medium py-2 w-full text-left border border-gray-300 rounded-md px-4 hover:bg-gray-50 transition-colors duration-200 my-3">
                                 <Link to="/sign-in">Login</Link>
@@ -220,7 +250,8 @@ export default function Navbar() {
                                     <Button className="w-full" buttonText="Create Account"/>
                                 </Link>
                             </div>
-                        </div>
+                        </div>}
+
                     </div>
                 </div>
             </div>
