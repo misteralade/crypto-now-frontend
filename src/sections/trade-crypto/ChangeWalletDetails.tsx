@@ -1,86 +1,133 @@
 import { useState } from "react"
-import {CustomInput} from "../../components/global/CustomInput.tsx";
-import {CustomSelect} from "../../components/global/CustomSelect.tsx";
-import type {WalletDetailsData} from "../../types/trade.types.ts";
+import { useDispatch } from "react-redux"
+import { CustomInput } from "../../components/global/CustomInput.tsx"
+import { CustomSelect } from "../../components/global/CustomSelect.tsx"
+import { setUserCreateCrypto } from "../../redux/crypto.slice.ts"
 
-interface WalletDetailsProps {
-    onConfirm: (data: WalletDetailsData) => void
-    onGoBack: () => void
-    canGoBack?: boolean // Optional prop to control go back availability
+interface CryptoWalletDetailsProps {
+  onConfirm: () => void
+  onGoBack: () => void
+  canGoBack?: boolean
 }
 
-const coinTypes = ["USDT", "BTC", "ETH", "BNB", "USDC"]
+const networkTypes = [
+  "BEP20", "ERC20", "TRC20", "BTC", "SOLANA"
+]
 
-const networkTypes = ["BEP20", "ERC20", "TRC20", "Bitcoin Network", "Ethereum Network"]
 
-export default function ChangeWalletDetails({ onConfirm, onGoBack, canGoBack = true }: WalletDetailsProps) {
-    const [selectedCoin, setSelectedCoin] = useState("")
-    const [walletAddress, setWalletAddress] = useState("")
-    const [selectedNetwork, setSelectedNetwork] = useState("")
+// const networkTypes = [
+//   "BEP20", "ERC20", "TRC20", "Bitcoin Network", "Ethereum Network",
+//   "Polygon", "Arbitrum", "Optimism", "Avalanche", "Fantom", "BSC",
+//   "Solana", "Cardano", "Polkadot", "Cosmos", "Terra", "Near Protocol",
+//   "Harmony", "Moonbeam", "Cronos", "KuCoin Community Chain", "Heco",
+//   "xDai", "Celo", "Algorand", "Tezos", "Elrond", "Klaytn", "Matic",
+//   "Binance Smart Chain", "Huobi ECO Chain", "OKEx Chain"
+// ]
 
-    const handleConfirm = () => {
-        if (selectedCoin && walletAddress && selectedNetwork) {
-            onConfirm?.({
-                coinType: selectedCoin,
-                walletAddress,
-                networkType: selectedNetwork,
-            })
-        }
+export default function ChangeCryptoWalletDetails({
+                                                    onConfirm,
+                                                    onGoBack,
+                                                    canGoBack = true,
+                                                  }: CryptoWalletDetailsProps) {
+  const dispatch = useDispatch()
+
+  const [walletLabel, setWalletLabel] = useState("")
+  const [walletAddress, setWalletAddress] = useState("")
+  const [network, setNetwork] = useState("")
+  const [isPrimary, setIsPrimary] = useState(false)
+  const [isVerified, setIsVerified] = useState(false)
+
+  const handleConfirm = () => {
+    if (walletLabel && walletAddress && network) {
+      dispatch(
+        setUserCreateCrypto({
+          walletLabel,
+          walletAddress,
+          network,
+          isPrimary,
+          isVerified,
+        })
+      )
+
+      onConfirm()
     }
+  }
 
-    const isFormValid = selectedCoin && walletAddress && selectedNetwork
+  const isFormValid = walletLabel && walletAddress && network
 
-    return (
-        <div className="space-y-10">
-            <h2 className="text-xl font-semibold text-center mb-8">Address details</h2>
+  return (
+    <div className="space-y-10">
+      <h2 className="text-xl font-semibold text-center">Wallet details</h2>
 
-            <div className="space-y-7">
-                <CustomSelect
-                    label="Select coin type"
-                    placeholder="Select option"
-                    options={coinTypes}
-                    value={selectedCoin}
-                    onValueChange={setSelectedCoin}
-                />
+      <div className="space-y-7">
+        <CustomInput
+          label="Wallet label"
+          placeholder="e.g My USDT Wallet"
+          value={walletLabel}
+          onChange={(e) => setWalletLabel(e.target.value)}
+        />
 
-                <CustomInput
-                    label="Wallet address"
-                    type="text"
-                    placeholder="0x0000000000000000000000000000000000000000"
-                    value={walletAddress}
-                    onChange={(e) => setWalletAddress(e.target.value)}
-                    className="font-mono text-sm"
-                />
+        <CustomInput
+          label="Wallet address"
+          placeholder="0x0000000000000000000000000000000000000000"
+          value={walletAddress}
+          onChange={(e) => setWalletAddress(e.target.value)}
+          className="font-mono text-sm"
+        />
 
-                <CustomSelect
-                    label="Network type"
-                    placeholder="Select option"
-                    options={networkTypes}
-                    value={selectedNetwork}
-                    onValueChange={setSelectedNetwork}
-                />
-            </div>
+        <CustomSelect
+          label="Network type"
+          placeholder="Select network"
+          options={networkTypes}
+          value={network}
+          onValueChange={setNetwork}
+        />
 
-            {/* Action Buttons */}
-            <div className="flex gap-4 pt-6">
-                {canGoBack && (
-                    <button
-                        type="button"
-                        onClick={onGoBack}
-                        className="flex-1 h-12 rounded-full text-primary font-semibold text-lg hover:bg-gray-50"
-                    >
-                        Go back
-                    </button>
-                )}
-                <button
-                    type="button"
-                    onClick={handleConfirm}
-                    disabled={!isFormValid}
-                    className={`${canGoBack ? 'flex-1' : 'w-full'} h-12 rounded-full text-lg font-semibold bg-primary text-white disabled:bg-gray-300 disabled:text-gray-500`}
-                >
-                    Confirm
-                </button>
-            </div>
+        <div className="flex items-center space-x-3">
+          <input
+            type="checkbox"
+            checked={isPrimary}
+            onChange={(e) => setIsPrimary(e.target.checked)}
+            className="h-4 w-4 text-primary border-gray-300 rounded"
+          />
+          <label className="text-sm font-medium text-gray-700">
+            Make this my primary wallet
+          </label>
         </div>
-    )
+
+        <div className="flex items-center space-x-3">
+          <input
+            type="checkbox"
+            checked={isVerified}
+            onChange={(e) => setIsVerified(e.target.checked)}
+            className="h-4 w-4 text-primary border-gray-300 rounded"
+          />
+          <label className="text-sm font-medium text-gray-700">
+            I confirm I own this wallet
+          </label>
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex gap-4 pt-6 w-4/5 mx-auto">
+        {canGoBack && (
+          <button
+            type="button"
+            onClick={onGoBack}
+            className="flex-1 h-12 rounded-full text-primary font-semibold text-lg hover:bg-gray-50"
+          >
+            Go back
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={handleConfirm}
+          disabled={!isFormValid}
+          className={`${canGoBack ? "flex-1" : "w-full"} h-12 rounded-full font-semibold text-lg bg-primary text-white disabled:bg-gray-300`}
+        >
+          Confirm
+        </button>
+      </div>
+    </div>
+  )
 }

@@ -1,7 +1,7 @@
 import type {MouseEvent} from "react";
 import type {
     SupportedCryptoOrCurrencyResponse,
-} from "../../../types/response.api.types.ts";
+} from "../../../types/response.payload.types.ts";
 
 interface NavTokenTradeProps {
     items: SupportedCryptoOrCurrencyResponse[];

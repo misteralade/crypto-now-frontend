@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { ChevronUp, ChevronDown } from "lucide-react"
-import type {SupportedCryptoOrCurrencyResponse} from "../../types/response.api.types.ts";
+import type {SupportedCryptoOrCurrencyResponse} from "../../types/response.payload.types.ts";
 
 interface CurrencyDropdownProps {
     currentValue: SupportedCryptoOrCurrencyResponse | undefined;
