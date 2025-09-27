@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios, { type AxiosRequestHeaders } from "axios";
 import {BASIC} from "../config/index.config.ts";
-import {ROUTES} from "../util/constants.ts";
+import {LOCAL_STORAGE_KEYS, ROUTES} from "../util/constants.ts";
 import type {BaseApiResponse} from "../types/response.payload.types.ts";
 
 export const API_KIT = axios.create({
@@ -11,7 +11,7 @@ export const API_KIT = axios.create({
 });
 
 API_KIT.interceptors.request.use(async (config) => {
-  const token = localStorage.getItem("accessToken");
+  const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
   if (token) {
     config.headers = {
       ...config.headers,
@@ -29,7 +29,7 @@ API_KIT.interceptors.response.use(
       typeof accessToken === "string" &&
       accessToken.trim() !== ""
     ) {
-      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN, accessToken);
     }
     return response;
   },

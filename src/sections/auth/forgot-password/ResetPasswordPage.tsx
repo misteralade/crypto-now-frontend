@@ -5,6 +5,7 @@ import CustomPasswordInput from "./CustomPassworsInput.tsx";
 import {useNavigate} from "@tanstack/react-router";
 import {authServiceApi} from "../../../api/auth.api.ts";
 import type {AuthResponse} from "../../../types/response.api.types.ts";
+import {LOCAL_STORAGE_KEYS} from "../../../util/constants.ts";
 
 export default function ResetPasswordPage() {
     const navigate = useNavigate();
@@ -16,7 +17,7 @@ export default function ResetPasswordPage() {
     const {confirmPasswordRequest} = authServiceApi;
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
-    const token = localStorage.getItem("accessToken") || "";
+    const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN) || "";
 
     const handlePasswordChange = (value: string)=> {
         setNewPassword(value)

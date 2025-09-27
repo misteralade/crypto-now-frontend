@@ -9,12 +9,13 @@ import NavbarDropdown from "./NavbarDropdown.tsx";
 import {ChevronDown} from "lucide-react";
 import type {DropItem} from "../../../types/navbar.types.ts";
 import ProfileNav from "./ProfileNav.tsx";
+import {LOCAL_STORAGE_KEYS} from "../../../util/constants.ts";
 
 export default function Navbar() {
     const navigate = useNavigate();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-    const isLoggedIn = localStorage.getItem("accessToken") !== null;
+    const isLoggedIn = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN) !== null;
 
     const dropItems: DropItem[] = [
         {
@@ -36,7 +37,7 @@ export default function Navbar() {
     };
 
     const handleLogout = () => {
-        localStorage.removeItem("accessToken");
+        localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
         navigate({to: '/sign-in'})
     }
 

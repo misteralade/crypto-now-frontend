@@ -2,6 +2,7 @@ import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import bankReducer from "./redux/bank.slice.ts";
 import cryptoSlice from "./redux/crypto.slice";
 import transactionSlice from "./redux/transaction.slice";
+import userSlice from "./redux/user.slice.ts";
 
 import {
   persistStore,
@@ -23,12 +24,13 @@ const rootReducer = combineReducers({
   bank: bankReducer,
   crypto: cryptoSlice,
   transaction: transactionSlice,
+  user: userSlice,
 });
 
 const persistConfig = {
   key: "root",
   storage: storageSession,
-  whitelist: ["bank", "crypto", "transaction"],
+  whitelist: ["bank", "crypto", "transaction", "user"],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

@@ -1,4 +1,7 @@
 export const QUERY_KEYS = {
+  USER: {
+    GET_PROFILE: 'GET_PROFILE',
+  },
   CURRENCY: {
     SUPPORTED_CURRENCY: 'GET_SUPPORTED_CURRENCY',
   },
