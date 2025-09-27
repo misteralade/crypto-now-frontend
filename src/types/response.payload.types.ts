@@ -5,6 +5,14 @@ export type BaseApiResponse<T> = {
   data: T;
 };
 
+// Start Auth
+export type AuthResponse = {
+  message: string;
+  success: boolean;
+}
+
+// End Auth
+
 export type SupportedCryptoOrCurrencyResponse = {
   id: string;
   name: string;

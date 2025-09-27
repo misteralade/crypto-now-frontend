@@ -3,10 +3,19 @@ import {TransactionTable} from "./TranactionTable.tsx";
 import {TransactionSearch} from "./TranactionSearch.tsx";
 import type {FilterState} from "./TranactionTable.tsx";
 import ExportTransaction from "./ExportTransaction.tsx";
+import {useTransactionBoard} from "../../../hooks/components/dashboard/useTransactionBoard.ts";
 
 export function TransactionDashboard() {
-    const [showFilters, setShowFilters] = useState(false)
-    const [searchQuery, setSearchQuery] = useState("")
+    const {
+        // Values
+        searchQuery,
+        showFilters,
+
+        // Functions
+        setSearchQuery,
+        setShowFilters
+    } = useTransactionBoard();
+
     const [filters, setFilters] = useState<FilterState>({
         fromDate: '',
         toDate: '',
