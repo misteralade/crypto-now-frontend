@@ -49,7 +49,7 @@ export const userSearchTransactionInitialState: SearchTransactionsRequestPayload
 
   // Include Relations
   includeUser: false,
-  includeCryptoCurrency: false,
+  includeCryptoCurrency: true,
   includeExchangeRate: false,
   includeAdminBankAccount: false,
   includeAdminCryptoWallet: false,

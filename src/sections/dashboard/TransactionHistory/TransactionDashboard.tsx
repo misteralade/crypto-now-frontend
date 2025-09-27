@@ -27,6 +27,11 @@ export function TransactionDashboard() {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 5
 
+  console.log({
+    userTransactionHistory,
+    loadingUserTransactionHistory,
+  })
+
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
   }

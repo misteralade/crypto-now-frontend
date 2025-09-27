@@ -1,6 +1,9 @@
+export type TradeType = "BUY" | "SELL";
+export type OrderBy = "ASC" | "DESC";
+
 export type InitiateTransactionRequestPayload = {
   exchangeRateId?: string;
-  action?: "BUY" | "SELL";
+  action?: TradeType;
   tokenId?: string;
   currencyId?: string;
   amountToReceive?: number;
@@ -23,20 +26,24 @@ export type UserCreateCryptoWalletRequestPayload = {
   walletLabel?: string | null;
 }
 
+// Start Transaction
+export type TransactionStatus = "INITIATED" | "PENDING" | "AWAITING_PAYMENT" | "PAYMENT_RECEIVED" | "PAYMENT_CONFIRMED" | "PROCESSING" | "AWAITING_CRYPTO" | "CRYPTO_SENT" | "CRYPTO_RECEIVED" | "CRYPTO_CONFIRMED" | "COMPLETED" | "FAILED" | "EXPIRED" | "CANCELLED" | "DISPUTED" | "REFUNDING" | "REFUNDED" | "PAYMENT_ACCOUNT_CONFIRMED";
+export type TransactionPriority = "LOW" | "NORMAL" | "HIGH" | "URGENT";
+
 export type SearchTransactionsRequestPayload = {
   id: string | undefined;
   sessionId: string | undefined;
   userId: string | undefined;
   cryptoCurrencyId: string | undefined;
   exchangeRateId: string | undefined;
-  type: "BUY" | "SELL" | undefined;
+  type: TradeType | undefined;
   amountCrypto: number | undefined;
   amountFiat: number | undefined;
   cryptoToStableRate: number | undefined;
   stableToCryptoRate: number | undefined;
   currency: string | undefined;
-  status: "INITIATED" | "PENDING" | "AWAITING_PAYMENT" | "PAYMENT_RECEIVED" | "PAYMENT_CONFIRMED" | "PROCESSING" | "AWAITING_CRYPTO" | "CRYPTO_SENT" | "CRYPTO_RECEIVED" | "CRYPTO_CONFIRMED" | "COMPLETED" | "FAILED" | "EXPIRED" | "CANCELLED" | "DISPUTED" | "REFUNDING" | "REFUNDED" | "PAYMENT_ACCOUNT_CONFIRMED" | undefined;
-  priority: "LOW" | "NORMAL" | "HIGH" | "URGENT" | undefined
+  status: TransactionStatus | undefined;
+  priority: TransactionPriority | undefined
   userBankAccountId: string | undefined;
   adminBankAccountId: string | undefined;
   userCryptoWalletId: string | undefined;
@@ -72,7 +79,8 @@ export type SearchTransactionsRequestPayload = {
 
   // Ordering
   sortModel: {
-    orderBy: "ASC" | "DESC";
+    orderBy: OrderBy;
     colId: string;
   } | undefined;
 }
+// End Transaction
