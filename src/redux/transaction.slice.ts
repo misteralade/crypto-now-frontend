@@ -1,16 +1,12 @@
 import {createSlice, type PayloadAction} from "@reduxjs/toolkit";
-import type { InitiateTransactionRequestPayload } from "../types/request.payload.types.ts";
-
-const initiateTransactionInitialState: InitiateTransactionRequestPayload | null = {
-  exchangeRateId: undefined,
-  action: undefined,
-  tokenId: undefined,
-  currencyId: undefined,
-  amountToReceive: undefined,
-  amountToSend: undefined,
-  receiptUrl: undefined,
-  transactionHash: undefined,
-}
+import type {
+  InitiateTransactionRequestPayload,
+  SearchTransactionsRequestPayload
+} from "../types/request.payload.types.ts";
+import {
+  initiateTransactionInitialState,
+  userSearchTransactionInitialState
+} from "./states/initial-transaction.state.ts";
 
 const transactionSlice = createSlice({
   name: "bank",
@@ -20,6 +16,9 @@ const transactionSlice = createSlice({
     },
     exchangeRateId: undefined as string | undefined,
     amountToSend: undefined as number | undefined,
+    dashboard: {
+      searchUserTransactions: userSearchTransactionInitialState
+    },
   },
   reducers: {
     // Set States
@@ -31,6 +30,9 @@ const transactionSlice = createSlice({
     },
     setAmountToSend: (state, action: PayloadAction<number | undefined>) => {
       state.amountToSend = action.payload;
+    },
+    setSearchUserTransactions: (state, action: PayloadAction<SearchTransactionsRequestPayload>) => {
+      state.dashboard.searchUserTransactions = action.payload;
     },
 
     // Clear States
@@ -52,6 +54,9 @@ const transactionSlice = createSlice({
     clearAmountToSend: (state) => {
       state.amountToSend = undefined;
     },
+    clearSearchUserTransactions: (state) => {
+      state.dashboard.searchUserTransactions = userSearchTransactionInitialState;
+    },
   },
 });
 
@@ -60,10 +65,12 @@ export const {
   setInitiateTransaction,
   setExchangeRateId,
   setAmountToSend,
+  setSearchUserTransactions,
 
   // Clear States
   clearInitiateTransaction,
   clearExchangeRateId,
   clearAmountToSend,
+  clearSearchUserTransactions,
 } = transactionSlice.actions;
 export default transactionSlice.reducer;
