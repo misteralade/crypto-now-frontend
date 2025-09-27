@@ -2,7 +2,7 @@
 import axios, { type AxiosRequestHeaders } from "axios";
 import {BASIC} from "../config/index.config.ts";
 import {ROUTES} from "../util/constants.ts";
-import type {BaseApiResponse} from "../types/response.api.types.ts";
+import type {BaseApiResponse} from "../types/response.payload.types.ts";
 
 export const API_KIT = axios.create({
   baseURL: BASIC.API_BASE_URL,

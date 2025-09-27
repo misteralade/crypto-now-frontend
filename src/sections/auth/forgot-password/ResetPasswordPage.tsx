@@ -16,7 +16,7 @@ export default function ResetPasswordPage() {
     const {confirmPasswordRequest} = authServiceApi;
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
-    const token = `dhvddhvdvdb`
+    const token = localStorage.getItem("accessToken") || "";
 
     const handlePasswordChange = (value: string)=> {
         setNewPassword(value)

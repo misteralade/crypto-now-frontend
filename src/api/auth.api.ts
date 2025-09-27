@@ -33,9 +33,9 @@ class AuthServiceApi {
         return await axiosPatchRequestHandler(`/user/auth/password-reset/confirm`, {token, newPassword});
     }
 
-    async activateAccount(token: string) {
-        return await axiosPatchRequestHandler(`/user/auth/activate?token=${token}`);
-    }
+    // async activateAccount(token: string) {
+    //     return await axiosPatchRequestHandler(`/user/auth/activate?token=${token}`);
+    // }
 
 }
 

@@ -3,49 +3,35 @@ import CustomButton from "../../../components/global/Button.tsx";
 import type {TradeType, TradeAdditionalInfoInterface} from "../../../types/trade.types.ts";
 import SwapIcon from "../../../assets/icons/fluent_arrow-swap-20-regular.svg"
 import {type FormEvent} from "react";
-import {availableCurrency, availableTokens, type TradeParamDisplay} from "../../../types/global.type.tsx";
 import TradeInputDropdown from "../TradeInputDropdown.tsx";
 import TradeAdditionalInfo from "../TradeAdditionalInfo.tsx";
+import type {SupportedCryptoOrCurrencyResponse} from "../../../types/response.payload.types.ts";
 
-
-interface TradeStep1Props {
+interface TradeStepOneProps {
     token: string;
     currency: string;
     tradeType: TradeType;
-    setStep: (value: number) => void
+    handleProceedToPayment: () => void
     orderDetails: TradeAdditionalInfoInterface[],
-    selectedToken: TradeParamDisplay,
-    setSelectedToken: (token: TradeParamDisplay) => void,
-    selectedCurrency: TradeParamDisplay,
-    setSelectedCurrency: (currency: TradeParamDisplay) => void
+    selectedToken: SupportedCryptoOrCurrencyResponse | undefined,
+    setSelectedToken: (token: SupportedCryptoOrCurrencyResponse) => void,
+    selectedCurrency: SupportedCryptoOrCurrencyResponse | undefined,
+    setSelectedCurrency: (currency: SupportedCryptoOrCurrencyResponse) => void
     numberOfToken: string | number;
     amountToBuy: string | number;
-    rate: number;
-    fee: number;
-    amountToReceive: number;
     setNumberOfToken: (token: string | number) => void;
     setAmountToBuy: (amountToBuy: string | number) => void;
+    availableCurrencies: SupportedCryptoOrCurrencyResponse[];
+    availableTokens: SupportedCryptoOrCurrencyResponse[];
 }
 
-export default function TradeStep1({setAmountToBuy, fee, amountToReceive, rate, numberOfToken, setNumberOfToken, amountToBuy,selectedCurrency, setSelectedCurrency, setSelectedToken,selectedToken, tradeType, setStep, orderDetails}: TradeStep1Props) {
+export default function TradeStepOne({setAmountToBuy, numberOfToken, setNumberOfToken, amountToBuy,selectedCurrency, setSelectedCurrency, setSelectedToken,selectedToken, tradeType, handleProceedToPayment, orderDetails, availableCurrencies, availableTokens}: TradeStepOneProps) {
 
-    const submitInvalid = numberOfToken === "" || amountToBuy === "" || rate === 0;
-
+    const submitInvalid = numberOfToken === "" || amountToBuy === "";
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
 
-        setStep(2)
-
-        const data = {
-            token: selectedToken.name,
-            currency: selectedCurrency.name,
-            amount: tradeType === "sell"? numberOfToken: amountToBuy,
-            rate: rate,
-            fee: fee,
-            amountToReceive: amountToReceive,
-        }
-
-        console.log("Data to be submitted", data)
+        handleProceedToPayment();
     }
 
     return (
@@ -59,14 +45,14 @@ export default function TradeStep1({setAmountToBuy, fee, amountToReceive, rate, 
                         <TradeFormInput
                             name={`${tradeType === "sell" ? "token": "currency"}`}
                             label={`enter amount`}
-                            value={`${tradeType === "sell" ? numberOfToken: amountToBuy}`}
-                            onInputChange={tradeType === "sell"? setNumberOfToken: setAmountToBuy}
+                            value={`${tradeType === "sell" ? numberOfToken : amountToBuy}`}
+                            onInputChange={tradeType === "sell" ? setNumberOfToken: setAmountToBuy}
                             tradeType={tradeType}
                             isReadOnly={false}
                         >
                             {tradeType === "sell" ?
                                 <TradeInputDropdown currentValue={selectedToken} setCurrentValue={setSelectedToken} items={availableTokens} /> :
-                                <TradeInputDropdown currentValue={selectedCurrency} setCurrentValue={setSelectedCurrency} items={availableCurrency} />
+                                <TradeInputDropdown currentValue={selectedCurrency} setCurrentValue={setSelectedCurrency} items={availableCurrencies} />
                             }
                         </TradeFormInput>
                     </div>
@@ -78,12 +64,12 @@ export default function TradeStep1({setAmountToBuy, fee, amountToReceive, rate, 
                         <TradeFormInput
                             name={`${tradeType === "sell" ? "currency": "token"}`}
                             label={`You will receive`}
-                            value={`${tradeType === "sell" ? amountToBuy: numberOfToken}`}
+                            value={`${tradeType === "sell" ? amountToBuy : numberOfToken}`}
                             isReadOnly={true}
                             tradeType={tradeType}
                         >
                             {tradeType === "sell" ?
-                                <TradeInputDropdown currentValue={selectedCurrency} setCurrentValue={setSelectedCurrency} items={availableCurrency} />
+                                <TradeInputDropdown currentValue={selectedCurrency} setCurrentValue={setSelectedCurrency} items={availableCurrencies} />
                                  :
                                 <TradeInputDropdown currentValue={selectedToken} setCurrentValue={setSelectedToken} items={availableTokens} />
                             }
