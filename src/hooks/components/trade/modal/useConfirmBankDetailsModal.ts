@@ -5,8 +5,11 @@ import type {UserBankAccountResponse, UserCryptoWalletResponse} from "../../../.
 import type {TradeType} from "../../../../types/trade.types.ts";
 import {useDispatch, useSelector} from "react-redux";
 import type {RootState} from "../../../../store.ts";
-import {setSelectedBankAccountId} from "../../../../redux/bank.slice.ts";
-import {setSelectedWalletId as setSelectedWalletAccountId } from "../../../../redux/crypto.slice.ts";
+import {clearSelectedBankAccountId, setSelectedBankAccountId} from "../../../../redux/bank.slice.ts";
+import {
+  clearSelectedWalletId,
+  setSelectedWalletId as setSelectedWalletAccountId
+} from "../../../../redux/crypto.slice.ts";
 
 type ViewState =
   | "select-bank"
@@ -60,8 +63,9 @@ export const useConfirmBankDetailsModal = (cryptoAccounts: UserCryptoWalletRespo
 
   /** ---------------- BANK LOGIC ---------------- */
   const handleBankSelection = (bankId: string) => {
-    dispatch(setSelectedBankAccountId(bankId))
     setSelectedBankId(bankId);
+    dispatch(clearSelectedWalletId())
+    dispatch(setSelectedBankAccountId(bankId))
   };
 
   const handleSubmitBankDetails = async () => {
@@ -79,8 +83,9 @@ export const useConfirmBankDetailsModal = (cryptoAccounts: UserCryptoWalletRespo
 
   /** ---------------- WALLET LOGIC ---------------- */
   const handleWalletSelection = (walletId: string) => {
-    dispatch(setSelectedWalletAccountId(walletId))
     setSelectedWalletId(walletId);
+    dispatch(clearSelectedBankAccountId())
+    dispatch(setSelectedWalletAccountId(walletId))
   };
 
   const handleSubmitWalletDetails = () => {

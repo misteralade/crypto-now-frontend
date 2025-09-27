@@ -1,5 +1,5 @@
 import {toast} from "react-toastify";
-import {axiosPostRequestHandler, axiosPutRequestHandler} from "./index.ts";
+import {axiosPatchRequestHandler, axiosPostRequestHandler, axiosPutRequestHandler} from "./index.ts";
 
 class TransactionServiceApi {
   private static instance: TransactionServiceApi;
@@ -74,6 +74,33 @@ class TransactionServiceApi {
 
     if (!success || error) {
       toast.error(error.message || message || error || "Failed to initiate transaction");
+      return;
+    }
+
+    return data.sessionId;
+  }
+
+  async confirmReceivingPaymentAccount(sessionId: string, accountData: Record<string, any>) {
+    console.log({
+      accountData,
+      sessionId,
+    })
+
+    const {data, message, success, error}: {
+      data: { sessionId: string },
+      message: string,
+      success: boolean,
+      error: any
+    } = await axiosPatchRequestHandler(
+      `/transaction/confirm-receiving-payment-account/${sessionId}`,
+      {
+        ...(accountData.walletId ? { walletId: accountData.walletId } : {}),
+        ...(accountData.accountId ? { accountId: accountData.accountId } : {}),
+      }
+    )
+
+    if (!success || error) {
+      toast.error(error.message || message || error || "Failed to confirm receiving account");
       return;
     }
 

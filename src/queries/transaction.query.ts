@@ -3,6 +3,7 @@ import {QUERY_KEYS} from "./query.keys.ts";
 import {transactionServiceApi} from "../api/transaction.api.ts";
 import {type RootState, store} from "../store.ts";
 import {SESSION_STORAGE_KEYS} from "../util/constants.ts";
+import {toast} from "react-toastify";
 
 export const useTransactionQuery = () => {
   const { data: calculatedAmount, isLoading: loadingCalculation } = useQuery({
@@ -59,12 +60,46 @@ export const useTransactionQuery = () => {
     },
   });
 
+  const receivingPaymentAccountConfirmationMutation = useMutation({
+    mutationKey: [QUERY_KEYS.TRANSACTION.CONFIRM_RECEIVING_PAYMENT_ACCOUNT],
+    mutationFn: async () => {
+      toast.loading(`Confirming receiving account...`, { toastId: 'confirm-receiving-account' });
+      const transactionSessionId = sessionStorage.getItem(SESSION_STORAGE_KEYS.SESSION_ID);
+      const rootState = store.getState() as RootState;
+      const walletId = rootState.crypto.tradeCrypto?.selectedWalletId;
+      const accountId = rootState.bank.tradeCrypto?.selectedBankAccountId;
+
+      if (!walletId && !accountId) {
+        throw new Error("Either walletId or accountId must be provided, and sessionId must exist");
+      }
+
+      if (!transactionSessionId) {
+        throw new Error("Either transaction sessionId must be provided, and sessionId must exist");
+      }
+
+      await transactionServiceApi.confirmReceivingPaymentAccount(transactionSessionId, {
+        walletId,
+        accountId,
+      });
+    },
+    onSuccess: () => {
+      toast.dismiss('confirm-receiving-account');
+      toast.success('Successfully confirmed receiving account');
+      sessionStorage.removeItem(SESSION_STORAGE_KEYS.SESSION_ID);
+    },
+    onError: () => {
+      toast.dismiss('confirm-receiving-account');
+      toast.error('Failed to confirm receiving account');
+    }
+  });
+
   return {
     // Values
     calculatedAmount,
     loadingCalculation,
     initiateTransactionMutation,
     makePaymentTransactionMutation,
+    receivingPaymentAccountConfirmationMutation,
 
     // Functions
   };

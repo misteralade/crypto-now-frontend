@@ -11,7 +11,9 @@ const bankSlice = createSlice({
   name: "bank",
   initialState: {
     createBankAccount: createBankInitialState,
-    selectedBankAccountId: null as string | null,
+    tradeCrypto: {
+      selectedBankAccountId: null as string | null,
+    },
   },
   reducers: {
     // Sets
@@ -19,7 +21,7 @@ const bankSlice = createSlice({
       state.createBankAccount = action.payload;
     },
     setSelectedBankAccountId: (state, action: PayloadAction<string>) => {
-      state.selectedBankAccountId = action.payload;
+      state.tradeCrypto.selectedBankAccountId = action.payload;
     },
 
     // Clears
@@ -31,7 +33,7 @@ const bankSlice = createSlice({
       }
     },
     clearSelectedBankAccountId: (state) => {
-      state.selectedBankAccountId = null;
+      state.tradeCrypto.selectedBankAccountId = null;
     },
   },
 });

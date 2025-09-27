@@ -44,7 +44,7 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
   const { userBankAccounts } = useBankQuery();
   const { supportedCurrencies } = useCurrencyQuery();
   const { supportedCryptoCurrencies, userCryptoWallets } = useCryptoQuery();
-  const { calculatedAmount, loadingCalculation, initiateTransactionMutation, makePaymentTransactionMutation } = useTransactionQuery();
+  const { calculatedAmount, loadingCalculation, initiateTransactionMutation, makePaymentTransactionMutation, receivingPaymentAccountConfirmationMutation } = useTransactionQuery();
 
   const [transactionSessionId, setTransactionSessionId] = useState<string>();
   const [selectedToken, setSelectedToken] = useState<SupportedCryptoOrCurrencyResponse>();
@@ -293,7 +293,8 @@ export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeT
     togglePaymentReceivingModal();
   }
 
-  const handleConfirmBankDetails = (step: number) => {
+  const handleConfirmBankDetails = async (step: number) => {
+    await receivingPaymentAccountConfirmationMutation.mutateAsync()
     toggleConfirmBankDetails();
     togglePaymentReceivingModal();
     setStep(step);
