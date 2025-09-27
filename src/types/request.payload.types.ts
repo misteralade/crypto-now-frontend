@@ -24,55 +24,55 @@ export type UserCreateCryptoWalletRequestPayload = {
 }
 
 export type SearchTransactionsRequestPayload = {
-  id: string | null;
-  sessionId: string | null;
-  userId: string | null;
-  cryptoCurrencyId: string | null;
-  exchangeRateId: string | null;
-  type: "BUY" | "SELL" | null;
-  amountCrypto: number | null;
-  amountFiat: number | null;
-  cryptoToStableRate: number | null;
-  stableToCryptoRate: number | null;
-  currency: string | null;
-  status: "INITIATED" | "PENDING" | "AWAITING_PAYMENT" | "PAYMENT_RECEIVED" | "PAYMENT_CONFIRMED" | "PROCESSING" | "AWAITING_CRYPTO" | "CRYPTO_SENT" | "CRYPTO_RECEIVED" | "CRYPTO_CONFIRMED" | "COMPLETED" | "FAILED" | "EXPIRED" | "CANCELLED" | "DISPUTED" | "REFUNDING" | "REFUNDED" | "PAYMENT_ACCOUNT_CONFIRMED" | null;
-  priority: "LOW" | "NORMAL" | "HIGH" | "URGENT" | null
-  userBankAccountId: string | null;
-  adminBankAccountId: string | null;
-  userCryptoWalletId: string | null;
-  bankTransferReference: string | null;
-  receiptImageUrl: string | null;
-  adminCryptoWalletId: string | null;
-  cryptoTxHash: string | null;
-  adminNotes: string | null;
-  userNotes: string | null;
-  internalNotes: string | null;
-  failureReason: string | null;
-  processedBy: string | null;
-  processedAt: string | null;
-  rate: string | null;
+  id: string | undefined;
+  sessionId: string | undefined;
+  userId: string | undefined;
+  cryptoCurrencyId: string | undefined;
+  exchangeRateId: string | undefined;
+  type: "BUY" | "SELL" | undefined;
+  amountCrypto: number | undefined;
+  amountFiat: number | undefined;
+  cryptoToStableRate: number | undefined;
+  stableToCryptoRate: number | undefined;
+  currency: string | undefined;
+  status: "INITIATED" | "PENDING" | "AWAITING_PAYMENT" | "PAYMENT_RECEIVED" | "PAYMENT_CONFIRMED" | "PROCESSING" | "AWAITING_CRYPTO" | "CRYPTO_SENT" | "CRYPTO_RECEIVED" | "CRYPTO_CONFIRMED" | "COMPLETED" | "FAILED" | "EXPIRED" | "CANCELLED" | "DISPUTED" | "REFUNDING" | "REFUNDED" | "PAYMENT_ACCOUNT_CONFIRMED" | undefined;
+  priority: "LOW" | "NORMAL" | "HIGH" | "URGENT" | undefined
+  userBankAccountId: string | undefined;
+  adminBankAccountId: string | undefined;
+  userCryptoWalletId: string | undefined;
+  bankTransferReference: string | undefined;
+  receiptImageUrl: string | undefined;
+  adminCryptoWalletId: string | undefined;
+  cryptoTxHash: string | undefined;
+  adminNotes: string | undefined;
+  userNotes: string | undefined;
+  internalNotes: string | undefined;
+  failureReason: string | undefined;
+  processedBy: string | undefined;
+  processedAt: string | undefined;
+  rate: string | undefined;
 
   // Date Range Filters
-  createdAtFrom: string | null;
-  createdAtTo: string | null;
+  createdAtFrom: string | undefined;
+  createdAtTo: string | undefined;
 
   // Include Relations
-  includeUser: boolean | null;
-  includeCryptoCurrency: boolean | null;
-  includeExchangeRate: boolean | null;
-  includeAdminBankAccount: boolean | null;
-  includeAdminCryptoWallet: boolean | null;
-  includeUserBankAccount: boolean | null;
-  includeUserCryptoWallet: boolean | null;
-  includeProcessedBy: boolean | null;
+  includeUser: boolean | undefined;
+  includeCryptoCurrency: boolean | undefined;
+  includeExchangeRate: boolean | undefined;
+  includeAdminBankAccount: boolean | undefined;
+  includeAdminCryptoWallet: boolean | undefined;
+  includeUserBankAccount: boolean | undefined;
+  includeUserCryptoWallet: boolean | undefined;
+  includeProcessedBy: boolean | undefined;
 
   // Pagination
-  page: number | null;
-  size: number | null;
+  page: number | undefined;
+  size: number | undefined;
 
   // Ordering
   sortModel: {
     orderBy: "ASC" | "DESC";
     colId: string;
-  } | null;
+  } | undefined;
 }

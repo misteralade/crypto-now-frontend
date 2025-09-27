@@ -1,11 +1,15 @@
 import {useMutation, useQuery} from "@tanstack/react-query";
+import {toast} from "react-toastify";
+import {useMatchRoute} from "@tanstack/react-router";
 import {QUERY_KEYS} from "./query.keys.ts";
 import {transactionServiceApi} from "../api/transaction.api.ts";
 import {type RootState, store} from "../store.ts";
 import {SESSION_STORAGE_KEYS} from "../util/constants.ts";
-import {toast} from "react-toastify";
 
 export const useTransactionQuery = () => {
+  const matchRoute = useMatchRoute();
+
+  // Calculate Amount to Receive
   const { data: calculatedAmount, isLoading: loadingCalculation } = useQuery({
     queryKey: [QUERY_KEYS.TRANSACTION.GET_AMOUNT_TO_SEND, store.getState().transaction.exchangeRateId, store.getState().transaction.amountToSend],
     queryFn: async () => {
@@ -28,6 +32,31 @@ export const useTransactionQuery = () => {
     enabled: !!store.getState().transaction.exchangeRateId && !!store.getState().transaction.amountToSend && Number(store.getState().transaction?.amountToSend) > 0,
   });
 
+  const { data: userTransactionHistory, isLoading: loadingUserTransactionHistory } = useQuery({
+    queryKey: [QUERY_KEYS.TRANSACTION.USER_SEARCH_TRANSACTION_HISTORY, (store.getState() as RootState)?.transaction?.dashboard?.searchUserTransactions],
+    queryFn: async () => {
+      const rootState = store.getState() as RootState;
+
+      console.log({
+        userTransactionHistory: rootState?.transaction?.dashboard?.searchUserTransactions
+      })
+
+      if (!rootState?.transaction?.dashboard?.searchUserTransactions) {
+        return;
+      }
+
+      const { data, success } = await transactionServiceApi.searchUserTransactions(rootState?.transaction?.dashboard?.searchUserTransactions);
+
+      if (success) {
+        return data;
+      }
+
+      return null;
+    },
+    // enabled: !!(store.getState() as RootState)?.transaction?.dashboard?.searchUserTransactions && !!matchRoute({ to: "/dashboard" }),
+  })
+
+  // Initiate Transaction Mutation
   const initiateTransactionMutation = useMutation({
     mutationKey: [QUERY_KEYS.TRANSACTION.INITIATE_TRANSACTION],
     mutationFn: async () => {
@@ -44,6 +73,7 @@ export const useTransactionQuery = () => {
     },
   });
 
+  // Make Payment Transaction Mutation
   const makePaymentTransactionMutation = useMutation({
     mutationKey: [QUERY_KEYS.TRANSACTION.MAKE_PAYMENT_TRANSACTION],
     mutationFn: async () => {
@@ -60,12 +90,13 @@ export const useTransactionQuery = () => {
     },
   });
 
+  // Confirm Receiving Payment Account Mutation
   const receivingPaymentAccountConfirmationMutation = useMutation({
     mutationKey: [QUERY_KEYS.TRANSACTION.CONFIRM_RECEIVING_PAYMENT_ACCOUNT],
     mutationFn: async () => {
       toast.loading(`Confirming receiving account...`, { toastId: 'confirm-receiving-account' });
-      const transactionSessionId = sessionStorage.getItem(SESSION_STORAGE_KEYS.SESSION_ID);
       const rootState = store.getState() as RootState;
+      const transactionSessionId = sessionStorage.getItem(SESSION_STORAGE_KEYS.SESSION_ID);
       const walletId = rootState.crypto.tradeCrypto?.selectedWalletId;
       const accountId = rootState.bank.tradeCrypto?.selectedBankAccountId;
 
@@ -97,6 +128,11 @@ export const useTransactionQuery = () => {
     // Values
     calculatedAmount,
     loadingCalculation,
+    userTransactionHistory,
+    loadingUserTransactionHistory,
+
+
+    // Mutations
     initiateTransactionMutation,
     makePaymentTransactionMutation,
     receivingPaymentAccountConfirmationMutation,
