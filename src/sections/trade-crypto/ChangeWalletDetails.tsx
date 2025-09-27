@@ -11,13 +11,18 @@ interface CryptoWalletDetailsProps {
 }
 
 const networkTypes = [
-  "BEP20", "ERC20", "TRC20", "Bitcoin Network", "Ethereum Network",
-  "Polygon", "Arbitrum", "Optimism", "Avalanche", "Fantom", "BSC",
-  "Solana", "Cardano", "Polkadot", "Cosmos", "Terra", "Near Protocol",
-  "Harmony", "Moonbeam", "Cronos", "KuCoin Community Chain", "Heco",
-  "xDai", "Celo", "Algorand", "Tezos", "Elrond", "Klaytn", "Matic",
-  "Binance Smart Chain", "Huobi ECO Chain", "OKEx Chain"
+  "BEP20", "ERC20", "TRC20", "BTC", "SOLANA"
 ]
+
+
+// const networkTypes = [
+//   "BEP20", "ERC20", "TRC20", "Bitcoin Network", "Ethereum Network",
+//   "Polygon", "Arbitrum", "Optimism", "Avalanche", "Fantom", "BSC",
+//   "Solana", "Cardano", "Polkadot", "Cosmos", "Terra", "Near Protocol",
+//   "Harmony", "Moonbeam", "Cronos", "KuCoin Community Chain", "Heco",
+//   "xDai", "Celo", "Algorand", "Tezos", "Elrond", "Klaytn", "Matic",
+//   "Binance Smart Chain", "Huobi ECO Chain", "OKEx Chain"
+// ]
 
 export default function ChangeCryptoWalletDetails({
                                                     onConfirm,
