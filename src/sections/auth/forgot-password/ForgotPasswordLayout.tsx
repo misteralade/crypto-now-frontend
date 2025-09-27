@@ -11,9 +11,10 @@ interface ForgotPasswordLayoutProp{
     description: string;
     handleSubmit: () => void
     submitInvalid: boolean
+    loading: boolean
 }
 
-export default function ForgotPasswordLayout({children, icon, heading, description, handleSubmit, submitInvalid}: ForgotPasswordLayoutProp){
+export default function ForgotPasswordLayout({children, loading, icon, heading, description, handleSubmit, submitInvalid}: ForgotPasswordLayoutProp){
     const navigate = useNavigate();
 
     return (
@@ -40,8 +41,8 @@ export default function ForgotPasswordLayout({children, icon, heading, descripti
 
                     <CustomButton
                         className="w-full"
-                        buttonText="Reset password"
-                        type="submit"
+                        buttonText={`${loading ? "loading...": "Reset password"}`}
+                        type="button"
                         onClick={handleSubmit}
                         disabled={submitInvalid}
                     />

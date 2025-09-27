@@ -78,20 +78,6 @@ export const axiosPutRequestHandler = async (url: string, data: any) => {
   }
 };
 
-export const axiosPatchRequestHandler = async (url: string, data: any) => {
-  try {
-    const request = await API_KIT.patch(url, data);
-
-    return request.data as BaseApiResponse<any>;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      throw error;
-    } else {
-      throw new Error("An unexpected error occurred");
-    }
-  }
-};
-
 export const axiosDeleteRequestHandler = async (url: string) => {
   try {
     const request = await API_KIT.delete(url);
@@ -117,6 +103,22 @@ export const axiosGetRequestHandler = async (url: string, params?: any) => {
     if (axios.isAxiosError(error)) {
       throw error;
     } else {
+      throw new Error("An unexpected error occurred");
+    }
+  }
+};
+
+export const axiosPatchRequestHandler = async (url: string, params?: any) => {
+  try{
+    const request = await API_KIT.patch(url, {
+      params,
+    });
+
+    return request.data as BaseApiResponse<any>;
+  }catch(error){
+    if(axios.isAxiosError(error)){
+      throw error;
+    }else{
       throw new Error("An unexpected error occurred");
     }
   }
