@@ -23,7 +23,7 @@ API_KIT.interceptors.request.use(async (config) => {
 
 API_KIT.interceptors.response.use(
   (response) => {
-    const accessToken = response.headers["x-api-key"];
+    const accessToken = response.headers["x-access-token"];
     if (
       accessToken &&
       typeof accessToken === "string" &&
