@@ -16,3 +16,7 @@ export const QUERY_KEYS = {
 export const SESSION_STORAGE_KEYS = {
   SESSION_ID: "transactionSessionId"
 }
+
+export const LOCAL_STORAGE_KEYS = {
+  ACCESS_TOKEN: "accessToken",
+}

@@ -59,3 +59,26 @@ export type UserCryptoWalletResponse = {
   isVerified: boolean;
   createdAt: Date;
 }
+
+export type UserProfilePayload = {
+  id: string;
+  userId: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  dateOfBirth: string;
+  address: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type GetUserProfileResponse = {
+  id: string;
+  email: string;
+  createdAt: Date;
+  profile: UserProfilePayload;
+}
