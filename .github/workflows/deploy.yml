@@ -39,6 +39,7 @@ jobs:
         run: |
           if [ "${{ github.ref }}" == "refs/heads/dev" ]; then
             echo "VITE_BASE_URL=${{ secrets.VITE_BASE_URL_DEV }}" > .env
+            echo "VITE_NODE_ENV=${{ secrets.VITE_NODE_ENV_DEV }}" >> .env
           elif [ "${{ github.ref }}" == "refs/heads/master" ]; then
             echo "VITE_BASE_URL=${{ secrets.VITE_BASE_URL_PROD }}" > .env
           fi
