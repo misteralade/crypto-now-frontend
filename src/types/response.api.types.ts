@@ -12,7 +12,7 @@ export type SupportedCryptoOrCurrencyResponse = {
   logoUrl: string;
 }
 
-export interface LoginResponse{
+export interface AuthResponse{
     message: string;
     success: boolean;
 }

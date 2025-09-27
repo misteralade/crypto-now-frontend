@@ -86,6 +86,7 @@ export default function Navbar() {
                     </div>
 
                     {/* Auth Buttons */}
+                    {/* TODO: Show a different UI when user is logged in */}
                     <div className="hidden md:flex items-center space-x-4">
                         <Link
                             to="/sign-in"

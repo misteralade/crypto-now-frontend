@@ -3,7 +3,7 @@ import CustomButton from "../../components/global/Button";
 import AuthLayout from "../../layouts/AuthLayout";
 import {Link, useNavigate} from "@tanstack/react-router";
 import {authServiceApi} from "../../api/auth.api";
-import type {LoginResponse} from "../../types/response.api.types.ts";
+import type {AuthResponse} from "../../types/response.api.types.ts";
 
 export default function SignInPage() {
     const [showPassword, setShowPassword] = useState(false);
@@ -29,7 +29,7 @@ export default function SignInPage() {
         }
 
         try {
-            const {success, message}: LoginResponse = await login({
+            const {success, message}: AuthResponse = await login({
                 email,
                 password,
                 keepLoggedIn
@@ -61,7 +61,7 @@ export default function SignInPage() {
             </div>
 
             {/* Form */}
-            <p className="text-red-500">{error}</p>
+            <p className="text-red-500 mb-2">{error}</p>
             <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Email Field */}
                 <div>

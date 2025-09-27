@@ -1,4 +1,6 @@
 import {axiosPostRequestHandler, axiosGetRequestHandler, axiosPatchRequestHandler} from "./index.ts";
+import type {AuthRequestSchema} from "../types/request.api.types.ts";
+import type {AuthResponse} from "../types/response.api.types.ts";
 
 // import {LoginRequestSchema} from "../schema/auth.schema.ts";
 
@@ -15,11 +17,11 @@ class AuthServiceApi {
         return AuthServiceApi.instance;
     }
 
-    async login(payload: any) {
+    async login(payload: AuthRequestSchema): Promise<AuthResponse> {
         return await axiosPostRequestHandler("/user/auth/sign-in", payload);
     }
 
-    async signup(payload: any) {
+    async signup(payload: AuthRequestSchema) {
         return await axiosPostRequestHandler("/user/auth/sign-up", payload);
     }
 
