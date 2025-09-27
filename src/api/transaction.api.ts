@@ -81,11 +81,6 @@ class TransactionServiceApi {
   }
 
   async confirmReceivingPaymentAccount(sessionId: string, accountData: Record<string, any>) {
-    console.log({
-      accountData,
-      sessionId,
-    })
-
     const {data, message, success, error}: {
       data: { sessionId: string },
       message: string,
