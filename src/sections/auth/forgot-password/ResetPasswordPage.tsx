@@ -4,8 +4,8 @@ import {useState} from "react";
 import CustomPasswordInput from "./CustomPassworsInput.tsx";
 import {useNavigate} from "@tanstack/react-router";
 import {authServiceApi} from "../../../api/auth.api.ts";
-import type {AuthResponse} from "../../../types/response.api.types.ts";
 import {LOCAL_STORAGE_KEYS} from "../../../util/constants.ts";
+import type {AuthResponse} from "../../../types/response.payload.types.ts";
 
 export default function ResetPasswordPage() {
     const navigate = useNavigate();

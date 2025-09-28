@@ -53,11 +53,11 @@ export const useTransactionBoard = () => {
   const handleSearchChange = useMemo(
     () =>
       debounce((query: string) => {
-        const updatedPayload: SearchTransactionsRequestPayload = {
+        const updatedPayload = {
           ...userSearchTransactionInitialState,
           searchQuery: query || undefined,
         };
-        dispatch(setSearchUserTransactions(updatedPayload));
+        dispatch(setSearchUserTransactions(updatedPayload as SearchTransactionsRequestPayload));
         setSearchQuery(query);
       }, TIME_IN_MILLISECONDS.FIVE_HUNDRED_MILLISECONDS),
     [dispatch]

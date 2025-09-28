@@ -3,8 +3,8 @@ import ForgotPasswordLayout from "./ForgotPasswordLayout.tsx";
 import ArrowIcon from "../../../assets/icons/fluent-arrow.svg";
 import {emailValidation} from "../../../util/constants.regex.ts";
 import {authServiceApi} from "../../../api/auth.api.ts";
-import type {AuthResponse} from "../../../types/response.api.types.ts";
 import {useNavigate} from "@tanstack/react-router";
+import type {AuthResponse} from "../../../types/response.payload.types.ts";
 
 // interface ForgotPasswordPageProp {
 //     setStep: (value: number) => void;
