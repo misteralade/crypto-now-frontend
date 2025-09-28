@@ -4,7 +4,7 @@ import AuthLayout from "../../layouts/AuthLayout";
 import {Link} from "@tanstack/react-router";
 import {authServiceApi} from "../../api/auth.api";
 import OtpSent from "./forgot-password/OtpSent.tsx";
-import type {AuthResponse} from "../../types/response.api.types.ts";
+import type {AuthResponse} from "../../types/response.payload.types.ts";
 
 export default function SignUpPage() {
     const [showPassword, setShowPassword] = useState(false);

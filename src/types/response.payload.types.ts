@@ -1,9 +1,19 @@
+import type {TradeType, TransactionPriority, TransactionStatus} from "./request.payload.types.ts";
+
 export type BaseApiResponse<T> = {
   success: boolean;
   message: string;
   error: any;
   data: T;
 };
+
+// Start Auth
+export type AuthResponse = {
+  message: string;
+  success: boolean;
+}
+
+// End Auth
 
 export type SupportedCryptoOrCurrencyResponse = {
   id: string;
@@ -82,3 +92,120 @@ export type GetUserProfileResponse = {
   createdAt: Date;
   profile: UserProfilePayload;
 }
+
+// Start Transactions
+export type CryptoCurrencyResponseEntity = {
+  id: string;
+  name: string;
+  symbol: string;
+  isStableCoin: boolean;
+  logoUrl: string;
+  createdAt: Date;
+};
+
+export type UserResponseEntity = {
+  id: string;
+  email: string;
+  isVerified: boolean;
+  createdAt: Date;
+};
+
+export type ExchangeRateResponseEntity = {
+  id: string;
+  fromCurrency: string;
+  toCurrency: string;
+  platformRate: string;
+  action: TradeType;
+  validUntil: Date;
+  createdAt: Date;
+}
+
+export type UserBankAccountResponseEntity = {
+  id: string;
+  userId: string;
+  accountNumber: string;
+  accountName: string;
+  bankName: string;
+  bankLogo: string;
+  createdAt: string;
+}
+
+export type AdminBankAccountResponseEntity = {
+  id: string;
+  accountNumber: string;
+  accountHolderName: string;
+  isActive: boolean;
+  bankName: string;
+  bankLogo: string;
+  instructions: string;
+  createdAt: Date;
+}
+
+export type AdminAndUserCryptoWalletResponseEntity = {
+  id: string;
+  userId: string;
+  createdBy: string;
+  walletAddress: string;
+  isActive: boolean;
+  isPrimary: boolean;
+  isVerified: boolean;
+  network: string;
+  createdAt: Date;
+}
+
+export type AdminResponseEntity = {
+  id: string;
+  email: string;
+  active: boolean;
+  lastActive: Date;
+  createdAt: Date;
+}
+
+export type TransactionResponseEntity = {
+  id: string;
+  userId: string;
+  sessionId: string;
+  cryptocurrencyId: string;
+  exchangeRateId: string;
+  type: TradeType;
+  amountCrypto: string;
+  amountFiat: string;
+  cryptoToStableRate: string;
+  stableToFiatRate: string;
+  stableToCryptoRate: string;
+  currency: string;
+  status: TransactionStatus;
+  priority: TransactionPriority,
+  userBankAccountId: string | null;
+  adminBankAccountId:string | null;
+  userCryptoWalletId: string | null;
+  bankTransferReference: string | null;
+  receiptImageUrl: string;
+  adminCryptoWalletId: string | null;
+  cryptoTxHash: string | null;
+  adminNotes: string | null;
+  userNotes: string | null;
+  internalNotes: string | null;
+  failureReason: string | null;
+  processedBy: string | null;
+  processedAt: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  cryptocurrency: CryptoCurrencyResponseEntity;
+  user: UserResponseEntity;
+  exchangeRate: ExchangeRateResponseEntity;
+  userBankAccount: UserBankAccountResponseEntity | null;
+  adminBankAccount: AdminBankAccountResponseEntity | null;
+  userCryptoWallet: AdminAndUserCryptoWalletResponseEntity | null;
+  adminCryptoWallet: AdminAndUserCryptoWalletResponseEntity | null;
+  admin: AdminResponseEntity | null;
+}
+
+export type UserTransactionsHistoryResponse = {
+  count: number;
+  limit: number;
+  page: number;
+  totalPages: number;
+  transactions: TransactionResponseEntity[];
+}
+// End Transactions

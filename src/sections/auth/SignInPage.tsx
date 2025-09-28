@@ -3,7 +3,7 @@ import CustomButton from "../../components/global/Button";
 import AuthLayout from "../../layouts/AuthLayout";
 import {Link, useNavigate} from "@tanstack/react-router";
 import {authServiceApi} from "../../api/auth.api";
-import type {AuthResponse} from "../../types/response.api.types.ts";
+import type {AuthResponse} from "../../types/response.payload.types.ts";
 
 export default function SignInPage() {
     const [showPassword, setShowPassword] = useState(false);
