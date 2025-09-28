@@ -104,6 +104,7 @@ export default function TradeStepDisplay({
         {/*heading*/}
         <TradeStepDisplayHeading
           step={step}
+          setStep={setStep}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
         />
