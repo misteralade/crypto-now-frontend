@@ -47,7 +47,7 @@ export default function DashboardContent(){
     }
 
     return (
-        <div className="max-w-7xl mx-auto md:-mt-10 px-3 md:px-0 space-y-10">
+        <div className="w-full md:w-[90%] 2xl:max-w-7xl mx-auto md:-mt-10 px-3 md:px-0 space-y-10 ">
             {/*Overview*/}
             <div className="grid md:grid-cols-3 gap-5">
                 <DashboardDataUI imgSrc={TokenBTC} Data={BTCData} />

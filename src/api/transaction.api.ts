@@ -1,5 +1,7 @@
 import {toast} from "react-toastify";
 import {axiosPatchRequestHandler, axiosPostRequestHandler, axiosPutRequestHandler} from "./index.ts";
+import type {SearchTransactionsRequestPayload} from "../types/request.payload.types.ts";
+import type {UserTransactionsHistoryResponse} from "../types/response.payload.types.ts";
 
 class TransactionServiceApi {
   private static instance: TransactionServiceApi;
@@ -81,11 +83,6 @@ class TransactionServiceApi {
   }
 
   async confirmReceivingPaymentAccount(sessionId: string, accountData: Record<string, any>) {
-    console.log({
-      accountData,
-      sessionId,
-    })
-
     const {data, message, success, error}: {
       data: { sessionId: string },
       message: string,
@@ -105,6 +102,12 @@ class TransactionServiceApi {
     }
 
     return data.sessionId;
+  }
+
+  async searchUserTransactions(payload: SearchTransactionsRequestPayload) {
+    const { data, message, success }: { data: UserTransactionsHistoryResponse, message: string, success: boolean } = await axiosPostRequestHandler("/transaction/user/search-history", payload);
+
+    return { data, message, success };
   }
 }
 

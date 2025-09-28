@@ -7,7 +7,7 @@ import type {
 class CryptoServiceApi {
   private static instance: CryptoServiceApi;
 
-  private constructor() {}
+  private constructor()  {}
 
   public static getInstance(): CryptoServiceApi {
     if (!CryptoServiceApi.instance) {

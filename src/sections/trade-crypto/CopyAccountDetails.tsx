@@ -3,9 +3,10 @@ import {useState} from "react";
 
 interface CopyAccountDetails {
     accountNumber: string;
+    className?: string;
 }
 
-export default function CopyAccountDetails({accountNumber}: CopyAccountDetails) {
+export default function CopyAccountDetails({accountNumber, className}: CopyAccountDetails) {
     const [response, setResponse] = useState<string>("");
     const handleCopy = () => {
         navigator.clipboard.writeText(accountNumber)
@@ -19,7 +20,7 @@ export default function CopyAccountDetails({accountNumber}: CopyAccountDetails) 
             });
     };
     return(
-            <div className={`flex gap-2 items-center relative max-w-[400px] w-3/4 md:w-fit`}>
+            <div className={`flex gap-2 items-center relative max-w-[400px] w-3/4 md:w-fit ${className}`}>
                 <p className={`text-black overflow-hidden whitespace-nowrap text-ellipsis`}>{accountNumber}</p>
 
                 <img src={Copy} alt="copy" onClick={handleCopy} className={`cursor-pointer`} />

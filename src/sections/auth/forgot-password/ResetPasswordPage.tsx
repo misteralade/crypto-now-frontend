@@ -3,6 +3,9 @@ import PadlockIcon from "../../../assets/icons/fluent-arrow-reset.svg";
 import {useState} from "react";
 import CustomPasswordInput from "./CustomPassworsInput.tsx";
 import {useNavigate} from "@tanstack/react-router";
+import {authServiceApi} from "../../../api/auth.api.ts";
+import {LOCAL_STORAGE_KEYS} from "../../../util/constants.ts";
+import type {AuthResponse} from "../../../types/response.payload.types.ts";
 
 export default function ResetPasswordPage() {
     const navigate = useNavigate();
@@ -11,6 +14,10 @@ export default function ResetPasswordPage() {
     const [confirmPassword, setConfirmPassword] = useState("");
     const [isPasswordValid, setIsPasswordValid] = useState(true);
     const [isPasswordMatch, setIsPasswordMatch] = useState(true);
+    const {confirmPasswordRequest} = authServiceApi;
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState("");
+    const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN) || "";
 
     const handlePasswordChange = (value: string)=> {
         setNewPassword(value)
@@ -26,8 +33,30 @@ export default function ResetPasswordPage() {
         setConfirmPassword(value)
     }
 
-    const handleNewPassword = () => {
-        setIsPasswordChanged(true)
+    const handleNewPassword = async () => {
+        setIsLoading(true);
+        setError("");
+
+        if (!isPasswordMatch) {
+            setError("Please fill in all fields");
+            setIsLoading(false);
+            return;
+        }
+
+        try {
+            const {success, message}: AuthResponse = await confirmPasswordRequest(token, newPassword);
+
+            if (!success) {
+                setError(message || 'Request Failed!');
+            } else {
+                setIsPasswordChanged(true)
+            }
+
+        } catch (error: any) {
+            setError(error.message || 'Password Reset Failed!');
+        } finally {
+            setIsLoading(false);
+        }
     }
 
     const navigateToLogin = () => {
@@ -44,7 +73,10 @@ export default function ResetPasswordPage() {
             }
             handleSubmit={isPasswordChanged ? navigateToLogin: handleNewPassword}
             submitInvalid={!isPasswordValid || !isPasswordMatch || newPassword === "" || confirmPassword === ""}
+            loading={isLoading}
         >
+            <p className="text-red-500 mb-2 text-left">{error}</p>
+
              <CustomPasswordInput
                  label={"password"}
                  placeholder={"Password"}

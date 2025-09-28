@@ -22,6 +22,7 @@ const OtpSent = () => {
 
       <div className="flex gap-3 mt-10 max-md:flex-col">
         <CustomButton className="w-full" buttonText="Open mailapp" />
+          {/*  TODO: Call Resend Verification Link Endpoint*/}
         <CustomButton
           variant="link"
           to="/"
