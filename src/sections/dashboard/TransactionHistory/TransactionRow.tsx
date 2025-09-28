@@ -23,7 +23,7 @@ export function TransactionRow({transaction, isLast}: TransactionRowProps) {
                 <span
                   className={`flex items-center w-fit gap-2 py-1 px-3 rounded-3xl text-xs ${getStatusColor(transaction.status)}`}>
                     <span className={`w-2 h-2 rounded-full ${getStatusDot(transaction.status)}`}></span>
-                    <span className={`text-sm capitalize`}>{transaction.status}</span>
+                    <span className={`text-sm capitalize`}>{transaction.status.replaceAll("_", " ").toLocaleLowerCase()}</span>
                 </span>
       </td>
       <td className="p-4">
