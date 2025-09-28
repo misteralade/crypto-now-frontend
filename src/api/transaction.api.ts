@@ -105,7 +105,7 @@ class TransactionServiceApi {
   }
 
   async searchUserTransactions(payload: SearchTransactionsRequestPayload) {
-    const { data, message, success }: { data: { transactions: UserTransactionsHistoryResponse }, message: string, success: boolean } = await axiosPostRequestHandler("/transaction/user/search-history", payload);
+    const { data, message, success }: { data: UserTransactionsHistoryResponse, message: string, success: boolean } = await axiosPostRequestHandler("/transaction/user/search-history", payload);
 
     return { data, message, success };
   }

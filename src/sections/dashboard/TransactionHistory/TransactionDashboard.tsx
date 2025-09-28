@@ -1,9 +1,8 @@
-import { useState } from "react"
 import {TransactionTable} from "./TranactionTable.tsx";
 import {TransactionSearch} from "./TranactionSearch.tsx";
-import type {FilterState} from "./TranactionTable.tsx";
 import ExportTransaction from "./ExportTransaction.tsx";
 import {useTransactionBoard} from "../../../hooks/components/dashboard/useTransactionBoard.ts";
+import type {SupportedCryptoOrCurrencyResponse} from "../../../types/response.payload.types.ts";
 
 export function TransactionDashboard() {
   const {
@@ -12,39 +11,16 @@ export function TransactionDashboard() {
     showFilters,
     userTransactionHistory,
     loadingUserTransactionHistory,
+    filters,
+    supportedCryptoCurrencies,
+    loadingSupportedCryptocurrencies,
 
     // Functions
-    setSearchQuery,
-    setShowFilters
+    setShowFilters,
+    handleSearchChange,
+    handleFiltersChange,
+    handlePageChange,
   } = useTransactionBoard();
-
-  const [filters, setFilters] = useState<FilterState>({
-    fromDate: '',
-    toDate: '',
-    cryptocurrency: '',
-    status: ''
-  })
-  const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 5
-
-  console.log({
-    userTransactionHistory,
-    loadingUserTransactionHistory,
-  })
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page)
-  }
-
-  const handleFiltersChange = (newFilters: FilterState) => {
-    setFilters(newFilters)
-    setCurrentPage(1)
-  }
-
-  const handleSearchChange = (query: string) => {
-    setSearchQuery(query)
-    setCurrentPage(1)
-  }
 
   return (
     <div className="w-full space-y-6">
@@ -62,13 +38,13 @@ export function TransactionDashboard() {
         setShowFilters={setShowFilters}
         filters={filters}
         onFiltersChange={handleFiltersChange}
+        supportedCrypto={!loadingSupportedCryptocurrencies && supportedCryptoCurrencies ? supportedCryptoCurrencies : [] as SupportedCryptoOrCurrencyResponse[]}
       />
 
       <TransactionTable
-        searchQuery={searchQuery}
-        filters={filters}
-        currentPage={currentPage}
-        itemsPerPage={itemsPerPage}
+        transactions={!loadingUserTransactionHistory && userTransactionHistory?.transactions || []}
+        totalPages={!loadingUserTransactionHistory && userTransactionHistory?.totalPages || 1}
+        currentPage={!loadingUserTransactionHistory && userTransactionHistory?.page || 1}
         onPageChange={handlePageChange}/>
     </div>
   )

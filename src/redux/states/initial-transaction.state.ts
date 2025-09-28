@@ -43,6 +43,9 @@ export const userSearchTransactionInitialState: SearchTransactionsRequestPayload
   processedAt: undefined,
   rate: undefined,
 
+  // Search Query
+  searchQuery: undefined,
+
   // Date Range Filters
   createdAtFrom: undefined,
   createdAtTo: undefined,

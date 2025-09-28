@@ -37,10 +37,6 @@ export const useTransactionQuery = () => {
     queryFn: async () => {
       const rootState = store.getState() as RootState;
 
-      console.log({
-        userTransactionHistory: rootState?.transaction?.dashboard?.searchUserTransactions
-      })
-
       if (!rootState?.transaction?.dashboard?.searchUserTransactions) {
         return;
       }

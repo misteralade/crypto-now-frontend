@@ -59,6 +59,9 @@ export type SearchTransactionsRequestPayload = {
   processedAt: string | undefined;
   rate: string | undefined;
 
+  // Search Query
+  searchQuery: string | undefined;
+
   // Date Range Filters
   createdAtFrom: string | undefined;
   createdAtTo: string | undefined;
