@@ -1,54 +1,62 @@
 import {useNavigate} from "@tanstack/react-router";
 import {useCryptoQuery} from "../../queries/crypto.query.ts";
 import {useCurrencyQuery} from "../../queries/currency.query.ts";
-import {useState} from "react";
+import {useState, useEffect} from "react";
 import type {TradeOption} from "../../types/navbar.types.ts";
 
-export const useNavbarDropdown = (handleMenuItemClick: (() => void) | undefined, isMobile: boolean | undefined) => {
-  const navigate = useNavigate()
-  const { supportedCryptoCurrencies } = useCryptoQuery();
-  const { supportedCurrencies } = useCurrencyQuery();
-  const [activeDropOption, setActiveDropOption] = useState<TradeOption>("")
-  const [dropStep, setDropStep] = useState<number>(0);
-  const [selectedToken, setSelectedToken] = useState<string>("");
-  const [showTradeDrop, setShowTradeDrop] = useState<boolean>(false);
+export const useNavbarDropdown = (handleMenuItemClick?: (() => void) | undefined, isMobile?: boolean | undefined) => {
+    const navigate = useNavigate()
+    const {supportedCryptoCurrencies} = useCryptoQuery();
+    const {supportedCurrencies} = useCurrencyQuery();
+    const [activeDropOption, setActiveDropOption] = useState<TradeOption>("")
+    const [dropStep, setDropStep] = useState<number>(0);
+    const [selectedToken, setSelectedToken] = useState<string>("");
+    const [showTradeDrop, setShowTradeDrop] = useState<boolean>(false);
 
-  const handleDropClick = (option: TradeOption) => {
-    if (activeDropOption === option) {
-      setShowTradeDrop(!showTradeDrop);
-    } else {
-      setActiveDropOption(option);
-      setShowTradeDrop(true);
-      setDropStep(1);
+    useEffect(() => {
+        if (supportedCryptoCurrencies?.length && !selectedToken) {
+            setSelectedToken(supportedCryptoCurrencies[0].id);
+        }
+    }, [supportedCryptoCurrencies, selectedToken]);
+
+    const handleDropClick = (option: TradeOption) => {
+        if (activeDropOption === option) {
+            setShowTradeDrop(!showTradeDrop);
+        } else {
+            setActiveDropOption(option);
+            setShowTradeDrop(true);
+            setDropStep(1);
+        }
+
+        setSelectedToken(supportedCryptoCurrencies?.[0]?.id || "");
     }
 
-    setSelectedToken("");
-  }
-
-  const handleNextStep = (token: string) => {
-    setSelectedToken(token);
-    setDropStep(2);
-  }
-
-  const handleRouting = (currency: string) => {
-    navigate({to: `/trade-crypto?option=${activeDropOption}&currency=${currency}&token=${selectedToken}`})
-
-    if(isMobile && handleMenuItemClick){
-      handleMenuItemClick();
+    const handleNextStep = (token: string) => {
+        setSelectedToken(token);
+        setDropStep(2);
     }
-  }
 
-  return {
-    // Values
-    supportedCurrencies,
-    supportedCryptoCurrencies,
-    dropStep,
-    activeDropOption,
-    showTradeDrop,
+    const handleRouting = (currency?: string) => {
+        const defaultCurrency = currency ? currency : supportedCurrencies?.[0]?.id;
 
-    // Functions
-    handleDropClick,
-    handleNextStep,
-    handleRouting,
-  }
+        navigate({to: `/trade-crypto?option=${activeDropOption}&currency=${defaultCurrency}&token=${selectedToken}`})
+
+        if (isMobile && handleMenuItemClick) {
+            handleMenuItemClick();
+        }
+    }
+
+    return {
+        // Values
+        supportedCurrencies,
+        supportedCryptoCurrencies,
+        dropStep,
+        activeDropOption,
+        showTradeDrop,
+
+        // Functions
+        handleDropClick,
+        handleNextStep,
+        handleRouting,
+    }
 }
