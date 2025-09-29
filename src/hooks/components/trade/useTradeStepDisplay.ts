@@ -490,6 +490,7 @@ export const useTradeStepDisplay = (
     showPaymentReceivingModal,
     userBankAccounts,
     userCryptoWallets,
+      isInitiatingTrade: initiateTransactionMutation.isPending,
 
     // Functions
     setAmountToBuy,

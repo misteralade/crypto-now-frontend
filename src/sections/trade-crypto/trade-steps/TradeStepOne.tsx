@@ -23,9 +23,10 @@ interface TradeStepOneProps {
     setAmountToBuy: (amountToBuy: string | number) => void;
     availableCurrencies: SupportedCryptoOrCurrencyResponse[];
     availableTokens: SupportedCryptoOrCurrencyResponse[];
+    isInitiatingTrade: boolean;
 }
 
-export default function TradeStepOne({setAmountToBuy, numberOfToken, setNumberOfToken, amountToBuy,selectedCurrency, setSelectedCurrency, setSelectedToken,selectedToken, tradeType, handleProceedToPayment, orderDetails, availableCurrencies, availableTokens}: TradeStepOneProps) {
+export default function TradeStepOne({setAmountToBuy, isInitiatingTrade, numberOfToken, setNumberOfToken, amountToBuy,selectedCurrency, setSelectedCurrency, setSelectedToken,selectedToken, tradeType, handleProceedToPayment, orderDetails, availableCurrencies, availableTokens}: TradeStepOneProps) {
 
     const submitInvalid = numberOfToken === "" || amountToBuy === "";
     const handleSubmit = (e: FormEvent) => {
@@ -84,9 +85,9 @@ export default function TradeStepOne({setAmountToBuy, numberOfToken, setNumberOf
             <div className={`md:w-1/2 w-full mx-auto px-5 md:px-0`}>
                 <CustomButton
                     className="w-full"
-                    buttonText="Proceed to payment"
+                    buttonText={isInitiatingTrade ? "Processing..." : "Proceed to payment"}
                     type="submit"
-                    disabled={submitInvalid}
+                    disabled={submitInvalid || isInitiatingTrade}
                 />
             </div>
         </form>

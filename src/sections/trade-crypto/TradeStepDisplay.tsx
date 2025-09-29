@@ -48,6 +48,7 @@ export default function TradeStepDisplay({
     supportedCurrencies,
     supportedCryptoCurrencies,
     exchangeRateId,
+      isInitiatingTrade,
     transactionSessionId,
     showPaymentReceivingModal,
     userBankAccounts,
@@ -127,6 +128,7 @@ export default function TradeStepDisplay({
             selectedToken={selectedToken}
             availableCurrencies={supportedCurrencies || []}
             availableTokens={supportedCryptoCurrencies || []}
+            isInitiatingTrade={isInitiatingTrade}
           />
         )}
         {step === 2 && (
