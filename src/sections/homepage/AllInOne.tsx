@@ -3,7 +3,7 @@ import CustomButton from "../../components/global/Button";
 export default function AllInOne() {
   return (
     <section className="sm:mt-24 mt-16 md:mt-40 max-md:px-4">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto md:px-4">
         <div className="grid lg:grid-cols-2 gap-12 items-start">
           <div className="max-md:w-full max-md:flex items-start justify-center flex-col">
             <h2 className="text-2xl sm:text-3xl max-md:text-left lg:text-4xl max-w-[378px] font-normal text-[#0E0F0C] md:tracking-[0.8px] mb-8">
