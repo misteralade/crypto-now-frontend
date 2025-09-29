@@ -1,6 +1,7 @@
-import { useState } from "react"
+import {useRef, useState} from "react"
 import { ChevronUp, ChevronDown } from "lucide-react"
 import type {SupportedCryptoOrCurrencyResponse} from "../../types/response.payload.types.ts";
+import useClickOutside from "../../hooks/useClickOutside.ts";
 
 interface CurrencyDropdownProps {
     currentValue: SupportedCryptoOrCurrencyResponse | undefined;
@@ -16,8 +17,11 @@ export default function TradeInputDropdown({ currentValue, setCurrentValue, item
         setIsOpen(false)
     }
 
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    useClickOutside(dropdownRef, () => setIsOpen(false));
+
     return (
-        <div className="relative basis-1/10">
+        <div className="relative basis-1/10" ref={dropdownRef}>
             {/* Dropdown Button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}

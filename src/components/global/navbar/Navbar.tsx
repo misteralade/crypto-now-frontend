@@ -1,6 +1,6 @@
 "use client";
 
-import {useState} from "react";
+import {useState,  useRef} from "react";
 import {Menu} from "lucide-react";
 import Button from "../Button.tsx";
 import Logo from "../../../assets/logo/logo.svg";
@@ -11,11 +11,13 @@ import type {DropItem} from "../../../types/navbar.types.ts";
 import ProfileNav from "./ProfileNav.tsx";
 import {LOCAL_STORAGE_KEYS} from "../../../util/constants.ts";
 import {handleLogout} from "../../../util/utils.ts";
+import useClickOutside from "../../../hooks/useClickOutside.ts";
 
 export default function Navbar() {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const isLoggedIn = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN) !== null;
+    const dropdownRef = useRef<HTMLDivElement>(null);
 
     const dropItems: DropItem[] = [
         {
@@ -35,6 +37,8 @@ export default function Navbar() {
         setIsDropdownOpen(false);
         closeDrawer();
     }
+
+    useClickOutside(dropdownRef, () => setIsDropdownOpen(false));
 
     return (
         <>
@@ -61,7 +65,7 @@ export default function Navbar() {
                         </a>
 
                         {/* Dropdown for Buy & sell crypto */}
-                        <div className="relative">
+                        <div className="relative" ref={dropdownRef}>
                             <button
                                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                                 className="flex items-center gap-1 text-gray-700 hover:text-gray-900 font-medium"

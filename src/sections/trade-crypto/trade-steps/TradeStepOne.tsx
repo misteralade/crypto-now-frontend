@@ -41,7 +41,7 @@ export default function TradeStepOne({setAmountToBuy, numberOfToken, setNumberOf
                 {/*Inputs*/}
                 <div className="space-y-2">
                     {/*Token*/}
-                    <div className={``}>
+                    <div>
                         <TradeFormInput
                             name={`${tradeType === "sell" ? "token": "currency"}`}
                             label={`enter amount`}
@@ -60,7 +60,7 @@ export default function TradeStepOne({setAmountToBuy, numberOfToken, setNumberOf
                     <img src={SwapIcon} alt="Swap icon" className={`block mx-auto`}/>
 
                     {/*Currency*/}
-                    <div className={``}>
+                    <div>
                         <TradeFormInput
                             name={`${tradeType === "sell" ? "currency": "token"}`}
                             label={`You will receive`}
