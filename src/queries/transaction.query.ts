@@ -4,7 +4,7 @@ import {useMatchRoute} from "@tanstack/react-router";
 import {QUERY_KEYS} from "./query.keys.ts";
 import {transactionServiceApi} from "../api/transaction.api.ts";
 import {type RootState, store} from "../store.ts";
-import {SESSION_STORAGE_KEYS} from "../util/constants.ts";
+import {LOCAL_STORAGE_KEYS, SESSION_STORAGE_KEYS} from "../util/constants.ts";
 
 export const useTransactionQuery = () => {
   const matchRoute = useMatchRoute();
@@ -16,7 +16,7 @@ export const useTransactionQuery = () => {
       const rootState = store.getState() as RootState;
       const transaction = rootState.transaction;
 
-      if (!transaction.amountToSend || transaction.exchangeRateId) {
+      if (!transaction.amountToSend || !transaction.exchangeRateId) {
         return;
       }
 
@@ -113,6 +113,7 @@ export const useTransactionQuery = () => {
       toast.dismiss('confirm-receiving-account');
       toast.success('Successfully confirmed receiving account');
       sessionStorage.removeItem(SESSION_STORAGE_KEYS.SESSION_ID);
+      localStorage.removeItem(LOCAL_STORAGE_KEYS.TRADE_PROGRESS);
     },
     onError: () => {
       toast.dismiss('confirm-receiving-account');

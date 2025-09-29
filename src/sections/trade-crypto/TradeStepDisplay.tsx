@@ -14,7 +14,6 @@ import {
 export default function TradeStepDisplay({
   activeTab,
   setActiveTab,
-  tradeType,
   step,
   currency,
   token,
@@ -64,7 +63,7 @@ export default function TradeStepDisplay({
     initiateTransaction,
     makePaymentTransaction,
     handleConfirmBankDetails,
-  } = useTradeStepDisplay(token, tradeType, activeTab, currency, setStep);
+  } = useTradeStepDisplay(token, activeTab, currency, setStep);
 
   // 1) On mount: only keep progress if navigation type is "reload"
   useEffect(() => {
@@ -78,6 +77,7 @@ export default function TradeStepDisplay({
       clearTradeProgress();
     }
   }, []);
+  
   // 2) On unmount: clear progress for SPA route changes, but keep it for reloads
   useEffect(() => {
     let isReloading = false;

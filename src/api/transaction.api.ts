@@ -1,5 +1,5 @@
 import {toast} from "react-toastify";
-import {axiosPatchRequestHandler, axiosPostRequestHandler, axiosPutRequestHandler} from "./index.ts";
+import { axiosPostRequestHandler, axiosPutRequestHandler} from "./index.ts";
 import type {SearchTransactionsRequestPayload} from "../types/request.payload.types.ts";
 import type {UserTransactionsHistoryResponse} from "../types/response.payload.types.ts";
 
@@ -88,7 +88,7 @@ class TransactionServiceApi {
       message: string,
       success: boolean,
       error: any
-    } = await axiosPatchRequestHandler(
+    } = await axiosPutRequestHandler(
       `/transaction/confirm-receiving-payment-account/${sessionId}`,
       {
         ...(accountData.walletId ? { walletId: accountData.walletId } : {}),
