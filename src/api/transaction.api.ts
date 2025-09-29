@@ -1,7 +1,7 @@
 import {toast} from "react-toastify";
-import { axiosPostRequestHandler, axiosPutRequestHandler} from "./index.ts";
+import {axiosGetRequestHandler, axiosPostRequestHandler, axiosPutRequestHandler} from "./index.ts";
 import type {SearchTransactionsRequestPayload} from "../types/request.payload.types.ts";
-import type {UserTransactionsHistoryResponse} from "../types/response.payload.types.ts";
+import type {TransactionSummaryResponse, UserTransactionsHistoryResponse} from "../types/response.payload.types.ts";
 
 class TransactionServiceApi {
   private static instance: TransactionServiceApi;
@@ -107,6 +107,12 @@ class TransactionServiceApi {
   async searchUserTransactions(payload: SearchTransactionsRequestPayload) {
     const { data, message, success }: { data: UserTransactionsHistoryResponse, message: string, success: boolean } = await axiosPostRequestHandler("/transaction/user/search-history", payload);
 
+    return { data, message, success };
+  }
+  
+  async getUserTransactionSummary() {
+    const { data, message, success }: { data: TransactionSummaryResponse, message: string, success: boolean } = await axiosGetRequestHandler("/transaction/user/summary");
+    
     return { data, message, success };
   }
 }

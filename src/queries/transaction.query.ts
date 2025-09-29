@@ -50,6 +50,21 @@ export const useTransactionQuery = () => {
       return null;
     },
     enabled: !!(store.getState() as RootState)?.transaction?.dashboard?.searchUserTransactions && !!matchRoute({ to: "/dashboard" }),
+  });
+  
+  // Return Transaction Summary
+  const { data: transactionSummary, isLoading: loadingTransactionSummary } = useQuery({
+    queryKey: [QUERY_KEYS.TRANSACTION.USER_TRANSACTION_SUMMARY],
+    queryFn: async () => {
+      const { data, success } = await transactionServiceApi.getUserTransactionSummary();
+
+      if (success) {
+        return data;
+      }
+
+      return null;
+    },
+    enabled: !!matchRoute({ to: "/dashboard" }),
   })
 
   // Initiate Transaction Mutation
@@ -68,7 +83,7 @@ export const useTransactionQuery = () => {
       sessionStorage.setItem(SESSION_STORAGE_KEYS.SESSION_ID, sessionId as string);
     },
   });
-
+  
   // Make Payment Transaction Mutation
   const makePaymentTransactionMutation = useMutation({
     mutationKey: [QUERY_KEYS.TRANSACTION.MAKE_PAYMENT_TRANSACTION],
@@ -85,7 +100,7 @@ export const useTransactionQuery = () => {
       });
     },
   });
-
+  
   // Confirm Receiving Payment Account Mutation
   const receivingPaymentAccountConfirmationMutation = useMutation({
     mutationKey: [QUERY_KEYS.TRANSACTION.CONFIRM_RECEIVING_PAYMENT_ACCOUNT],
@@ -120,13 +135,15 @@ export const useTransactionQuery = () => {
       toast.error('Failed to confirm receiving account');
     }
   });
-
+  
   return {
     // Values
     calculatedAmount,
     loadingCalculation,
     userTransactionHistory,
     loadingUserTransactionHistory,
+    transactionSummary,
+    loadingTransactionSummary,
 
 
     // Mutations
