@@ -1,15 +1,6 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
-import DashboardPage from "../sections/dashboard/DashboardPage.tsx";
-import { LOCAL_STORAGE_KEYS } from "../util/constants.ts";
+import { createFileRoute } from "@tanstack/react-router";
+import DashboardPage from "../sections/dashboard/DashboardPage.tsx"
 
 export const Route = createFileRoute("/dashboard")({
-  beforeLoad: () => {
-    const accessToken = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
-    if (!accessToken) {
-      throw redirect({
-        to: "/sign-in",
-      });
-    }
-  },
-  component: DashboardPage,
+    component: DashboardPage,
 });

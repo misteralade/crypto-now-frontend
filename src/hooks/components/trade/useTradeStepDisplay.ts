@@ -1,61 +1,42 @@
-import { useEffect, useState, useMemo, useRef } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import {useEffect, useState, useMemo, useRef} from "react";
+import { useQueryClient} from "@tanstack/react-query";
 import { useDispatch } from "react-redux";
 
 import type {
   TradeAdditionalInfoInterface,
   TradeType,
 } from "../../../types/trade.types.ts";
-import { useCurrencyQuery } from "../../../queries/currency.query.ts";
-import type { SupportedCryptoOrCurrencyResponse } from "../../../types/response.payload.types.ts";
-import { useCryptoQuery } from "../../../queries/crypto.query.ts";
-import { useRateQuery } from "../../../queries/rate.query.ts";
-import { useTransactionQuery } from "../../../queries/transaction.query.ts";
-import { QUERY_KEYS } from "../../../queries/query.keys.ts";
-import type { InitiateTransactionRequestPayload } from "../../../types/request.payload.types.ts";
-import { useBankQuery } from "../../../queries/bank.query.ts";
-import {
-  setExchangeRateId as setReduxExchangeRateId,
-  setInitiateTransaction,
-  setAmountToSend,
-} from "../../../redux/transaction.slice.ts";
-import { setSelectedCryptoId } from "../../../redux/crypto.slice.ts";
-import { SESSION_STORAGE_KEYS } from "../../../util/constants.ts";
-import {
-  loadTradeProgress,
-  saveTradeProgress,
-} from "../../../util/tradeProgress.storgae.ts";
+import {useCurrencyQuery} from "../../../queries/currency.query.ts";
+import type {SupportedCryptoOrCurrencyResponse} from "../../../types/response.payload.types.ts";
+import {useCryptoQuery} from "../../../queries/crypto.query.ts";
+import {useRateQuery} from "../../../queries/rate.query.ts";
+import {useTransactionQuery} from "../../../queries/transaction.query.ts";
+import {QUERY_KEYS} from "../../../queries/query.keys.ts";
+import type {InitiateTransactionRequestPayload} from "../../../types/request.payload.types.ts";
+import {useBankQuery} from "../../../queries/bank.query.ts";
+import { setExchangeRateId as setReduxExchangeRateId, setInitiateTransaction, setAmountToSend } from '../../../redux/transaction.slice.ts'
+import { setSelectedCryptoId } from '../../../redux/crypto.slice.ts'
+import {SESSION_STORAGE_KEYS} from "../../../util/constants.ts";
 
-// Debounce
+// Custom debounce hook
 const useDebounce = (value: any, delay: number) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
+
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedValue(value), delay);
-    return () => clearTimeout(t);
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
   }, [value, delay]);
+
   return debouncedValue;
 };
 
-// shallow compare helper
-const shallowEqual = (a: any, b: any) => {
-  if (a === b) return true;
-  if (typeof a !== "object" || typeof b !== "object" || !a || !b) return false;
-  const ak = Object.keys(a);
-  const bk = Object.keys(b);
-  if (ak.length !== bk.length) return false;
-  for (const k of ak) {
-    if (a[k] !== b[k]) return false;
-  }
-  return true;
-};
-
-export const useTradeStepDisplay = (
-  token: string,
-  tradeType: TradeType,
-  activeTab: TradeType,
-  currency: string,
-  setStep: (value: number) => void
-) => {
+export const useTradeStepDisplay = (token: string, tradeType: TradeType, activeTab: TradeType, currency: string, setStep: (value: number) => void) => {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-expect-error
   const countdownIntervalRef = useRef<any>();
   const queryClient = useQueryClient();
@@ -63,32 +44,15 @@ export const useTradeStepDisplay = (
   const { userBankAccounts } = useBankQuery();
   const { supportedCurrencies } = useCurrencyQuery();
   const { supportedCryptoCurrencies, userCryptoWallets } = useCryptoQuery();
-  const {
-    calculatedAmount,
-    loadingCalculation,
-    initiateTransactionMutation,
-    makePaymentTransactionMutation,
-    receivingPaymentAccountConfirmationMutation,
-  } = useTransactionQuery();
+  const { calculatedAmount, loadingCalculation, initiateTransactionMutation, makePaymentTransactionMutation, receivingPaymentAccountConfirmationMutation } = useTransactionQuery();
 
   const [transactionSessionId, setTransactionSessionId] = useState<string>();
-  const [selectedToken, setSelectedToken] =
-    useState<SupportedCryptoOrCurrencyResponse>();
-  const [selectedCurrency, setSelectedCurrency] =
-    useState<SupportedCryptoOrCurrencyResponse>();
+  const [selectedToken, setSelectedToken] = useState<SupportedCryptoOrCurrencyResponse>();
+  const [selectedCurrency, setSelectedCurrency] = useState<SupportedCryptoOrCurrencyResponse>();
   const [countdown, setCountdown] = useState<string>("");
-  const [transactionForm, setTransactionForm] =
-    useState<InitiateTransactionRequestPayload>();
-  const transactionFormRef = useRef<
-    InitiateTransactionRequestPayload | undefined
-  >(undefined);
-
-  const [isCountdownLocked, setIsCountdownLocked] = useState(false);
-  const { exchangeRate, loadingExchangeRate } = useRateQuery(
-    selectedToken?.id || "",
-    selectedCurrency?.id || "",
-    tradeType.toUpperCase() === "BUY" ? "BUY" : "SELL"
-  );
+  const [transactionForm, setTransactionForm] = useState<InitiateTransactionRequestPayload>()
+  const [isCountdownLocked, setIsCountdownLocked] = useState(false); // New state to lock countdown
+  const { exchangeRate, loadingExchangeRate } = useRateQuery(selectedToken?.id || '', selectedCurrency?.id || '', tradeType.toUpperCase() === 'BUY' ? 'BUY' : 'SELL');
 
   const [numberOfToken, setNumberOfToken] = useState<string | number>("");
   const [exchangeRateId, setExchangeRateId] = useState("");
@@ -96,338 +60,229 @@ export const useTradeStepDisplay = (
   const [amountToBuy, setAmountToBuy] = useState<string | number>("");
 
   // Modals
-  const [showPaymentReceivingModal, setShowPaymentReceivingModal] =
-    useState(false);
-  const [, setShowConfirmBankDetails] = useState<boolean>(false);
+  const [showPaymentReceivingModal, setShowPaymentReceivingModal] = useState(false)
+  const [, setShowConfirmBankDetails] = useState<boolean>(false)
 
-  // Amount to send
-  const amountToSend =
-    activeTab === "sell" ? Number(numberOfToken) : Number(amountToBuy);
+  // Get the amount to send for the transaction query
+  const amountToSend = activeTab === "sell" ? Number(numberOfToken) : Number(amountToBuy);
+
+  // Debounce the amount to send to prevent excessive API calls (500ms delay)
   const debouncedAmountToSend = useDebounce(amountToSend, 500);
-  useEffect(() => {
-    dispatch(
-      setAmountToSend(
-        debouncedAmountToSend > 0 ? debouncedAmountToSend : undefined
-      )
-    );
-  }, [debouncedAmountToSend, dispatch]);
+  dispatch(setAmountToSend(debouncedAmountToSend > 0 ? debouncedAmountToSend : undefined))
 
-  // 🔹 Hydration guard to avoid saving empty defaults on first paint
-  const hydratedRef = useRef(false);
-
-  // ---------- Restore persisted progress ----------
-  useEffect(() => {
-    const saved = loadTradeProgress();
-    if (!saved) {
-      hydratedRef.current = true;
-      return;
-    }
-
-    // amounts & flags
-    if (saved.numberOfToken !== undefined)
-      setNumberOfToken(saved.numberOfToken);
-    if (saved.amountToBuy !== undefined) setAmountToBuy(saved.amountToBuy);
-    if (saved.isCountdownLocked !== undefined)
-      setIsCountdownLocked(saved.isCountdownLocked);
-    if (saved.exchangeRateId) setExchangeRateId(saved.exchangeRateId);
-    if (saved.transactionSessionId)
-      setTransactionSessionId(saved.transactionSessionId);
-
-    // mark hydrated after we push restored state
-    // small timeout ensures our "save" effects don't run with pre-hydrate empties
-    setTimeout(() => {
-      hydratedRef.current = true;
-    }, 0);
-  }, []);
-
-  // Countdown
+  // Countdown timer effect
   useEffect(() => {
     if (!validUntil || isCountdownLocked) return;
 
     const updateCountdown = () => {
       const now = new Date().getTime();
-      const target = validUntil.getTime();
-      const diff = target - now;
+      const targetTime = validUntil.getTime();
+      const timeDifference = targetTime - now;
 
-      if (diff <= 0) {
+      if (timeDifference <= 0) {
         setCountdown("Expired");
-        if (countdownIntervalRef.current)
+
+        // Clear the interval
+        if (countdownIntervalRef.current) {
           clearInterval(countdownIntervalRef.current);
+        }
+
+        // Don't reset amounts - just unlock countdown and refresh rates
         setIsCountdownLocked(false);
+
+        // Refetch exchange rate when expired to get new rates
         if (selectedToken?.id && selectedCurrency?.id) {
           queryClient.invalidateQueries({
-            queryKey: [
-              QUERY_KEYS.EXCHANGE_RATE.GET_CRYPTO_TO_CURRENCY_EXCHANGE_RATE,
-              selectedToken.id,
-              selectedCurrency.id,
-            ],
+            queryKey: [QUERY_KEYS.EXCHANGE_RATE.GET_CRYPTO_TO_CURRENCY_EXCHANGE_RATE, selectedToken.id, selectedCurrency.id]
           });
         }
         return;
       }
 
-      const h = Math.floor(diff / (1000 * 60 * 60));
-      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const s = Math.floor((diff % (1000 * 60)) / 1000);
-      setCountdown(
-        h > 0 ? `${h}h ${m}m ${s}s` : m > 0 ? `${m}m ${s}s` : `${s}s`
-      );
+      const hours = Math.floor(timeDifference / (1000 * 60 * 60));
+      const minutes = Math.floor((timeDifference % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((timeDifference % (1000 * 60)) / 1000);
+
+      if (hours > 0) {
+        setCountdown(`${hours}h ${minutes}m ${seconds}s`);
+      } else if (minutes > 0) {
+        setCountdown(`${minutes}m ${seconds}s`);
+      } else {
+        setCountdown(`${seconds}s`);
+      }
     };
 
-    dispatch(setSelectedCryptoId(selectedToken?.id || ""));
+    dispatch(setSelectedCryptoId(selectedToken?.id || ""))
+
+    // Update immediately
     updateCountdown();
+
+    // Set up interval to update every second only if countdown is not locked
     if (!isCountdownLocked) {
       countdownIntervalRef.current = setInterval(updateCountdown, 1000);
     }
+
+    // Cleanup interval on unmount or when dependencies change
     return () => {
-      if (countdownIntervalRef.current)
+      if (countdownIntervalRef.current) {
         clearInterval(countdownIntervalRef.current);
+      }
     };
-  }, [
-    validUntil,
-    isCountdownLocked,
-    selectedToken?.id,
-    selectedCurrency?.id,
-    queryClient,
-    dispatch,
-  ]);
+  }, [validUntil, selectedToken?.id, selectedCurrency?.id, queryClient, isCountdownLocked]);
 
-  // Auto-calc opposite field (guarded)
+  // Auto-calculate the opposite field based on exchange rate (only if countdown is not locked)
   useEffect(() => {
-    if (!exchangeRate?.fiatRate || loadingExchangeRate || isCountdownLocked)
-      return;
+    if (!exchangeRate?.fiatRate || loadingExchangeRate || isCountdownLocked) return;
 
-    let nextAmountToBuy = amountToBuy;
-    let nextNumberOfToken = numberOfToken;
-
-    if (
-      activeTab === "sell" &&
-      numberOfToken !== "" &&
-      Number(numberOfToken) > 0
-    ) {
-      nextAmountToBuy = (Number(numberOfToken) * exchangeRate.fiatRate).toFixed(
-        5
-      );
-      if (nextAmountToBuy !== amountToBuy) setAmountToBuy(nextAmountToBuy);
+    if (activeTab === "sell" && numberOfToken !== "" && Number(numberOfToken) > 0) {
+      const calculatedAmount = (Number(numberOfToken) * exchangeRate.fiatRate).toFixed(5);
+      setAmountToBuy(calculatedAmount);
     }
+
     if (activeTab === "buy" && amountToBuy !== "" && Number(amountToBuy) > 0) {
-      nextNumberOfToken = (Number(amountToBuy) / exchangeRate.fiatRate).toFixed(
-        8
-      );
-      if (nextNumberOfToken !== numberOfToken)
-        setNumberOfToken(nextNumberOfToken);
+      const calculatedTokens = (Number(amountToBuy) / exchangeRate.fiatRate).toFixed(8);
+      setNumberOfToken(calculatedTokens);
     }
 
-    const partial: Partial<InitiateTransactionRequestPayload> = {
-      amountToReceive:
-        activeTab.toUpperCase() === "SELL"
-          ? Number(nextAmountToBuy)
-          : Number(nextNumberOfToken),
-      amountToSend:
-        activeTab.toUpperCase() === "SELL"
-          ? Number(nextNumberOfToken)
-          : Number(nextAmountToBuy),
-    };
+    setTransactionForm((prev) => ({
+      ...prev,
+      amountToReceive: activeTab.toUpperCase() === "SELL" ? Number(amountToBuy) : Number(numberOfToken),
+      amountToSend: activeTab.toUpperCase() === "SELL" ? Number(numberOfToken) : Number(amountToBuy),
+    }))
+    dispatch(setInitiateTransaction({
+      ...transactionForm,
+      amountToReceive: activeTab.toUpperCase() === "SELL" ? Number(amountToBuy) : Number(numberOfToken),
+      amountToSend: activeTab.toUpperCase() === "SELL" ? Number(numberOfToken) : Number(amountToBuy),
+    }));
+  }, [numberOfToken, amountToBuy, activeTab, exchangeRate?.fiatRate, loadingExchangeRate, isCountdownLocked]);
 
-    const merged: InitiateTransactionRequestPayload = {
-      ...(transactionFormRef.current || {}),
-      ...partial,
-    } as InitiateTransactionRequestPayload;
-
-    if (!shallowEqual(transactionFormRef.current, merged)) {
-      transactionFormRef.current = merged;
-      setTransactionForm(merged);
-      dispatch(setInitiateTransaction(merged));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    numberOfToken,
-    amountToBuy,
-    activeTab,
-    exchangeRate?.fiatRate,
-    loadingExchangeRate,
-    isCountdownLocked,
-  ]);
-
-  // Initial selection from route params
   useEffect(() => {
-    const foundToken = supportedCryptoCurrencies?.find((c) => c.id === token);
-    const foundCurrency = supportedCurrencies?.find((c) => c.id === currency);
+    // Find the selected token from the supportedCryptoCurrencies array
+    const foundToken = supportedCryptoCurrencies?.find(
+      (crypto) => crypto.id === token
+    );
     setSelectedToken(foundToken);
+
+    // Find the selected currency from the supportedCurrencies array
+    const foundCurrency = supportedCurrencies?.find(
+      (curr) => curr.id === currency
+    );
     setSelectedCurrency(foundCurrency);
 
-    const partial: Partial<InitiateTransactionRequestPayload> = {
+    setTransactionForm((prev) => ({
+      ...prev,
       tokenId: foundToken?.id,
       currencyId: foundCurrency?.id,
-    };
-    const merged: InitiateTransactionRequestPayload = {
-      ...(transactionFormRef.current || {}),
-      ...partial,
-    } as InitiateTransactionRequestPayload;
+    }))
+    dispatch(setInitiateTransaction({
+      ...transactionForm,
+      tokenId: foundToken?.id,
+      currencyId: foundCurrency?.id,
+    }));
+  }, [supportedCurrencies, supportedCryptoCurrencies, token, currency])
 
-    if (!shallowEqual(transactionFormRef.current, merged)) {
-      transactionFormRef.current = merged;
-      setTransactionForm(merged);
-      dispatch(setInitiateTransaction(merged));
-    }
-  }, [
-    supportedCurrencies,
-    supportedCryptoCurrencies,
-    token,
-    currency,
-    dispatch,
-  ]);
-
-  // Restore selections by saved IDs once lists are ready
   useEffect(() => {
-    const saved = loadTradeProgress();
-    if (!saved) return;
+    const rateId = exchangeRate?.rateId || '';
 
-    if (saved.selectedTokenId && supportedCryptoCurrencies?.length) {
-      const found = supportedCryptoCurrencies.find(
-        (c) => c.id === saved.selectedTokenId
-      );
-      if (found) setSelectedToken(found);
-    }
-    if (saved.selectedCurrencyId && supportedCurrencies?.length) {
-      const found = supportedCurrencies.find(
-        (c) => c.id === saved.selectedCurrencyId
-      );
-      if (found) setSelectedCurrency(found);
-    }
-  }, [supportedCryptoCurrencies, supportedCurrencies]);
-
-  // Exchange rate updates (guarded)
-  useEffect(() => {
-    const rateId = exchangeRate?.rateId || "";
     setExchangeRateId(rateId);
-    dispatch(setReduxExchangeRateId(rateId));
-    setValidUntil(
-      exchangeRate?.validUntil ? new Date(exchangeRate.validUntil) : undefined
-    );
+    dispatch(setReduxExchangeRateId(rateId))
+    setValidUntil(exchangeRate?.validUntil ? new Date(exchangeRate.validUntil) : undefined);
 
-    const partial: Partial<InitiateTransactionRequestPayload> = {
+    setTransactionForm((val) => ({
+      ...val,
       exchangeRateId: rateId,
-    };
-    const merged: InitiateTransactionRequestPayload = {
-      ...(transactionFormRef.current || {}),
-      ...partial,
-    } as InitiateTransactionRequestPayload;
+    }));
+    dispatch(setInitiateTransaction({
+      ...transactionForm,
+      exchangeRateId: rateId,
+    }));
 
-    if (!shallowEqual(transactionFormRef.current, merged)) {
-      transactionFormRef.current = merged;
-      setTransactionForm(merged);
-      dispatch(setInitiateTransaction(merged));
-    }
-
+    // Store exchange rate ID in session storage
     if (rateId) {
       sessionStorage.setItem("exchangeRateId", rateId);
-      saveTradeProgress({ exchangeRateId: rateId });
     }
-    if (rateId && isCountdownLocked) setIsCountdownLocked(false);
-  }, [exchangeRate, dispatch, isCountdownLocked]);
 
-  // 🔹 Only clear amounts when the tab ACTUALLY changes (not on mount)
-  const prevActiveTabRef = useRef<TradeType>(activeTab);
-  useEffect(() => {
-    const prev = prevActiveTabRef.current;
-    if (prev !== activeTab) {
-      setNumberOfToken("");
-      setAmountToBuy("");
+    // Reset countdown lock when new exchange rate is received
+    if (rateId && isCountdownLocked) {
       setIsCountdownLocked(false);
-      prevActiveTabRef.current = activeTab;
     }
-    // if same tab, do nothing (prevents clearing after refresh)
+  }, [exchangeRate]);
+
+  // Reset form when switching between buy/sell tabs
+  useEffect(() => {
+    setNumberOfToken("");
+    setAmountToBuy("");
+
+    // Reset countdown lock when switching tabs
+    setIsCountdownLocked(false);
   }, [activeTab]);
 
-  const isDebouncing =
-    amountToSend !== debouncedAmountToSend && amountToSend > 0;
+  // Check if we're currently waiting for debounce (user is still typing)
+  const isDebouncing = amountToSend !== debouncedAmountToSend && amountToSend > 0;
 
+  // Get the calculated amount to receive from the API or fallback to local calculation
   const amountToReceive: number = useMemo(() => {
+    // If we have API response, use it
     if (calculatedAmount && !loadingCalculation && !isDebouncing) {
       return Number(calculatedAmount);
     }
+
+    // Fallback to local calculation while API is loading or debouncing
     if (exchangeRate?.fiatRate && amountToSend > 0) {
-      return activeTab === "sell"
-        ? Number(amountToBuy) || 0
-        : Number(numberOfToken) || 0;
+      if (activeTab === "sell") {
+        // Selling: convert tokens to currency
+        return Number(amountToBuy) || 0;
+      } else {
+        // Buying: convert currency to tokens
+        return Number(numberOfToken) || 0;
+      }
     }
+
     return 0;
-  }, [
-    calculatedAmount,
-    loadingCalculation,
-    isDebouncing,
-    exchangeRate?.fiatRate,
-    amountToSend,
-    activeTab,
-    amountToBuy,
-    numberOfToken,
-  ]);
+  }, [calculatedAmount, loadingCalculation, isDebouncing, exchangeRate?.fiatRate, amountToSend, activeTab, amountToBuy, numberOfToken]);
 
   const AdditionalInfo: TradeAdditionalInfoInterface[] = [
     {
       title: "Rate",
-      value: loadingExchangeRate
-        ? "Loading..."
-        : `1 ${selectedToken?.symbol} = ${exchangeRate?.fiatRate?.toLocaleString() || 0} ${selectedCurrency?.code}`,
+      value: loadingExchangeRate ? 'Loading...' : `1 ${selectedToken?.symbol} = ${exchangeRate?.fiatRate?.toLocaleString() || 0} ${selectedCurrency?.code}`,
     },
     {
       title: "Valid until",
-      value: loadingExchangeRate
-        ? "Loading..."
-        : isCountdownLocked
-          ? "Rate Locked"
-          : countdown || "Loading...",
+      value: loadingExchangeRate ? 'Loading...' : isCountdownLocked ? 'Rate Locked' : countdown || "Loading...",
     },
-  ];
+  ]
 
   const handleReceiptUrl = (url: string) => {
-    const partial: Partial<InitiateTransactionRequestPayload> = {
-      receiptUrl: url,
-    };
-    const merged: InitiateTransactionRequestPayload = {
-      ...(transactionFormRef.current || {}),
-      ...partial,
-    } as InitiateTransactionRequestPayload;
-
-    if (!shallowEqual(transactionFormRef.current, merged)) {
-      transactionFormRef.current = merged;
-      setTransactionForm(merged);
-      dispatch(setInitiateTransaction(merged));
-    }
-    saveTradeProgress({ receiptUrl: url });
+    setTransactionForm((prev) => ({
+      ...prev,
+      receiptUrl: url
+    }))
+    dispatch(setInitiateTransaction({
+      ...transactionForm,
+      receiptUrl: url
+    }))
   };
 
   const handleTransactionHash = (hash: string) => {
-    const partial: Partial<InitiateTransactionRequestPayload> = {
-      transactionHash: hash,
-    };
-    const merged: InitiateTransactionRequestPayload = {
-      ...(transactionFormRef.current || {}),
-      ...partial,
-    } as InitiateTransactionRequestPayload;
-
-    if (!shallowEqual(transactionFormRef.current, merged)) {
-      transactionFormRef.current = merged;
-      setTransactionForm(merged);
-      dispatch(setInitiateTransaction(merged));
-    }
-    saveTradeProgress({ transactionHash: hash });
+    setTransactionForm((prev) => ({
+      ...prev,
+      transactionHash: hash
+    }))
+    dispatch(setInitiateTransaction({
+      ...transactionForm,
+      transactionHash: hash
+    }))
   };
 
-  const togglePaymentReceivingModal = () =>
-    setShowPaymentReceivingModal((prev) => !prev);
+  const togglePaymentReceivingModal = () => setShowPaymentReceivingModal((prev) => !prev);
 
-  const toggleConfirmBankDetails = () =>
-    setShowConfirmBankDetails((prev) => !prev);
+  const toggleConfirmBankDetails = () => setShowConfirmBankDetails((prev) => !prev);
 
   const initiateTransaction = async () => {
-    await initiateTransactionMutation.mutateAsync();
-    const sid = sessionStorage.getItem(SESSION_STORAGE_KEYS.SESSION_ID) || "";
-    setTransactionSessionId(sid);
-    saveTradeProgress({ transactionSessionId: sid, step: 2 });
+    await initiateTransactionMutation.mutateAsync()
+    setTransactionSessionId(sessionStorage.getItem(SESSION_STORAGE_KEYS.SESSION_ID) || "")
     setStep(2);
-  };
+  }
 
   const makePaymentTransaction = async () => {
     await makePaymentTransactionMutation.mutateAsync();
@@ -436,38 +291,14 @@ export const useTradeStepDisplay = (
       clearInterval(countdownIntervalRef.current);
     }
     togglePaymentReceivingModal();
-  };
+  }
 
   const handleConfirmBankDetails = async (step: number) => {
-    await receivingPaymentAccountConfirmationMutation.mutateAsync();
+    await receivingPaymentAccountConfirmationMutation.mutateAsync()
     toggleConfirmBankDetails();
     togglePaymentReceivingModal();
     setStep(step);
-  };
-
-  // ---------- Persist deltas (guarded by hydration) ----------
-  useEffect(() => {
-    if (!hydratedRef.current) return;
-    saveTradeProgress({
-      selectedTokenId: selectedToken?.id,
-      selectedCurrencyId: selectedCurrency?.id,
-    });
-  }, [selectedToken?.id, selectedCurrency?.id]);
-
-  useEffect(() => {
-    if (!hydratedRef.current) return;
-    saveTradeProgress({ numberOfToken, amountToBuy, isCountdownLocked });
-  }, [numberOfToken, amountToBuy, isCountdownLocked]);
-
-  useEffect(() => {
-    if (!hydratedRef.current) return;
-    if (exchangeRateId) saveTradeProgress({ exchangeRateId });
-  }, [exchangeRateId]);
-
-  useEffect(() => {
-    if (!hydratedRef.current) return;
-    if (transactionSessionId) saveTradeProgress({ transactionSessionId });
-  }, [transactionSessionId]);
+  }
 
   return {
     // Values
@@ -503,4 +334,4 @@ export const useTradeStepDisplay = (
     makePaymentTransaction,
     handleConfirmBankDetails,
   };
-};
+}
