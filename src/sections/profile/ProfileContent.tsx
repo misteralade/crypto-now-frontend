@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react"
 import {useUserQuery} from "../../queries/user.query.ts";
+import {useBankQuery} from "../../queries/bank.query.ts";
 import CustomLoader from "../../components/global/Loader.tsx";
 import ProfilePersonalInfoSection from "./ProfilePersonalInfoSection.tsx";
 import ProfileBankDetailsSection from "./ProfileBankDetailsSection.tsx";
-import {useBankQuery} from "../../queries/bank.query.ts";
+import ProfileAddressDetailsSection from "./ProfileAddressDetailsSection.tsx";
 
 export default function ProfileContent(){
     const {userProfileData,  loadingUserProfile} = useUserQuery();
@@ -12,13 +13,19 @@ export default function ProfileContent(){
     const [email, setEmail] = useState("")
     const [phoneNumber, setPhoneNumber] = useState("")
 
-    console.log(userProfileData)
-
-
     const { allBanks, loadingAllBanks } = useBankQuery();
     const [selectedBank, setSelectedBank] = useState("")
     const [accountHolderName, setAccountHolderName] = useState("")
     const [accountNumber, setAccountNumber] = useState("")
+
+    const [selectedCoin, setSelectedCoin] = useState("")
+    const [walletAddress, setWalletAddress] = useState("")
+    const [selectedNetwork, setSelectedNetwork] = useState("")
+
+    const handleAddAddress = () => {
+        console.log("Add address clicked")
+        // Implement add address logic here
+    }
 
     useEffect(() => {
         if(!loadingUserProfile){
@@ -59,6 +66,16 @@ export default function ProfileContent(){
                                 onBankChange={setSelectedBank}
                                 onAccountHolderNameChange={setAccountHolderName}
                                 onAccountNumberChange={setAccountNumber}
+                            />
+
+                            <ProfileAddressDetailsSection
+                                selectedCoin={selectedCoin}
+                                walletAddress={walletAddress}
+                                selectedNetwork={selectedNetwork}
+                                onCoinChange={setSelectedCoin}
+                                onWalletAddressChange={setWalletAddress}
+                                onNetworkChange={setSelectedNetwork}
+                                onAddAddress={handleAddAddress}
                             />
                         </>
                     )}
