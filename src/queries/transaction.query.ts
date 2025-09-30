@@ -4,7 +4,7 @@ import {useMatchRoute} from "@tanstack/react-router";
 import {QUERY_KEYS} from "./query.keys.ts";
 import {transactionServiceApi} from "../api/transaction.api.ts";
 import {type RootState, store} from "../store.ts";
-import {SESSION_STORAGE_KEYS} from "../util/constants.ts";
+import {LOCAL_STORAGE_KEYS, SESSION_STORAGE_KEYS} from "../util/constants.ts";
 
 export const useTransactionQuery = () => {
   const matchRoute = useMatchRoute();
@@ -16,7 +16,7 @@ export const useTransactionQuery = () => {
       const rootState = store.getState() as RootState;
       const transaction = rootState.transaction;
 
-      if (!transaction.amountToSend || transaction.exchangeRateId) {
+      if (!transaction.amountToSend || !transaction.exchangeRateId) {
         return;
       }
 
@@ -50,6 +50,21 @@ export const useTransactionQuery = () => {
       return null;
     },
     enabled: !!(store.getState() as RootState)?.transaction?.dashboard?.searchUserTransactions && !!matchRoute({ to: "/dashboard" }),
+  });
+  
+  // Return Transaction Summary
+  const { data: transactionSummary, isLoading: loadingTransactionSummary } = useQuery({
+    queryKey: [QUERY_KEYS.TRANSACTION.USER_TRANSACTION_SUMMARY],
+    queryFn: async () => {
+      const { data, success } = await transactionServiceApi.getUserTransactionSummary();
+
+      if (success) {
+        return data;
+      }
+
+      return null;
+    },
+    enabled: !!matchRoute({ to: "/dashboard" }),
   })
 
   // Initiate Transaction Mutation
@@ -68,7 +83,7 @@ export const useTransactionQuery = () => {
       sessionStorage.setItem(SESSION_STORAGE_KEYS.SESSION_ID, sessionId as string);
     },
   });
-
+  
   // Make Payment Transaction Mutation
   const makePaymentTransactionMutation = useMutation({
     mutationKey: [QUERY_KEYS.TRANSACTION.MAKE_PAYMENT_TRANSACTION],
@@ -85,7 +100,7 @@ export const useTransactionQuery = () => {
       });
     },
   });
-
+  
   // Confirm Receiving Payment Account Mutation
   const receivingPaymentAccountConfirmationMutation = useMutation({
     mutationKey: [QUERY_KEYS.TRANSACTION.CONFIRM_RECEIVING_PAYMENT_ACCOUNT],
@@ -113,19 +128,22 @@ export const useTransactionQuery = () => {
       toast.dismiss('confirm-receiving-account');
       toast.success('Successfully confirmed receiving account');
       sessionStorage.removeItem(SESSION_STORAGE_KEYS.SESSION_ID);
+      localStorage.removeItem(LOCAL_STORAGE_KEYS.TRADE_PROGRESS);
     },
     onError: () => {
       toast.dismiss('confirm-receiving-account');
       toast.error('Failed to confirm receiving account');
     }
   });
-
+  
   return {
     // Values
     calculatedAmount,
     loadingCalculation,
     userTransactionHistory,
     loadingUserTransactionHistory,
+    transactionSummary,
+    loadingTransactionSummary,
 
 
     // Mutations

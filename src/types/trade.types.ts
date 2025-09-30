@@ -2,7 +2,6 @@ import type {ReactNode} from "react";
 
 // Interfaces
 export interface TradeCryptoPageProps {
-    tradeType: TradeType;
     step: number;
     currency: string;
     token: string;
