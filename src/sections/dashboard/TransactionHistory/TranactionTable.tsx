@@ -1,6 +1,7 @@
 import {TransactionRow} from "./TransactionRow.tsx";
 import TransactionPagination from "./TransactionPagination.tsx";
 import type {TransactionResponseEntity} from "../../../types/response.payload.types.ts";
+import CustomLoader from "../../../components/global/Loader.tsx";
 
 export interface FilterState {
     fromDate: string | undefined;
@@ -32,11 +33,7 @@ export function TransactionTable({
                 <tr>
                     <td colSpan={7} className="text-center p-8 text-lg text-gray-500">
                         <div className="flex justify-center items-center space-x-3 min-h-[150px] md:min-h-[300px]">
-                            <div className="relative w-10 h-10">
-                                <div className="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
-                                <div
-                                    className="absolute inset-0 border-4 border-primary rounded-full border-t-transparent animate-spin"></div>
-                            </div>
+                            <CustomLoader />
                         </div>
                     </td>
                 </tr>

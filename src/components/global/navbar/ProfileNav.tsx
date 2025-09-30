@@ -44,7 +44,7 @@ export default function ProfileNav() {
                             className={`bg-greyBg rounded-xl text-lg font-medium absolute top-10 
                             shadow-xl right-0 space-y-3 py-5 px-4 min-w-[200px] z-50`}>
                             <div>
-                                <a href={`/dashboard/profile`}>Profile</a>
+                                <a href={`/profile`}>Profile</a>
                             </div>
 
 

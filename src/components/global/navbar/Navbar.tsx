@@ -199,7 +199,7 @@ export default function Navbar() {
                                     Dashboard
                                 </a>
                                 <a
-                                    href={"/dashboard/Profile"}
+                                    href={"/Profile"}
                                     onClick={handleMenuItemClick}
                                     className="text-gray-700 hover:text-gray-900 font-medium py-2 border-b border-gray-100"
                                 >
