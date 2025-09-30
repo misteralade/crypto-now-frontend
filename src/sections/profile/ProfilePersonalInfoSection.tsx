@@ -11,7 +11,7 @@ interface PersonalInfoSectionProps {
     onPhoneNumberChange: (value: string) => void
 }
 
-export default function PersonalInfoSection({
+export default function ProfilePersonalInfoSection({
                                                 firstName,
                                                 lastName,
                                                 email,
@@ -24,7 +24,7 @@ export default function PersonalInfoSection({
 
     return (
         <div className="space-y-6">
-            <h3 className="text-base font-medium text-gray-900">Personal Info</h3>
+            <h3 className="text-lg">Personal Info</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 <CustomInput
                     label="First name"

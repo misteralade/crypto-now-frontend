@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react"
-import PersonalInfoSection from "./PersonalInfo.tsx";
 import {useUserQuery} from "../../queries/user.query.ts";
 import CustomLoader from "../../components/global/Loader.tsx";
+import ProfilePersonalInfoSection from "./ProfilePersonalInfoSection.tsx";
+import ProfileBankDetailsSection from "./ProfileBankDetailsSection.tsx";
+import {useBankQuery} from "../../queries/bank.query.ts";
 
 export default function ProfileContent(){
     const {userProfileData,  loadingUserProfile} = useUserQuery();
@@ -9,6 +11,14 @@ export default function ProfileContent(){
     const [lastName, setLastName] = useState("")
     const [email, setEmail] = useState("")
     const [phoneNumber, setPhoneNumber] = useState("")
+
+    console.log(userProfileData)
+
+
+    const { allBanks, loadingAllBanks } = useBankQuery();
+    const [selectedBank, setSelectedBank] = useState("")
+    const [accountHolderName, setAccountHolderName] = useState("")
+    const [accountNumber, setAccountNumber] = useState("")
 
     useEffect(() => {
         if(!loadingUserProfile){
@@ -30,7 +40,7 @@ export default function ProfileContent(){
                     </div>) :
                     (
                         <>
-                            <PersonalInfoSection
+                            <ProfilePersonalInfoSection
                                 firstName={firstName}
                                 lastName={lastName}
                                 email={email}
@@ -39,6 +49,16 @@ export default function ProfileContent(){
                                 onLastNameChange={setLastName}
                                 onEmailChange={setEmail}
                                 onPhoneNumberChange={setPhoneNumber}
+                            />
+
+                            <ProfileBankDetailsSection
+                                selectedBank={selectedBank}
+                                accountHolderName={accountHolderName}
+                                accountNumber={accountNumber}
+                                banks={!loadingAllBanks ? allBanks : []}
+                                onBankChange={setSelectedBank}
+                                onAccountHolderNameChange={setAccountHolderName}
+                                onAccountNumberChange={setAccountNumber}
                             />
                         </>
                     )}

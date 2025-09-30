@@ -12,7 +12,7 @@ interface BankSelectorProps {
   className?: string
 }
 
-const BankSelector = ({ label, placeholder = "Select option", options, value, onValueChange, error, className = "" }: BankSelectorProps) => {
+const BankSelector = ({ label, placeholder, options, value, onValueChange, error, className = "" }: BankSelectorProps) => {
   const [isOpen, setIsOpen] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
   const selectId = useId()
