@@ -1,19 +1,20 @@
-import { useState, useEffect } from "react"
+import {useState, useEffect} from "react"
 import {useUserQuery} from "../../queries/user.query.ts";
 import {useBankQuery} from "../../queries/bank.query.ts";
 import CustomLoader from "../../components/global/Loader.tsx";
 import ProfilePersonalInfoSection from "./ProfilePersonalInfoSection.tsx";
 import ProfileBankDetailsSection from "./ProfileBankDetailsSection.tsx";
 import ProfileAddressDetailsSection from "./ProfileAddressDetailsSection.tsx";
+import CustomButton from "../../components/global/Button.tsx";
 
-export default function ProfileContent(){
-    const {userProfileData,  loadingUserProfile} = useUserQuery();
+export default function ProfileContent() {
+    const {userProfileData, loadingUserProfile} = useUserQuery();
     const [firstName, setFirstName] = useState("")
     const [lastName, setLastName] = useState("")
     const [email, setEmail] = useState("")
     const [phoneNumber, setPhoneNumber] = useState("")
 
-    const { allBanks, loadingAllBanks } = useBankQuery();
+    const {allBanks, loadingAllBanks} = useBankQuery();
     const [selectedBank, setSelectedBank] = useState("")
     const [accountHolderName, setAccountHolderName] = useState("")
     const [accountNumber, setAccountNumber] = useState("")
@@ -27,8 +28,18 @@ export default function ProfileContent(){
         // Implement add address logic here
     }
 
+    const handleSaveChanges = () => {
+        console.log("Saving changes...")
+        // Implement save logic here
+    }
+
+    const handleCancel = () => {
+        console.log("Cancelling changes...")
+        // Reset form or navigate away
+    }
+
     useEffect(() => {
-        if(!loadingUserProfile){
+        if (!loadingUserProfile) {
             setFirstName(userProfileData?.profile?.firstName || "")
             setLastName(userProfileData?.profile?.lastName || "")
             setEmail(userProfileData?.email || "")
@@ -42,11 +53,11 @@ export default function ProfileContent(){
                 <h1 className="text-2xl md:text-3xl font-semibold text-titleColor">Account settings</h1>
 
                 {loadingUserProfile ? (
-                    <div className={`w-full min-h-[60vh] flex items-center justify-center`}>
-                        <CustomLoader />
-                    </div>) :
+                        <div className={`w-full min-h-[60vh] flex items-center justify-center`}>
+                            <CustomLoader/>
+                        </div>) :
                     (
-                        <>
+                        <div className={`space-y-10`}>
                             <ProfilePersonalInfoSection
                                 firstName={firstName}
                                 lastName={lastName}
@@ -77,10 +88,18 @@ export default function ProfileContent(){
                                 onNetworkChange={setSelectedNetwork}
                                 onAddAddress={handleAddAddress}
                             />
-                        </>
+
+                            <div className="flex flex-col-reverse md:flex-row gap-4 md:justify-end pt-4">
+                                <button
+                                    onClick={handleCancel}
+                                    className="h-12 px-8 rounded-full text-gray-700 font-semibold text-base hover:bg-gray-100 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <CustomButton buttonText="Save Changes"  onClick={handleSaveChanges}/>
+                            </div>
+                        </div>
                     )}
-
-
             </div>
         </div>
     )
