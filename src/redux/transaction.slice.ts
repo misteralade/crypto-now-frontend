@@ -25,6 +25,12 @@ const transactionSlice = createSlice({
     setInitiateTransaction: (state, action: PayloadAction<InitiateTransactionRequestPayload>) => {
       state.initiate.initiateTransaction = action.payload;
     },
+    setInitiateTransactionField: (state, action: PayloadAction<{ field: keyof InitiateTransactionRequestPayload; value: any }>) => {
+      const { field, value } = action.payload;
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
+      state.initiate.initiateTransaction[field] = value;
+    },
     setExchangeRateId: (state, action: PayloadAction<string | undefined>) => {
       state.exchangeRateId = action.payload;
     },
@@ -34,7 +40,7 @@ const transactionSlice = createSlice({
     setSearchUserTransactions: (state, action: PayloadAction<SearchTransactionsRequestPayload>) => {
       state.dashboard.searchUserTransactions = action.payload;
     },
-
+    
     // Clear States
     clearInitiateTransaction: (state) => {
       state.initiate.initiateTransaction = {
@@ -47,6 +53,12 @@ const transactionSlice = createSlice({
         receiptUrl: undefined,
         transactionHash: undefined,
       }
+    },
+    clearInitiateTransactionField: (state, action: PayloadAction<keyof InitiateTransactionRequestPayload>) => {
+      const field = action.payload;
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
+      state.initiate.initiateTransaction[field] = undefined;
     },
     clearExchangeRateId: (state) => {
       state.exchangeRateId = undefined;
@@ -63,12 +75,14 @@ const transactionSlice = createSlice({
 export const {
   // Set States
   setInitiateTransaction,
+  setInitiateTransactionField,
   setExchangeRateId,
   setAmountToSend,
   setSearchUserTransactions,
-
+  
   // Clear States
   clearInitiateTransaction,
+  clearInitiateTransactionField,
   clearExchangeRateId,
   clearAmountToSend,
   clearSearchUserTransactions,

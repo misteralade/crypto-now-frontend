@@ -16,8 +16,7 @@ import type { InitiateTransactionRequestPayload } from "../../../types/request.p
 import { useBankQuery } from "../../../queries/bank.query.ts";
 import {
   setExchangeRateId as setReduxExchangeRateId,
-  setInitiateTransaction,
-  setAmountToSend,
+  setAmountToSend, setInitiateTransactionField,
 } from "../../../redux/transaction.slice.ts";
 import { setSelectedCryptoId } from "../../../redux/crypto.slice.ts";
 import { SESSION_STORAGE_KEYS } from "../../../util/constants.ts";
@@ -51,11 +50,11 @@ const shallowEqual = (a: any, b: any) => {
 
 export const useTradeStepDisplay = (
   token: string,
-  tradeType: TradeType,
   activeTab: TradeType,
   currency: string,
   setStep: (value: number) => void
 ) => {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-expect-error
   const countdownIntervalRef = useRef<any>();
   const queryClient = useQueryClient();
@@ -87,7 +86,7 @@ export const useTradeStepDisplay = (
   const { exchangeRate, loadingExchangeRate } = useRateQuery(
     selectedToken?.id || "",
     selectedCurrency?.id || "",
-    tradeType.toUpperCase() === "BUY" ? "BUY" : "SELL"
+    activeTab.toUpperCase() === "BUY" ? "BUY" : "SELL"
   );
 
   const [numberOfToken, setNumberOfToken] = useState<string | number>("");
@@ -237,7 +236,14 @@ export const useTradeStepDisplay = (
     if (!shallowEqual(transactionFormRef.current, merged)) {
       transactionFormRef.current = merged;
       setTransactionForm(merged);
-      dispatch(setInitiateTransaction(merged));
+      dispatch(setInitiateTransactionField({
+        field: "amountToReceive",
+        value: partial.amountToReceive
+      }));
+      dispatch(setInitiateTransactionField({
+        field: "amountToSend",
+        value: partial.amountToSend
+      }))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
@@ -268,7 +274,6 @@ export const useTradeStepDisplay = (
     if (!shallowEqual(transactionFormRef.current, merged)) {
       transactionFormRef.current = merged;
       setTransactionForm(merged);
-      dispatch(setInitiateTransaction(merged));
     }
   }, [
     supportedCurrencies,
@@ -317,7 +322,10 @@ export const useTradeStepDisplay = (
     if (!shallowEqual(transactionFormRef.current, merged)) {
       transactionFormRef.current = merged;
       setTransactionForm(merged);
-      dispatch(setInitiateTransaction(merged));
+      dispatch(setInitiateTransactionField({
+        field: "exchangeRateId",
+        value: rateId
+      }))
     }
 
     if (rateId) {
@@ -393,7 +401,10 @@ export const useTradeStepDisplay = (
     if (!shallowEqual(transactionFormRef.current, merged)) {
       transactionFormRef.current = merged;
       setTransactionForm(merged);
-      dispatch(setInitiateTransaction(merged));
+      dispatch(setInitiateTransactionField({
+        field: "receiptUrl",
+        value: url
+      }));
     }
     saveTradeProgress({ receiptUrl: url });
   };
@@ -410,7 +421,10 @@ export const useTradeStepDisplay = (
     if (!shallowEqual(transactionFormRef.current, merged)) {
       transactionFormRef.current = merged;
       setTransactionForm(merged);
-      dispatch(setInitiateTransaction(merged));
+      dispatch(setInitiateTransactionField({
+        field: "transactionHash",
+        value: hash
+      }))
     }
     saveTradeProgress({ transactionHash: hash });
   };

@@ -208,4 +208,47 @@ export type UserTransactionsHistoryResponse = {
   totalPages: number;
   transactions: TransactionResponseEntity[];
 }
+
+// Transaction Summary
+export type TransactionSummaryResponseEntity = {
+  cryptoCurrencySymbol: string;
+  cryptoCurrencyName: string;
+  cryptoCurrencyId: string;
+  cryptoCurrencyImageUrl: string;
+  transactionCount: string;
+  totalFiatAmount: string;
+  totalCryptoAmount: string;
+  totalUsdAmount: string;
+  cryptoBought: string;
+  cryptoSold: string;
+  usdSpentOnBuying: string;
+  usdReceivedFromSelling: string;
+  fiatSpentOnBuying: string;
+  fiatReceivedFromSelling: string;
+  buyTransactionCount: string;
+  sellTransactionCount: string;
+  currency: string;
+}
+
+export type TotalTransactionSummaryEntity = {
+  cryptoSymbol: string;
+  cryptoName: string;
+  transactionCount: string;
+  buyCount: string;
+  sellCount: string;
+  cryptoBought: string;
+  cryptoSold: string;
+  totalCryptoAmount: string;
+  totalFiatAmount: string;
+  fiatSpentOnBuying: string;
+  fiatReceivedFromSelling: string;
+  totalUsdAmount: string;
+  usdSpentOnBuying: string;
+  usdReceivedFromSelling: string;
+}
+
+export type TransactionSummaryResponse = {
+  summary: TransactionSummaryResponseEntity[],
+  total: TotalTransactionSummaryEntity[]
+}
 // End Transactions

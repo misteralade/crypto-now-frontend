@@ -1,6 +1,6 @@
 import type { TradeType } from "../types/trade.types";
+import {LOCAL_STORAGE_KEYS} from "./constants.ts";
 
-const STORAGE_KEY = "TRADE_PROGRESS_V1";
 
 export interface TradeProgress {
   step?: number;
@@ -29,7 +29,7 @@ export interface TradeProgress {
 // Read
 export function loadTradeProgress(): TradeProgress | null {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(LOCAL_STORAGE_KEYS.TRADE_PROGRESS);
     if (!raw) return null;
     return JSON.parse(raw) as TradeProgress;
   } catch {
@@ -42,7 +42,7 @@ export function saveTradeProgress(partial: Partial<TradeProgress>) {
   try {
     const current = loadTradeProgress() || {};
     const merged = { ...current, ...partial };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+    localStorage.setItem(LOCAL_STORAGE_KEYS.TRADE_PROGRESS, JSON.stringify(merged));
   } catch {
     // no-op
   }
@@ -51,7 +51,7 @@ export function saveTradeProgress(partial: Partial<TradeProgress>) {
 // Clear
 export function clearTradeProgress() {
   try {
-    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(LOCAL_STORAGE_KEYS.TRADE_PROGRESS);
   } catch {
     // no-op
   }
