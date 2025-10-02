@@ -1,21 +1,25 @@
 "use client";
 
-import {useState} from "react";
+import {useState, useRef} from "react";
 import {Menu} from "lucide-react";
 import Button from "../Button.tsx";
 import Logo from "../../../assets/logo/logo.svg";
-import {Link, useNavigate} from "@tanstack/react-router";
+import {Link} from "@tanstack/react-router";
 import NavbarDropdown from "./NavbarDropdown.tsx";
 import {ChevronDown} from "lucide-react";
 import type {DropItem} from "../../../types/navbar.types.ts";
 import ProfileNav from "./ProfileNav.tsx";
 import {LOCAL_STORAGE_KEYS} from "../../../util/constants.ts";
+import {handleLogout} from "../../../util/utils.ts";
+import useClickOutside from "../../../hooks/useClickOutside.ts";
+import {useLocation} from "@tanstack/react-router";
 
 export default function Navbar() {
-    const navigate = useNavigate();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const isLoggedIn = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN) !== null;
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    const location = useLocation();
 
     const dropItems: DropItem[] = [
         {
@@ -34,12 +38,9 @@ export default function Navbar() {
     const handleMenuItemClick = () => {
         setIsDropdownOpen(false);
         closeDrawer();
-    };
-
-    const handleLogout = () => {
-        localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
-        navigate({to: '/sign-in'})
     }
+
+    useClickOutside(dropdownRef, () => setIsDropdownOpen(false));
 
     return (
         <>
@@ -51,9 +52,9 @@ export default function Navbar() {
                     </div>
 
                     {/* Navigation Links */}
-                    <div className="hidden md:flex items-center space-x-8">
+                    <div className="hidden xl:flex items-center space-x-8">
                         <a
-                            href="/"
+                            href={'/'}
                             className="text-gray-700 hover:text-gray-900 font-medium"
                         >
                             Home
@@ -66,7 +67,7 @@ export default function Navbar() {
                         </a>
 
                         {/* Dropdown for Buy & sell crypto */}
-                        <div className="relative">
+                        <div className="relative" ref={dropdownRef}>
                             <button
                                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                                 className="flex items-center gap-1 text-gray-700 hover:text-gray-900 font-medium"
@@ -95,35 +96,42 @@ export default function Navbar() {
                     </div>
 
                     {/* Auth Buttons */}
-                    {/* TODO: Show a different UI when user is logged in */}
-                    {isLoggedIn ?
-                        <div className={`hidden md:block`}>
-                            <ProfileNav />
-                        </div>
+                    {isLoggedIn ? (
+                            <>
+                                {location.pathname === "/" ? <a
+                                    href={'/dashboard'}
+                                    className="text-gray-700 hover:text-gray-900 font-medium hidden xl:block"
+                                >
+                                    Dashboard
+                                </a> : <div className={`hidden xl:block`}>
+                                    <ProfileNav/>
+                                </div>}
+                            </>
+                        )
                         :
                         (
-                        <>
-                            <div className="hidden md:flex items-center space-x-4">
-                                <Link
-                                    to="/sign-in"
-                                    className="text-gray-700 hover:text-gray-900 font-medium"
-                                >
-                                    Login
-                                </Link>
-                                <Link to={`/sign-up`}>
-                                    <Button buttonText="Create Account"/>
-                                </Link>
-                            </div>
-                        </>
-                    )}
+                            <>
+                                <div className="hidden xl:flex items-center space-x-4">
+                                    <Link
+                                        to="/sign-in"
+                                        className="text-gray-700 hover:text-gray-900 font-medium"
+                                    >
+                                        Login
+                                    </Link>
+                                    <Link to={`/sign-up`}>
+                                        <Button buttonText="Create Account"/>
+                                    </Link>
+                                </div>
+                            </>
+                        )}
 
                     {/* Mobile menu button */}
-                    <div className={`flex gap-2 items-center md:hidden`}>
+                    <div className={`flex gap-x-2 items-center xl:hidden`}>
                         {isLoggedIn &&
-                            <ProfileNav />
+                            <ProfileNav/>
                         }
 
-                        <div >
+                        <div>
                             <button
                                 onClick={openDrawer}
                                 className="text-gray-700 hover:text-gray-900"
@@ -175,12 +183,30 @@ export default function Navbar() {
 
                     <div className="flex flex-col space-y-4">
                         <a
-                            href="#"
+                            href={"/"}
                             onClick={handleMenuItemClick}
                             className="text-gray-700 hover:text-gray-900 font-medium py-2 border-b border-gray-100"
                         >
                             Home
                         </a>
+                        {isLoggedIn && location.pathname === "/" && (
+                            <>
+                                <a
+                                    href={"/dashboard"}
+                                    onClick={handleMenuItemClick}
+                                    className="text-gray-700 hover:text-gray-900 font-medium py-2 border-b border-gray-100"
+                                >
+                                    Dashboard
+                                </a>
+                                <a
+                                    href={"/Profile"}
+                                    onClick={handleMenuItemClick}
+                                    className="text-gray-700 hover:text-gray-900 font-medium py-2 border-b border-gray-100"
+                                >
+                                    Profile
+                                </a>
+                            </>
+                        )}
                         <a
                             href="#"
                             onClick={handleMenuItemClick}
@@ -241,18 +267,18 @@ export default function Navbar() {
                                     Sign Out
                                 </button>
                             </div>
-                            :  <div className="pt-4 space-y-3">
-                            <button
-                                className="text-gray-700 hover:text-gray-900 font-medium py-2 w-full text-left border border-gray-300 rounded-md px-4 hover:bg-gray-50 transition-colors duration-200 my-3">
-                                <Link to="/sign-in">Login</Link>
-                            </button>
+                            : <div className="absolute bottom-5 space-y-1 w-4/5">
+                                <button
+                                    className="text-gray-700 hover:text-gray-900 font-medium py-2 w-full text-left border border-gray-300 rounded-3xl px-4 hover:bg-gray-50 transition-colors duration-200 my-3">
+                                    <Link to="/sign-in">Login</Link>
+                                </button>
 
-                            <div className="w-full mt-3">
-                                <Link to={`/sign-up`}>
-                                    <Button className="w-full" buttonText="Create Account"/>
-                                </Link>
-                            </div>
-                        </div>}
+                                <div className="w-full mt-3">
+                                    <Link to={`/sign-up`}>
+                                        <Button className="w-full" buttonText="Create Account"/>
+                                    </Link>
+                                </div>
+                            </div>}
 
                     </div>
                 </div>

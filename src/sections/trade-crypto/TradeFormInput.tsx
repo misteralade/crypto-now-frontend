@@ -26,7 +26,7 @@ export default function TradeFormInput({ label, name, value, onInputChange, chil
 
             <div className={`flex items-center justify-between gap-2`}>
                 <input
-                    type={`number`}
+                    type="number"
                     name={name}
                     id={name}
                     value={value}

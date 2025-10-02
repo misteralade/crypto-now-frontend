@@ -45,7 +45,9 @@ export function TransactionDashboard() {
         transactions={!loadingUserTransactionHistory && userTransactionHistory?.transactions || []}
         totalPages={!loadingUserTransactionHistory && userTransactionHistory?.totalPages || 1}
         currentPage={!loadingUserTransactionHistory && userTransactionHistory?.page || 1}
-        onPageChange={handlePageChange}/>
+        onPageChange={handlePageChange}
+        isLoading={loadingUserTransactionHistory}
+      />
     </div>
   )
 }

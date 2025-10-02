@@ -10,7 +10,6 @@ import {useDispatch} from "react-redux";
 import { setInitiateTransactionField } from '../../../redux/transaction.slice.ts';
 
 interface TradeStepOneProps {
-  token: string;
   currency: string;
   tradeType: TradeType;
   handleProceedToPayment: () => void
@@ -25,9 +24,11 @@ interface TradeStepOneProps {
   setAmountToBuy: (amountToBuy: string | number) => void;
   availableCurrencies: SupportedCryptoOrCurrencyResponse[];
   availableTokens: SupportedCryptoOrCurrencyResponse[];
+  token: string;
+  isInitiatingTrade: boolean;
 }
 
-export default function TradeStepOne({setAmountToBuy, numberOfToken, setNumberOfToken, amountToBuy,selectedCurrency, setSelectedCurrency, setSelectedToken,selectedToken, tradeType, handleProceedToPayment, orderDetails, availableCurrencies, availableTokens}: TradeStepOneProps) {
+export default function TradeStepOne({setAmountToBuy, isInitiatingTrade, numberOfToken, setNumberOfToken, amountToBuy,selectedCurrency, setSelectedCurrency, setSelectedToken,selectedToken, tradeType, handleProceedToPayment, orderDetails, availableCurrencies, availableTokens}: TradeStepOneProps) {
   const dispatch = useDispatch();
   
   const submitInvalid = numberOfToken === "" || amountToBuy === "";
@@ -60,7 +61,7 @@ export default function TradeStepOne({setAmountToBuy, numberOfToken, setNumberOf
         {/*Inputs*/}
         <div className="space-y-2">
           {/*Token*/}
-          <div className={``}>
+          <div>
             <TradeFormInput
               name={`${tradeType === "sell" ? "token": "currency"}`}
               label={`enter amount`}
@@ -79,7 +80,7 @@ export default function TradeStepOne({setAmountToBuy, numberOfToken, setNumberOf
           <img src={SwapIcon} alt="Swap icon" className={`block mx-auto`}/>
           
           {/*Currency*/}
-          <div className={``}>
+          <div>
             <TradeFormInput
               name={`${tradeType === "sell" ? "currency": "token"}`}
               label={`You will receive`}
@@ -103,9 +104,9 @@ export default function TradeStepOne({setAmountToBuy, numberOfToken, setNumberOf
       <div className={`md:w-1/2 w-full mx-auto px-5 md:px-0`}>
         <CustomButton
           className="w-full"
-          buttonText="Proceed to payment"
+          buttonText={isInitiatingTrade ? "Processing..." : "Proceed to payment"}
           type="submit"
-          disabled={submitInvalid}
+          disabled={submitInvalid || isInitiatingTrade}
         />
       </div>
     </form>

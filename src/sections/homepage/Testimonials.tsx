@@ -1,7 +1,7 @@
 export default function Testimonials() {
   return (
     <section className="mt-20 max-md:px-4">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto md:px-4">
         {/* Header Section */}
         <div className="text-center mb-12">
           <h2 className="text-2xl sm:text-4xl md:text-5xl font-normal text-[#0E0F0C] mb-2">
