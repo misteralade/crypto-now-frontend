@@ -138,6 +138,18 @@ export const useTradeStepDisplay = (
       hydratedRef.current = true;
     }, 0);
   }, []);
+  
+  // Set the fields on the redux store
+  useEffect(() => {
+    dispatch(setInitiateTransactionField({
+      field: "currencyId",
+      value: currency,
+    }))
+    dispatch(setInitiateTransactionField({
+      field: "tokenId",
+      value: token,
+    }));
+  }, [])
 
   // Countdown
   useEffect(() => {

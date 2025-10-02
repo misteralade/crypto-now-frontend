@@ -4,7 +4,7 @@ import {exchangeRateServiceApi} from "../api/rate.api.ts";
 
 export const useRateQuery = (cryptoId: string, currencyId: string, action: 'BUY' | 'SELL') => {
   const { data: exchangeRate, isLoading: loadingExchangeRate } = useQuery({
-    queryKey: [QUERY_KEYS.EXCHANGE_RATE.GET_CRYPTO_TO_CURRENCY_EXCHANGE_RATE, cryptoId, currencyId],
+    queryKey: [QUERY_KEYS.EXCHANGE_RATE.GET_CRYPTO_TO_CURRENCY_EXCHANGE_RATE, cryptoId, currencyId, action],
     queryFn: async () => {
       const { data } = await exchangeRateServiceApi.getExchangeRate(cryptoId, currencyId, action);
 
