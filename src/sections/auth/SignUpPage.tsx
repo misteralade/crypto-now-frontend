@@ -1,10 +1,11 @@
-import {useState} from "react";
+import {type FormEvent, useState} from "react";
 import CustomButton from "../../components/global/Button";
 import AuthLayout from "../../layouts/AuthLayout";
 import {Link} from "@tanstack/react-router";
 import {authServiceApi} from "../../api/auth.api";
 import OtpSent from "./forgot-password/OtpSent.tsx";
 import type {AuthResponse} from "../../types/response.payload.types.ts";
+import {BASIC} from "../../config/index.config.ts";
 
 export default function SignUpPage() {
     const [showPassword, setShowPassword] = useState(false);
@@ -14,8 +15,13 @@ export default function SignUpPage() {
     const [otpSent, setOtpSent] = useState(false);
     const [error, setError] = useState("");
     const {signup} = authServiceApi;
+    
+    const handleGoogleSignUp = () => {
+        // Redirect to your backend OAuth endpoint
+        window.location.href = `${BASIC.API_BASE_URL}/user/auth/google-signup`;
+    };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
         setError("");
@@ -158,6 +164,7 @@ export default function SignUpPage() {
                     {/* Google Sign In */}
                     <button
                         type="button"
+                        onClick={handleGoogleSignUp}
                         className="w-full h-[52px] flex items-center justify-center px-4 py-3 border border-[#E5E7EB] rounded-[26px] shadow-sm bg-white text-[16px] font-medium text-[#374151] hover:bg-[#F9FAFB] transition-colors duration-200"
                     >
                         <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
