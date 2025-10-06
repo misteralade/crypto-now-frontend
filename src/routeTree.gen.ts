@@ -17,6 +17,8 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as OauthSuccessRouteImport } from './routes/oauth/success'
+import { Route as OauthErrorRouteImport } from './routes/oauth/error'
 
 const TradeCryptoRoute = TradeCryptoRouteImport.update({
   id: '/trade-crypto',
@@ -58,6 +60,16 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OauthSuccessRoute = OauthSuccessRouteImport.update({
+  id: '/oauth/success',
+  path: '/oauth/success',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OauthErrorRoute = OauthErrorRouteImport.update({
+  id: '/oauth/error',
+  path: '/oauth/error',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -68,6 +80,8 @@ export interface FileRoutesByFullPath {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/trade-crypto': typeof TradeCryptoRoute
+  '/oauth/error': typeof OauthErrorRoute
+  '/oauth/success': typeof OauthSuccessRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -78,6 +92,8 @@ export interface FileRoutesByTo {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/trade-crypto': typeof TradeCryptoRoute
+  '/oauth/error': typeof OauthErrorRoute
+  '/oauth/success': typeof OauthSuccessRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -89,6 +105,8 @@ export interface FileRoutesById {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/trade-crypto': typeof TradeCryptoRoute
+  '/oauth/error': typeof OauthErrorRoute
+  '/oauth/success': typeof OauthSuccessRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -101,6 +119,8 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/trade-crypto'
+    | '/oauth/error'
+    | '/oauth/success'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -111,6 +131,8 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/trade-crypto'
+    | '/oauth/error'
+    | '/oauth/success'
   id:
     | '__root__'
     | '/'
@@ -121,6 +143,8 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/trade-crypto'
+    | '/oauth/error'
+    | '/oauth/success'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -132,6 +156,8 @@ export interface RootRouteChildren {
   SignInRoute: typeof SignInRoute
   SignUpRoute: typeof SignUpRoute
   TradeCryptoRoute: typeof TradeCryptoRoute
+  OauthErrorRoute: typeof OauthErrorRoute
+  OauthSuccessRoute: typeof OauthSuccessRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -192,6 +218,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/oauth/success': {
+      id: '/oauth/success'
+      path: '/oauth/success'
+      fullPath: '/oauth/success'
+      preLoaderRoute: typeof OauthSuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/oauth/error': {
+      id: '/oauth/error'
+      path: '/oauth/error'
+      fullPath: '/oauth/error'
+      preLoaderRoute: typeof OauthErrorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -204,6 +244,8 @@ const rootRouteChildren: RootRouteChildren = {
   SignInRoute: SignInRoute,
   SignUpRoute: SignUpRoute,
   TradeCryptoRoute: TradeCryptoRoute,
+  OauthErrorRoute: OauthErrorRoute,
+  OauthSuccessRoute: OauthSuccessRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
