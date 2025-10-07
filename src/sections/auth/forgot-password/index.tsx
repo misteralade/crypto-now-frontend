@@ -3,10 +3,6 @@ import ForgotPasswordLayout from "./ForgotPasswordLayout.tsx";
 import ArrowIcon from "../../../assets/icons/fluent-arrow.svg";
 import {useForgotPasswordPage} from "../../../hooks/pages/useForgotPasswordPage.ts";
 
-// interface ForgotPasswordPageProp {
-//     setStep: (value: number) => void;
-// }
-
 export default function ForgotPasswordPage() {
   const {
     // Values

@@ -110,9 +110,7 @@ export const axiosGetRequestHandler = async (url: string, params?: any) => {
 
 export const axiosPatchRequestHandler = async (url: string, params?: any) => {
   try{
-    const request = await API_KIT.patch(url, {
-      params,
-    });
+    const request = await API_KIT.patch(url, params);
 
     return request.data as BaseApiResponse<any>;
   }catch(error){
