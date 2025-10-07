@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import ForgotPasswordPage from "../sections/auth/forgot-password";
 
@@ -6,10 +7,9 @@ export const Route = createFileRoute("/forgot-password")({
 });
 
 function RouteComponent() {
-
   return (
-    <>
-        <ForgotPasswordPage />
-    </>
+    <Fragment>
+      <ForgotPasswordPage />
+    </Fragment>
   );
 }
