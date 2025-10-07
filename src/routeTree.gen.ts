@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VerifyAccountRouteImport } from './routes/verify-account'
 import { Route as TradeCryptoRouteImport } from './routes/trade-crypto'
 import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as SignInRouteImport } from './routes/sign-in'
@@ -16,10 +17,16 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as ActivationResultRouteImport } from './routes/activation-result'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as OauthSuccessRouteImport } from './routes/oauth/success'
 import { Route as OauthErrorRouteImport } from './routes/oauth/error'
 
+const VerifyAccountRoute = VerifyAccountRouteImport.update({
+  id: '/verify-account',
+  path: '/verify-account',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TradeCryptoRoute = TradeCryptoRouteImport.update({
   id: '/trade-crypto',
   path: '/trade-crypto',
@@ -55,6 +62,11 @@ const DashboardRoute = DashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ActivationResultRoute = ActivationResultRouteImport.update({
+  id: '/activation-result',
+  path: '/activation-result',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -73,6 +85,7 @@ const OauthErrorRoute = OauthErrorRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/activation-result': typeof ActivationResultRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/profile': typeof ProfileRoute
@@ -80,11 +93,13 @@ export interface FileRoutesByFullPath {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/trade-crypto': typeof TradeCryptoRoute
+  '/verify-account': typeof VerifyAccountRoute
   '/oauth/error': typeof OauthErrorRoute
   '/oauth/success': typeof OauthSuccessRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/activation-result': typeof ActivationResultRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/profile': typeof ProfileRoute
@@ -92,12 +107,14 @@ export interface FileRoutesByTo {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/trade-crypto': typeof TradeCryptoRoute
+  '/verify-account': typeof VerifyAccountRoute
   '/oauth/error': typeof OauthErrorRoute
   '/oauth/success': typeof OauthSuccessRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/activation-result': typeof ActivationResultRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/profile': typeof ProfileRoute
@@ -105,6 +122,7 @@ export interface FileRoutesById {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/trade-crypto': typeof TradeCryptoRoute
+  '/verify-account': typeof VerifyAccountRoute
   '/oauth/error': typeof OauthErrorRoute
   '/oauth/success': typeof OauthSuccessRoute
 }
@@ -112,6 +130,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/activation-result'
     | '/dashboard'
     | '/forgot-password'
     | '/profile'
@@ -119,11 +138,13 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/trade-crypto'
+    | '/verify-account'
     | '/oauth/error'
     | '/oauth/success'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/activation-result'
     | '/dashboard'
     | '/forgot-password'
     | '/profile'
@@ -131,11 +152,13 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/trade-crypto'
+    | '/verify-account'
     | '/oauth/error'
     | '/oauth/success'
   id:
     | '__root__'
     | '/'
+    | '/activation-result'
     | '/dashboard'
     | '/forgot-password'
     | '/profile'
@@ -143,12 +166,14 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/trade-crypto'
+    | '/verify-account'
     | '/oauth/error'
     | '/oauth/success'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ActivationResultRoute: typeof ActivationResultRoute
   DashboardRoute: typeof DashboardRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   ProfileRoute: typeof ProfileRoute
@@ -156,12 +181,20 @@ export interface RootRouteChildren {
   SignInRoute: typeof SignInRoute
   SignUpRoute: typeof SignUpRoute
   TradeCryptoRoute: typeof TradeCryptoRoute
+  VerifyAccountRoute: typeof VerifyAccountRoute
   OauthErrorRoute: typeof OauthErrorRoute
   OauthSuccessRoute: typeof OauthSuccessRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/verify-account': {
+      id: '/verify-account'
+      path: '/verify-account'
+      fullPath: '/verify-account'
+      preLoaderRoute: typeof VerifyAccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/trade-crypto': {
       id: '/trade-crypto'
       path: '/trade-crypto'
@@ -211,6 +244,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/activation-result': {
+      id: '/activation-result'
+      path: '/activation-result'
+      fullPath: '/activation-result'
+      preLoaderRoute: typeof ActivationResultRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -237,6 +277,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ActivationResultRoute: ActivationResultRoute,
   DashboardRoute: DashboardRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   ProfileRoute: ProfileRoute,
@@ -244,6 +285,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignInRoute: SignInRoute,
   SignUpRoute: SignUpRoute,
   TradeCryptoRoute: TradeCryptoRoute,
+  VerifyAccountRoute: VerifyAccountRoute,
   OauthErrorRoute: OauthErrorRoute,
   OauthSuccessRoute: OauthSuccessRoute,
 }
