@@ -1,7 +1,11 @@
 import {toast} from "react-toastify";
 import {axiosGetRequestHandler, axiosPostRequestHandler, axiosPutRequestHandler} from "./index.ts";
 import type {SearchTransactionsRequestPayload} from "../types/request.payload.types.ts";
-import type {TransactionSummaryResponse, UserTransactionsHistoryResponse} from "../types/response.payload.types.ts";
+import type {
+  InitiateTransactionAPIResponse,
+  TransactionSummaryResponse,
+  UserTransactionsHistoryResponse
+} from "../types/response.payload.types.ts";
 
 class TransactionServiceApi {
   private static instance: TransactionServiceApi;
@@ -44,23 +48,11 @@ class TransactionServiceApi {
     return { data, success };
   }
 
-  async initiateTransaction(transactionData: Record<string, any>) {
-    const {data, message, success, error}: {
-      data: { sessionId: string },
-      message: string,
-      success: boolean,
-      error: any
-    } = await axiosPostRequestHandler(
+  async initiateTransaction(transactionData: Record<string, any>): Promise<InitiateTransactionAPIResponse> {
+    return await axiosPostRequestHandler(
       '/transaction/initiate',
       transactionData
-    )
-
-    if (!success || error) {
-      toast.error(error.message || message || error || "Failed to initiate transaction");
-      return;
-    }
-
-    return data.sessionId;
+    ) as InitiateTransactionAPIResponse
   }
 
   async makeTransactionPayment(paymentData: Record<string, any>) {

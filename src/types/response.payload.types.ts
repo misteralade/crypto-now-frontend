@@ -161,6 +161,11 @@ export type AdminResponseEntity = {
   createdAt: Date;
 }
 
+// Transaction Response
+export type InitiateTransactionAPIResponse = BaseApiResponse<{
+  sessionId: string;
+}>
+
 export type TransactionResponseEntity = {
   id: string;
   userId: string;
