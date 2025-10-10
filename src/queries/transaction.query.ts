@@ -5,6 +5,7 @@ import {QUERY_KEYS} from "./query.keys.ts";
 import {transactionServiceApi} from "../api/transaction.api.ts";
 import {type RootState, store} from "../store.ts";
 import {LOCAL_STORAGE_KEYS, SESSION_STORAGE_KEYS} from "../util/constants.ts";
+import type {InitiateTransactionAPIResponse} from "../types/response.payload.types.ts";
 
 export const useTransactionQuery = () => {
   const matchRoute = useMatchRoute();
@@ -71,6 +72,7 @@ export const useTransactionQuery = () => {
   const initiateTransactionMutation = useMutation({
     mutationKey: [QUERY_KEYS.TRANSACTION.INITIATE_TRANSACTION],
     mutationFn: async () => {
+      toast.loading(`Initiating transaction...`, { toastId: QUERY_KEYS.TRANSACTION.INITIATE_TRANSACTION });
       const rootState = store.getState() as RootState;
       const transactionForm = rootState.transaction.initiate.initiateTransaction;
 
@@ -79,8 +81,19 @@ export const useTransactionQuery = () => {
         coinId: transactionForm?.tokenId,
       }
 
-      const sessionId = await transactionServiceApi.initiateTransaction(payload);
-      sessionStorage.setItem(SESSION_STORAGE_KEYS.SESSION_ID, sessionId as string);
+      return await transactionServiceApi.initiateTransaction(payload);
+    },
+    onSuccess: (response: InitiateTransactionAPIResponse) => {
+      toast.dismiss(QUERY_KEYS.TRANSACTION.INITIATE_TRANSACTION);
+      const { data, message } = response;
+      
+      sessionStorage.setItem(SESSION_STORAGE_KEYS.SESSION_ID, data?.sessionId as string);
+      toast.success(message);
+    },
+    onError: (response: any) => {
+      const responseData = response?.response?.data;
+      toast.dismiss(QUERY_KEYS.TRANSACTION.INITIATE_TRANSACTION);
+      toast.error(responseData.message)
     },
   });
   
