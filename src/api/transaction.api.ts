@@ -1,11 +1,16 @@
 import {toast} from "react-toastify";
-import {axiosGetRequestHandler, axiosPostRequestHandler, axiosPutRequestHandler} from "./index.ts";
+import {
+  axiosGetRequestHandler,
+  axiosPatchRequestHandler,
+  axiosPostRequestHandler,
+} from "./index.ts";
 import type {SearchTransactionsRequestPayload} from "../types/request.payload.types.ts";
 import type {
   InitiateTransactionAPIResponse,
   TransactionSummaryResponse,
   UserTransactionsHistoryResponse
 } from "../types/response.payload.types.ts";
+import {SESSION_STORAGE_KEYS} from "../util/constants.ts";
 
 class TransactionServiceApi {
   private static instance: TransactionServiceApi;
@@ -21,8 +26,9 @@ class TransactionServiceApi {
   }
 
   async uploadTransactionReceipt(formData: FormData) {
+    const sessionId = sessionStorage.getItem(SESSION_STORAGE_KEYS.SESSION_ID)
     const response = await axiosPostRequestHandler(
-      '/transaction/receipt/anonymous/upload',
+      `/upload/user/transaction/${sessionId}/payment-receipt/anonymous`,
       formData,
       {
         headers: {
@@ -47,8 +53,15 @@ class TransactionServiceApi {
 
     return { data, success };
   }
+  
+  async initiateTransactionAnonymousUser(transactionData: Record<string, any>): Promise<InitiateTransactionAPIResponse> {
+    return await axiosPostRequestHandler(
+      '/transaction/initiate/anonymous',
+      transactionData
+    ) as InitiateTransactionAPIResponse
+  }
 
-  async initiateTransaction(transactionData: Record<string, any>): Promise<InitiateTransactionAPIResponse> {
+  async initiateTransaction(transactionData: Record<string, any>) {
     return await axiosPostRequestHandler(
       '/transaction/initiate',
       transactionData
@@ -61,7 +74,7 @@ class TransactionServiceApi {
       message: string,
       success: boolean,
       error: any
-    } = await axiosPutRequestHandler(
+    } = await axiosPatchRequestHandler(
       `/transaction/make-payment/${paymentData.sessionId}`,
       paymentData
     )
@@ -73,6 +86,25 @@ class TransactionServiceApi {
 
     return data.sessionId;
   }
+  
+  async anonymousUserMakeTransactionPayment(paymentData: Record<string, any>) {
+    const {data, message, success, error}: {
+      data: { sessionId: string },
+      message: string,
+      success: boolean,
+      error: any
+    } = await axiosPatchRequestHandler(
+      `/transaction/make-payment/${paymentData.sessionId}/anonymous`,
+      paymentData
+    )
+    
+    if (!success || error) {
+      toast.error(error.message || message || error || "Failed to initiate transaction");
+      return;
+    }
+    
+    return data.sessionId;
+  }
 
   async confirmReceivingPaymentAccount(sessionId: string, accountData: Record<string, any>) {
     const {data, message, success, error}: {
@@ -80,11 +112,42 @@ class TransactionServiceApi {
       message: string,
       success: boolean,
       error: any
-    } = await axiosPutRequestHandler(
+    } = await axiosPatchRequestHandler(
       `/transaction/confirm-receiving-payment-account/${sessionId}`,
       {
         ...(accountData.walletId ? { walletId: accountData.walletId } : {}),
         ...(accountData.accountId ? { accountId: accountData.accountId } : {}),
+      }
+    )
+
+    if (!success || error) {
+      toast.error(error.message || message || error || "Failed to confirm receiving account");
+      return;
+    }
+
+    return data.sessionId;
+  }
+  
+  async confirmAnonymousUserReceivingPaymentAccount(sessionId: string, accountData: Record<string, any>) {
+    console.log(
+      {
+        ...(accountData.walletId ? { walletId: accountData.walletId } : {}),
+        ...(accountData.accountId ? { accountId: accountData.accountId } : {}),
+        ...(accountData.email ? { email: accountData.email }: {}),
+      }
+    )
+    
+    const {data, message, success, error}: {
+      data: { sessionId: string },
+      message: string,
+      success: boolean,
+      error: any
+    } = await axiosPatchRequestHandler(
+      `/transaction/confirm-receiving-payment-account/${sessionId}/anonymous`,
+      {
+        ...(accountData.walletId ? { walletId: accountData.walletId } : {}),
+        ...(accountData.accountId ? { accountId: accountData.accountId } : {}),
+        ...(accountData.email ? { email: accountData.email }: {}),
       }
     )
 

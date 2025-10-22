@@ -1,4 +1,16 @@
+import type {AxiosError} from "axios";
 import type {TradeType, TransactionPriority, TransactionStatus} from "./request.payload.types.ts";
+
+export interface StandardizedServerError {
+  success: false;
+  error: {
+    code: string;
+    message: string;
+    details?: unknown;
+  };
+}
+
+export type AxiosServerError = AxiosError<StandardizedServerError>;
 
 export type BaseApiResponse<T> = {
   success: boolean;
@@ -45,6 +57,9 @@ export type SupportedPlatformCryptoWalletResponse = {
   network: string;
 }
 
+// Banks Start
+export type UserBanksAPIResponse = BaseApiResponse<Array<UserBankAccountResponse>>
+
 export type AllBanksResponse = {
   id: string;
   name: string;
@@ -59,6 +74,10 @@ export type UserBankAccountResponse = {
   accountName: string;
   createdAt: Date;
 }
+// Banks End
+
+// Crypto Start
+export type UserCryptoWalletAPIResponse = BaseApiResponse<Array<UserCryptoWalletResponse>>
 
 export type UserCryptoWalletResponse = {
   id: string;

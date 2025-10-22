@@ -9,6 +9,7 @@ export const ROUTES = {
   LOGIN: "/",
   HOMEPAGE: "/dashboard",
   ORGANIZATIONS: "/dashboard/organizations",
+  TRADE_CRYPTO: "/trade-crypto",
 }
 
 export const QUERY_KEYS = {

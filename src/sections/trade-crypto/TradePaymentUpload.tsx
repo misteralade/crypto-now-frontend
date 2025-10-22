@@ -14,12 +14,12 @@ interface FileUploadProps {
 }
 
 export default function TradePaymentUpload({onFileUploaded, maxFiles = 5, setUploadedFileUrl, acceptedTypes = [".jpg", ".png", ".pdf"] }: FileUploadProps) {
-  const [files, setFiles] = useState<File[]>([])
-  const [isDragOver, setIsDragOver] = useState(false)
-  const [filePreviews, setFilePreviews] = useState<{ [key: string]: string }>({})
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const [, setIsUploading] = useState(false)
-  const [, setUploadError] = useState<string | null>(null)
+  const [files, setFiles] = useState<File[]>([]);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [filePreviews, setFilePreviews] = useState<{ [key: string]: string }>({});
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [, setIsUploading] = useState(false);
+  const [, setUploadError] = useState<string | null>(null);
 
   const createFilePreview = (file: File) => {
     const extension = "." + file.name.split(".").pop()?.toLowerCase()

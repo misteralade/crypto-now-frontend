@@ -11,7 +11,7 @@ export const useBankQuery = () => {
     queryKey: [QUERY_KEYS.BANK.ALL_BANKS],
     queryFn: async () => {
       const { data, success } = await bankServiceApi.getAllBanks();
-
+      
       if (success) {
         return data;
       }
@@ -23,6 +23,19 @@ export const useBankQuery = () => {
   const { data: userBankAccounts, isLoading: loadingUserBankAccounts } = useQuery({
     queryKey: [QUERY_KEYS.BANK.USER_BANK_ACCOUNTS],
     queryFn: async () => {
+      const rootState = store.getState() as RootState;
+      const userEmail = rootState.user.trade.anonymous.email;
+      
+      if (userEmail) {
+        const { data, success } = await bankServiceApi.getAnonymousUserBankAccounts(userEmail);
+
+        if (success) {
+          return data;
+        }
+
+        return [];
+      }
+      
       const { data, success } = await bankServiceApi.getUserBankAccounts();
 
       if (success) {
@@ -38,6 +51,7 @@ export const useBankQuery = () => {
     mutationFn: async () => {
       toast.loading(`Creating bank account...`, { toastId: QUERY_KEYS.BANK.CREATE_USER_BANK_ACCOUNT });
       const rootState = store.getState() as RootState;
+      const userEmail = rootState.user.trade.anonymous.email;
       const bank = rootState.bank;
 
       if (!bank.createBankAccount.bankId || !bank.createBankAccount.accountName || !bank.createBankAccount.accountNumber) {
@@ -49,6 +63,10 @@ export const useBankQuery = () => {
         bankId: bank.createBankAccount.bankId,
         accountHolderName: bank.createBankAccount.accountName,
         accountNumber: bank.createBankAccount.accountNumber,
+      }
+      
+      if (userEmail) {
+        return bankServiceApi.createAnonymousUserBankAccount({...payload, email: userEmail});
       }
 
       return bankServiceApi.createUserBankAccount(payload);

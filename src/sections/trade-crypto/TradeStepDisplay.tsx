@@ -10,6 +10,7 @@ import {
   loadTradeProgress,
   saveTradeProgress,
 } from "../../util/tradeProgress.storgae.ts";
+import EmailModal from "./modals/EmailModal.tsx";
 
 export default function TradeStepDisplay({
   activeTab,
@@ -47,11 +48,12 @@ export default function TradeStepDisplay({
     supportedCurrencies,
     supportedCryptoCurrencies,
     exchangeRateId,
-      isInitiatingTrade,
+    isInitiatingTrade,
     transactionSessionId,
     showPaymentReceivingModal,
     userBankAccounts,
     userCryptoWallets,
+    showUserEnterEmail,
 
     // Functions
     setAmountToBuy,
@@ -64,6 +66,8 @@ export default function TradeStepDisplay({
     initiateTransaction,
     makePaymentTransaction,
     handleConfirmBankDetails,
+    handleAnonymousUserEmailInput,
+    toggleShowUserEnterEmail
   } = useTradeStepDisplay(token, activeTab, currency, setStep);
 
   // 1) On mount: only keep progress if navigation type is "reload"
@@ -156,6 +160,13 @@ export default function TradeStepDisplay({
         tradeType={activeTab}
         onProceed={handleConfirmBankDetails}
         setShowConfirmBankDetails={toggleConfirmBankDetails}
+      />
+      
+      
+      <EmailModal
+        open={showUserEnterEmail}
+        onClose={toggleShowUserEnterEmail}
+        onConfirm={handleAnonymousUserEmailInput}
       />
     </Fragment>
   );

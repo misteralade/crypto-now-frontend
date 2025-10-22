@@ -1,7 +1,7 @@
 import { axiosGetRequestHandler, axiosPostRequestHandler } from "./index.ts";
 import type {
-  AllBanksResponse,
-  SupportedPlatformBankAccountResponse, UserBankAccountResponse
+  AllBanksResponse, BaseApiResponse,
+  SupportedPlatformBankAccountResponse, UserBanksAPIResponse
 } from "../types/response.payload.types.ts";
 
 class BankServiceApi {
@@ -30,15 +30,19 @@ class BankServiceApi {
   }
 
   async getUserBankAccounts() {
-    const { data, message, success }: { data: UserBankAccountResponse[], message: string, success: boolean} = await axiosGetRequestHandler(`/bank/user/bank-accounts`);
-
-    return { data, message, success };
+    return  await axiosGetRequestHandler(`/bank/user/bank-accounts`) as UserBanksAPIResponse;
   }
-
+  
+  async getAnonymousUserBankAccounts(email: string) {
+    return await axiosGetRequestHandler(`/bank/anonymous-user/bank-accounts`, { email }) as UserBanksAPIResponse;
+  }
+  
   async createUserBankAccount(payload: Record<string, any>) {
-    const { data, message, success }: { data: null, message: string, success: boolean} = await axiosPostRequestHandler("/bank/user/create", payload);
-
-    return { data, message, success };
+    return await axiosPostRequestHandler("/bank/user/create", payload) as BaseApiResponse<null>;
+  }
+  
+  async createAnonymousUserBankAccount(payload: Record<string, any>) {
+    return await axiosPostRequestHandler("/bank/anonymous-user/create", payload) as BaseApiResponse<null>;
   }
 }
 

@@ -5,7 +5,7 @@ import {QUERY_KEYS} from "./query.keys.ts";
 import {transactionServiceApi} from "../api/transaction.api.ts";
 import {type RootState, store} from "../store.ts";
 import {LOCAL_STORAGE_KEYS, SESSION_STORAGE_KEYS} from "../util/constants.ts";
-import type {InitiateTransactionAPIResponse} from "../types/response.payload.types.ts";
+import type {AxiosServerError} from "../types/response.payload.types.ts";
 
 export const useTransactionQuery = () => {
   const matchRoute = useMatchRoute();
@@ -75,25 +75,33 @@ export const useTransactionQuery = () => {
       toast.loading(`Initiating transaction...`, { toastId: QUERY_KEYS.TRANSACTION.INITIATE_TRANSACTION });
       const rootState = store.getState() as RootState;
       const transactionForm = rootState.transaction.initiate.initiateTransaction;
+      const userEmail = rootState.user.trade.anonymous.email;
 
       const payload = {
         ...transactionForm,
         coinId: transactionForm?.tokenId,
       }
+      
+      if (userEmail) {
+        const updatedPayload = {
+          ...payload,
+          email: userEmail,
+        }
+        return await transactionServiceApi.initiateTransactionAnonymousUser(updatedPayload);
+      }
 
       return await transactionServiceApi.initiateTransaction(payload);
     },
-    onSuccess: (response: InitiateTransactionAPIResponse) => {
+    onSuccess: ({ data, message }) => {
       toast.dismiss(QUERY_KEYS.TRANSACTION.INITIATE_TRANSACTION);
-      const { data, message } = response;
-      
       sessionStorage.setItem(SESSION_STORAGE_KEYS.SESSION_ID, data?.sessionId as string);
       toast.success(message);
     },
-    onError: (response: any) => {
-      const responseData = response?.response?.data;
+    onError: ( error: AxiosServerError ) => {
       toast.dismiss(QUERY_KEYS.TRANSACTION.INITIATE_TRANSACTION);
-      toast.error(responseData.message)
+      const { response } = error;
+      const message = response ? response.data.error.message : 'Failed to initiate transaction. Please try again.'
+      toast.error(message);
     },
   });
   
@@ -104,9 +112,21 @@ export const useTransactionQuery = () => {
       const rootState = store.getState() as RootState;
       const transactionForm = rootState.transaction.initiate.initiateTransaction;
       const transactionSessionId = sessionStorage.getItem(SESSION_STORAGE_KEYS.SESSION_ID);
-
+      
+      const userEmail = rootState.user.trade.anonymous.email;
+      
       if (!transactionSessionId || !transactionForm) return;
-      await transactionServiceApi.makeTransactionPayment({
+      
+      if (userEmail) {
+        return await transactionServiceApi.anonymousUserMakeTransactionPayment({
+          ...transactionForm,
+          sessionId: transactionSessionId,
+          coinId: transactionForm?.tokenId,
+          email: userEmail,
+        });
+      }
+      
+      return await transactionServiceApi.makeTransactionPayment({
         ...transactionForm,
         sessionId: transactionSessionId,
         coinId: transactionForm?.tokenId,
@@ -123,6 +143,7 @@ export const useTransactionQuery = () => {
       const transactionSessionId = sessionStorage.getItem(SESSION_STORAGE_KEYS.SESSION_ID);
       const walletId = rootState.crypto.tradeCrypto?.selectedWalletId;
       const accountId = rootState.bank.tradeCrypto?.selectedBankAccountId;
+      const userEmail = rootState.user.trade.anonymous.email;
 
       if (!walletId && !accountId) {
         throw new Error("Either walletId or accountId must be provided, and sessionId must exist");
@@ -131,7 +152,17 @@ export const useTransactionQuery = () => {
       if (!transactionSessionId) {
         throw new Error("Either transaction sessionId must be provided, and sessionId must exist");
       }
-
+      
+      if (userEmail) {
+        await transactionServiceApi.confirmAnonymousUserReceivingPaymentAccount(transactionSessionId, {
+          walletId,
+          accountId,
+          email: userEmail,
+        })
+        
+        return;
+      }
+      
       await transactionServiceApi.confirmReceivingPaymentAccount(transactionSessionId, {
         walletId,
         accountId,
