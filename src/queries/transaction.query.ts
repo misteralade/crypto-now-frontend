@@ -5,7 +5,6 @@ import {QUERY_KEYS} from "./query.keys.ts";
 import {transactionServiceApi} from "../api/transaction.api.ts";
 import {type RootState, store} from "../store.ts";
 import {LOCAL_STORAGE_KEYS, SESSION_STORAGE_KEYS} from "../util/constants.ts";
-import {userServiceApi} from "../api/user.api.ts";
 import type {AxiosServerError} from "../types/response.payload.types.ts";
 
 export const useTransactionQuery = () => {
@@ -76,17 +75,19 @@ export const useTransactionQuery = () => {
       toast.loading(`Initiating transaction...`, { toastId: QUERY_KEYS.TRANSACTION.INITIATE_TRANSACTION });
       const rootState = store.getState() as RootState;
       const transactionForm = rootState.transaction.initiate.initiateTransaction;
+      const userEmail = rootState.user.trade.anonymous.email;
 
       const payload = {
         ...transactionForm,
         coinId: transactionForm?.tokenId,
       }
       
-      // Step 1: Ping User to establish whether anonymous or authenticated transaction
-      const { success } = await userServiceApi.pingUser();
-      
-      if (!success) {
-        return await transactionServiceApi.initiateTransactionAnonymousUser(payload);
+      if (userEmail) {
+        const updatedPayload = {
+          ...payload,
+          email: userEmail,
+        }
+        return await transactionServiceApi.initiateTransactionAnonymousUser(updatedPayload);
       }
 
       return await transactionServiceApi.initiateTransaction(payload);

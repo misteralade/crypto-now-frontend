@@ -24,6 +24,9 @@ import {
   loadTradeProgress,
   saveTradeProgress,
 } from "../../../util/tradeProgress.storgae.ts";
+import {useUserQuery} from "../../../queries/user.query.ts";
+import {type RootState, store} from "../../../store.ts";
+import {setAnonymousUserEmail} from "../../../redux/user.slice.ts";
 
 // Debounce
 const useDebounce = (value: any, delay: number) => {
@@ -54,21 +57,20 @@ export const useTradeStepDisplay = (
   currency: string,
   setStep: (value: number) => void
 ) => {
+  const rootState = store.getState() as RootState;
+  
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-expect-error
   const countdownIntervalRef = useRef<any>();
   const queryClient = useQueryClient();
   const dispatch = useDispatch();
+  useUserQuery();
   const { userBankAccounts } = useBankQuery();
   const { supportedCurrencies } = useCurrencyQuery();
   const { supportedCryptoCurrencies, userCryptoWallets } = useCryptoQuery();
-  const {
-    calculatedAmount,
-    loadingCalculation,
-    initiateTransactionMutation,
-    makePaymentTransactionMutation,
-    receivingPaymentAccountConfirmationMutation,
-  } = useTransactionQuery();
+  const { calculatedAmount, loadingCalculation, initiateTransactionMutation, makePaymentTransactionMutation, receivingPaymentAccountConfirmationMutation } = useTransactionQuery();
+  
+  const isAnonymousUser = rootState.user.trade.anonymous.isAnonymousUser
 
   const [transactionSessionId, setTransactionSessionId] = useState<string>();
   const [selectedToken, setSelectedToken] =
@@ -95,9 +97,9 @@ export const useTradeStepDisplay = (
   const [amountToBuy, setAmountToBuy] = useState<string | number>("");
 
   // Modals
-  const [showPaymentReceivingModal, setShowPaymentReceivingModal] =
-    useState(false);
+  const [showPaymentReceivingModal, setShowPaymentReceivingModal] = useState(false);
   const [, setShowConfirmBankDetails] = useState<boolean>(false);
+  const [showUserEnterEmail, setShowUserEnterEmail] = useState<boolean>(false)
 
   // Amount to send
   const amountToSend =
@@ -110,6 +112,13 @@ export const useTradeStepDisplay = (
       )
     );
   }, [debouncedAmountToSend, dispatch]);
+  
+  // Update the show Enter email modal for anonymous users
+  useEffect(() => {
+    if (isAnonymousUser !== undefined && isAnonymousUser) {
+      toggleShowUserEnterEmail();
+    }
+  }, [isAnonymousUser])
 
   // 🔹 Hydration guard to avoid saving empty defaults on first paint
   const hydratedRef = useRef(false);
@@ -446,6 +455,8 @@ export const useTradeStepDisplay = (
 
   const toggleConfirmBankDetails = () =>
     setShowConfirmBankDetails((prev) => !prev);
+  
+  const toggleShowUserEnterEmail = () => setShowUserEnterEmail((prev) => !prev);
 
   const initiateTransaction = async () => {
     await initiateTransactionMutation.mutateAsync();
@@ -470,6 +481,11 @@ export const useTradeStepDisplay = (
     togglePaymentReceivingModal();
     setStep(step);
   };
+  
+  const handleAnonymousUserEmailInput = (value: string) => {
+    dispatch(setAnonymousUserEmail(value));
+    toggleShowUserEnterEmail();
+  }
 
   // ---------- Persist deltas (guarded by hydration) ----------
   useEffect(() => {
@@ -516,7 +532,8 @@ export const useTradeStepDisplay = (
     showPaymentReceivingModal,
     userBankAccounts,
     userCryptoWallets,
-      isInitiatingTrade: initiateTransactionMutation.isPending,
+    isInitiatingTrade: initiateTransactionMutation.isPending,
+    showUserEnterEmail,
 
     // Functions
     setAmountToBuy,
@@ -529,5 +546,7 @@ export const useTradeStepDisplay = (
     initiateTransaction,
     makePaymentTransaction,
     handleConfirmBankDetails,
+    handleAnonymousUserEmailInput,
+    toggleShowUserEnterEmail
   };
 };
