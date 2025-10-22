@@ -1,5 +1,10 @@
 import {toast} from "react-toastify";
-import {axiosGetRequestHandler, axiosPostRequestHandler, axiosPutRequestHandler} from "./index.ts";
+import {
+  axiosGetRequestHandler,
+  axiosPatchRequestHandler,
+  axiosPostRequestHandler,
+  axiosPutRequestHandler
+} from "./index.ts";
 import type {SearchTransactionsRequestPayload} from "../types/request.payload.types.ts";
 import type {
   InitiateTransactionAPIResponse,
@@ -22,7 +27,7 @@ class TransactionServiceApi {
 
   async uploadTransactionReceipt(formData: FormData) {
     const response = await axiosPostRequestHandler(
-      '/transaction/receipt/anonymous/upload',
+      '/upload/user/transaction/payment-receipt/anonymous',
       formData,
       {
         headers: {
@@ -68,7 +73,7 @@ class TransactionServiceApi {
       message: string,
       success: boolean,
       error: any
-    } = await axiosPutRequestHandler(
+    } = await axiosPatchRequestHandler(
       `/transaction/make-payment/${paymentData.sessionId}`,
       paymentData
     )
@@ -78,6 +83,25 @@ class TransactionServiceApi {
       return;
     }
 
+    return data.sessionId;
+  }
+  
+  async anonymousUserMakeTransactionPayment(paymentData: Record<string, any>) {
+    const {data, message, success, error}: {
+      data: { sessionId: string },
+      message: string,
+      success: boolean,
+      error: any
+    } = await axiosPatchRequestHandler(
+      `/transaction/make-payment/${paymentData.sessionId}/anonymous`,
+      paymentData
+    )
+    
+    if (!success || error) {
+      toast.error(error.message || message || error || "Failed to initiate transaction");
+      return;
+    }
+    
     return data.sessionId;
   }
 

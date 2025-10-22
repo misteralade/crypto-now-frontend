@@ -112,9 +112,21 @@ export const useTransactionQuery = () => {
       const rootState = store.getState() as RootState;
       const transactionForm = rootState.transaction.initiate.initiateTransaction;
       const transactionSessionId = sessionStorage.getItem(SESSION_STORAGE_KEYS.SESSION_ID);
-
+      
+      const userEmail = rootState.user.trade.anonymous.email;
+      
       if (!transactionSessionId || !transactionForm) return;
-      await transactionServiceApi.makeTransactionPayment({
+      
+      if (userEmail) {
+        return await transactionServiceApi.anonymousUserMakeTransactionPayment({
+          ...transactionForm,
+          sessionId: transactionSessionId,
+          coinId: transactionForm?.tokenId,
+          email: userEmail,
+        });
+      }
+      
+      return await transactionServiceApi.makeTransactionPayment({
         ...transactionForm,
         sessionId: transactionSessionId,
         coinId: transactionForm?.tokenId,
