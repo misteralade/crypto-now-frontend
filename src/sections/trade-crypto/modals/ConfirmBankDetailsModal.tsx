@@ -8,6 +8,7 @@ import type {
   UserCryptoWalletResponse,
 } from "../../../types/response.payload.types.ts";
 import {useConfirmBankDetailsModal} from "../../../hooks/components/trade/modal/useConfirmBankDetailsModal.ts";
+import {Fragment} from "react";
 
 interface ConfirmBankDetailsModalProps {
   isOpen: boolean;
@@ -131,38 +132,41 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, cryptoAccou
   const renderBankDetails = () => (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-center mb-4">Bank Details</h3>
+      BANK INFORMATION
       {selectedBank && (
-        <div className="space-y-4">
-          <div className="p-4 border border-gray-200 rounded-lg bg-gray-50">
-            <div className="flex items-center space-x-3 mb-3">
-              <img
-                src={selectedBank.bankLogo}
-                alt={`${selectedBank.bankName} logo`}
-                className="w-10 h-10 rounded-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                }}
-              />
-              <h4 className="font-semibold text-gray-900">
-                {selectedBank.bankName}
-              </h4>
-            </div>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Account Name:</span>
-                <span className="font-medium">
+        <Fragment>
+          <div className="space-y-4">
+            <div className="p-4 border border-gray-200 rounded-lg bg-gray-50">
+              <div className="flex items-center space-x-3 mb-3">
+                <img
+                  src={selectedBank.bankLogo}
+                  alt={`${selectedBank.bankName} logo`}
+                  className="w-10 h-10 rounded-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
+                <h4 className="font-semibold text-gray-900">
+                  {selectedBank.bankName}
+                </h4>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Account Name:</span>
+                  <span className="font-medium">
                   {selectedBank.accountName}
                 </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Account Number:</span>
-                <span className="font-mono font-medium">
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Account Number:</span>
+                  <span className="font-mono font-medium">
                   {selectedBank.accountNumber}
                 </span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </Fragment>
       )}
     </div>
   );

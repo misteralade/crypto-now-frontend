@@ -19,102 +19,114 @@ type ViewState =
   | "wallet-details"
   | "create-wallet";
 
-export const useConfirmBankDetailsModal = (cryptoAccounts: UserCryptoWalletResponse[] | undefined, bankAccounts: UserBankAccountResponse[] | undefined, tradeType: TradeType, onProceed: (value: number) => void, setShowConfirmBankDetails: (showConfirmBankDetails: boolean) => void) => {
+export const useConfirmBankDetailsModal = (
+  cryptoAccounts: UserCryptoWalletResponse[] | undefined,
+  bankAccounts: UserBankAccountResponse[] | undefined,
+  tradeType: TradeType,
+  onProceed: (value: number) => void,
+  setShowConfirmBankDetails: (showConfirmBankDetails: boolean) => void
+) => {
   const dispatch = useDispatch();
   const { createUserBankAccountMutation } = useBankQuery();
   const { createUserCryptoWalletMutation } = useCryptoQuery()
   const newCryptoWallet: any = useSelector((state: RootState) => state.crypto.tradeCrypto.userCreateCrypto)
-
+  
   const [selectedBankId, setSelectedBankId] = useState<string>("");
   const [selectedWalletId, setSelectedWalletId] = useState<string>("");
-
   const [viewState, setViewState] = useState<ViewState>(tradeType === "sell" ? "select-bank" : "select-wallet");
-
-  // Default selected bank
+  
+  // Track if we've initialized to prevent resets
+  const [hasInitialized, setHasInitialized] = useState(false);
+  
+  // Single initialization effect
   useEffect(() => {
-    if (bankAccounts && bankAccounts.length > 0) {
-      setSelectedBankId(bankAccounts[0].id);
-    }
-  }, [bankAccounts]);
-
-  // Default selected wallet
-  useEffect(() => {
-    if (cryptoAccounts && cryptoAccounts.length > 0) {
-      setSelectedWalletId(cryptoAccounts[0].id);
-    }
-  }, [cryptoAccounts]);
-
-  // Determine initial view
-  useEffect(() => {
+    if (hasInitialized) return;
+    
     if (tradeType === "sell") {
       if (!bankAccounts || bankAccounts.length === 0) {
         setViewState("create-bank");
       } else {
         setViewState("select-bank");
+        setSelectedBankId(bankAccounts[0].id);
       }
     } else if (tradeType === "buy") {
       if (!cryptoAccounts || cryptoAccounts.length === 0) {
         setViewState("create-wallet");
       } else {
         setViewState("select-wallet");
+        setSelectedWalletId(cryptoAccounts[0].id);
       }
     }
-  }, [tradeType, bankAccounts, cryptoAccounts]);
-
+    
+    setHasInitialized(true);
+  }, [tradeType, bankAccounts, cryptoAccounts, hasInitialized]);
+  
+  // Update selected IDs when new accounts are added (but don't reset view)
+  useEffect(() => {
+    if (hasInitialized && bankAccounts && bankAccounts.length > 0 && !selectedBankId) {
+      setSelectedBankId(bankAccounts[0].id);
+    }
+  }, [bankAccounts, selectedBankId, hasInitialized]);
+  
+  useEffect(() => {
+    if (hasInitialized && cryptoAccounts && cryptoAccounts.length > 0 && !selectedWalletId) {
+      setSelectedWalletId(cryptoAccounts[0].id);
+    }
+  }, [cryptoAccounts, selectedWalletId, hasInitialized]);
+  
   /** ---------------- BANK LOGIC ---------------- */
   const handleBankSelection = (bankId: string) => {
     setSelectedBankId(bankId);
     dispatch(clearSelectedWalletId())
     dispatch(setSelectedBankAccountId(bankId))
   };
-
+  
   const handleSubmitBankDetails = async () => {
     await createUserBankAccountMutation.mutateAsync();
-    if (bankAccounts && bankAccounts.length > 0) {
-      setViewState("select-bank");
-    }
+    // Explicitly set view state after successful creation
+    setViewState("select-bank");
   };
-
+  
   const handleViewSelectedBankDetails = () => {
     if (selectedBankId) {
       setViewState("bank-details");
     }
   };
-
+  
   /** ---------------- WALLET LOGIC ---------------- */
   const handleWalletSelection = (walletId: string) => {
     setSelectedWalletId(walletId);
     dispatch(clearSelectedBankAccountId())
     dispatch(setSelectedWalletAccountId(walletId))
   };
-
+  
   const handleSubmitWalletDetails = () => {
     if (newCryptoWallet) {
       createUserCryptoWalletMutation.mutate(newCryptoWallet)
       setViewState("select-wallet")
     }
   }
-
+  
   const handleViewSelectedWalletDetails = () => {
     if (selectedWalletId) {
       setViewState("wallet-details");
     }
   };
-
+  
   /** ---------------- COMMON ---------------- */
   const handleProceed = () => {
     onProceed(3);
     setShowConfirmBankDetails(false);
   };
-
+  
   const selectedBank = bankAccounts && bankAccounts.length > 0 ? bankAccounts.find(
     (bank) => bank.id === selectedBankId
   ) : null;
-
+  
   const selectedWallet = cryptoAccounts && cryptoAccounts.length > 0 ? cryptoAccounts.find(
     (wallet) => wallet.id === selectedWalletId
   ) : null;
-
+  
   return {
     // Values
     selectedBankId,
@@ -122,7 +134,7 @@ export const useConfirmBankDetailsModal = (cryptoAccounts: UserCryptoWalletRespo
     selectedWalletId,
     selectedWallet,
     viewState,
-
+    
     // Functions
     handleBankSelection,
     setViewState,
