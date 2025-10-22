@@ -2,7 +2,7 @@ import {axiosGetRequestHandler, axiosPostRequestHandler} from "./index.ts";
 import type {
   BaseApiResponse,
   SupportedCryptoOrCurrencyResponse,
-  SupportedPlatformCryptoWalletResponse, UserCryptoWalletAPIResponse, UserCryptoWalletResponse
+  SupportedPlatformCryptoWalletResponse, UserCryptoWalletResponse
 } from "../types/response.payload.types.ts";
 
 class CryptoServiceApi {
