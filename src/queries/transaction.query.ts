@@ -5,7 +5,8 @@ import {QUERY_KEYS} from "./query.keys.ts";
 import {transactionServiceApi} from "../api/transaction.api.ts";
 import {type RootState, store} from "../store.ts";
 import {LOCAL_STORAGE_KEYS, SESSION_STORAGE_KEYS} from "../util/constants.ts";
-import type {InitiateTransactionAPIResponse} from "../types/response.payload.types.ts";
+import {userServiceApi} from "../api/user.api.ts";
+import type {AxiosServerError} from "../types/response.payload.types.ts";
 
 export const useTransactionQuery = () => {
   const matchRoute = useMatchRoute();
@@ -80,20 +81,26 @@ export const useTransactionQuery = () => {
         ...transactionForm,
         coinId: transactionForm?.tokenId,
       }
+      
+      // Step 1: Ping User to establish whether anonymous or authenticated transaction
+      const { success } = await userServiceApi.pingUser();
+      
+      if (!success) {
+        return await transactionServiceApi.initiateTransactionAnonymousUser(payload);
+      }
 
       return await transactionServiceApi.initiateTransaction(payload);
     },
-    onSuccess: (response: InitiateTransactionAPIResponse) => {
+    onSuccess: ({ data, message }) => {
       toast.dismiss(QUERY_KEYS.TRANSACTION.INITIATE_TRANSACTION);
-      const { data, message } = response;
-      
       sessionStorage.setItem(SESSION_STORAGE_KEYS.SESSION_ID, data?.sessionId as string);
       toast.success(message);
     },
-    onError: (response: any) => {
-      const responseData = response?.response?.data;
+    onError: ( error: AxiosServerError ) => {
       toast.dismiss(QUERY_KEYS.TRANSACTION.INITIATE_TRANSACTION);
-      toast.error(responseData.message)
+      const { response } = error;
+      const message = response ? response.data.error.message : 'Failed to initiate transaction. Please try again.'
+      toast.error(message);
     },
   });
   

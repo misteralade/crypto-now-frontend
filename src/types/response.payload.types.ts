@@ -1,4 +1,16 @@
+import type {AxiosError} from "axios";
 import type {TradeType, TransactionPriority, TransactionStatus} from "./request.payload.types.ts";
+
+export interface StandardizedServerError {
+  success: false;
+  error: {
+    code: string;
+    message: string;
+    details?: unknown;
+  };
+}
+
+export type AxiosServerError = AxiosError<StandardizedServerError>;
 
 export type BaseApiResponse<T> = {
   success: boolean;

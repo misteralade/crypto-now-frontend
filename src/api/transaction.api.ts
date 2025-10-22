@@ -47,8 +47,15 @@ class TransactionServiceApi {
 
     return { data, success };
   }
+  
+  async initiateTransactionAnonymousUser(transactionData: Record<string, any>): Promise<InitiateTransactionAPIResponse> {
+    return await axiosPostRequestHandler(
+      '/transaction/initiate/anonymous',
+      transactionData
+    ) as InitiateTransactionAPIResponse
+  }
 
-  async initiateTransaction(transactionData: Record<string, any>): Promise<InitiateTransactionAPIResponse> {
+  async initiateTransaction(transactionData: Record<string, any>) {
     return await axiosPostRequestHandler(
       '/transaction/initiate',
       transactionData

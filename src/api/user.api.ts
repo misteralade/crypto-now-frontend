@@ -1,5 +1,5 @@
 import { axiosGetRequestHandler } from "./index.ts";
-import type { GetUserProfileResponse } from "../types/response.payload.types.ts";
+import type {BaseApiResponse, GetUserProfileResponse} from "../types/response.payload.types.ts";
 
 // import {LoginRequestSchema} from "../schema/auth.schema.ts";
 
@@ -20,6 +20,10 @@ class UserServiceApi {
     const { data, message, success }:{ data: GetUserProfileResponse, message: string, success: boolean }  = await axiosGetRequestHandler('/user/profile');
 
     return { data, message, success };
+  }
+  
+  async pingUser() {
+    return await axiosGetRequestHandler('/user/ping-user') as BaseApiResponse<null>;
   }
 }
 
