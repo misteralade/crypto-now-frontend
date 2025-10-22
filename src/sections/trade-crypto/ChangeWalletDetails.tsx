@@ -1,8 +1,9 @@
-import { useState } from "react"
+import {Fragment, useState} from "react"
 import { useDispatch } from "react-redux"
 import { CustomInput } from "../../components/global/CustomInput.tsx"
 import { CustomSelect } from "../../components/global/CustomSelect.tsx"
 import { setUserCreateCrypto } from "../../redux/crypto.slice.ts"
+import {type RootState, store} from "../../store.ts";
 
 interface CryptoWalletDetailsProps {
   onConfirm: () => void
@@ -24,12 +25,10 @@ const networkTypes = [
 //   "Binance Smart Chain", "Huobi ECO Chain", "OKEx Chain"
 // ]
 
-export default function ChangeCryptoWalletDetails({
-                                                    onConfirm,
-                                                    onGoBack,
-                                                    canGoBack = true,
-                                                  }: CryptoWalletDetailsProps) {
+const ChangeCryptoWalletDetails = ({ onConfirm, onGoBack, canGoBack = true }: CryptoWalletDetailsProps) => {
   const dispatch = useDispatch()
+  const rootState = store.getState() as RootState;
+  const userEmail = rootState.user.trade.anonymous.email;
 
   const [walletLabel, setWalletLabel] = useState("")
   const [walletAddress, setWalletAddress] = useState("")
@@ -82,30 +81,34 @@ export default function ChangeCryptoWalletDetails({
           value={network}
           onValueChange={setNetwork}
         />
-
-        <div className="flex items-center space-x-3">
-          <input
-            type="checkbox"
-            checked={isPrimary}
-            onChange={(e) => setIsPrimary(e.target.checked)}
-            className="h-4 w-4 text-primary border-gray-300 rounded"
-          />
-          <label className="text-sm font-medium text-gray-700">
-            Make this my primary wallet
-          </label>
-        </div>
-
-        <div className="flex items-center space-x-3">
-          <input
-            type="checkbox"
-            checked={isVerified}
-            onChange={(e) => setIsVerified(e.target.checked)}
-            className="h-4 w-4 text-primary border-gray-300 rounded"
-          />
-          <label className="text-sm font-medium text-gray-700">
-            I confirm I own this wallet
-          </label>
-        </div>
+        
+        {!userEmail && (
+          <Fragment>
+            <div className="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                checked={isPrimary}
+                onChange={(e) => setIsPrimary(e.target.checked)}
+                className="h-4 w-4 text-primary border-gray-300 rounded"
+              />
+              <label className="text-sm font-medium text-gray-700">
+                Make this my primary wallet
+              </label>
+            </div>
+            
+            <div className="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                checked={isVerified}
+                onChange={(e) => setIsVerified(e.target.checked)}
+                className="h-4 w-4 text-primary border-gray-300 rounded"
+              />
+              <label className="text-sm font-medium text-gray-700">
+                I confirm I own this wallet
+              </label>
+            </div>
+          </Fragment>
+        )}
       </div>
 
       {/* Action Buttons */}
@@ -131,3 +134,5 @@ export default function ChangeCryptoWalletDetails({
     </div>
   )
 }
+
+export default ChangeCryptoWalletDetails;

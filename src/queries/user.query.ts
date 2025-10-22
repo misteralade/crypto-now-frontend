@@ -36,7 +36,7 @@ export const useUserQuery = () => {
 
       dispatch(setIsAnonymousUser(false));
     },
-    refetchInterval: 30_000, // ⏱ 30 seconds (in ms)
+    // refetchInterval: 30_000, // ⏱ 30 seconds (in ms)
     refetchIntervalInBackground: true, // ✅ keeps pinging even when tab is inactive
     refetchOnWindowFocus: false,
     enabled: !!matchRoute({ to: ROUTES.TRADE_CRYPTO })

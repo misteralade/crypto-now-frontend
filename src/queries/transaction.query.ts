@@ -143,6 +143,7 @@ export const useTransactionQuery = () => {
       const transactionSessionId = sessionStorage.getItem(SESSION_STORAGE_KEYS.SESSION_ID);
       const walletId = rootState.crypto.tradeCrypto?.selectedWalletId;
       const accountId = rootState.bank.tradeCrypto?.selectedBankAccountId;
+      const userEmail = rootState.user.trade.anonymous.email;
 
       if (!walletId && !accountId) {
         throw new Error("Either walletId or accountId must be provided, and sessionId must exist");
@@ -151,7 +152,17 @@ export const useTransactionQuery = () => {
       if (!transactionSessionId) {
         throw new Error("Either transaction sessionId must be provided, and sessionId must exist");
       }
-
+      
+      if (userEmail) {
+        await transactionServiceApi.confirmAnonymousUserReceivingPaymentAccount(transactionSessionId, {
+          walletId,
+          accountId,
+          email: userEmail,
+        })
+        
+        return;
+      }
+      
       await transactionServiceApi.confirmReceivingPaymentAccount(transactionSessionId, {
         walletId,
         accountId,

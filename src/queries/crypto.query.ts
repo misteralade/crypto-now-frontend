@@ -48,7 +48,18 @@ export const useCryptoQuery = () => {
     queryFn: async () => {
       const rootState = store.getState() as RootState;
       const selectedCryptoId = rootState.crypto.tradeCrypto.selectedCryptoId || "";
+      const userEmail = rootState.user.trade.anonymous.email;
 
+      if (userEmail) {
+        const { data, success } = await cryptoServiceApi.getAnonymousUserCryptoWallets(selectedCryptoId, userEmail);
+        
+        if (success) {
+          return data;
+        }
+        
+        return [];
+      }
+      
       const { data, success } = await cryptoServiceApi.getUserCryptoWallets(selectedCryptoId);
 
       if (success) {
@@ -66,10 +77,18 @@ export const useCryptoQuery = () => {
       toast.loading("Creating crypto wallet...", { toastId: QUERY_KEYS.CRYPTO.USER_CREATE_CRYPTO_WALLET });
       const rootState = store.getState() as RootState;
       const createCryptoPayload = rootState.crypto.tradeCrypto.userCreateCrypto;
+      const userEmail = rootState.user.trade.anonymous.email;
 
       if (!rootState.crypto.tradeCrypto.selectedCryptoId) {
         toast.error("Please select a crypto", { toastId: QUERY_KEYS.CRYPTO.USER_CREATE_CRYPTO_WALLET });
         throw new Error("No crypto selected");
+      }
+      
+      if (userEmail) {
+        return cryptoServiceApi.anonymousUserCreateCryptoWallet(rootState.crypto.tradeCrypto.selectedCryptoId, {
+          ...createCryptoPayload,
+          email: userEmail,
+        });
       }
 
       return cryptoServiceApi.userCreateCryptoWallet(rootState.crypto.tradeCrypto.selectedCryptoId, createCryptoPayload);

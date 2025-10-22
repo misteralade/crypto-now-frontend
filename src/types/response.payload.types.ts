@@ -76,6 +76,9 @@ export type UserBankAccountResponse = {
 }
 // Banks End
 
+// Crypto Start
+export type UserCryptoWalletAPIResponse = BaseApiResponse<Array<UserCryptoWalletResponse>>
+
 export type UserCryptoWalletResponse = {
   id: string;
   walletAddress: string;
