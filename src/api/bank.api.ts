@@ -18,9 +18,7 @@ class BankServiceApi {
   }
 
   async getPlatformBankDetails() {
-    const { data, message, success }: { data: SupportedPlatformBankAccountResponse[], message: string, success: boolean} = await axiosGetRequestHandler(`/bank/supported-bank/platform`);
-
-    return { data, message, success };
+    return await axiosGetRequestHandler(`/bank/supported-bank/platform`) as BaseApiResponse<SupportedPlatformBankAccountResponse>;
   }
 
   async getAllBanks() {

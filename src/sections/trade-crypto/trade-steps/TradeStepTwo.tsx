@@ -35,7 +35,7 @@ export default function TradeStepTwo({ amountToBuy, tradeType, numberOfToken, ad
     setTransactionHash,
     setUploadedFileUrl,
   } = useTradeStepTwo({tradeType, exchangeRateId, amountToBuy, numberOfToken, selectedToken, selectedCurrency });
-
+  
   // Loading state
   if (paymentDetailsLoading) {
     return (
@@ -84,7 +84,7 @@ export default function TradeStepTwo({ amountToBuy, tradeType, numberOfToken, ad
             </h3>
             <p className="text-orange-700 text-sm">
               Please send <strong>{numberOfToken} {selectedToken?.symbol}</strong> to the wallet address below
-              on the <strong>{walletDetails?.[0]?.network}</strong> network, then upload proof and provide the transaction hash.
+              on the <strong>{walletDetails?.network}</strong> network, then upload proof and provide the transaction hash.
             </p>
           </div>
         )}
@@ -214,7 +214,7 @@ export default function TradeStepTwo({ amountToBuy, tradeType, numberOfToken, ad
             <>
               <li>• Verify the wallet address and network before sending</li>
               <li>• Send exactly: <strong>{numberOfToken} {selectedToken?.symbol}</strong></li>
-              <li>• Use the <strong>{walletDetails?.[0]?.network}</strong> network only</li>
+              <li>• Use the <strong>{walletDetails?.network}</strong> network only</li>
               <li>• Double-check the transaction hash before submitting</li>
             </>
           )}
