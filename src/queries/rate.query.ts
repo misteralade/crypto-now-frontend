@@ -9,7 +9,8 @@ export const useRateQuery = (cryptoId: string, currencyId: string, action: 'BUY'
       const { data } = await exchangeRateServiceApi.getExchangeRate(cryptoId, currencyId, action);
 
       return data;
-    }
+    },
+    enabled: !!cryptoId && !!currencyId && !!action,
   });
 
   return {

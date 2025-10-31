@@ -24,10 +24,8 @@ class CryptoServiceApi {
     return { data, message, success };
   }
 
-  async getPlatformWallets() {
-    const { data, message, success }: { data: SupportedPlatformCryptoWalletResponse[], message: string, success: boolean} = await axiosGetRequestHandler("/crypto/supported-cryptos/platform/receiving");
-
-    return { data, message, success };
+  async getPlatformWallet(id: string) {
+    return  await axiosGetRequestHandler(`/crypto/supported-crypto/platform/receiving/${id}`) as BaseApiResponse<SupportedPlatformCryptoWalletResponse>;
   }
 
   async getSupportedCryptoById(selectedCryptoId: string) {

@@ -14,6 +14,8 @@ import {
   loadTradeProgress,
   saveTradeProgress,
 } from "../../../util/tradeProgress.storgae.ts";
+import {type RootState, store} from "../../../store.ts";
+import {toast} from "react-toastify";
 
 interface UseTradeStepTwoProps {
   tradeType: TradeType;
@@ -36,10 +38,10 @@ export const useTradeStepTwo = ({
   const [uploadedFileUrl, setUploadedFileUrl] = useState<string | undefined>();
   const [transactionHash, setTransactionHash] = useState<string>("");
   const [bankDetails, setBankDetails] = useState<
-    SupportedPlatformBankAccountResponse[] | null
+    SupportedPlatformBankAccountResponse | null
   >(null);
   const [walletDetails, setWalletDetails] = useState<
-    SupportedPlatformCryptoWalletResponse[] | null
+    SupportedPlatformCryptoWalletResponse | null
   >(null);
 
   // Fetch payment details based on trade type
@@ -57,7 +59,15 @@ export const useTradeStepTwo = ({
           setBankDetails(data);
           return data;
         } else {
-          const { data } = await cryptoServiceApi.getPlatformWallets();
+          const rootState = store.getState() as RootState;
+          const cryptoId = rootState.crypto.tradeCrypto.selectedCryptoId
+          
+          if (!cryptoId) {
+            toast.error("Please select a crypto");
+            throw new Error("No crypto selected");
+          }
+          
+          const { data } = await cryptoServiceApi.getPlatformWallet(cryptoId);
           setWalletDetails(data);
           return data;
         }
@@ -91,21 +101,20 @@ export const useTradeStepTwo = ({
 
   // Generate account details based on API response
   const generateAccountDetails = (): TradeAdditionalInfoInterface[] => {
-    if (tradeType === "buy" && bankDetails && bankDetails.length > 0) {
+    if (tradeType === "buy" && bankDetails) {
       // Show all bank accounts if multiple exist
-      const bank = bankDetails[0]; // Use first bank account
       return [
         {
           title: "Bank Account Number",
-          value: bank.accountNumber,
+          value: bankDetails.accountNumber,
         },
         {
           title: "Account Name",
-          value: bank.accountHolderName,
+          value: bankDetails.accountHolderName,
         },
         {
           title: "Bank Name",
-          value: bank.bankName,
+          value: bankDetails.bankName,
         },
         {
           title: "Amount to Pay",
@@ -114,16 +123,15 @@ export const useTradeStepTwo = ({
       ];
     }
 
-    if (tradeType === "sell" && walletDetails && walletDetails.length > 0) {
-      const wallet = walletDetails[0]; // Use first wallet
+    if (tradeType === "sell" && walletDetails) {
       return [
         {
           title: "Wallet Address",
-          value: wallet.walletAddress,
+          value: walletDetails.walletAddress,
         },
         {
           title: "Network",
-          value: wallet.network,
+          value: walletDetails.network,
         },
         {
           title: "Coin Type",
@@ -140,61 +148,51 @@ export const useTradeStepTwo = ({
   };
 
   const oldGenerateAccountDetails = (): { title: string; value: string }[] => {
-    if (tradeType === "buy" && bankDetails && bankDetails.length > 0) {
+    if (tradeType === "buy" && bankDetails) {
       // Return the nested details directly
-      return bankDetails
-        .map((bank, index) => [
-          {
-            title:
-              `Bank Account Number ${bankDetails.length > 1 ? index + 1 : ""}`.trim(),
-            value: bank.accountNumber,
-          },
-          {
-            title:
-              `Account Name ${bankDetails.length > 1 ? index + 1 : ""}`.trim(),
-            value: bank.accountHolderName,
-          },
-          {
-            title:
-              `Bank Name ${bankDetails.length > 1 ? index + 1 : ""}`.trim(),
-            value: bank.bankName,
-          },
-        ])
-        .flat()
-        .concat([
-          {
-            title: "Amount to Pay",
-            value: `${amountToBuy} ${selectedCurrency?.code}`,
-          },
-        ]);
+      return [
+        {
+          title: `Bank Account Number`.trim(),
+          value: bankDetails.accountNumber,
+        },
+        {
+          title:
+            `Account Name`.trim(),
+          value: bankDetails.accountHolderName,
+        },
+        {
+          title:
+            `Bank Name`.trim(),
+          value: bankDetails.bankName,
+        },
+        {
+          title: "Amount to Pay",
+          value: `${amountToBuy} ${selectedCurrency?.code}`,
+        },
+      ]
     }
 
-    if (tradeType === "sell" && walletDetails && walletDetails.length > 0) {
+    if (tradeType === "sell" && walletDetails) {
       // Return the nested details directly
-      return walletDetails
-        .map((wallet, index) => [
-          {
-            title:
-              `Wallet Address ${walletDetails.length > 1 ? index + 1 : ""}`.trim(),
-            value: wallet.walletAddress,
-          },
-          {
-            title:
-              `Network ${walletDetails.length > 1 ? index + 1 : ""}`.trim(),
-            value: wallet.network,
-          },
-        ])
-        .flat()
-        .concat([
-          {
-            title: "Coin Type",
-            value: `${selectedToken?.name} (${selectedToken?.symbol})`,
-          },
-          {
-            title: "Amount to Send",
-            value: `${numberOfToken} ${selectedToken?.symbol}`,
-          },
-        ]);
+      return [
+        {
+          title:
+            `Wallet Address`.trim(),
+          value: walletDetails.walletAddress,
+        },
+        {
+          title: `Network`.trim(),
+          value: walletDetails.network,
+        },
+        {
+          title: "Coin Type",
+          value: `${selectedToken?.name} (${selectedToken?.symbol})`,
+        },
+        {
+          title: "Amount to Send",
+          value: `${numberOfToken} ${selectedToken?.symbol}`,
+        },
+      ]
     }
 
     return [];

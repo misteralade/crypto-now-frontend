@@ -32,7 +32,9 @@ export const useConfirmBankDetailsModal = (
   const newCryptoWallet: any = useSelector((state: RootState) => state.crypto.tradeCrypto.userCreateCrypto)
   
   const [selectedBankId, setSelectedBankId] = useState<string>("");
+  const [selectedBank, setSelectedBank] = useState<UserBankAccountResponse | null>()
   const [selectedWalletId, setSelectedWalletId] = useState<string>("");
+  const [selectedWallet, setSelectedWallet] = useState<UserCryptoWalletResponse | null>()
   const [viewState, setViewState] = useState<ViewState>(tradeType === "sell" ? "select-bank" : "select-wallet");
   
   // Track if we've initialized to prevent resets
@@ -58,6 +60,20 @@ export const useConfirmBankDetailsModal = (
       }
     }
     
+    if (bankAccounts && bankAccounts.length > 0) {
+      setSelectedBankId(bankAccounts[0].id);
+      setSelectedBank(bankAccounts[0]);
+      dispatch(clearSelectedWalletId())
+      dispatch(setSelectedBankAccountId(bankAccounts[0].id))
+    }
+    
+    if (cryptoAccounts && cryptoAccounts.length > 0) {
+      setSelectedWalletId(cryptoAccounts[0].id);
+      setSelectedWallet(cryptoAccounts[0]);
+      dispatch(clearSelectedBankAccountId())
+      dispatch(setSelectedWalletAccountId(cryptoAccounts[0].id))
+    }
+    
     setHasInitialized(true);
   }, [tradeType, bankAccounts, cryptoAccounts, hasInitialized]);
   
@@ -77,6 +93,9 @@ export const useConfirmBankDetailsModal = (
   /** ---------------- BANK LOGIC ---------------- */
   const handleBankSelection = (bankId: string) => {
     setSelectedBankId(bankId);
+    setSelectedBank(bankAccounts && bankAccounts.length > 0 ? bankAccounts.find(
+      (bank) => bank.id === bankId
+    ) : null);
     dispatch(clearSelectedWalletId())
     dispatch(setSelectedBankAccountId(bankId))
   };
@@ -96,6 +115,9 @@ export const useConfirmBankDetailsModal = (
   /** ---------------- WALLET LOGIC ---------------- */
   const handleWalletSelection = (walletId: string) => {
     setSelectedWalletId(walletId);
+    setSelectedWallet(cryptoAccounts && cryptoAccounts.length > 0 ? cryptoAccounts.find(
+      (wallet) => wallet.id === walletId
+    ) : null);
     dispatch(clearSelectedBankAccountId())
     dispatch(setSelectedWalletAccountId(walletId))
   };
@@ -118,14 +140,6 @@ export const useConfirmBankDetailsModal = (
     onProceed(3);
     setShowConfirmBankDetails(false);
   };
-  
-  const selectedBank = bankAccounts && bankAccounts.length > 0 ? bankAccounts.find(
-    (bank) => bank.id === selectedBankId
-  ) : null;
-  
-  const selectedWallet = cryptoAccounts && cryptoAccounts.length > 0 ? cryptoAccounts.find(
-    (wallet) => wallet.id === selectedWalletId
-  ) : null;
   
   return {
     // Values

@@ -38,7 +38,7 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, cryptoAccou
     handleViewSelectedWalletDetails,
     handleProceed,
   } = useConfirmBankDetailsModal(cryptoAccounts, bankAccounts, tradeType, onProceed, setShowConfirmBankDetails);
-
+  
   /** ---------------- RENDERERS ---------------- */
   const renderBankList = () => (
     <div className="space-y-4">
@@ -105,6 +105,17 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, cryptoAccou
           </div>
         ))}
       </div>
+      
+      {/*Proceed to confirm bank details button*/}
+      {selectedBank && (
+        <div className="mt-3">
+          <CustomButton
+            buttonText="View Details & Proceed"
+            onClick={handleViewSelectedBankDetails}
+            className="w-full h-12"
+          />
+        </div>
+      )}
 
       {/* Add New Bank Button */}
       <button
@@ -218,6 +229,18 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, cryptoAccou
           </div>
         ))}
       </div>
+      
+      {/*Proceed to confirm bank details button*/}
+      {selectedWallet && (
+        <div className="mt-3">
+          <CustomButton
+            buttonText="View Details & Proceed"
+            onClick={handleViewSelectedWalletDetails}
+            className="w-full h-12"
+          />
+        </div>
+      )}
+      
       <button
         onClick={() => setViewState("create-wallet")}
         className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-400 hover:text-blue-600 transition-colors duration-200 flex items-center justify-center space-x-2"
