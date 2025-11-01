@@ -54,12 +54,12 @@ jobs:
       - name: Setup Firebase credentials for Dev
         if: github.ref == 'refs/heads/dev'
         run: |
-          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > $HOME/gcloud-key.json
+          echo '${{ secrets.FIREBASE_TOKEN }}' > $HOME/gcloud-key.json
 
       - name: Setup Firebase credentials for Prod
         if: github.ref == 'refs/heads/master'
         run: |
-          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_PROD }}' > $HOME/gcloud-key.json
+          echo '${{ secrets.FIREBASE_TOKEN_PROD }}' > $HOME/gcloud-key.json
 
       - name: Deploy to Firebase Hosting
         env:
