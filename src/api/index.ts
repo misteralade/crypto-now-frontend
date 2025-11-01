@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios, { type AxiosRequestHeaders } from "axios";
 import {BASIC} from "../config/index.config.ts";
-import {LOCAL_STORAGE_KEYS, ROUTES} from "../util/constants.ts";
+import {LOCAL_STORAGE_KEYS, ROUTES} from "../util/constants.util.ts";
 import type {BaseApiResponse} from "../types/response.payload.types.ts";
 
 export const API_KIT = axios.create({

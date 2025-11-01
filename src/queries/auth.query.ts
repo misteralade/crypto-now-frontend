@@ -3,7 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import {authServiceApi} from "../api/auth.api.ts";
 import {useState} from "react";
 import {toast} from "react-toastify";
-import {ROUTES} from "../util/constants.ts";
+import {ROUTES} from "../util/constants.util.ts";
 
 export const useAuthQuery = () => {
   const [loggingInLoading, setLoggingInLoading] = useState(false);

@@ -3,7 +3,7 @@ import {cryptoServiceApi} from "../api/crypto.api.ts";
 import {QUERY_KEYS} from "./query.keys.ts";
 import {type RootState, store} from "../store.ts";
 import {toast} from "react-toastify";
-import {SESSION_STORAGE_KEYS} from "../util/constants.ts";
+import {SESSION_STORAGE_KEYS} from "../util/constants.util.ts";
 
 export const useCryptoQuery = () => {
   const queryClient = useQueryClient();

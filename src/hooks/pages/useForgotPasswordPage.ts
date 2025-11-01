@@ -1,6 +1,6 @@
 import {useState} from "react";
 import {authServiceApi} from "../../api/auth.api.ts";
-import {emailValidation} from "../../util/constants.regex.ts";
+import {emailValidation} from "../../util/constants.regex.util.ts";
 import type {AuthResponse} from "../../types/response.payload.types.ts";
 import {toast} from "react-toastify";
 

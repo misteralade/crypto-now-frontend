@@ -1,6 +1,6 @@
 import {useQuery} from "@tanstack/react-query";
 import {QUERY_KEYS} from "./query.keys.ts";
-import {LOCAL_STORAGE_KEYS, ROUTES} from "../util/constants.ts";
+import {LOCAL_STORAGE_KEYS, ROUTES} from "../util/constants.util.ts";
 import {userServiceApi} from "../api/user.api.ts";
 import { useMatchRoute } from "@tanstack/react-router";
 import {useDispatch} from "react-redux";

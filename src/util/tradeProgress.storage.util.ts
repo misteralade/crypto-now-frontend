@@ -1,5 +1,5 @@
 import type { TradeType } from "../types/trade.types";
-import {LOCAL_STORAGE_KEYS} from "./constants.ts";
+import {LOCAL_STORAGE_KEYS} from "./constants.util.ts";
 
 
 export interface TradeProgress {

@@ -1,4 +1,4 @@
-export default function Testimonials() {
+const Testimonials = () => {
   return (
     <section className="mt-20 max-md:px-4">
       <div className="max-w-6xl mx-auto md:px-4">
@@ -30,3 +30,5 @@ export default function Testimonials() {
     </section>
   );
 }
+
+export default Testimonials;

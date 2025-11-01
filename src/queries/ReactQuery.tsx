@@ -1,6 +1,6 @@
 import {type ReactNode, useState} from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import {TIME_IN_MILLISECONDS} from "../util/constants.ts";
+import {TIME_IN_MILLISECONDS} from "../util/constants.util.ts";
 
 export default function ReactQueryRegistry({
   children,

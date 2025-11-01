@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import MakeDispute from "../MakeDispute.tsx";
-import {formatTime} from "../../../util/utils.ts";
+import {formatTime} from "../../../util/index.util.ts";
 
 interface PaymentConfirmationModalProps {
     isOpen: boolean

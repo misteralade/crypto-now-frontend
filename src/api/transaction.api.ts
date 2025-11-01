@@ -10,7 +10,7 @@ import type {
   TransactionSummaryResponse,
   UserTransactionsHistoryResponse
 } from "../types/response.payload.types.ts";
-import {SESSION_STORAGE_KEYS} from "../util/constants.ts";
+import {SESSION_STORAGE_KEYS} from "../util/constants.util.ts";
 
 class TransactionServiceApi {
   private static instance: TransactionServiceApi;

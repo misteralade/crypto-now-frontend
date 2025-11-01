@@ -19,11 +19,11 @@ import {
   setAmountToSend, setInitiateTransactionField,
 } from "../../../redux/transaction.slice.ts";
 import { setSelectedCryptoId } from "../../../redux/crypto.slice.ts";
-import { SESSION_STORAGE_KEYS } from "../../../util/constants.ts";
+import { SESSION_STORAGE_KEYS } from "../../../util/constants.util.ts";
 import {
   loadTradeProgress,
   saveTradeProgress,
-} from "../../../util/tradeProgress.storgae.ts";
+} from "../../../util/tradeProgress.storage.util.ts";
 import {useUserQuery} from "../../../queries/user.query.ts";
 import {type RootState, store} from "../../../store.ts";
 import {setAnonymousUserEmail} from "../../../redux/user.slice.ts";

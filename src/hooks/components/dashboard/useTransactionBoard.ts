@@ -8,7 +8,7 @@ import type {SearchTransactionsRequestPayload} from "../../../types/request.payl
 import momentClient from "../../../lib/moment.ts";
 import {useCryptoQuery} from "../../../queries/crypto.query.ts";
 import {userSearchTransactionInitialState} from "../../../redux/states/initial-transaction.state.ts";
-import {TIME_IN_MILLISECONDS} from "../../../util/constants.ts";
+import {TIME_IN_MILLISECONDS} from "../../../util/constants.util.ts";
 import {debounce} from "../../../util/debouce.util.ts";
 
 export const useTransactionBoard = () => {

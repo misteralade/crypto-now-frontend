@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import SignUpPage from "../sections/auth/SignUpPage";
-import { LOCAL_STORAGE_KEYS } from "../util/constants";
+import { LOCAL_STORAGE_KEYS } from "../util/constants.util.ts";
 
 export const Route = createFileRoute("/sign-up")({
   beforeLoad: () => {

@@ -1,6 +1,10 @@
 import CustomButton from "../../components/global/Button";
 
-export default function AllInOne() {
+interface AllInOneProps {
+  tradeCrypto: () => void;
+}
+
+const AllInOne = ({ tradeCrypto }: AllInOneProps) => {
   return (
     <section className="sm:mt-24 mt-16 md:mt-40 max-md:px-4">
       <div className="max-w-6xl mx-auto md:px-4">
@@ -42,7 +46,7 @@ export default function AllInOne() {
               </div>
             </div>
 
-            <CustomButton buttonText="Buy & sell crypto now" />
+            <CustomButton onClick={tradeCrypto} buttonText="Buy & sell crypto now" />
           </div>
 
           <div className="">
@@ -53,3 +57,5 @@ export default function AllInOne() {
     </section>
   );
 }
+
+export default AllInOne;

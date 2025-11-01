@@ -9,7 +9,7 @@ import {
   clearTradeProgress,
   loadTradeProgress,
   saveTradeProgress,
-} from "../../util/tradeProgress.storgae.ts";
+} from "../../util/tradeProgress.storage.util.ts";
 import EmailModal from "./modals/EmailModal.tsx";
 
 export default function TradeStepDisplay({

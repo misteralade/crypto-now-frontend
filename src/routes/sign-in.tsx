@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import SignInPage from "../sections/auth/SignInPage";
-import { LOCAL_STORAGE_KEYS } from "../util/constants";
+import { LOCAL_STORAGE_KEYS } from "../util/constants.util.ts";
 
 export const Route = createFileRoute("/sign-in")({
   beforeLoad: () => {

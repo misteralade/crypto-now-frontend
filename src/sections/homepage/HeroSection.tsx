@@ -2,7 +2,11 @@ import CustomButton from "../../components/global/Button";
 import UserIllustration from "../../assets/illustrations/image-container.png";
 import Arrow from "../../assets/icons/banner-arrow.svg";
 
-export default function HeroSection() {
+interface HeroSectionProps {
+  tradeCrypto: () => void;
+}
+
+const HeroSection = ({ tradeCrypto }: HeroSectionProps) => {
   return (
     <section className="bg-white relative overflow-hidden max-md:px-4">
       <div className="max-w-6xl mx-auto text-center mt-16">
@@ -53,7 +57,7 @@ export default function HeroSection() {
         </p>
 
         {/* CTA Button */}
-        <CustomButton buttonText="Buy & sell crypto now" />
+        <CustomButton onClick={tradeCrypto} buttonText="Buy & sell crypto now" />
 
         <div className="mt-12 flex items-center justify-center">
           <img
@@ -72,3 +76,5 @@ export default function HeroSection() {
     </section>
   );
 }
+
+export default HeroSection;

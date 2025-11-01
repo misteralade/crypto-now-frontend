@@ -13,7 +13,7 @@ import type { TradeAdditionalInfoInterface } from "../../../types/trade.types.ts
 import {
   loadTradeProgress,
   saveTradeProgress,
-} from "../../../util/tradeProgress.storgae.ts";
+} from "../../../util/tradeProgress.storage.util.ts";
 import {type RootState, store} from "../../../store.ts";
 import {toast} from "react-toastify";
 

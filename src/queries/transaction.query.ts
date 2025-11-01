@@ -4,8 +4,9 @@ import {useMatchRoute} from "@tanstack/react-router";
 import {QUERY_KEYS} from "./query.keys.ts";
 import {transactionServiceApi} from "../api/transaction.api.ts";
 import {type RootState, store} from "../store.ts";
-import {LOCAL_STORAGE_KEYS, SESSION_STORAGE_KEYS} from "../util/constants.ts";
+import { SESSION_STORAGE_KEYS } from "../util/constants.util.ts";
 import type {AxiosServerError} from "../types/response.payload.types.ts";
+import {clearTradeProgress} from "../util/tradeProgress.storage.util.ts";
 
 export const useTransactionQuery = () => {
   const matchRoute = useMatchRoute();
@@ -171,8 +172,13 @@ export const useTransactionQuery = () => {
     onSuccess: () => {
       toast.dismiss('confirm-receiving-account');
       toast.success('Successfully confirmed receiving account');
+      clearTradeProgress();
       sessionStorage.removeItem(SESSION_STORAGE_KEYS.SESSION_ID);
-      localStorage.removeItem(LOCAL_STORAGE_KEYS.TRADE_PROGRESS);
+      
+      setTimeout(() => {
+        // Reload the page to reset the state
+        window.location.reload();
+      }, 5000)
     },
     onError: () => {
       toast.dismiss('confirm-receiving-account');

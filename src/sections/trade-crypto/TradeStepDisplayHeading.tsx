@@ -1,5 +1,5 @@
 import type { TradeType } from "../../types/trade.types.ts";
-import { clearTradeProgress } from "../../util/tradeProgress.storgae.ts";
+import { clearTradeProgress } from "../../util/tradeProgress.storage.util.ts";
 
 interface TradeStepDisplayHeadingProps {
   step: number;
