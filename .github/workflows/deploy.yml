@@ -8,7 +8,6 @@ on:
 
 env:
   NODE_VERSION: "22"
-  FIREBASE_PROJECT: "crypto-now-8d762"
 
 jobs:
   deploy:
@@ -18,12 +17,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set target environment
+      - name: Set target environment and project
         run: |
           if [ "${{ github.ref }}" == "refs/heads/dev" ]; then
             echo "FIREBASE_TARGET=crypto-now-dev" >> $GITHUB_ENV
+            echo "FIREBASE_PROJECT=${{ secrets.FIREBASE_PROJECT_DEV }}" >> $GITHUB_ENV
           elif [ "${{ github.ref }}" == "refs/heads/master" ]; then
             echo "FIREBASE_TARGET=crypto-now-prod" >> $GITHUB_ENV
+            echo "FIREBASE_PROJECT=${{ secrets.FIREBASE_PROJECT_PROD }}" >> $GITHUB_ENV
           fi
 
       - name: Setup Node.js
