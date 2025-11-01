@@ -10,8 +10,11 @@ import CustomButton from "../components/global/Button.tsx";
 import Footer from "../components/global/Footer.tsx";
 import {useCryptoQuery} from "../queries/crypto.query.ts";
 import {useCurrencyQuery} from "../queries/currency.query.ts";
+import {ROUTES} from "../util/constants.util.ts";
+import {useNavigate} from "@tanstack/react-router";
 
 const HomePage = () => {
+  const navigate = useNavigate();
   const {supportedCryptoCurrencies, loadingSupportedCrypto} = useCryptoQuery();
   const { supportedCurrencies, loadingSupportedCurrencies} = useCurrencyQuery()
   
@@ -32,11 +35,19 @@ const HomePage = () => {
     }
   }, [loadingSupportedCurrencies]);
   
+  const handleTradeCrypto = () => {
+    navigate({ to: `${ROUTES.TRADE_CRYPTO}?option=${selectedAction.toLowerCase()}&currency=${supportedCurrency}&token=${selectedCrypto}` });
+  }
+  
   return (
     <Fragment>
       <div>
         <Navbar />
-        <HeroSection />
+        
+        <HeroSection
+          tradeCrypto={handleTradeCrypto}
+        />
+        
         <InstantTradeSection
           cryptoCurrencies={supportedCryptoCurrencies || undefined}
           currencies={supportedCurrencies || undefined}
@@ -45,20 +56,33 @@ const HomePage = () => {
           selectedAction={selectedAction}
           onCryptoChange={setSelectedCrypto}
           onCurrencyChange={setSupportedCurrency}
-          onActionChange={setSelectedAction} />
-        <StepsSection />
+          onActionChange={setSelectedAction}
+        />
+        
+        <StepsSection
+          tradeCrypto={handleTradeCrypto}
+        />
+        
         <WhyCryptoNow />
-        <AllInOne />
-        <Testimonials />
+        
+        <AllInOne
+          tradeCrypto={handleTradeCrypto}
+        />
+        
+        <Testimonials/>
+        
         <div className="max-w-[960px] my-20 mx-auto text-center">
           <div className="text-5xl sm:text-7xl md:tex-8xl lg:text-9xl font-semibold">
             Your crypto,
           </div>
+          
           <div className="text-5xl sm:text-7xl md:tex-8xl lg:text-9xl text-[#BDBDBD] font-semibold md:-mt-4 mb-6">
             your way
           </div>
-          <CustomButton buttonText="Buy & sell crypto now" />
+          
+          <CustomButton onClick={handleTradeCrypto} buttonText="Buy & sell crypto now" />
         </div>
+        
         <Footer />
       </div>
     </Fragment>

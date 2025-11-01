@@ -1,6 +1,10 @@
 import CustomButton from "../../components/global/Button";
 
-export default function StepsSection() {
+interface StepsSectionProps {
+  tradeCrypto: () => void;
+}
+
+const StepsSection = ({ tradeCrypto }: StepsSectionProps) => {
   return (
     <section className="sm:mt-20 mt-14 md:mt-40 max-md:px-4">
       <div className="max-w-7xl mx-auto">
@@ -67,10 +71,12 @@ export default function StepsSection() {
               </div>
             </div>
 
-            <CustomButton buttonText="Buy & sell crypto now" />
+            <CustomButton onClick={tradeCrypto} buttonText="Buy & sell crypto now" />
           </div>
         </div>
       </div>
     </section>
   );
 }
+
+export default StepsSection;
