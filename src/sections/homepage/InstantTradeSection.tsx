@@ -1,6 +1,29 @@
 import CustomButton from "../../components/global/Button";
+import type {SupportedCryptoOrCurrencyResponse} from "../../types/response.payload.types.ts";
+import CurrencySelector from "../../components/global/CurrencySelector.tsx";
+import {useState} from "react";
+import {useNavigate} from "@tanstack/react-router";
+import {ROUTES} from "../../util/constants.util.ts";
 
-export default function InstantTradeSection() {
+interface InstantTradeSectionProps {
+  cryptoCurrencies: Array<SupportedCryptoOrCurrencyResponse> | undefined;
+  currencies: Array<SupportedCryptoOrCurrencyResponse> | undefined;
+  selectedCryptoId: string;
+  selectedCurrencyId: string;
+  selectedAction: 'BUY' | 'SELL';
+  onCryptoChange: (cryptoId: string) => void;
+  onCurrencyChange: (currencyId: string) => void;
+  onActionChange: (action: 'BUY' | 'SELL') => void;
+}
+
+const  InstantTradeSection = ({ cryptoCurrencies, currencies, selectedCryptoId, selectedCurrencyId, selectedAction, onCryptoChange, onCurrencyChange, onActionChange }: InstantTradeSectionProps) => {
+  const navigate = useNavigate();
+  const [fiatAmount, setFiatAmount] = useState(0)
+  
+  const handleSubmit = () => {
+    navigate({ to: `${ROUTES.TRADE_CRYPTO}?option=${selectedAction.toLowerCase()}&currency=${selectedCurrencyId}&token=${selectedCryptoId}&amount=${fiatAmount}` });
+  }
+  
   return (
     <section className="max-md:px-4">
       <div className="max-w-6xl mx-auto mt-24">
@@ -24,23 +47,26 @@ export default function InstantTradeSection() {
           <div className="flex items-center max-md:w-full bg-white rounded-[100px] border border-[#ECECEC] p-2">
             {/* Buy dropdown */}
             <div className="flex items-center gap-3 px-4 py-2">
-              <select className="bg-transparent border-none outline-none font-medium text-gray-900 cursor-pointer">
-                <option>Buy</option>
-                <option>Sell</option>
+              <select
+                value={selectedAction}
+                onChange={(e) => onActionChange(e.target.value as 'BUY' | 'SELL')}
+                className="bg-transparent border-none outline-none font-medium text-gray-900 cursor-pointer"
+              >
+                <option value="BUY">Buy</option>
+                <option value='SELL'>Sell</option>
               </select>
             </div>
 
             {/* Divider */}
             <div className="w-px h-8 bg-gray-300"></div>
 
-            {/* Bitcoin dropdown */}
+            {/* Crypto Currency Selector */}
             <div className="flex items-center gap-3 px-4 py-2">
-              <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-xs font-bold">₿</span>
-              </div>
-              <select className="bg-transparent border-none outline-none font-medium text-gray-900 cursor-pointer">
-                <option>Bitcoin</option>
-              </select>
+              <CurrencySelector
+                currencies={cryptoCurrencies}
+                selectedCurrency={cryptoCurrencies ? cryptoCurrencies?.find(c => c.id === selectedCryptoId) : undefined}
+                handleSelectedCurrencyIdChange={onCryptoChange}
+              />
             </div>
           </div>
 
@@ -55,6 +81,7 @@ export default function InstantTradeSection() {
                 type="text"
                 placeholder="Amount"
                 className="bg-transparent border-none outline-none font-medium text-gray-900 placeholder-gray-500 w-[200px]"
+                onChange={(e) => setFiatAmount(Number(e.target.value))}
               />
             </div>
 
@@ -63,19 +90,20 @@ export default function InstantTradeSection() {
 
             {/* Naira dropdown */}
             <div className="flex items-center gap-3 px-4 py-2">
-              <div className="w-6 h-4 rounded-sm overflow-hidden">
-                <div className="w-full h-full bg-gradient-to-r from-green-600 via-white to-green-600"></div>
-              </div>
-              <select className="bg-transparent border-none outline-none font-medium text-gray-900 cursor-pointer">
-                <option>Naira</option>
-              </select>
+              <CurrencySelector
+                currencies={currencies}
+                selectedCurrency={currencies ? currencies?.find(c => c.id === selectedCurrencyId) : undefined}
+                handleSelectedCurrencyIdChange={onCurrencyChange}
+              />
             </div>
           </div>
 
           {/* Buy Button */}
-          <CustomButton buttonText="Buy crypto now" />
+          <CustomButton onClick={handleSubmit} buttonText="Buy crypto now" />
         </div>
       </div>
     </section>
   );
 }
+
+export default InstantTradeSection;

@@ -9,8 +9,8 @@ import NavbarDropdown from "./NavbarDropdown.tsx";
 import {ChevronDown} from "lucide-react";
 import type {DropItem} from "../../../types/navbar.types.ts";
 import ProfileNav from "./ProfileNav.tsx";
-import {LOCAL_STORAGE_KEYS} from "../../../util/constants.ts";
-import {handleLogout} from "../../../util/utils.ts";
+import {LOCAL_STORAGE_KEYS} from "../../../util/constants.util.ts";
+import {handleLogout} from "../../../util/index.util.ts";
 import useClickOutside from "../../../hooks/useClickOutside.ts";
 import {useLocation} from "@tanstack/react-router";
 
@@ -58,12 +58,6 @@ export default function Navbar() {
                             className="text-gray-700 hover:text-gray-900 font-medium"
                         >
                             Home
-                        </a>
-                        <a
-                            href="#"
-                            className="text-gray-700 hover:text-gray-900 font-medium"
-                        >
-                            Wallet
                         </a>
 
                         {/* Dropdown for Buy & sell crypto */}

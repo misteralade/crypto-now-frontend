@@ -20,11 +20,6 @@ export default function Footer() {
               </li>
               <li>
                 <a href="#" className="text-gray-600 hover:text-gray-900">
-                  Wallet Features
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-600 hover:text-gray-900">
                   FAQs
                 </a>
               </li>

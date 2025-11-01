@@ -3,7 +3,7 @@ import AlertIcon from "../../../assets/icons/Ellipse_12.svg";
 import TestDP from "../../../assets/icons/male_11.svg"
 import {ChevronDown, ChevronUp} from "lucide-react";
 import {useState} from "react";
-import {handleLogout} from "../../../util/utils.ts";
+import {handleLogout} from "../../../util/index.util.ts";
 import {useUserQuery} from "../../../queries/user.query.ts";
 import LogoutIcon from "../../../assets/icons/logout.svg"
 

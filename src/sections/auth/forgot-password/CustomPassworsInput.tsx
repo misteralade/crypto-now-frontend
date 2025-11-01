@@ -1,6 +1,6 @@
 import {type ChangeEvent, useState} from "react";
 import {EyeOff, Eye} from "lucide-react";
-import {passwordValidation} from "../../../util/constants.regex.ts";
+import {passwordValidation} from "../../../util/constants.regex.util.ts";
 
 interface CustomPasswordInputProps {
     label: string;

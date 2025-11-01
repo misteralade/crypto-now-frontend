@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import ProfilePage from "../sections/profile/ProfilePage.tsx";
-import { LOCAL_STORAGE_KEYS } from "../util/constants.ts";
+import { LOCAL_STORAGE_KEYS } from "../util/constants.util.ts";
 
 export const Route = createFileRoute("/profile")({
     beforeLoad: () => {
