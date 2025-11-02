@@ -6,6 +6,7 @@ import {
 } from "./index.ts";
 import type {SearchTransactionsRequestPayload} from "../types/request.payload.types.ts";
 import type {
+  GetTransactionDetailsAPIResponse,
   InitiateTransactionAPIResponse,
   TransactionSummaryResponse,
   UserTransactionsHistoryResponse
@@ -129,14 +130,6 @@ class TransactionServiceApi {
   }
   
   async confirmAnonymousUserReceivingPaymentAccount(sessionId: string, accountData: Record<string, any>) {
-    console.log(
-      {
-        ...(accountData.walletId ? { walletId: accountData.walletId } : {}),
-        ...(accountData.accountId ? { accountId: accountData.accountId } : {}),
-        ...(accountData.email ? { email: accountData.email }: {}),
-      }
-    )
-    
     const {data, message, success, error}: {
       data: { sessionId: string },
       message: string,
@@ -169,6 +162,10 @@ class TransactionServiceApi {
     const { data, message, success }: { data: TransactionSummaryResponse, message: string, success: boolean } = await axiosGetRequestHandler("/transaction/user/summary");
     
     return { data, message, success };
+  }
+  
+  async getTransactionDetails(sessionId: string) {
+    return await axiosGetRequestHandler(`/transaction/details/${sessionId}`) as GetTransactionDetailsAPIResponse
   }
 }
 

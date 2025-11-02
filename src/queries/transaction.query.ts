@@ -4,7 +4,7 @@ import {useMatchRoute} from "@tanstack/react-router";
 import {QUERY_KEYS} from "./query.keys.ts";
 import {transactionServiceApi} from "../api/transaction.api.ts";
 import {type RootState, store} from "../store.ts";
-import { SESSION_STORAGE_KEYS } from "../util/constants.util.ts";
+import {ROUTES, SESSION_STORAGE_KEYS} from "../util/constants.util.ts";
 import type {AxiosServerError} from "../types/response.payload.types.ts";
 import {clearTradeProgress} from "../util/tradeProgress.storage.util.ts";
 
@@ -66,7 +66,29 @@ export const useTransactionQuery = () => {
 
       return null;
     },
-    enabled: !!matchRoute({ to: "/dashboard" }),
+    enabled: !!matchRoute({ to: ROUTES.HOMEPAGE }),
+  })
+  
+  // Get transaction Details
+  const { data: transactionDetails, isLoading: loadingTransactionDetails } = useQuery({
+    queryKey: [QUERY_KEYS.TRANSACTION.USER_TRANSACTION_DETAILS, store.getState().transaction.details.sessionId],
+    queryFn: async () => {
+      const rootState = store.getState() as RootState;
+      const sessionId = rootState.transaction.details.sessionId;
+
+      if (!sessionId) {
+        return;
+      }
+
+      const { data, success } = await transactionServiceApi.getTransactionDetails(sessionId);
+
+      if (success) {
+        return data;
+      }
+
+      return null;
+    },
+    enabled: !!store.getState().transaction.details.sessionId && !!matchRoute({ to: ROUTES.TRANSACTION_DETAILS }),
   })
 
   // Initiate Transaction Mutation
@@ -194,7 +216,8 @@ export const useTransactionQuery = () => {
     loadingUserTransactionHistory,
     transactionSummary,
     loadingTransactionSummary,
-
+    transactionDetails,
+    loadingTransactionDetails,
 
     // Mutations
     initiateTransactionMutation,

@@ -16,11 +16,12 @@ import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
-import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ActivationResultRouteImport } from './routes/activation-result'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as OauthSuccessRouteImport } from './routes/oauth/success'
 import { Route as OauthErrorRouteImport } from './routes/oauth/error'
+import { Route as DashboardTransactionsIdRouteImport } from './routes/dashboard/transactions/$id'
 
 const VerifyAccountRoute = VerifyAccountRouteImport.update({
   id: '/verify-account',
@@ -57,11 +58,6 @@ const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ActivationResultRoute = ActivationResultRouteImport.update({
   id: '/activation-result',
   path: '/activation-result',
@@ -70,6 +66,11 @@ const ActivationResultRoute = ActivationResultRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: '/dashboard/',
+  path: '/dashboard/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OauthSuccessRoute = OauthSuccessRouteImport.update({
@@ -82,11 +83,15 @@ const OauthErrorRoute = OauthErrorRouteImport.update({
   path: '/oauth/error',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardTransactionsIdRoute = DashboardTransactionsIdRouteImport.update({
+  id: '/dashboard/transactions/$id',
+  path: '/dashboard/transactions/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/activation-result': typeof ActivationResultRoute
-  '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -96,11 +101,12 @@ export interface FileRoutesByFullPath {
   '/verify-account': typeof VerifyAccountRoute
   '/oauth/error': typeof OauthErrorRoute
   '/oauth/success': typeof OauthSuccessRoute
+  '/dashboard': typeof DashboardIndexRoute
+  '/dashboard/transactions/$id': typeof DashboardTransactionsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/activation-result': typeof ActivationResultRoute
-  '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -110,12 +116,13 @@ export interface FileRoutesByTo {
   '/verify-account': typeof VerifyAccountRoute
   '/oauth/error': typeof OauthErrorRoute
   '/oauth/success': typeof OauthSuccessRoute
+  '/dashboard': typeof DashboardIndexRoute
+  '/dashboard/transactions/$id': typeof DashboardTransactionsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/activation-result': typeof ActivationResultRoute
-  '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -125,13 +132,14 @@ export interface FileRoutesById {
   '/verify-account': typeof VerifyAccountRoute
   '/oauth/error': typeof OauthErrorRoute
   '/oauth/success': typeof OauthSuccessRoute
+  '/dashboard/': typeof DashboardIndexRoute
+  '/dashboard/transactions/$id': typeof DashboardTransactionsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/activation-result'
-    | '/dashboard'
     | '/forgot-password'
     | '/profile'
     | '/reset-password'
@@ -141,11 +149,12 @@ export interface FileRouteTypes {
     | '/verify-account'
     | '/oauth/error'
     | '/oauth/success'
+    | '/dashboard'
+    | '/dashboard/transactions/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/activation-result'
-    | '/dashboard'
     | '/forgot-password'
     | '/profile'
     | '/reset-password'
@@ -155,11 +164,12 @@ export interface FileRouteTypes {
     | '/verify-account'
     | '/oauth/error'
     | '/oauth/success'
+    | '/dashboard'
+    | '/dashboard/transactions/$id'
   id:
     | '__root__'
     | '/'
     | '/activation-result'
-    | '/dashboard'
     | '/forgot-password'
     | '/profile'
     | '/reset-password'
@@ -169,12 +179,13 @@ export interface FileRouteTypes {
     | '/verify-account'
     | '/oauth/error'
     | '/oauth/success'
+    | '/dashboard/'
+    | '/dashboard/transactions/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ActivationResultRoute: typeof ActivationResultRoute
-  DashboardRoute: typeof DashboardRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   ProfileRoute: typeof ProfileRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -184,6 +195,8 @@ export interface RootRouteChildren {
   VerifyAccountRoute: typeof VerifyAccountRoute
   OauthErrorRoute: typeof OauthErrorRoute
   OauthSuccessRoute: typeof OauthSuccessRoute
+  DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardTransactionsIdRoute: typeof DashboardTransactionsIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -237,13 +250,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/activation-result': {
       id: '/activation-result'
       path: '/activation-result'
@@ -256,6 +262,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/oauth/success': {
@@ -272,13 +285,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OauthErrorRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/transactions/$id': {
+      id: '/dashboard/transactions/$id'
+      path: '/dashboard/transactions/$id'
+      fullPath: '/dashboard/transactions/$id'
+      preLoaderRoute: typeof DashboardTransactionsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ActivationResultRoute: ActivationResultRoute,
-  DashboardRoute: DashboardRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   ProfileRoute: ProfileRoute,
   ResetPasswordRoute: ResetPasswordRoute,
@@ -288,6 +307,8 @@ const rootRouteChildren: RootRouteChildren = {
   VerifyAccountRoute: VerifyAccountRoute,
   OauthErrorRoute: OauthErrorRoute,
   OauthSuccessRoute: OauthSuccessRoute,
+  DashboardIndexRoute: DashboardIndexRoute,
+  DashboardTransactionsIdRoute: DashboardTransactionsIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
