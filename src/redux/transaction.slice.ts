@@ -9,7 +9,7 @@ import {
 } from "./states/initial-transaction.state.ts";
 
 const transactionSlice = createSlice({
-  name: "bank",
+  name: "transaction",
   initialState: {
     initiate: {
       initiateTransaction: initiateTransactionInitialState,
@@ -19,6 +19,9 @@ const transactionSlice = createSlice({
     dashboard: {
       searchUserTransactions: userSearchTransactionInitialState
     },
+    details: {
+      sessionId: undefined as string | undefined,
+    }
   },
   reducers: {
     // Set States
@@ -39,6 +42,9 @@ const transactionSlice = createSlice({
     },
     setSearchUserTransactions: (state, action: PayloadAction<SearchTransactionsRequestPayload>) => {
       state.dashboard.searchUserTransactions = action.payload;
+    },
+    setTransactionDetailSessionId: (state, action: PayloadAction<string>) => {
+      state.details.sessionId = action.payload;
     },
     
     // Clear States
@@ -69,6 +75,9 @@ const transactionSlice = createSlice({
     clearSearchUserTransactions: (state) => {
       state.dashboard.searchUserTransactions = userSearchTransactionInitialState;
     },
+    clearTransactionDetailSessionId: (state) => {
+      state.details.sessionId = undefined;
+    }
   },
 });
 
@@ -79,6 +88,7 @@ export const {
   setExchangeRateId,
   setAmountToSend,
   setSearchUserTransactions,
+  setTransactionDetailSessionId,
   
   // Clear States
   clearInitiateTransaction,
@@ -86,5 +96,6 @@ export const {
   clearExchangeRateId,
   clearAmountToSend,
   clearSearchUserTransactions,
+  clearTransactionDetailSessionId,
 } = transactionSlice.actions;
 export default transactionSlice.reducer;

@@ -1,3 +1,4 @@
+import millify from "millify";
 import {LOCAL_STORAGE_KEYS} from "./constants.util.ts";
 
 export const formatTime = (seconds: number) => {
@@ -16,4 +17,9 @@ export const formatNumber = (value: string | number) => {
         minimumFractionDigits: 2,
         maximumFractionDigits: 8,
     })
+}
+
+export const convertToMillify = (num: number, precision: number = 2): string => {
+    const safe = Number.isFinite(num) ? num : 0;
+    return millify(safe, { precision });
 }

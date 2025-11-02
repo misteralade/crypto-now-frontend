@@ -1,5 +1,6 @@
 import type {AxiosError} from "axios";
 import type {TradeType, TransactionPriority, TransactionStatus} from "./request.payload.types.ts";
+import type { TransactionAction } from "../schemas/enum.schema.ts";
 
 export interface StandardizedServerError {
   success: false;
@@ -98,6 +99,7 @@ export type UserProfilePayload = {
   dateOfBirth: string;
   address: string;
   city: string;
+  profileImg: string;
   state: string;
   postalCode: string;
   country: string;
@@ -116,9 +118,19 @@ export type GetUserProfileResponse = {
 export type CryptoCurrencyResponseEntity = {
   id: string;
   name: string;
+  description: string;
   symbol: string;
+  maxTransactionLimit: string;
+  minTransactionLimit: string;
+  maxTradeAmountForAnonymous: string;
+  minTradeAmountForAnonymous: string;
   isStableCoin: boolean;
   logoUrl: string;
+  buyRate: string;
+  sellRate: string;
+  isActive: boolean;
+  websiteUrl: string;
+  whitepaperUrl: string;
   createdAt: Date;
 };
 
@@ -134,6 +146,7 @@ export type ExchangeRateResponseEntity = {
   fromCurrency: string;
   toCurrency: string;
   platformRate: string;
+  rate: string;
   action: TradeType;
   validUntil: Date;
   createdAt: Date;
@@ -233,7 +246,52 @@ export type UserTransactionsHistoryResponse = {
   transactions: TransactionResponseEntity[];
 }
 
-// Transaction Summary
+// Stat Transaction
+export type GetTransactionDetailsAPIResponse = BaseApiResponse<SearchTransactionsResponse>
+
+export type SearchTransactionsResponse = {
+  adminPaymentReceiptUrl: string | undefined;
+  id: string;
+  userId: string;
+  sessionId: string;
+  cryptocurrencyId: string;
+  exchangeRateId: string;
+  type: TransactionAction;
+  amountCrypto: string;
+  amountFiat: string;
+  cryptoToStableRate: string;
+  stableToFiatRate: string;
+  stableToCryptoRate: string;
+  currency: string;
+  status: TransactionStatus;
+  email: string | undefined;
+  priority: TransactionPriority;
+  userBankAccountId: string;
+  adminBankAccountId: string;
+  userCryptoWalletId: string;
+  bankTransferReference: string;
+  receiptImageUrl: string;
+  adminCryptoWalletId: string;
+  cryptoTxHash: string;
+  adminNotes: string;
+  userNotes: string;
+  internalNotes: string;
+  failureReason: string;
+  processedBy: string;
+  processedAt: Date;
+  usdAmount: number;
+  createdAt: Date;
+  updatedAt: Date;
+  
+  // Relations
+  user?: GetUserProfileResponse;
+  profile?: UserProfilePayload;
+  cryptocurrency?: CryptoCurrencyResponseEntity;
+  exchangeRate?: ExchangeRateResponseEntity;
+  userBankAccount?: UserBankAccountResponse;
+  userCryptoWallet?: UserCryptoWalletResponse;
+}
+
 export type TransactionSummaryResponseEntity = {
   cryptoCurrencySymbol: string;
   cryptoCurrencyName: string;
@@ -276,3 +334,4 @@ export type TransactionSummaryResponse = {
   total: TotalTransactionSummaryEntity[]
 }
 // End Transactions
+

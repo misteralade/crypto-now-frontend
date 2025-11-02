@@ -1,16 +1,16 @@
 import {Fragment, useEffect, useState} from "react";
-import Navbar from "../components/global/navbar/Navbar.tsx";
-import HeroSection from "./homepage/HeroSection.tsx";
-import InstantTradeSection from "./homepage/InstantTradeSection.tsx";
-import StepsSection from "./homepage/StepsSection.tsx";
-import WhyCryptoNow from "./homepage/WhyCryptoNow.tsx";
-import AllInOne from "./homepage/AllInOne.tsx";
-import Testimonials from "./homepage/Testimonials.tsx";
-import CustomButton from "../components/global/Button.tsx";
-import Footer from "../components/global/Footer.tsx";
-import {useCryptoQuery} from "../queries/crypto.query.ts";
-import {useCurrencyQuery} from "../queries/currency.query.ts";
-import {ROUTES} from "../util/constants.util.ts";
+import Navbar from "../../components/global/navbar/Navbar.tsx";
+import HeroSection from "./HeroSection.tsx";
+import InstantTradeSection from "./InstantTradeSection.tsx";
+import StepsSection from "./StepsSection.tsx";
+import WhyCryptoNow from "./WhyCryptoNow.tsx";
+import AllInOne from "./AllInOne.tsx";
+import Testimonials from "./Testimonials.tsx";
+import CustomButton from "../../components/global/Button.tsx";
+import Footer from "../../components/global/Footer.tsx";
+import {useCryptoQuery} from "../../queries/crypto.query.ts";
+import {useCurrencyQuery} from "../../queries/currency.query.ts";
+import {ROUTES} from "../../util/constants.util.ts";
 import {useNavigate} from "@tanstack/react-router";
 
 const HomePage = () => {
