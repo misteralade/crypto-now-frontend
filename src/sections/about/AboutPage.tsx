@@ -71,7 +71,7 @@ const AboutPage = () => (
                 key={item.id}
                 className="group relative transition-transform duration-400 ease-out hover:-translate-y-1 hover:scale-[1.01]"
               >
-                <div className="transition-colors duration-300 bg-white group-hover:bg-[#F9F9FF] rounded-xl">
+                <div className="">
                   <div className="bg-[#E5E5FB] p-2 w-fit rounded-lg">
                     <img src={item.icon} alt="access-icon" />
                   </div>
@@ -95,13 +95,13 @@ const AboutPage = () => (
             Why Choose CryptoNow?
           </h3>
         </aside>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-[26px] mt-6 md:mt-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-[26px] mt-6 md:mt-12 items-stretch">
           {WhyChooseUs.map((item) => (
             <aside
               key={item.id}
-              className="group relative transition-transform duration-400 ease-out hover:-translate-y-1 hover:scale-[1.01]"
+              className="group relative h-full transition-transform duration-400 ease-out hover:-translate-y-1 hover:scale-[1.01]"
             >
-              <div className="border-[#ECECEC] border p-3 rounded-[16px] bg-white transition-colors duration-300 group-hover:bg-[#F9F9FF] group-hover:shadow-sm group-hover:shadow-black/5">
+              <div className="h-full border-[#ECECEC] border p-3 rounded-[16px] bg-white transition-colors duration-300 group-hover:bg-[#F9F9FF] group-hover:shadow-sm group-hover:shadow-black/5 flex flex-col">
                 <div className="bg-[#E5E5FB] p-2 w-fit rounded-lg">
                   <img src={item.icon} alt="access-icon" />
                 </div>
