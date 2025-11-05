@@ -18,6 +18,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AmlPolicyRouteImport } from './routes/aml-policy'
 import { Route as ActivationResultRouteImport } from './routes/activation-result'
 import { Route as AboutRouteImport } from './routes/about'
@@ -72,6 +73,11 @@ const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AmlPolicyRoute = AmlPolicyRouteImport.update({
   id: '/aml-policy',
   path: '/aml-policy',
@@ -118,6 +124,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/activation-result': typeof ActivationResultRoute
   '/aml-policy': typeof AmlPolicyRoute
+  '/contact': typeof ContactRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/profile': typeof ProfileRoute
@@ -137,6 +144,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/activation-result': typeof ActivationResultRoute
   '/aml-policy': typeof AmlPolicyRoute
+  '/contact': typeof ContactRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/profile': typeof ProfileRoute
@@ -157,6 +165,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/activation-result': typeof ActivationResultRoute
   '/aml-policy': typeof AmlPolicyRoute
+  '/contact': typeof ContactRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/profile': typeof ProfileRoute
@@ -178,6 +187,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/activation-result'
     | '/aml-policy'
+    | '/contact'
     | '/forgot-password'
     | '/privacy-policy'
     | '/profile'
@@ -197,6 +207,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/activation-result'
     | '/aml-policy'
+    | '/contact'
     | '/forgot-password'
     | '/privacy-policy'
     | '/profile'
@@ -216,6 +227,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/activation-result'
     | '/aml-policy'
+    | '/contact'
     | '/forgot-password'
     | '/privacy-policy'
     | '/profile'
@@ -236,6 +248,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   ActivationResultRoute: typeof ActivationResultRoute
   AmlPolicyRoute: typeof AmlPolicyRoute
+  ContactRoute: typeof ContactRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   ProfileRoute: typeof ProfileRoute
@@ -316,6 +329,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/aml-policy': {
       id: '/aml-policy'
       path: '/aml-policy'
@@ -380,6 +400,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   ActivationResultRoute: ActivationResultRoute,
   AmlPolicyRoute: AmlPolicyRoute,
+  ContactRoute: ContactRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   ProfileRoute: ProfileRoute,

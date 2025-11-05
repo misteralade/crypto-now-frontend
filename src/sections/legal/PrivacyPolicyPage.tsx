@@ -13,7 +13,7 @@ const PrivacyPolicyPage = () => {
   return (
     <>
       <Navbar />
-      <section className="max-w-3xl md:max-w-2xl lg:max-w-3xl xl:max-w-6xl mx-auto mt-[34px] mb-[30px] lg:mb-[143px] px-4 text-lg text-[#454745] flex flex-col md:flex-row items-start gap-x-6 lg:gap-x-24">
+      <section className="w-full md:w-[90%] 2xl:max-w-7xl mx-auto mt-[34px] mb-[30px] lg:mb-[143px] px-4 text-lg text-[#454745] flex flex-col md:flex-row items-start gap-x-6 lg:gap-x-24">
         {/* LHS Table of Content */}
         <nav
           aria-label="Table of contents"

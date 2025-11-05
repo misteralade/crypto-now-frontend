@@ -8,7 +8,7 @@ import { WhatWeDo, WhyChooseUs } from "./about.data";
 const AboutPage = () => (
   <>
     <Navbar />
-    <main className="w-full max-w-screen md:max-w-[45rem] lg:max-w-[60rem] xl:max-w-[75rem] mx-auto px-4 sm:px-6 lg:px-8 mt-[34px] mb-[30px] lg:mb-[121px] text-lg text-[#454745]">
+    <main className="w-full md:w-[90%] 2xl:max-w-7xl mx-auto px-4 md:px-0 mt-[34px] mb-[30px] lg:mb-[121px] text-lg text-[#454745]">
       <aside className="xl:pr-56">
         <h1 className="text-3xl lg:text-5xl xl:text-[64px] xl:leading-[70px] text-[#0E0F0C] font-bold mb-6 xl">
           Making Cryptocurrency Simple and Accessible for Everyone
@@ -72,9 +72,11 @@ const AboutPage = () => (
                 className="group relative transition-transform duration-400 ease-out hover:-translate-y-1 hover:scale-[1.01]"
               >
                 <div className="">
-                  <div className="bg-[#E5E5FB] p-2 w-fit rounded-lg">
-                    <img src={item.icon} alt="access-icon" />
-                  </div>
+                  <img
+                    src={item.icon}
+                    alt="access-icon"
+                    className="w-16 h-16"
+                  />
                   <p className="text-[#0E0F0C] font-medium text-lg md:text-2xl mt-4">
                     {item.title}
                   </p>
@@ -89,13 +91,13 @@ const AboutPage = () => (
       </section>
 
       {/* Why choose us */}
-      <div className="md:flex justify-between items-start gap-x-12 mt-6 md:mt-12">
+      <div className="md:flex justify-between items-start gap-x-12 xl:gap-x-[72px] mt-6 md:mt-12">
         <aside className="text-[#0E0F0C]">
           <h3 className="text-2xl lg:text-5xl font-bold">
             Why Choose CryptoNow?
           </h3>
         </aside>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-[26px] mt-6 md:mt-12 items-stretch">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-[26px] mt-6 md:mt-0 items-stretch">
           {WhyChooseUs.map((item) => (
             <aside
               key={item.id}
