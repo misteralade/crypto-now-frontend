@@ -116,7 +116,7 @@ const AboutPage = () => (
       </div>
 
       {/* your crypto, your way */}
-      <aside className="flex flex-col justify-center items-center text-center p-4">
+      <aside className="flex flex-col justify-center items-center text-center p-4 mt-20 lg:mt-[116px]">
         <div className="text-6xl md:text-[126px] font-semibold leading-20 md:leading-32 mb-6 md:mb-12">
           <h1 className="text-[#0E0F0C]">Your crypto,</h1>
           <p className="text-[#BDBDBD]">your way</p>
