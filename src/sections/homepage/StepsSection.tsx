@@ -1,16 +1,18 @@
 import CustomButton from "../../components/global/Button";
-
+import stepsImage from "../../assets/illustrations/steps-img.png";
 interface StepsSectionProps {
   tradeCrypto: () => void;
 }
 
 const StepsSection = ({ tradeCrypto }: StepsSectionProps) => {
   return (
-    <section className="sm:mt-20 mt-14 md:mt-40 max-md:px-4">
+    <section className="sm:mt-20 mt-14 md:mt-40 max-md:px-4 w-full md:w-[90%] 2xl:max-w-7xl mx-auto ">
       <div className="max-w-7xl mx-auto">
         <div className="grid md:grid-cols-2 gap-12 items-start">
           <div className="max-md:order-2">
-            <div className="bg-[#F5F5FF] max-w-[589px] h-[300px] sm:h-[461px] rounded-2xl"></div>
+            <div className="bg-[#F5F5FF] max-w-[589px] h-[300px] sm:h-[461px] rounded-2xl">
+              <img src={stepsImage} alt="steps-img" />
+            </div>
           </div>
 
           <div className="max-md:w-full max-md:flex items-center justify-center flex-col">
@@ -71,12 +73,15 @@ const StepsSection = ({ tradeCrypto }: StepsSectionProps) => {
               </div>
             </div>
 
-            <CustomButton onClick={tradeCrypto} buttonText="Buy & sell crypto now" />
+            <CustomButton
+              onClick={tradeCrypto}
+              buttonText="Buy & sell crypto now"
+            />
           </div>
         </div>
       </div>
     </section>
   );
-}
+};
 
 export default StepsSection;
