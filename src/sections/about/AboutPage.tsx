@@ -4,8 +4,13 @@ import Navbar from "../../components/global/navbar/Navbar.tsx";
 import Footer from "../../components/global/Footer.tsx";
 import aboutImage from "../../assets/backgrounds/crypto-about.png";
 import { WhatWeDo, WhyChooseUs } from "./about.data";
+import CustomButton from "../../components/global/Button.tsx";
 
-const AboutPage = () => (
+interface AboutPageProps {
+  tradeCrypto: () => void;
+}
+
+const AboutPage = ({ tradeCrypto }: AboutPageProps) => (
   <>
     <Navbar />
     <main className="w-full md:w-[90%] 2xl:max-w-7xl mx-auto px-4 md:px-0 mt-[34px] mb-[30px] lg:mb-[121px] text-lg text-[#454745]">
@@ -124,9 +129,10 @@ const AboutPage = () => (
           <p className="text-[#BDBDBD]">your way</p>
         </div>
 
-        <button className="bg-[#03034D] text-sm md:text-lg font-semibold text-white px-12 py-4 rounded-full cursor-pointer hover:bg-[#03034D]/90 transition-colors duration-300">
+        {/* <button className="bg-[#03034D] text-sm md:text-lg font-semibold text-white px-12 py-4 rounded-full cursor-pointer hover:bg-[#03034D]/90 transition-colors duration-300">
           Buy & sell crypto now
-        </button>
+        </button> */}
+        <CustomButton onClick={tradeCrypto} buttonText="Buy & sell crypto now" />
       </aside>
     </main>
     <Footer />

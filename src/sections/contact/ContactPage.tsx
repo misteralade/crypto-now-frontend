@@ -2,6 +2,7 @@ import React from "react";
 
 import Navbar from "../../components/global/navbar/Navbar.tsx";
 import Footer from "../../components/global/Footer.tsx";
+import CustomButton from "../../components/global/Button.tsx";
 
 const ContactPage = () => (
   <>
@@ -76,12 +77,14 @@ const ContactPage = () => (
           </div>
 
           <div className="mt-6 md:mt-12 flex justify-end">
-            <button
+            {/* <button
               type="submit"
               className="bg-[#03034D] lg:text-lg text-white px-8 md:px-5 py-4 cursor-pointer rounded-full font-semibold hover:bg-[#03034D]/90 transition-colors duration-300"
             >
               Send Message
-            </button>
+            </button> */}
+
+            <CustomButton onClick={() => {}} buttonText="Send Message" />
           </div>
         </form>
       </aside>
