@@ -1,5 +1,4 @@
 import CustomButton from "../../components/global/Button";
-import allInOneImage from "../../assets/illustrations/all-in-one.png";
 
 interface AllInOneProps {
   tradeCrypto: () => void;
@@ -7,9 +6,9 @@ interface AllInOneProps {
 
 const AllInOne = ({ tradeCrypto }: AllInOneProps) => {
   return (
-    <section className="sm:mt-24 mt-16 md:mt-40 max-md:px-4 w-full md:w-[90%] 2xl:max-w-7xl mx-auto">
+    <section className="sm:mt-24 mt-16 md:mt-40 max-md:px-4">
       <div className="max-w-6xl mx-auto md:px-4">
-        <div className="grid gap-12 items-start lg:grid-cols-[minmax(0,420px)_1fr]">
+        <div className="grid lg:grid-cols-2 gap-12 items-start">
           <div className="max-md:w-full max-md:flex items-start justify-center flex-col">
             <h2 className="text-2xl sm:text-3xl max-md:text-left lg:text-4xl max-w-[378px] font-normal text-[#0E0F0C] md:tracking-[0.8px] mb-8">
               Your All-in-One Wallet Dashboard
@@ -47,25 +46,16 @@ const AllInOne = ({ tradeCrypto }: AllInOneProps) => {
               </div>
             </div>
 
-            <CustomButton
-              onClick={tradeCrypto}
-              buttonText="Buy & sell crypto now"
-            />
+            <CustomButton onClick={tradeCrypto} buttonText="Buy & sell crypto now" />
           </div>
 
           <div className="">
-            <div className="bg-[#F5F5FF] max-w-[589px] h-[300px] lg:h-[461px] rounded-2xl overflow-hidden">
-              <img
-                src={allInOneImage}
-                alt="all-in-one-img"
-                className="w-full h-full object-cover rounded-2xl"
-              />
-            </div>
+            <div className="bg-[#F5F5FF] max-w-[589px] h-[300px] lg:h-[461px] rounded-2xl"></div>
           </div>
         </div>
       </div>
     </section>
   );
-};
+}
 
 export default AllInOne;

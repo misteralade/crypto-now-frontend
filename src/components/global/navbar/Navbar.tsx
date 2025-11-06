@@ -76,13 +76,13 @@ export default function Navbar() {
                         </div>
 
                         <a
-                            href="/about"
+                            href="#"
                             className="text-gray-700 hover:text-gray-900 font-medium"
                         >
                             About
                         </a>
                         <a
-                            href="/contact"
+                            href="#"
                             className="text-gray-700 hover:text-gray-900 font-medium"
                         >
                             Contact
