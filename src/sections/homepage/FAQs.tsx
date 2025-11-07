@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { faqs } from "../../data/faqs";
 
 const FAQs = () => {
@@ -18,82 +18,122 @@ const FAQs = () => {
     open,
     onToggle,
     isLast,
-  }: FAQItemProps) => (
-    <div>
-      <button
-        type="button"
-        aria-expanded={open}
-        aria-controls={`faq-panel-${index}`}
-        onClick={onToggle}
-        className="w-full flex items-center justify-between gap-4 py-8 text-left"
-      >
-        <span className="text-base md:text-lg font-medium text-[#03034D] leading-7">
-          {question}
-        </span>
-        <span
-          className="relative shrink-0 w-5 h-5 cursor-pointer"
-          aria-hidden="true"
+  }: FAQItemProps) => {
+    const panelRef = useRef<HTMLDivElement>(null);
+
+    // Compute the target height for smooth transition
+    const [maxH, setMaxH] = useState<string>("0px");
+    useEffect(() => {
+      const el = panelRef.current;
+      if (!el) return;
+
+      // Measure content height
+      const next = open ? `${el.scrollHeight}px` : "0px";
+      setMaxH(next);
+
+      // If content inside changes while open, re-measure
+      if (open) {
+        const ro = new ResizeObserver(() => {
+          setMaxH(`${el.scrollHeight}px`);
+        });
+        ro.observe(el);
+        return () => ro.disconnect();
+      }
+    }, [open, question, answer]);
+
+    return (
+      <div>
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-controls={`faq-panel-${index}`}
+          onClick={onToggle}
+          className="w-full flex items-center justify-between gap-4 py-8 text-left"
         >
-          {open ? (
-            /* minus icon */
-            <svg
-              width="14"
-              height="2"
-              viewBox="0 0 14 2"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M1 1H12.31"
-                stroke="#03034D"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          ) : (
-            /* plus icon */
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 14 14"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M6.66669 0.666504V12.6665"
-                stroke="#A0A3BD"
-                stroke-width="1.33333"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M0.666687 6.6665H12.6667"
-                stroke="#A0A3BD"
-                stroke-width="1.33333"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          )}
-        </span>
-      </button>
-      <div
-        id={`faq-panel-${index}`}
-        role="region"
-        className={
-          open
-            ? "overflow-hidden transition-[max-height,opacity] duration-300 max-h-auto opacity-100"
-            : "overflow-hidden transition-[max-height,opacity] duration-300 max-h-0 opacity-0"
-        }
-      >
-        <p className="pr-10 pb-6 md:pb-8 text-sm md:text-lg text-[#454745]">
-          {answer}
-        </p>
+          <span
+            className={[
+              "text-base md:text-lg leading-7 text-[#03034D]",
+              open ? "font-bold" : "font-medium",
+              "transition-[font-weight,color] duration-200",
+            ].join(" ")}
+          >
+            {question}
+          </span>
+
+          <span
+            className="relative shrink-0 w-5 h-5 cursor-pointer"
+            aria-hidden="true"
+          >
+            {open ? (
+              // minus icon
+              <svg
+                width="14"
+                height="2"
+                viewBox="0 0 14 2"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M1 1H12.31"
+                  stroke="#03034D"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            ) : (
+              // plus icon
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 14 14"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M6.66669 0.666504V12.6665"
+                  stroke="#A0A3BD"
+                  strokeWidth="1.33333"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M0.666687 6.6665H12.6667"
+                  stroke="#A0A3BD"
+                  strokeWidth="1.33333"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            )}
+          </span>
+        </button>
+
+        <div
+          id={`faq-panel-${index}`}
+          role="region"
+          aria-hidden={!open}
+          // Smooth height + opacity transition
+          style={{
+            maxHeight: maxH,
+          }}
+          className={[
+            "overflow-hidden",
+            "transition-[max-height,opacity] duration-300 ease-out",
+            open ? "opacity-100" : "opacity-0",
+          ].join(" ")}
+        >
+          <div ref={panelRef}>
+            <p className="pr-10 pb-6 md:pb-8 text-sm md:text-lg text-[#454745]">
+              {answer}
+            </p>
+          </div>
+        </div>
+
+        {!isLast && <hr className="border-t border-[#F1F2F9] pt-6" />}
       </div>
-      {!isLast && <hr className="border-t border-[#F1F2F9] pt-6" />}
-    </div>
-  );
+    );
+  };
 
   const [openIndex, setOpenIndex] = useState<number | null>(0);
   const toggle = (value: number) =>
