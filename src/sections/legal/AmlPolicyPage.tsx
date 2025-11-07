@@ -6,12 +6,12 @@ import Footer from "../../components/global/Footer.tsx";
 const AmlPolicyPage = () => (
   <>
     <Navbar />
-    <section className="max-w-3xl md:max-w-xl lg:max-w-3xl xl:max-w-5xl 2xl:max-w-6xl mx-auto mt-[34px] mb-[30px] lg:mb-[242px] px-4 text-lg text-[#454745]">
-      <div className="text-center lg:px-20 xl:px-44">
-        <h1 className="text-3xl lg:text-5xl text-[#0E0F0C] font-bold mb-4">
+    <section className="max-w-3xl md:max-w-xl lg:max-w-3xl xl:max-w-5xl 2xl:max-w-6xl mx-auto mt-[64px] mb-[30px] lg:mb-[242px] px-4 text-lg text-[#454745]">
+      <div className="text-center lg:px-20 xl:px-20">
+        <h1 className="text-4xl lg:text-6xl text-[#0E0F0C] font-bold mb-4 tracking-wider">
           Anti-money Laundering & KYC Policy
         </h1>
-        <p className="text-base md:text-lg">
+        <p className="text-lg md:text-2xl">
           Understand Our Commitment to Our AML and KYC Policies
         </p>
       </div>
