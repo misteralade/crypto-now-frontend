@@ -36,18 +36,12 @@ export default function Footer() {
             <h3 className="font-semibold text-gray-900 mb-4">Legal</h3>
             <ul className="space-y-3">
               <li>
-                <a
-                  href="/terms-of-service"
-                  className="text-gray-600 hover:text-gray-900"
-                >
+                <a href="#" className="text-gray-600 hover:text-gray-900">
                   Terms of Service
                 </a>
               </li>
               <li>
-                <a
-                  href="/privacy-policy"
-                  className="text-gray-600 hover:text-gray-900"
-                >
+                <a href="#" className="text-gray-600 hover:text-gray-900">
                   Privacy Policy
                 </a>
               </li>
@@ -57,10 +51,7 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a
-                  href="/aml-policy"
-                  className="text-gray-600 hover:text-gray-900"
-                >
+                <a href="#" className="text-gray-600 hover:text-gray-900">
                   AML/Compliance
                 </a>
               </li>
