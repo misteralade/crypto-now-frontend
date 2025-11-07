@@ -11,12 +11,12 @@ interface AboutPageProps {
 const AboutPage = ({ tradeCrypto }: AboutPageProps) => (
   <>
     <Navbar />
-    <main className="w-full md:w-[90%] 2xl:max-w-7xl mx-auto px-4 md:px-0 mt-[34px] mb-[30px] lg:mb-[121px] text-lg text-[#454745]">
+    <main className="w-full md:w-[90%] 2xl:max-w-7xl mx-auto px-4 md:px-0 mt-[64px] mb-[30px] lg:mb-[121px] text-lg text-[#454745]">
       <aside className="xl:pr-56">
-        <h1 className="text-3xl lg:text-5xl xl:text-[64px] xl:leading-[70px] text-[#0E0F0C] font-bold mb-6 xl">
+        <h1 className="text-3xl tracking-wide lg:text-5xl xl:text-[64px] xl:leading-[70px] text-[#0E0F0C] font-bold mb-6 xl">
           Making Cryptocurrency Simple and Accessible for Everyone
         </h1>
-        <p className="text-[#0E0F0C] text-xl">
+        <p className="text-[#0E0F0C] font-light mt-4 text-xl">
           Buy, sell, and manage your digital assets with ease — built for
           everyone, everywhere.
         </p>
@@ -27,19 +27,19 @@ const AboutPage = ({ tradeCrypto }: AboutPageProps) => (
         <img
           src={aboutImage}
           alt="About-img"
-          className="w-full h-auto max-h-[401px] object-cover"
+          className="w-full h-auto max-h-[401px] object-cover rounded-2xl"
         />
 
-        <div className="md:flex justify-between items-start gap-x-12 mt-6 md:mt-12">
+        <div className="md:flex justify-between items-start gap-x-12 mt-6 md:mt-30">
           <aside className="text-[#0E0F0C]">
             <h3 className="text-2xl lg:text-5xl font-bold text-nowrap">
               Our Mission
             </h3>
-            <p className="font-medium text-lg md:text-2xl mt-2">
+            <p className="font-normal text-lg md:text-xl mt-2">
               We believe in the future of finance.
             </p>
           </aside>
-          <aside className="text-[#454745] text-lg md:text-2xl font-medium">
+          <aside className="text-[#454745] text-lg md:text-2xl font-normal">
             <p className="mb-6">
               In a world that’s becoming more digital every day, digital money
               has the power to create a fairer, more transparent, and more
@@ -55,7 +55,7 @@ const AboutPage = ({ tradeCrypto }: AboutPageProps) => (
         </div>
 
         {/* What we do */}
-        <aside className="mt-12">
+        <aside className="mt-26">
           <div className=" flex flex-col justify-center lg:px-24 xl:px-56">
             <h3 className="text-[#0E0F0C] text-2xl lg:text-5xl font-bold text-nowrap text-center">
               What we do
@@ -68,7 +68,7 @@ const AboutPage = ({ tradeCrypto }: AboutPageProps) => (
           </div>
 
           {/* grid cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[26px] mt-6 md:mt-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[26px] mt-6 md:mt-10">
             {WhatWeDo.map((item) => (
               <aside
                 key={item.id}
@@ -94,7 +94,7 @@ const AboutPage = ({ tradeCrypto }: AboutPageProps) => (
       </section>
 
       {/* Why choose us */}
-      <div className="md:flex justify-between items-start gap-x-12 xl:gap-x-[72px] mt-6 md:mt-12">
+      <div className="md:flex justify-between items-start gap-x-12 xl:gap-x-[72px] mt-6 md:mt-32">
         <aside className="text-[#0E0F0C]">
           <h3 className="text-2xl lg:text-5xl font-bold">
             Why Choose CryptoNow?

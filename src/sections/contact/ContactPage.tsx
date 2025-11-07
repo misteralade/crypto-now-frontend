@@ -5,25 +5,25 @@ import CustomButton from "../../components/global/Button.tsx";
 const ContactPage = () => (
   <>
     <Navbar />
-    <main className="w-full md:w-[90%] 2xl:max-w-7xl mx-auto px-4 md:px-0 mt-[34px] mb-[30px] lg:mb-[121px] text-lg text-[#454745] flex md:flex-row flex-col gap-x-8 lg:gap-[51px] md:mt-16">
+    <main className="w-full md:w-[90%] 2xl:max-w-7xl mx-auto px-4 md:px-0 mt-[34px] mb-[30px] lg:mb-[121px] text-lg text-[#454745] flex md:flex-row flex-col gap-x-8 lg:gap-[51px] md:mt-24">
       {/* LHS */}
       <aside className="w-full md:w-[270px] lg:w-[458px]">
         <h1 className="text-3xl lg:text-5xl xl:text-[64px] xl:leading-[70px] text-[#0E0F0C] font-bold mb-6">
           Get in touch with us
         </h1>
-        <p className="text-xl">
+        <p className="text-lg">
           We’re here to help! Whether you have a question about our services,
           need assistance with your account, or want to provide feedback, our
           tram is ready to assist you
         </p>
         <div className="mt-4 md:mt-8">
           <p className="text-xl">Email</p>
-          <p className="text-2xl mt-2">support@cryptonow.dev</p>
+          <p className="text-xl hover:text-blue-800">support@cryptonow.dev</p>
         </div>
 
         <div className="mt-4 md:mt-8">
           <p className="text-xl">Phone</p>
-          <p className="text-2xl mt-2">+234 801 000 222</p>
+          <p className="text-xl hover:text-blue-800">+234 801 000 222</p>
         </div>
       </aside>
 
