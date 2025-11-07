@@ -1,5 +1,3 @@
-import React from "react";
-
 import Navbar from "../../components/global/navbar/Navbar.tsx";
 import Footer from "../../components/global/Footer.tsx";
 import aboutImage from "../../assets/backgrounds/crypto-about.png";
@@ -7,7 +5,7 @@ import { WhatWeDo, WhyChooseUs } from "./about.data";
 import CustomButton from "../../components/global/Button.tsx";
 
 interface AboutPageProps {
-  tradeCrypto: () => void;
+  tradeCrypto?: () => void;
 }
 
 const AboutPage = ({ tradeCrypto }: AboutPageProps) => (
@@ -132,7 +130,10 @@ const AboutPage = ({ tradeCrypto }: AboutPageProps) => (
         {/* <button className="bg-[#03034D] text-sm md:text-lg font-semibold text-white px-12 py-4 rounded-full cursor-pointer hover:bg-[#03034D]/90 transition-colors duration-300">
           Buy & sell crypto now
         </button> */}
-        <CustomButton onClick={tradeCrypto} buttonText="Buy & sell crypto now" />
+        <CustomButton
+          onClick={tradeCrypto ?? (() => {})}
+          buttonText="Buy & sell crypto now"
+        />
       </aside>
     </main>
     <Footer />
