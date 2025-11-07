@@ -1,5 +1,3 @@
-import React from "react";
-
 import Navbar from "../../components/global/navbar/Navbar.tsx";
 import Footer from "../../components/global/Footer.tsx";
 import CustomButton from "../../components/global/Button.tsx";

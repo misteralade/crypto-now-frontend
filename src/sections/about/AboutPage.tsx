@@ -5,7 +5,7 @@ import { WhatWeDo, WhyChooseUs } from "./about.data";
 import CustomButton from "../../components/global/Button.tsx";
 
 interface AboutPageProps {
-  tradeCrypto: () => void;
+  tradeCrypto?: () => void;
 }
 
 const AboutPage = ({ tradeCrypto }: AboutPageProps) => (
@@ -131,7 +131,7 @@ const AboutPage = ({ tradeCrypto }: AboutPageProps) => (
           Buy & sell crypto now
         </button> */}
         <CustomButton
-          onClick={tradeCrypto}
+          onClick={tradeCrypto ?? (() => {})}
           buttonText="Buy & sell crypto now"
         />
       </aside>
