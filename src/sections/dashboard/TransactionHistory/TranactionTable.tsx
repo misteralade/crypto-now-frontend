@@ -21,6 +21,10 @@ interface TransactionTableProps {
 const TransactionTable = ({ transactions, isLoading, totalPages, onPageChange, currentPage }: TransactionTableProps) => {
   const COL_COUNT = 7;
   
+  console.log({
+    transactions,
+  });
+  
   const renderTableBody = () => {
     if (isLoading) {
       return (

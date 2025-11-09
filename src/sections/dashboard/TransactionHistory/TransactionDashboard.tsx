@@ -3,6 +3,8 @@ import ExportTransaction from "./ExportTransaction.tsx";
 import {useTransactionBoard} from "../../../hooks/components/dashboard/useTransactionBoard.ts";
 import type {SupportedCryptoOrCurrencyResponse} from "../../../types/response.payload.types.ts";
 import TransactionTable from "./TranactionTable.tsx";
+import EmptyTransaction from "../EmptyTransaction.tsx";
+import {Fragment} from "react";
 
 export function TransactionDashboard() {
   const {
@@ -22,6 +24,14 @@ export function TransactionDashboard() {
     handlePageChange,
   } = useTransactionBoard();
 
+  if (!loadingUserTransactionHistory && userTransactionHistory?.count === 0) {
+    return (
+      <Fragment>
+        <EmptyTransaction/>
+      </Fragment>
+    )
+  }
+  
   return (
     <div className="w-full space-y-6">
       {/*heading */}

@@ -1,4 +1,3 @@
-import EmptyTransaction from "./EmptyTransaction.tsx";
 import DashboardDataUI from "./DashboardDataUI.tsx";
 import OrderIcon from "../../assets/icons/fluent_tag-multiple-16-filled.svg";
 import EmptyPendingTransaction from "./EmptyPendingTransaction.tsx";
@@ -16,12 +15,6 @@ export default function DashboardContent(){
   } = useDashboardContent()
   
   const pendingTransaction = []
-  
-  if(!loadingTransactionSummary && transactionSummary?.summary?.length === 0){
-    return(
-      <EmptyTransaction />
-    )
-  }
   
   const orderTotal = !loadingTransactionSummary && transactionSummary ? transactionSummary?.total?.reduce((acc, item) => acc + Number(item.totalUsdAmount), 0) : 0;
   
