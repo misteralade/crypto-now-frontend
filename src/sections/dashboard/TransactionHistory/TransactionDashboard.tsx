@@ -1,8 +1,8 @@
-import {TransactionTable} from "./TranactionTable.tsx";
 import {TransactionSearch} from "./TranactionSearch.tsx";
 import ExportTransaction from "./ExportTransaction.tsx";
 import {useTransactionBoard} from "../../../hooks/components/dashboard/useTransactionBoard.ts";
 import type {SupportedCryptoOrCurrencyResponse} from "../../../types/response.payload.types.ts";
+import TransactionTable from "./TranactionTable.tsx";
 
 export function TransactionDashboard() {
   const {

@@ -7,6 +7,7 @@ import {type RootState, store} from "../store.ts";
 import {ROUTES, SESSION_STORAGE_KEYS} from "../util/constants.util.ts";
 import type {AxiosServerError} from "../types/response.payload.types.ts";
 import {clearTradeProgress} from "../util/tradeProgress.storage.util.ts";
+import {disputeServiceApi} from "../api/dispute.api.ts";
 
 export const useTransactionQuery = () => {
   const matchRoute = useMatchRoute();
@@ -208,6 +209,33 @@ export const useTransactionQuery = () => {
     }
   });
   
+  const disputeTransactionInitiationMutation = useMutation({
+    mutationKey: [QUERY_KEYS.DISPUTE.INITIATE_DISPUTE_TRANSACTION],
+    mutationFn: async () => {
+      const sessionId = store.getState().transaction.details.sessionId;
+      const reason = store.getState().transaction.dispute.create.reason;
+      const attachments = store.getState().transaction.dispute.create.attachments;
+      
+      if (!sessionId || !reason) {
+        throw new Error("Session ID and reason are required to initiate a dispute.");
+      }
+      
+      toast.loading(`Initiating dispute...`, { toastId: QUERY_KEYS.DISPUTE.INITIATE_DISPUTE_TRANSACTION });
+      return await disputeServiceApi.initiateDisputeTransaction(sessionId, { reason, attachments: attachments as any });
+    },
+    onSuccess: ({ message, data }) => {
+      toast.dismiss(QUERY_KEYS.DISPUTE.INITIATE_DISPUTE_TRANSACTION);
+      toast.success(message);
+      return data;
+    },
+    onError: ( error: AxiosServerError ) => {
+      toast.dismiss(QUERY_KEYS.DISPUTE.INITIATE_DISPUTE_TRANSACTION);
+      const { response } = error;
+      const message = response ? response.data.error.message : 'Failed to initiate dispute. Please try again.'
+      toast.error(message);
+    },
+  })
+  
   return {
     // Values
     calculatedAmount,
@@ -223,6 +251,7 @@ export const useTransactionQuery = () => {
     initiateTransactionMutation,
     makePaymentTransactionMutation,
     receivingPaymentAccountConfirmationMutation,
+    disputeTransactionInitiationMutation,
 
     // Functions
   };

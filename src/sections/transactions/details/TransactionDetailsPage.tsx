@@ -1,31 +1,31 @@
-import {Fragment, useState} from "react";
+import { Fragment } from "react";
 import Navbar from "../../../components/global/navbar/Navbar.tsx";
 import {useTransactionDetailsPage} from "../../../hooks/pages/useTransactionDetailsPage.ts";
 import {LoadingSpinner} from "../../../components/global/LoadingSpinner.tsx";
 import {TransactionStatus} from "../../../hooks/components/transaction/TransactionStatusIcon.tsx";
 import {transactionStatusMessages, transactionStatusStyles} from "../../../util/constants.util.ts";
 import { formatNumber } from "../../../util/index.util.ts";
-import {CheckCircle, Clock, Copy} from "lucide-react";
+import {AlertTriangle, CheckCircle, Clock, Copy} from "lucide-react";
 import momentClient from "../../../lib/moment.ts";
+import DisputeTransactionModal from "./modals/DisputeTransactionModal.tsx";
 
 const TransactionDetailsPage = () => {
   const {
     // 🧩 Values
     transactionDetails: transaction,
     loadingTransactionDetails,
+    showDisputeTransaction,
+    copiedField,
     
     // ⚙️ Functions
+    toggleDisputeTransaction,
+    copyToClipboard,
+    handleSubmitDispute,
   } = useTransactionDetailsPage();
   
-  const [copiedField, setCopiedField] = useState<string | null>(null);
+  
   const transactionColorScheme = transactionStatusStyles[transaction?.status as keyof typeof transactionStatusStyles];
   const transactionMessage = transactionStatusMessages[transaction?.status as keyof typeof transactionStatusStyles];
-  
-  const copyToClipboard = (text: string, field: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedField(field);
-    setTimeout(() => setCopiedField(null), 2000);
-  };
   
   const CopyButton = ({ text, field }: { text: string, field: string }) => (
     <button
@@ -52,12 +52,24 @@ const TransactionDetailsPage = () => {
             
             <div className="max-w-7xl mx-auto">
               {/* Header */}
-              <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900">Transaction Details</h1>
-                <p className="mt-2 text-sm text-gray-600">
-                  View your transaction information and status
-                </p>
+              <div className="mb-8 flex items-center justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900">Transaction Details</h1>
+                  <p className="mt-2 text-sm text-gray-600">
+                    View your transaction information and status
+                  </p>
+                </div>
+                
+                <button
+                  onClick={toggleDisputeTransaction}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors"
+                >
+                  <AlertTriangle className="w-4 h-4" />
+                  Dispute Transaction
+                </button>
               </div>
+              
+              
               
               {/* Status Alert */}
               <div className={`mb-6 p-4 rounded-lg border ${transactionColorScheme?.bg}`}>
@@ -310,6 +322,15 @@ const TransactionDetailsPage = () => {
               </div>
             </div>
           </div>
+          
+          {showDisputeTransaction && (
+            <DisputeTransactionModal
+              transactionId={transaction.sessionId}
+              
+              onClose={toggleDisputeTransaction}
+              onSubmit={handleSubmitDispute}
+            />
+          )}
         </Fragment>
       ) : (
         <Fragment></Fragment>
