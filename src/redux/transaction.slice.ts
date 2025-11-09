@@ -28,6 +28,13 @@ const transactionSlice = createSlice({
         reason: undefined as string | undefined,
         attachments: undefined as Array<MessageAttachment> | undefined,
       },
+      details: {
+        id: undefined as string | undefined,
+        message: {
+          text: undefined as string | undefined,
+          attachments: undefined as Array<MessageAttachment> | undefined,
+        }
+      }
     }
   },
   reducers: {
@@ -71,6 +78,15 @@ const transactionSlice = createSlice({
         state.dispute.create.attachments.splice(index, 1);
       }
     },
+    setDisputeDetailsId: (state, action: PayloadAction<string>) => {
+      state.dispute.details.id = action.payload;
+    },
+    setDisputeMessageText: (state, action: PayloadAction<string>) => {
+      state.dispute.details.message.text = action.payload;
+    },
+    setDisputeMessageAttachments: (state, action: PayloadAction<Array<MessageAttachment>>) => {
+      state.dispute.details.message.attachments = action.payload;
+    },
     
     // Clear States
     clearInitiateTransaction: (state) => {
@@ -100,6 +116,15 @@ const transactionSlice = createSlice({
     clearDisputeAttachments: (state) => {
       state.dispute.create.attachments = undefined;
     },
+    clearDisputeDetailsId: (state) => {
+      state.dispute.details.id = undefined;
+    },
+    clearDisputeMessageText: (state) => {
+      state.dispute.details.message.text = undefined;
+    },
+    clearDisputeMessageAttachments: (state) => {
+      state.dispute.details.message.attachments = undefined;
+    },
   },
 });
 
@@ -115,6 +140,9 @@ export const {
   setDisputeAttachments,
   addDisputeAttachment,
   removeDisputeAttachment,
+  setDisputeDetailsId,
+  setDisputeMessageText,
+  setDisputeMessageAttachments,
   
   // Clear States
   clearInitiateTransaction,
@@ -125,5 +153,8 @@ export const {
   clearTransactionDetailSessionId,
   clearDisputeReason,
   clearDisputeAttachments,
+  clearDisputeDetailsId,
+  clearDisputeMessageText,
+  clearDisputeMessageAttachments,
 } = transactionSlice.actions;
 export default transactionSlice.reducer;

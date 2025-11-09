@@ -11,7 +11,8 @@ export const ROUTES = {
   ORGANIZATIONS: "/dashboard/organizations",
   TRADE_CRYPTO: "/trade-crypto",
   TRANSACTION: '/dashboard/transactions',
-  TRANSACTION_DETAILS: '/dashboard/transactions/$id'
+  TRANSACTION_DETAILS: '/dashboard/transactions/$id',
+  DISPUTE_DETAILS: '/dispute/$id',
 }
 
 export const QUERY_KEYS = {

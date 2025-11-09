@@ -14,10 +14,8 @@ import { type ChangeEvent, Fragment, useState } from "react";
 import { formatFileSize } from "../../../../util/index.util";
 import type { FileTypeConfig, MessageAttachment, AttachmentType } from "../../../../types/transaction.types.ts";
 import { ATTACHMENT_TYPE } from "../../../../util/constants.util.ts";
-import { useMutation } from "@tanstack/react-query";
 import { toast } from "react-toastify";
-import { transactionServiceApi } from "../../../../api/transaction.api.ts";
-import type {AxiosServerError} from "../../../../types/response.payload.types.ts";
+import {useUploadQuery} from "../../../../queries/upload.query.ts";
 
 interface UploadingFile {
   id: number;
@@ -84,6 +82,8 @@ const fileTypeConfig: Record<AttachmentType, FileTypeConfig> = {
 };
 
 const DisputeTransactionModal = ({ transactionId, onClose, onSubmit }: DisputeTransactionModalProps) => {
+  const { uploadFileMutation } = useUploadQuery();
+  
   const [disputeReason, setDisputeReason] = useState<string>("");
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
   const [uploadedAttachments, setUploadedAttachments] = useState<MessageAttachment[]>([]);
@@ -141,28 +141,6 @@ const DisputeTransactionModal = ({ transactionId, onClose, onSubmit }: DisputeTr
       video.src = URL.createObjectURL(file);
     });
   };
-  
-  // Upload mutation
-  const uploadFileMutation = useMutation({
-    mutationFn: async (formData: FormData) => {
-      const toastId = toast.loading("Uploading file...");
-      try {
-        const { url } = await transactionServiceApi.uploadDisputeAttachment(formData);
-        toast.dismiss(toastId);
-        toast.success("File uploaded successfully");
-        return url;
-      } catch (error) {
-        toast.dismiss(toastId);
-        toast.error("Failed to upload file");
-        throw error;
-      }
-    },
-    onError: (error: AxiosServerError) => {
-      toast.dismiss()
-      const { data } = error.response as { data: { error: { message: string } } };
-      toast.error(data.error.message)
-    },
-  });
   
   // File upload handler
   const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>): Promise<void> => {

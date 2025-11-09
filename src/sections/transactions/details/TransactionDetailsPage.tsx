@@ -47,7 +47,7 @@ const TransactionDetailsPage = () => {
         <LoadingSpinner fullScreen={true}/>
       ) : transaction ? (
         <Fragment>
-          <div className={`space-y-10 md:space-y-20 pb-14 min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8`}>
+          <div className={`space-y-10 md:space-y-20 min-h-screen bg-gray-50`}>
             <Navbar />
             
             <div className="max-w-7xl mx-auto">
@@ -68,8 +68,6 @@ const TransactionDetailsPage = () => {
                   Dispute Transaction
                 </button>
               </div>
-              
-              
               
               {/* Status Alert */}
               <div className={`mb-6 p-4 rounded-lg border ${transactionColorScheme?.bg}`}>
