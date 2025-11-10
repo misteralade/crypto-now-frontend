@@ -85,7 +85,7 @@ const ViewDisputePage = () => {
                     <TransactionDisputeInfo
                       sessionId={disputeDetails.transaction?.sessionId || ''}
                       transactionType={disputeDetails.transaction?.type || 'BUY'}
-                      status={"INITIATED"}
+                      status={disputeDetails.transaction?.status || 'INITIATED'}
                       cryptoAmount={disputeDetails.transaction?.amountCrypto || ''}
                       cryptoCurrency={disputeDetails.transaction?.cryptocurrency?.symbol || ''}
                       fiatAmount={disputeDetails.transaction?.amountFiat || ''}
