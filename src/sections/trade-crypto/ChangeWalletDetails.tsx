@@ -60,7 +60,7 @@ const ChangeCryptoWalletDetails = ({ onConfirm, onGoBack, canGoBack = true }: Cr
 
       <div className="space-y-7">
         <CustomInput
-          label="Wallet label"
+          label="Wallet nickname"
           placeholder="e.g My USDT Wallet"
           value={walletLabel}
           onChange={(e) => setWalletLabel(e.target.value)}

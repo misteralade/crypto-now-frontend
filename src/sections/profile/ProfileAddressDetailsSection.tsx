@@ -37,7 +37,7 @@ export default function ProfileAddressDetailsSection({
                                               }: ProfileAddressDetailsSectionProps) {
     return (
         <div className="space-y-6">
-            <h3 className="text-base font-medium text-gray-900">Address details</h3>
+            <h3 className="text-base font-medium text-gray-900">Wallet details</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 <CustomSelector
                     label="Select coin type"
@@ -64,7 +64,7 @@ export default function ProfileAddressDetailsSection({
                     onClick={onAddAddress}
                     className="flex items-center gap-2 text-primary font-medium text-sm hover:underline"
                 >
-                    Add address
+                    Add wallet
                     <Plus className="w-4 h-4" />
                 </button>
             </div>
