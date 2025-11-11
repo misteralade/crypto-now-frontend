@@ -1,6 +1,6 @@
-import {useState, useEffect} from "react"
-import {useUserQuery} from "../../queries/user.query.ts";
-import {useBankQuery} from "../../queries/bank.query.ts";
+import { useState, useEffect } from "react";
+import { useUserQuery } from "../../queries/user.query.ts";
+import { useBankQuery } from "../../queries/bank.query.ts";
 import CustomLoader from "../../components/global/Loader.tsx";
 import ProfilePersonalInfoSection from "./ProfilePersonalInfoSection.tsx";
 import ProfileBankDetailsSection from "./ProfileBankDetailsSection.tsx";
@@ -10,129 +10,152 @@ import ProfileSecuritySettingsSection from "./ProfileSecuritySection.tsx";
 import TwoFactorModal from "./TwoFactorModal.tsx";
 
 export default function ProfileContent() {
-    const {userProfileData, loadingUserProfile} = useUserQuery();
-    const [firstName, setFirstName] = useState("")
-    const [lastName, setLastName] = useState("")
-    const [email, setEmail] = useState("")
-    const [phoneNumber, setPhoneNumber] = useState("")
+  const { userProfileData, loadingUserProfile } = useUserQuery();
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
 
-    const {allBanks, loadingAllBanks} = useBankQuery();
-    const [selectedBank, setSelectedBank] = useState("")
-    const [accountHolderName, setAccountHolderName] = useState("")
-    const [accountNumber, setAccountNumber] = useState("")
+  const { allBanks, loadingAllBanks } = useBankQuery();
+  const [selectedBank, setSelectedBank] = useState("");
+  const [accountHolderName, setAccountHolderName] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
 
-    const [selectedCoin, setSelectedCoin] = useState("")
-    const [walletAddress, setWalletAddress] = useState("")
-    const [selectedNetwork, setSelectedNetwork] = useState("")
+  const [selectedCoin, setSelectedCoin] = useState("");
+  const [walletAddress, setWalletAddress] = useState("");
+  const [selectedNetwork, setSelectedNetwork] = useState("");
 
-    const [isTwoFactorModalOpen, setIsTwoFactorModalOpen] = useState(false)
+  const [isTwoFactorModalOpen, setIsTwoFactorModalOpen] = useState(false);
 
-    const handleAddAddress = () => {
-        console.log("Add address clicked")
-        // Implement add address logic here
+  const handleAddAddress = () => {
+    console.log("Add address clicked");
+    // Implement add address logic here
+  };
+
+  const handleSaveChanges = () => {
+    console.log("Saving changes...");
+    // Implement save logic here
+  };
+
+  const handleCancel = () => {
+    console.log("Cancelling changes...");
+    // reset form
+    setFirstName(userProfileData?.profile?.firstName || "");
+    setLastName(userProfileData?.profile?.lastName || "");
+    setEmail(userProfileData?.email || "");
+    setPhoneNumber(userProfileData?.profile?.phoneNumber || "");
+
+    // clear bank details
+    setSelectedBank("");
+    setAccountHolderName("");
+    setAccountNumber("");
+
+    // clear wallet details
+    setSelectedCoin("");
+    setWalletAddress("");
+    setSelectedNetwork("");
+  };
+
+  const handleEnableTwoFactor = () => {
+    setIsTwoFactorModalOpen(true);
+  };
+
+  const handleTwoFactorConfirm = (code: string) => {
+    console.log("Two-factor code:", code);
+    setIsTwoFactorModalOpen(false);
+    // Implement two-factor setup logic here
+  };
+
+  const handleChangePassword = () => {
+    console.log("Change password clicked");
+    // Implement password change logic here
+  };
+
+  useEffect(() => {
+    if (!loadingUserProfile) {
+      setFirstName(userProfileData?.profile?.firstName || "");
+      setLastName(userProfileData?.profile?.lastName || "");
+      setEmail(userProfileData?.email || "");
+      setPhoneNumber(userProfileData?.profile?.phoneNumber || "");
     }
+  }, [loadingUserProfile]);
 
-    const handleSaveChanges = () => {
-        console.log("Saving changes...")
-        // Implement save logic here
-    }
+  return (
+    <>
+      <div className="w-full md:w-[90%] 2xl:max-w-7xl mx-auto md:-mt-10 px-3 md:px-0 space-y-10 ">
+        <div className="space-y-8">
+          <h1 className="text-2xl md:text-3xl font-semibold text-titleColor">
+            Account settings
+          </h1>
 
-    const handleCancel = () => {
-        console.log("Cancelling changes...")
-        // Reset form or navigate away
-    }
+          {loadingUserProfile ? (
+            <div
+              className={`w-full min-h-[60vh] flex items-center justify-center`}
+            >
+              <CustomLoader />
+            </div>
+          ) : (
+            <>
+              <div className={`space-y-10`}>
+                <ProfilePersonalInfoSection
+                  firstName={firstName}
+                  lastName={lastName}
+                  email={email}
+                  phoneNumber={phoneNumber}
+                  onFirstNameChange={setFirstName}
+                  onLastNameChange={setLastName}
+                  onEmailChange={setEmail}
+                  onPhoneNumberChange={setPhoneNumber}
+                />
 
-    const handleEnableTwoFactor = () => {
-        setIsTwoFactorModalOpen(true)
-    }
+                <ProfileBankDetailsSection
+                  selectedBank={selectedBank}
+                  accountHolderName={accountHolderName}
+                  accountNumber={accountNumber}
+                  banks={!loadingAllBanks ? allBanks : []}
+                  onBankChange={setSelectedBank}
+                  onAccountHolderNameChange={setAccountHolderName}
+                  onAccountNumberChange={setAccountNumber}
+                />
 
-    const handleTwoFactorConfirm = (code: string) => {
-        console.log("Two-factor code:", code)
-        setIsTwoFactorModalOpen(false)
-        // Implement two-factor setup logic here
-    }
+                <ProfileAddressDetailsSection
+                  selectedCoin={selectedCoin}
+                  walletAddress={walletAddress}
+                  selectedNetwork={selectedNetwork}
+                  onCoinChange={setSelectedCoin}
+                  onWalletAddressChange={setWalletAddress}
+                  onNetworkChange={setSelectedNetwork}
+                  onAddAddress={handleAddAddress}
+                />
 
-    const handleChangePassword = () => {
-        console.log("Change password clicked")
-        // Implement password change logic here
-    }
+                <div className="flex flex-col-reverse md:flex-row gap-4 md:justify-end pt-4">
+                  <button
+                    onClick={handleCancel}
+                    className="h-12 px-8 rounded-full text-gray-700 font-semibold text-base hover:bg-gray-100 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <CustomButton
+                    buttonText="Save Changes"
+                    onClick={handleSaveChanges}
+                  />
+                </div>
+              </div>
 
-    useEffect(() => {
-        if (!loadingUserProfile) {
-            setFirstName(userProfileData?.profile?.firstName || "")
-            setLastName(userProfileData?.profile?.lastName || "")
-            setEmail(userProfileData?.email || "")
-            setPhoneNumber(userProfileData?.profile?.phoneNumber || "")
-        }
-    }, [loadingUserProfile]);
+              <ProfileSecuritySettingsSection
+                onEnableTwoFactor={handleEnableTwoFactor}
+                onChangePassword={handleChangePassword}
+              />
+            </>
+          )}
+        </div>
+      </div>
 
-    return (
-       <>
-           <div className="w-full md:w-[90%] 2xl:max-w-7xl mx-auto md:-mt-10 px-3 md:px-0 space-y-10 ">
-               <div className="space-y-8">
-                   <h1 className="text-2xl md:text-3xl font-semibold text-titleColor">Account settings</h1>
-
-                   {loadingUserProfile ? (
-                           <div className={`w-full min-h-[60vh] flex items-center justify-center`}>
-                               <CustomLoader/>
-                           </div>) :
-                       (
-                           <>
-                               <div className={`space-y-10`}>
-                                   <ProfilePersonalInfoSection
-                                       firstName={firstName}
-                                       lastName={lastName}
-                                       email={email}
-                                       phoneNumber={phoneNumber}
-                                       onFirstNameChange={setFirstName}
-                                       onLastNameChange={setLastName}
-                                       onEmailChange={setEmail}
-                                       onPhoneNumberChange={setPhoneNumber}
-                                   />
-
-                                   <ProfileBankDetailsSection
-                                       selectedBank={selectedBank}
-                                       accountHolderName={accountHolderName}
-                                       accountNumber={accountNumber}
-                                       banks={!loadingAllBanks ? allBanks : []}
-                                       onBankChange={setSelectedBank}
-                                       onAccountHolderNameChange={setAccountHolderName}
-                                       onAccountNumberChange={setAccountNumber}
-                                   />
-
-                                   <ProfileAddressDetailsSection
-                                       selectedCoin={selectedCoin}
-                                       walletAddress={walletAddress}
-                                       selectedNetwork={selectedNetwork}
-                                       onCoinChange={setSelectedCoin}
-                                       onWalletAddressChange={setWalletAddress}
-                                       onNetworkChange={setSelectedNetwork}
-                                       onAddAddress={handleAddAddress}
-                                   />
-
-                                   <div className="flex flex-col-reverse md:flex-row gap-4 md:justify-end pt-4">
-                                       <button
-                                           onClick={handleCancel}
-                                           className="h-12 px-8 rounded-full text-gray-700 font-semibold text-base hover:bg-gray-100 transition-colors"
-                                       >
-                                           Cancel
-                                       </button>
-                                       <CustomButton buttonText="Save Changes"  onClick={handleSaveChanges}/>
-                                   </div>
-                               </div>
-
-                               <ProfileSecuritySettingsSection onEnableTwoFactor={handleEnableTwoFactor} onChangePassword={handleChangePassword} />
-                           </>
-
-                       )}
-               </div>
-           </div>
-
-           <TwoFactorModal
-               isOpen={isTwoFactorModalOpen}
-               onClose={() => setIsTwoFactorModalOpen(false)}
-               onConfirm={handleTwoFactorConfirm}
-           />
-       </>
-    )
+      <TwoFactorModal
+        isOpen={isTwoFactorModalOpen}
+        onClose={() => setIsTwoFactorModalOpen(false)}
+        onConfirm={handleTwoFactorConfirm}
+      />
+    </>
+  );
 }
