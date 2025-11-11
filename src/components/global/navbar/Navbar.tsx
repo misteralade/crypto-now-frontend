@@ -63,18 +63,25 @@ export default function Navbar() {
 
             {/* Dropdown for Buy & sell crypto */}
             <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center gap-1 text-gray-700 hover:text-gray-900 font-medium"
-              >
-                {/* Buy & sell crypto */}
-                {isLoggedIn
-                  ? "Buy & sell crypto"
-                  : "Finish setup to start trading"}
-                <ChevronDown className="h-5 w-5" />
-              </button>
-
-              {isDropdownOpen && <NavbarDropdown dropItems={dropItems} />}
+              {isLoggedIn ? (
+                <>
+                  <button
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    className="flex items-center gap-1 text-gray-700 hover:text-gray-900 font-medium"
+                  >
+                    Buy & sell crypto
+                    <ChevronDown className="h-5 w-5" />
+                  </button>
+                  {isDropdownOpen && <NavbarDropdown dropItems={dropItems} />}
+                </>
+              ) : (
+                <a
+                  href="/sign-up"
+                  className="text-gray-700 hover:text-gray-900 font-medium"
+                >
+                  Finish setup to start trading
+                </a>
+              )}
             </div>
 
             <a

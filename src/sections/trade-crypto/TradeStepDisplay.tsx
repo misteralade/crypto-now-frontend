@@ -11,6 +11,7 @@ import {
   saveTradeProgress,
 } from "../../util/tradeProgress.storage.util.ts";
 import EmailModal from "./modals/EmailModal.tsx";
+import { useSearch } from "@tanstack/react-router";
 
 export default function TradeStepDisplay({
   activeTab,
@@ -20,6 +21,10 @@ export default function TradeStepDisplay({
   token,
   setStep,
 }: TradeCryptoPageProps) {
+  // Read ?amount from query to prefill from guest flow
+  const searchParams: { amount?: string } = useSearch({ strict: false });
+  const initialAmount = searchParams?.amount;
+
   // Restore step/activeTab on mount
   useEffect(() => {
     const saved = loadTradeProgress();
@@ -67,8 +72,27 @@ export default function TradeStepDisplay({
     makePaymentTransaction,
     handleConfirmBankDetails,
     handleAnonymousUserEmailInput,
-    toggleShowUserEnterEmail
+    toggleShowUserEnterEmail,
   } = useTradeStepDisplay(token, activeTab, currency, setStep);
+
+  // prefill amt on first load if provided in the URL and fields are empty
+  useEffect(() => {
+    if (!initialAmount) return;
+    const amount = Number(initialAmount);
+    if (!isFinite(amount) || amount <= 0) return;
+
+    if (activeTab === "buy") {
+      if (amountToBuy === "" || Number(amountToBuy) === 0) {
+        setAmountToBuy(String(amount));
+        saveTradeProgress({ amountToBuy: String(amount) });
+      }
+    } else {
+      if (numberOfToken === "" || Number(numberOfToken) === 0) {
+        setNumberOfToken(String(amount));
+        saveTradeProgress({ numberOfToken: String(amount) });
+      }
+    }
+  }, []);
 
   // 1) On mount: only keep progress if navigation type is "reload"
   useEffect(() => {
@@ -82,7 +106,7 @@ export default function TradeStepDisplay({
       clearTradeProgress();
     }
   }, []);
-  
+
   // 2) On unmount: clear progress for SPA route changes, but keep it for reloads
   useEffect(() => {
     let isReloading = false;
@@ -161,8 +185,7 @@ export default function TradeStepDisplay({
         onProceed={handleConfirmBankDetails}
         setShowConfirmBankDetails={toggleConfirmBankDetails}
       />
-      
-      
+
       <EmailModal
         open={showUserEnterEmail}
         onClose={toggleShowUserEnterEmail}
