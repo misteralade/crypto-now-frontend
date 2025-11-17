@@ -2,7 +2,7 @@ import {useState} from "react";
 import {useDispatch} from "react-redux";
 import {useUserQuery} from "../../queries/user.query.ts";
 import {useBankQuery} from "../../queries/bank.query.ts";
-import {clearProfilePersonalInfoField, setProfilePersonalInfoField} from "../../redux/user.slice.ts";
+import { clearProfilePersonalInfoField, setProfilePersonalInfoField } from "../../redux/user.slice.ts";
 import {useAuthQuery} from "../../queries/auth.query.ts";
 import type {
   CreateBankAccountRequestPayload,
@@ -25,7 +25,7 @@ import {
 export const useProfilePage = () => {
   const dispatch = useDispatch();
   const { userRequestPasswordChangeMutation } = useAuthQuery();
-  const { userProfileData, loadingUserProfile } = useUserQuery();
+  const { userProfileData, loadingUserProfile, updateProfileMutation } = useUserQuery();
   const { allBanks, loadingAllBanks } = useBankQuery();
   const { supportedCryptoCurrencies, loadingSupportedCryptocurrencies, allUserCryptoWallets, loadingAllUserCryptoWallets, createUserWalletMutation, makeWalletPrimaryMutation, deleteUserWalletMutation } = useCryptoQuery();
   const { userBankAccounts, loadingUserBankAccounts, createUserBankAccountMutation, updateDefaultBankAccountMutation, deleteBankAccountMutation } = useBankQuery();
@@ -37,23 +37,10 @@ export const useProfilePage = () => {
   const [showCreateNewBankAccount, setShowCreateNewBankAccount] = useState(false);
   const [showCreateWallet, setShowCreateWallet] = useState(false);
   
-  const handleSaveChanges = () => {
-    console.log("Saving changes...");
-    // Implement save logic here
-  };
-  
-  const handleCancel = () => {
-    console.log("Cancelling changes...");
-    // reset form
+  const handleSaveChanges = async () => {
+    await updateProfileMutation.mutateAsync()
+    
     dispatch(clearProfilePersonalInfoField());
-    
-    // clear bank details
-    setSelectedBank("");
-    dispatch(clearNewBankAccount())
-    
-    // clear wallet details
-    setSelectedWallet('')
-    dispatch(clearCreateCryptoWalletField())
   };
   
   const handleEnableTwoFactor = () => {
@@ -66,7 +53,7 @@ export const useProfilePage = () => {
     // Implement two-factor setup logic here
   };
   
-  const handlePersonalInfoProfileFieldUpdate = (field: 'firstName' | 'lastName' | 'phoneNumber', value: string) => {
+  const handlePersonalInfoProfileFieldUpdate = (field: 'firstName' | 'lastName' | 'phoneNumber' | 'dob' | 'profileImg', value: string) => {
     dispatch(setProfilePersonalInfoField({
       field,
       value,
@@ -175,7 +162,6 @@ export const useProfilePage = () => {
     // Functions
     handleChangePassword,
     handlePersonalInfoProfileFieldUpdate,
-    handleCancel,
     handleSaveChanges,
     handleEnableTwoFactor,
     handleTwoFactorConfirm,

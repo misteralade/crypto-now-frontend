@@ -33,7 +33,6 @@ const ProfilePage = () => {
     // Functions
     handleChangePassword,
     handlePersonalInfoProfileFieldUpdate,
-    handleCancel,
     handleSaveChanges,
     handleEnableTwoFactor,
     handleTwoFactorConfirm,
@@ -81,8 +80,17 @@ const ProfilePage = () => {
                   lastName={userProfileData?.profile?.lastName || ''}
                   email={userProfileData?.email || ''}
                   phoneNumber={userProfileData?.profile?.phoneNumber || ''}
+                  dob={userProfileData?.profile?.dateOfBirth}
+                  profileImg={userProfileData?.profile?.profileImg}
                   handleFieldChange={handlePersonalInfoProfileFieldUpdate}
                 />
+                
+                <div className="w-full flex items-center justify-center gap-2">
+                  <CustomButton
+                    buttonText="Save Changes"
+                    onClick={handleSaveChanges}
+                  />
+                </div>
                 
                 <div className="space-y-6">
                   <h3 className="text-lg">Bank details</h3>
@@ -123,19 +131,6 @@ const ProfilePage = () => {
                       deleteWallet={handleDeleteWallet}
                     />
                   )}
-                </div>
-                
-                <div className="flex flex-col-reverse md:flex-row gap-4 md:justify-end pt-4">
-                  <button
-                    onClick={handleCancel}
-                    className="h-12 px-8 rounded-full text-gray-700 font-semibold text-base hover:bg-gray-100 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <CustomButton
-                    buttonText="Save Changes"
-                    onClick={handleSaveChanges}
-                  />
                 </div>
               </div>
               

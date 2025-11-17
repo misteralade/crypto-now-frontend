@@ -22,7 +22,7 @@ const userSlice = createSlice({
     setAnonymousUserEmail: (state, action:PayloadAction<string>) => {
       state.trade.anonymous.email = action.payload;
     },
-    setProfilePersonalInfoField: (state, action:PayloadAction<{ field: 'firstName' | 'lastName' | 'phoneNumber', value: string }>) => {
+    setProfilePersonalInfoField: (state, action:PayloadAction<{ field: 'firstName' | 'lastName' | 'phoneNumber' | 'dob' | 'profileImg', value: string }>) => {
       const { field, value } = action.payload;
       state.profile.personalInfo[field] = value;
     },
