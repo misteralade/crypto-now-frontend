@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { faqs } from "../../data/faqs";
+import {ROUTES} from "../../util/constants.util.ts";
 
 const FAQs = () => {
   type FAQItemProps = {
@@ -42,7 +43,7 @@ const FAQs = () => {
     }, [open, question, answer]);
 
     return (
-      <div>
+      <div id={ROUTES.IN_PAGE_ROUTES.FAQ}>
         <button
           type="button"
           aria-expanded={open}

@@ -18,6 +18,21 @@ export const ROUTES = {
   
   ABOUT: "/about",
   CONTACT: "/contact",
+  TERMS_OF_SERVICES: "/terms-of-service",
+  PRIVACY_POLICY: "/privacy-policy",
+  AML_POLICY: "aml-policy",
+  RATES: "/rates",
+  
+  SOCIALS: {
+    FACEBOOK: "https://www.facebook.com/share/1DhKLD85Ho/",
+    TIK_TOK: "https://www.tiktok.com/@cryptonownaija?_r=1&_t=ZS-91QM2DxOqpO",
+    INSTAGRAM: "https://www.instagram.com/cryptonow.ng?igsh=MTZqZWk5enRiMjQ2Zg==",
+    TWITTER: "https://x.com/cryptonownaija?t=wQ23QgGSUyB9YH5fPFXrBw&s=09",
+  },
+  IN_PAGE_ROUTES: {
+    FAQ: "faq",
+    HOW_IT_WORKS: "how-it-works",
+  }
 }
 
 export const QUERY_KEYS = {

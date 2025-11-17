@@ -49,7 +49,7 @@ export default function Navbar() {
         <div className="w-full md:w-[90%] 2xl:max-w-7xl mx-auto flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center">
-            <img src={Logo} />
+            <img src={Logo} alt={Logo} />
           </div>
 
           {/* Navigation Links */}
@@ -59,6 +59,13 @@ export default function Navbar() {
               className="text-gray-700 hover:text-gray-900 font-medium"
             >
               Home
+            </a>
+            
+            <a
+              href={ROUTES.RATES}
+              className="text-gray-700 hover:text-gray-900 font-medium"
+            >
+              Rates
             </a>
 
             {/* Dropdown for Buy & sell crypto */}
