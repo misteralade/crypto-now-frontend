@@ -135,6 +135,7 @@ const ProfilePage = () => {
               </div>
               
               <ProfileSecuritySettingsSection
+                isTwoFactorEnabled={userProfileData?.twoFactorEnabled || false}
                 onEnableTwoFactor={handleEnableTwoFactor}
                 onChangePassword={handleChangePassword}
               />

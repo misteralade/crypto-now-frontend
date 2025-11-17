@@ -117,6 +117,7 @@ export type GetUserProfileResponse = {
   id: string;
   email: string;
   createdAt: Date;
+  twoFactorEnabled: boolean;
   profile: UserProfilePayload;
 }
 

@@ -24,7 +24,7 @@ import {
 
 export const useProfilePage = () => {
   const dispatch = useDispatch();
-  const { userRequestPasswordChangeMutation } = useAuthQuery();
+  const { userRequestPasswordChangeMutation, userToggleTwoFactorAuthenticationMutation } = useAuthQuery();
   const { userProfileData, loadingUserProfile, updateProfileMutation } = useUserQuery();
   const { allBanks, loadingAllBanks } = useBankQuery();
   const { supportedCryptoCurrencies, loadingSupportedCryptocurrencies, allUserCryptoWallets, loadingAllUserCryptoWallets, createUserWalletMutation, makeWalletPrimaryMutation, deleteUserWalletMutation } = useCryptoQuery();
@@ -43,7 +43,8 @@ export const useProfilePage = () => {
     dispatch(clearProfilePersonalInfoField());
   };
   
-  const handleEnableTwoFactor = () => {
+  const handleEnableTwoFactor = async () => {
+    await userToggleTwoFactorAuthenticationMutation.mutateAsync();
     setIsTwoFactorModalOpen(true);
   };
   
