@@ -4,6 +4,8 @@ import type { TransactionAction } from "../schemas/enum.schema.ts";
 
 export interface StandardizedServerError {
   success: false;
+  message: string;
+  data: any;
   error: {
     code: string;
     message: string;

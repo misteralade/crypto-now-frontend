@@ -63,18 +63,12 @@ const BankAccountCard = ({
               </button>
             )}
             <button
-              className="text-[#EB5757] text-sm font-semibold hover:opacity-80"
+              className="text-[#EB5757] text-sm font-semibold hover:opacity-80 hover:cursor-pointer"
               onClick={() => onDelete(account.id)}
             >
               Delete
             </button>
           </div>
-          {/*<button*/}
-          {/*  className="px-4 py-2 rounded-full bg-[#03034D] text-white text-sm font-semibold hover:opacity-80"*/}
-          {/*  onClick={() => onEdit(index)}*/}
-          {/*>*/}
-          {/*  Edit*/}
-          {/*</button>*/}
         </div>
       </div>
     </section>

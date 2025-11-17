@@ -5,6 +5,7 @@ import {toast} from "react-toastify";
 import {type RootState, store} from "../store.ts";
 import {ROUTES} from "../util/constants.util.ts";
 import {useMatchRoute} from "@tanstack/react-router";
+import type {AxiosServerError} from "../types/response.payload.types.ts";
 
 export const useBankQuery = () => {
   const queryClient = useQueryClient();
@@ -110,7 +111,7 @@ export const useBankQuery = () => {
     onSuccess: ({ success, message}) => {
       // Invalidate and refetch user bank accounts after mutation
       if (success) {
-        toast.dismiss(QUERY_KEYS.BANK.CREATE_USER_BANK_ACCOUNT);
+        toast.dismiss();
         toast.success(message || 'Default bank account updated successfully.');
         queryClient.invalidateQueries({
           queryKey: [QUERY_KEYS.BANK.USER_BANK_ACCOUNTS]
@@ -119,10 +120,12 @@ export const useBankQuery = () => {
       
       return { success, message };
     },
-    onError: () => {
-      toast.dismiss(QUERY_KEYS.BANK.CREATE_USER_BANK_ACCOUNT);
-      toast.error("Failed to update bank account default. Please try again.", { toastId: QUERY_KEYS.BANK.CREATE_USER_BANK_ACCOUNT });
-    }
+    onError: ( error: AxiosServerError ) => {
+      toast.dismiss();
+      const { response } = error;
+      const message = response ? response?.data?.error?.message || response?.data?.message : 'Failed to update bank account default. Please try again.'
+      toast.error(message);
+    },
   });
   
   const deleteBankAccountMutation = useMutation({
@@ -140,20 +143,28 @@ export const useBankQuery = () => {
     },
     onSuccess: ({ success, message}) => {
       // Invalidate and refetch user bank accounts after mutation
+      console.log({
+        success,
+        message
+      })
+      toast.dismiss();
       if (success) {
-        toast.dismiss(QUERY_KEYS.BANK.CREATE_USER_BANK_ACCOUNT);
         toast.success(message || 'Bank account successfully deleted.');
         queryClient.invalidateQueries({
           queryKey: [QUERY_KEYS.BANK.USER_BANK_ACCOUNTS]
         });
+      } else {
+        toast.error(message)
       }
       
       return { success, message };
     },
-    onError: () => {
-      toast.dismiss(QUERY_KEYS.BANK.CREATE_USER_BANK_ACCOUNT);
-      toast.error("Failed to delete bank account. Please try again.", { toastId: QUERY_KEYS.BANK.CREATE_USER_BANK_ACCOUNT });
-    }
+    onError: ( error: AxiosServerError ) => {
+      toast.dismiss();
+      const { response } = error;
+      const message = response ? response?.data?.error?.message || response?.data?.message : 'Failed to delete bank account. Please try again.'
+      toast.error(message);
+    },
   });
 
   return {
