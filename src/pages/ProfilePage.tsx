@@ -9,6 +9,7 @@ import ProfileSecuritySettingsSection from "../components/pages/profile/ProfileS
 import TwoFactorModal from "../components/pages/profile/TwoFactorModal.tsx";
 import {LoadingSpinner} from "../components/global/LoadingSpinner.tsx";
 import NewBankAccountModal from "../components/pages/profile/modals/NewBankAccountModal.tsx";
+import NewCryptoWalletModal from "../components/pages/profile/modals/NewCryptoWalletModal.tsx";
 
 const ProfilePage = () => {
   const {
@@ -22,13 +23,18 @@ const ProfilePage = () => {
     loadingUserBankAccounts,
     selectedBank,
     showCreateNewBankAccount,
+    supportedCryptoCurrencies,
+    loadingSupportedCryptocurrencies,
+    allUserCryptoWallets,
+    loadingAllUserCryptoWallets,
+    showCreateWallet,
+    selectedWallet,
     
     // Functions
     handleChangePassword,
     handlePersonalInfoProfileFieldUpdate,
     handleCancel,
     handleSaveChanges,
-    handleAddAddress,
     handleEnableTwoFactor,
     handleTwoFactorConfirm,
     toggleTwoFactorModal,
@@ -37,6 +43,11 @@ const ProfilePage = () => {
     toggleShowCreateNewBankAccount,
     handleDefaultBankAccount,
     handleDeleteBankAccount,
+    toggleShowCreateNewWallet,
+    handleCreateWallet,
+    handleNewWalletField,
+    handleMakeWalletDefault,
+    handleDeleteWallet,
   } = useProfilePage();
   
   useEffect(() => {
@@ -77,10 +88,12 @@ const ProfilePage = () => {
                   <h3 className="text-lg">Bank details</h3>
                   
                   {!loadingUserBankAccounts && !userBankAccounts ? (
-                    <CustomButton
-                      buttonText="Add Bank account"
-                      onClick={toggleShowCreateNewBankAccount}
-                    />
+                    <div className="w-full flex items-center justify-center">
+                      <CustomButton
+                        buttonText="Add Bank account"
+                        onClick={toggleShowCreateNewBankAccount}
+                      />
+                    </div>
                   ) : (
                     <ProfileBankDetailsSection
                       banks={userBankAccounts}
@@ -92,15 +105,25 @@ const ProfilePage = () => {
                 </div>
                 
                 
-                {/*<ProfileAddressDetailsSection*/}
-                {/*  selectedCoin={selectedCoin}*/}
-                {/*  walletAddress={walletAddress}*/}
-                {/*  selectedNetwork={selectedNetwork}*/}
-                {/*  onCoinChange={setSelectedCoin}*/}
-                {/*  onWalletAddressChange={setWalletAddress}*/}
-                {/*  onNetworkChange={setSelectedNetwork}*/}
-                {/*  onAddAddress={handleAddAddress}*/}
-                {/*/>*/}
+                <div className="space-y-6">
+                  <h3 className="text-lg">Wallet details</h3>
+                  
+                  {!loadingAllUserCryptoWallets && !allUserCryptoWallets ? (
+                    <div className="w-full flex items-center justify-center">
+                      <CustomButton
+                        buttonText="Add Crypto Wallet"
+                        onClick={toggleShowCreateNewWallet}
+                      />
+                    </div>
+                  ) : (
+                    <ProfileAddressDetailsSection
+                      wallets={allUserCryptoWallets ? allUserCryptoWallets : []}
+                      createNewWalletModal={toggleShowCreateNewWallet}
+                      makePrimaryWallet={handleMakeWalletDefault}
+                      deleteWallet={handleDeleteWallet}
+                    />
+                  )}
+                </div>
                 
                 <div className="flex flex-col-reverse md:flex-row gap-4 md:justify-end pt-4">
                   <button
@@ -138,6 +161,15 @@ const ProfilePage = () => {
         handleChangeField={handleNewBankAccountField}
         onClose={toggleShowCreateNewBankAccount}
         onSubmit={handleCreateBankAccount}
+      />
+      
+      <NewCryptoWalletModal
+        isOpen={showCreateWallet}
+        supportedCryptoWallet={!loadingSupportedCryptocurrencies && supportedCryptoCurrencies !== undefined ? supportedCryptoCurrencies : []}
+        selectedWalletId={selectedWallet}
+        onClose={toggleShowCreateNewWallet}
+        onSubmit={handleCreateWallet}
+        handleChangeField={handleNewWalletField}
       />
     </AuthenticatedLayout>
   )

@@ -24,6 +24,7 @@ export type UserCreateCryptoWalletRequestPayload = {
   network: string;
   isVerified: boolean;
   isPrimary: boolean;
+  cryptoId?: string;
   walletLabel?: string | null;
 }
 

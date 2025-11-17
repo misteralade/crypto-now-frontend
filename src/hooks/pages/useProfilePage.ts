@@ -4,34 +4,38 @@ import {useUserQuery} from "../../queries/user.query.ts";
 import {useBankQuery} from "../../queries/bank.query.ts";
 import {clearProfilePersonalInfoField, setProfilePersonalInfoField} from "../../redux/user.slice.ts";
 import {useAuthQuery} from "../../queries/auth.query.ts";
-import type {CreateBankAccountRequestPayload} from "../../types/request.payload.types.ts";
+import type {
+  CreateBankAccountRequestPayload,
+  UserCreateCryptoWalletRequestPayload
+} from "../../types/request.payload.types.ts";
 import {
   clearNewBankAccount,
   clearUpdateSelectedBankAccountId,
   setNewBankAccountField,
   setUpdateSelectedBankAccountId
 } from "../../redux/bank.slice.ts";
+import {useCryptoQuery} from "../../queries/crypto.query.ts";
+import {
+  clearCreateCryptoWalletField,
+  clearUpdateCryptoWalletField,
+  setCreateCryptoWalletField,
+  setUpdateCryptoWalletId,
+} from "../../redux/crypto.slice.ts";
 
 export const useProfilePage = () => {
   const dispatch = useDispatch();
   const { userRequestPasswordChangeMutation } = useAuthQuery();
   const { userProfileData, loadingUserProfile } = useUserQuery();
   const { allBanks, loadingAllBanks } = useBankQuery();
+  const { supportedCryptoCurrencies, loadingSupportedCryptocurrencies, allUserCryptoWallets, loadingAllUserCryptoWallets, createUserWalletMutation, makeWalletPrimaryMutation, deleteUserWalletMutation } = useCryptoQuery();
   const { userBankAccounts, loadingUserBankAccounts, createUserBankAccountMutation, updateDefaultBankAccountMutation, deleteBankAccountMutation } = useBankQuery();
   
   const [selectedBank, setSelectedBank] = useState("");
-  
-  const [selectedCoin, setSelectedCoin] = useState("");
-  const [walletAddress, setWalletAddress] = useState("");
-  const [selectedNetwork, setSelectedNetwork] = useState("");
+  const [selectedWallet, setSelectedWallet] = useState("");
   
   const [isTwoFactorModalOpen, setIsTwoFactorModalOpen] = useState(false);
   const [showCreateNewBankAccount, setShowCreateNewBankAccount] = useState(false);
-  
-  const handleAddAddress = () => {
-    console.log("Add address clicked");
-    // Implement add address logic here
-  };
+  const [showCreateWallet, setShowCreateWallet] = useState(false);
   
   const handleSaveChanges = () => {
     console.log("Saving changes...");
@@ -48,9 +52,8 @@ export const useProfilePage = () => {
     dispatch(clearNewBankAccount())
     
     // clear wallet details
-    setSelectedCoin("");
-    setWalletAddress("");
-    setSelectedNetwork("");
+    setSelectedWallet('')
+    dispatch(clearCreateCryptoWalletField())
   };
   
   const handleEnableTwoFactor = () => {
@@ -79,6 +82,16 @@ export const useProfilePage = () => {
       value,
     }))
   }
+ 
+  const handleNewWalletField = (field: keyof UserCreateCryptoWalletRequestPayload, value: any) => {
+    if (field === 'cryptoId') {
+      setSelectedWallet(value);
+    }
+    dispatch(setCreateCryptoWalletField({
+      field,
+      value,
+    }))
+  }
   
   // Mutation Functions
   const handleChangePassword = () => {
@@ -90,6 +103,14 @@ export const useProfilePage = () => {
     if (success) {
       toggleShowCreateNewBankAccount();
       dispatch(clearNewBankAccount())
+    }
+  }
+  
+  const handleCreateWallet = async () => {
+    const { success } = await createUserWalletMutation.mutateAsync();
+    if (success) {
+      toggleShowCreateNewWallet();
+      dispatch(clearCreateCryptoWalletField());
     }
   }
   
@@ -111,9 +132,27 @@ export const useProfilePage = () => {
     }
   }
   
+  const handleMakeWalletDefault = async (id: string) => {
+    dispatch(setUpdateCryptoWalletId(id))
+    const { success } = await makeWalletPrimaryMutation.mutateAsync()
+    if (success) {
+      dispatch(clearUpdateCryptoWalletField())
+    }
+  }
+  
+  const handleDeleteWallet = async (id: string) => {
+    dispatch(setUpdateCryptoWalletId(id))
+    const { success } = await deleteUserWalletMutation.mutateAsync()
+    if (success) {
+      dispatch(clearUpdateCryptoWalletField())
+    }
+  }
+  
   const toggleTwoFactorModal = () => setIsTwoFactorModalOpen(!isTwoFactorModalOpen);
   
   const toggleShowCreateNewBankAccount = () => setShowCreateNewBankAccount(!showCreateNewBankAccount);
+  
+  const toggleShowCreateNewWallet = () => setShowCreateWallet(!showCreateWallet);
   
   return {
     // Values
@@ -126,13 +165,18 @@ export const useProfilePage = () => {
     loadingUserBankAccounts,
     selectedBank,
     showCreateNewBankAccount,
+    supportedCryptoCurrencies,
+    loadingSupportedCryptocurrencies,
+    allUserCryptoWallets,
+    loadingAllUserCryptoWallets,
+    showCreateWallet,
+    selectedWallet,
     
     // Functions
     handleChangePassword,
     handlePersonalInfoProfileFieldUpdate,
     handleCancel,
     handleSaveChanges,
-    handleAddAddress,
     handleEnableTwoFactor,
     handleTwoFactorConfirm,
     toggleTwoFactorModal,
@@ -141,5 +185,10 @@ export const useProfilePage = () => {
     toggleShowCreateNewBankAccount,
     handleDefaultBankAccount,
     handleDeleteBankAccount,
+    toggleShowCreateNewWallet,
+    handleCreateWallet,
+    handleNewWalletField,
+    handleMakeWalletDefault,
+    handleDeleteWallet,
   }
 }

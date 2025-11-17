@@ -1,11 +1,11 @@
 import { ChevronDown } from "lucide-react";
 import { useState, useId, useRef, useEffect, type KeyboardEvent } from "react";
-import type { AllBanksResponse } from "../../types/response.payload.types.ts";
+import type {AllBanksResponse, SupportedCryptoOrCurrencyResponse} from "../../types/response.payload.types.ts";
 
 interface BankSelectorProps {
   label: string;
   placeholder?: string;
-  options: AllBanksResponse[] | undefined;
+  options: AllBanksResponse[] | SupportedCryptoOrCurrencyResponse[] | undefined;
   value?: string; // value is the option id
   onValueChange: (value: string) => void;
   error?: string;
@@ -54,7 +54,7 @@ const BankSelector = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSelect = (option: AllBanksResponse) => {
+  const handleSelect = (option: AllBanksResponse | SupportedCryptoOrCurrencyResponse) => {
     onValueChange(option.id);
     setIsOpen(false);
     setIsFocused(false);

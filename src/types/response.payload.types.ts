@@ -93,6 +93,7 @@ export type UserCryptoWalletResponse = {
   isPrimary: boolean;
   isVerified: boolean;
   createdAt: Date;
+  cryptocurrency: CryptoCurrencyResponseEntity | undefined;
 }
 
 export type UserProfilePayload = {

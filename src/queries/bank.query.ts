@@ -6,6 +6,7 @@ import {type RootState, store} from "../store.ts";
 import {ROUTES} from "../util/constants.util.ts";
 import {useMatchRoute} from "@tanstack/react-router";
 import type {AxiosServerError} from "../types/response.payload.types.ts";
+import {extractErrorMessage} from "../util/index.util.ts";
 
 export const useBankQuery = () => {
   const queryClient = useQueryClient();
@@ -89,10 +90,11 @@ export const useBankQuery = () => {
       
       return { success, message };
     },
-    onError: () => {
-      toast.dismiss(QUERY_KEYS.BANK.CREATE_USER_BANK_ACCOUNT);
-      toast.error("Failed to create bank account. Please try again.", { toastId: QUERY_KEYS.BANK.CREATE_USER_BANK_ACCOUNT });
-    }
+    onError: ( error: AxiosServerError ) => {
+      toast.dismiss();
+      const message = extractErrorMessage(error) || "Failed to create bank account. Please try again."
+      toast.error(message);
+    },
   });
   
   const updateDefaultBankAccountMutation = useMutation({
@@ -122,8 +124,7 @@ export const useBankQuery = () => {
     },
     onError: ( error: AxiosServerError ) => {
       toast.dismiss();
-      const { response } = error;
-      const message = response ? response?.data?.error?.message || response?.data?.message : 'Failed to update bank account default. Please try again.'
+      const message = extractErrorMessage(error) || 'Failed to update bank account default. Please try again.'
       toast.error(message);
     },
   });
@@ -161,8 +162,7 @@ export const useBankQuery = () => {
     },
     onError: ( error: AxiosServerError ) => {
       toast.dismiss();
-      const { response } = error;
-      const message = response ? response?.data?.error?.message || response?.data?.message : 'Failed to delete bank account. Please try again.'
+      const message = extractErrorMessage(error) || 'Failed to delete bank account. Please try again.'
       toast.error(message);
     },
   });

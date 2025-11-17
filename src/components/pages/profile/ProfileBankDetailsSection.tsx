@@ -29,7 +29,7 @@ const ProfileBankDetailsSection = ({ banks, makeBankAccountDefault, handleDelete
       
       <div className="w-full flex items-center justify-center">
         <CustomButton
-          buttonText="Add New Bank account"
+          buttonText="Add New Bank Account"
           onClick={createNewBankModal}
         />
       </div>
