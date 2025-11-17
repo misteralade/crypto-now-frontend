@@ -1,6 +1,6 @@
 import {axiosPostRequestHandler, axiosGetRequestHandler, axiosPatchRequestHandler} from "./index.ts";
 import type {AuthRequestSchema} from "../types/request.api.types.ts";
-import type {AuthResponse, BaseApiResponse} from "../types/response.payload.types.ts";
+import type { BaseApiResponse} from "../types/response.payload.types.ts";
 
 // import {LoginRequestSchema} from "../schema/auth.schema.ts";
 
@@ -17,8 +17,8 @@ class AuthServiceApi {
     return AuthServiceApi.instance;
   }
   
-  async login(payload: AuthRequestSchema): Promise<AuthResponse> {
-    return await axiosPostRequestHandler("/user/auth/sign-in", payload) as BaseApiResponse<null>;
+  async login(payload: AuthRequestSchema) {
+    return await axiosPostRequestHandler("/user/auth/sign-in", payload) as BaseApiResponse<null | { twoFactorRequired: boolean }>;
   }
   
   async signup(payload: AuthRequestSchema) {
@@ -39,6 +39,10 @@ class AuthServiceApi {
   
   async toggleTwoFactorAuthentication() {
     return await axiosPatchRequestHandler('/user/auth/two-factor-authentication')
+  }
+  
+  async verifyTwoFactorAuthenticationCode(code: string) {
+    return await axiosPostRequestHandler(`/user/auth/two-factor-authentication/verify`, { code }) as BaseApiResponse<null>;
   }
   
   // async activateAccount(token: string) {

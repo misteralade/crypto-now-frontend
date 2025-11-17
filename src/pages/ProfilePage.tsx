@@ -6,7 +6,6 @@ import ProfileBankDetailsSection from "../components/pages/profile/ProfileBankDe
 import ProfileAddressDetailsSection from "../components/pages/profile/ProfileAddressDetailsSection.tsx";
 import CustomButton from "../components/global/Button.tsx";
 import ProfileSecuritySettingsSection from "../components/pages/profile/ProfileSecuritySection.tsx";
-import TwoFactorModal from "../components/pages/profile/TwoFactorModal.tsx";
 import {LoadingSpinner} from "../components/global/LoadingSpinner.tsx";
 import NewBankAccountModal from "../components/pages/profile/modals/NewBankAccountModal.tsx";
 import NewCryptoWalletModal from "../components/pages/profile/modals/NewCryptoWalletModal.tsx";
@@ -18,7 +17,6 @@ const ProfilePage = () => {
     loadingUserProfile,
     allBanks,
     loadingAllBanks,
-    isTwoFactorModalOpen,
     userBankAccounts,
     loadingUserBankAccounts,
     selectedBank,
@@ -35,8 +33,6 @@ const ProfilePage = () => {
     handlePersonalInfoProfileFieldUpdate,
     handleSaveChanges,
     handleEnableTwoFactor,
-    handleTwoFactorConfirm,
-    toggleTwoFactorModal,
     handleNewBankAccountField,
     handleCreateBankAccount,
     toggleShowCreateNewBankAccount,
@@ -143,12 +139,6 @@ const ProfilePage = () => {
           )}
         </div>
       </div>
-      
-      <TwoFactorModal
-        isOpen={isTwoFactorModalOpen}
-        onClose={toggleTwoFactorModal}
-        onConfirm={handleTwoFactorConfirm}
-      />
       
       <NewBankAccountModal
         isOpen={showCreateNewBankAccount}

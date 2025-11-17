@@ -33,7 +33,6 @@ export const useProfilePage = () => {
   const [selectedBank, setSelectedBank] = useState("");
   const [selectedWallet, setSelectedWallet] = useState("");
   
-  const [isTwoFactorModalOpen, setIsTwoFactorModalOpen] = useState(false);
   const [showCreateNewBankAccount, setShowCreateNewBankAccount] = useState(false);
   const [showCreateWallet, setShowCreateWallet] = useState(false);
   
@@ -45,13 +44,6 @@ export const useProfilePage = () => {
   
   const handleEnableTwoFactor = async () => {
     await userToggleTwoFactorAuthenticationMutation.mutateAsync();
-    setIsTwoFactorModalOpen(true);
-  };
-  
-  const handleTwoFactorConfirm = (code: string) => {
-    console.log("Two-factor code:", code);
-    setIsTwoFactorModalOpen(false);
-    // Implement two-factor setup logic here
   };
   
   const handlePersonalInfoProfileFieldUpdate = (field: 'firstName' | 'lastName' | 'phoneNumber' | 'dob' | 'profileImg', value: string) => {
@@ -136,8 +128,6 @@ export const useProfilePage = () => {
     }
   }
   
-  const toggleTwoFactorModal = () => setIsTwoFactorModalOpen(!isTwoFactorModalOpen);
-  
   const toggleShowCreateNewBankAccount = () => setShowCreateNewBankAccount(!showCreateNewBankAccount);
   
   const toggleShowCreateNewWallet = () => setShowCreateWallet(!showCreateWallet);
@@ -148,7 +138,6 @@ export const useProfilePage = () => {
     loadingUserProfile,
     allBanks,
     loadingAllBanks,
-    isTwoFactorModalOpen,
     userBankAccounts,
     loadingUserBankAccounts,
     selectedBank,
@@ -165,8 +154,6 @@ export const useProfilePage = () => {
     handlePersonalInfoProfileFieldUpdate,
     handleSaveChanges,
     handleEnableTwoFactor,
-    handleTwoFactorConfirm,
-    toggleTwoFactorModal,
     handleNewBankAccountField,
     handleCreateBankAccount,
     toggleShowCreateNewBankAccount,

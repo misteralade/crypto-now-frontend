@@ -51,7 +51,7 @@ export const useTransactionQuery = () => {
 
       return null;
     },
-    enabled: !!(store.getState() as RootState)?.transaction?.dashboard?.searchUserTransactions && !!matchRoute({ to: ROUTES.HOMEPAGE }),
+    enabled: !!(store.getState() as RootState)?.transaction?.dashboard?.searchUserTransactions && !!matchRoute({ to: ROUTES.DASHBOARD }),
   });
   
   // Return Transaction Summary
@@ -66,7 +66,7 @@ export const useTransactionQuery = () => {
 
       return null;
     },
-    enabled: !!matchRoute({ to: ROUTES.HOMEPAGE }),
+    enabled: !!matchRoute({ to: ROUTES.DASHBOARD }),
   })
   
   // Get transaction Details

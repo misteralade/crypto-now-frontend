@@ -24,7 +24,7 @@ export const useAuthQuery = () => {
       if (success) {
         toast.success(message);
         setTimeout(() => {
-          window.location.href = ROUTES.HOMEPAGE;
+          window.location.href = ROUTES.DASHBOARD;
         }, 3000);
       } else {
         toast.error(message || "Login failed");
@@ -81,6 +81,28 @@ export const useAuthQuery = () => {
       toast.error(message);
     },
   });
+  
+  const verifyCodeMutation = useMutation({
+    mutationFn: async (code: string) => {
+      toast.loading(`Updating Two-Factor authentication...`);
+      return await authServiceApi.verifyTwoFactorAuthenticationCode(code);
+    },
+    onSuccess: ({ success, message }) => {
+      toast.dismiss();
+      if (success) {
+        toast.success(message);
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.USER.GET_PROFILE] });
+      } else {
+        toast.error(message || "Failed to verify your code");
+      }
+    },
+    onError: ( error: AxiosServerError ) => {
+      toast.dismiss();
+      const { response } = error;
+      const message = response ? response.data.error.message : 'Failed to verify your code'
+      toast.error(message);
+    },
+  })
 
   return {
     // Values
@@ -90,5 +112,6 @@ export const useAuthQuery = () => {
     loginMutation,
     userRequestPasswordChangeMutation,
     userToggleTwoFactorAuthenticationMutation,
+    verifyCodeMutation,
   };
 };

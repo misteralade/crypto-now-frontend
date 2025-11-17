@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import {useState, useRef, Fragment} from "react";
 import { Menu } from "lucide-react";
 import Button from "../Button.tsx";
 import Logo from "../../../assets/logo/logo.svg";
@@ -9,7 +9,7 @@ import NavbarDropdown from "./NavbarDropdown.tsx";
 import { ChevronDown } from "lucide-react";
 import type { DropItem } from "../../../types/navbar.types.ts";
 import ProfileNav from "./ProfileNav.tsx";
-import { LOCAL_STORAGE_KEYS } from "../../../util/constants.util.ts";
+import {LOCAL_STORAGE_KEYS, ROUTES} from "../../../util/constants.util.ts";
 import { handleLogout } from "../../../util/index.util.ts";
 import useClickOutside from "../../../hooks/useClickOutside.ts";
 import { useLocation } from "@tanstack/react-router";
@@ -55,7 +55,7 @@ export default function Navbar() {
           {/* Navigation Links */}
           <div className="hidden xl:flex items-center space-x-8">
             <a
-              href={"/"}
+              href={ROUTES.HOMEPAGE}
               className="text-gray-700 hover:text-gray-900 font-medium"
             >
               Home
@@ -76,7 +76,7 @@ export default function Navbar() {
                 </>
               ) : (
                 <a
-                  href="/sign-up"
+                  href={ROUTES.SIGNUP}
                   className="text-gray-700 hover:text-gray-900 font-medium"
                 >
                   Finish setup to start trading
@@ -85,13 +85,13 @@ export default function Navbar() {
             </div>
 
             <a
-              href="/about"
+              href={ROUTES.ABOUT}
               className="text-gray-700 hover:text-gray-900 font-medium"
             >
               About
             </a>
             <a
-              href="/contact"
+              href={ROUTES.CONTACT}
               className="text-gray-700 hover:text-gray-900 font-medium"
             >
               Contact
@@ -101,9 +101,9 @@ export default function Navbar() {
           {/* Auth Buttons */}
           {isLoggedIn ? (
             <>
-              {location.pathname === "/" ? (
+              {location.pathname === ROUTES.HOMEPAGE ? (
                 <a
-                  href={"/dashboard"}
+                  href={ROUTES.DASHBOARD}
                   className="text-gray-700 hover:text-gray-900 font-medium hidden xl:block"
                 >
                   Dashboard
@@ -118,12 +118,12 @@ export default function Navbar() {
             <>
               <div className="hidden xl:flex items-center space-x-4">
                 <Link
-                  to="/sign-in"
+                  to={ROUTES.SIGNIN}
                   className="text-gray-700 hover:text-gray-900 font-medium"
                 >
                   Login
                 </Link>
-                <Link to={`/sign-up`}>
+                <Link to={ROUTES.SIGNUP}>
                   <Button buttonText="Create Account" />
                 </Link>
               </div>
@@ -186,25 +186,25 @@ export default function Navbar() {
 
           <div className="flex flex-col space-y-4">
             {isLoggedIn && (
-              <>
+              <Fragment>
                 <a
-                  href={"/dashboard"}
+                  href={ROUTES.DASHBOARD}
                   onClick={handleMenuItemClick}
                   className="text-gray-700 hover:text-gray-900 font-medium py-2 border-b border-gray-100"
                 >
                   Dashboard
                 </a>
                 <a
-                  href={"/Profile"}
+                  href={ROUTES.PROFILE}
                   onClick={handleMenuItemClick}
                   className="text-gray-700 hover:text-gray-900 font-medium py-2 border-b border-gray-100"
                 >
                   Profile
                 </a>
-              </>
+              </Fragment>
             )}
             <a
-              href="/contact"
+              href={ROUTES.CONTACT}
               onClick={handleMenuItemClick}
               className="text-gray-700 hover:text-gray-900 font-medium py-2 border-b border-gray-100"
             >
@@ -225,11 +225,11 @@ export default function Navbar() {
             ) : (
               <div className="absolute bottom-5 space-y-1 w-4/5">
                 <button className="text-gray-700 hover:text-gray-900 font-medium py-2 w-full text-left border border-gray-300 rounded-3xl px-4 hover:bg-gray-50 transition-colors duration-200 my-3">
-                  <Link to="/sign-in">Login</Link>
+                  <Link to={ROUTES.SIGNIN}>Login</Link>
                 </button>
 
                 <div className="w-full mt-3">
-                  <Link to={`/sign-up`}>
+                  <Link to={ROUTES.SIGNUP}>
                     <Button className="w-full" buttonText="Create Account" />
                   </Link>
                 </div>

@@ -13,7 +13,6 @@ import { Route as VerifyAccountRouteImport } from './routes/verify-account'
 import { Route as TradeCryptoRouteImport } from './routes/trade-crypto'
 import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
 import { Route as SignUpRouteImport } from './routes/sign-up'
-import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
@@ -22,7 +21,9 @@ import { Route as AmlPolicyRouteImport } from './routes/aml-policy'
 import { Route as ActivationResultRouteImport } from './routes/activation-result'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SignInIndexRouteImport } from './routes/sign-in/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
+import { Route as SignInVerifyRouteImport } from './routes/sign-in/verify'
 import { Route as OauthSuccessRouteImport } from './routes/oauth/success'
 import { Route as OauthErrorRouteImport } from './routes/oauth/error'
 import { Route as DashboardProfileRouteImport } from './routes/dashboard/profile'
@@ -46,11 +47,6 @@ const TermsOfServiceRoute = TermsOfServiceRouteImport.update({
 const SignUpRoute = SignUpRouteImport.update({
   id: '/sign-up',
   path: '/sign-up',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SignInRoute = SignInRouteImport.update({
-  id: '/sign-in',
-  path: '/sign-in',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -93,9 +89,19 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SignInIndexRoute = SignInIndexRouteImport.update({
+  id: '/sign-in/',
+  path: '/sign-in/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardIndexRoute = DashboardIndexRouteImport.update({
   id: '/dashboard/',
   path: '/dashboard/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignInVerifyRoute = SignInVerifyRouteImport.update({
+  id: '/sign-in/verify',
+  path: '/sign-in/verify',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OauthSuccessRoute = OauthSuccessRouteImport.update({
@@ -128,7 +134,6 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/trade-crypto': typeof TradeCryptoRoute
@@ -136,7 +141,9 @@ export interface FileRoutesByFullPath {
   '/dashboard/profile': typeof DashboardProfileRoute
   '/oauth/error': typeof OauthErrorRoute
   '/oauth/success': typeof OauthSuccessRoute
+  '/sign-in/verify': typeof SignInVerifyRoute
   '/dashboard': typeof DashboardIndexRoute
+  '/sign-in': typeof SignInIndexRoute
   '/dashboard/transactions/$id': typeof DashboardTransactionsIdRoute
 }
 export interface FileRoutesByTo {
@@ -148,7 +155,6 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/trade-crypto': typeof TradeCryptoRoute
@@ -156,7 +162,9 @@ export interface FileRoutesByTo {
   '/dashboard/profile': typeof DashboardProfileRoute
   '/oauth/error': typeof OauthErrorRoute
   '/oauth/success': typeof OauthSuccessRoute
+  '/sign-in/verify': typeof SignInVerifyRoute
   '/dashboard': typeof DashboardIndexRoute
+  '/sign-in': typeof SignInIndexRoute
   '/dashboard/transactions/$id': typeof DashboardTransactionsIdRoute
 }
 export interface FileRoutesById {
@@ -169,7 +177,6 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/trade-crypto': typeof TradeCryptoRoute
@@ -177,7 +184,9 @@ export interface FileRoutesById {
   '/dashboard/profile': typeof DashboardProfileRoute
   '/oauth/error': typeof OauthErrorRoute
   '/oauth/success': typeof OauthSuccessRoute
+  '/sign-in/verify': typeof SignInVerifyRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/sign-in/': typeof SignInIndexRoute
   '/dashboard/transactions/$id': typeof DashboardTransactionsIdRoute
 }
 export interface FileRouteTypes {
@@ -191,7 +200,6 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/privacy-policy'
     | '/reset-password'
-    | '/sign-in'
     | '/sign-up'
     | '/terms-of-service'
     | '/trade-crypto'
@@ -199,7 +207,9 @@ export interface FileRouteTypes {
     | '/dashboard/profile'
     | '/oauth/error'
     | '/oauth/success'
+    | '/sign-in/verify'
     | '/dashboard'
+    | '/sign-in'
     | '/dashboard/transactions/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -211,7 +221,6 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/privacy-policy'
     | '/reset-password'
-    | '/sign-in'
     | '/sign-up'
     | '/terms-of-service'
     | '/trade-crypto'
@@ -219,7 +228,9 @@ export interface FileRouteTypes {
     | '/dashboard/profile'
     | '/oauth/error'
     | '/oauth/success'
+    | '/sign-in/verify'
     | '/dashboard'
+    | '/sign-in'
     | '/dashboard/transactions/$id'
   id:
     | '__root__'
@@ -231,7 +242,6 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/privacy-policy'
     | '/reset-password'
-    | '/sign-in'
     | '/sign-up'
     | '/terms-of-service'
     | '/trade-crypto'
@@ -239,7 +249,9 @@ export interface FileRouteTypes {
     | '/dashboard/profile'
     | '/oauth/error'
     | '/oauth/success'
+    | '/sign-in/verify'
     | '/dashboard/'
+    | '/sign-in/'
     | '/dashboard/transactions/$id'
   fileRoutesById: FileRoutesById
 }
@@ -252,7 +264,6 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
-  SignInRoute: typeof SignInRoute
   SignUpRoute: typeof SignUpRoute
   TermsOfServiceRoute: typeof TermsOfServiceRoute
   TradeCryptoRoute: typeof TradeCryptoRoute
@@ -260,7 +271,9 @@ export interface RootRouteChildren {
   DashboardProfileRoute: typeof DashboardProfileRoute
   OauthErrorRoute: typeof OauthErrorRoute
   OauthSuccessRoute: typeof OauthSuccessRoute
+  SignInVerifyRoute: typeof SignInVerifyRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
+  SignInIndexRoute: typeof SignInIndexRoute
   DashboardTransactionsIdRoute: typeof DashboardTransactionsIdRoute
 }
 
@@ -292,13 +305,6 @@ declare module '@tanstack/react-router' {
       path: '/sign-up'
       fullPath: '/sign-up'
       preLoaderRoute: typeof SignUpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sign-in': {
-      id: '/sign-in'
-      path: '/sign-in'
-      fullPath: '/sign-in'
-      preLoaderRoute: typeof SignInRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -357,11 +363,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sign-in/': {
+      id: '/sign-in/'
+      path: '/sign-in'
+      fullPath: '/sign-in'
+      preLoaderRoute: typeof SignInIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard/': {
       id: '/dashboard/'
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sign-in/verify': {
+      id: '/sign-in/verify'
+      path: '/sign-in/verify'
+      fullPath: '/sign-in/verify'
+      preLoaderRoute: typeof SignInVerifyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/oauth/success': {
@@ -404,7 +424,6 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
-  SignInRoute: SignInRoute,
   SignUpRoute: SignUpRoute,
   TermsOfServiceRoute: TermsOfServiceRoute,
   TradeCryptoRoute: TradeCryptoRoute,
@@ -412,7 +431,9 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardProfileRoute: DashboardProfileRoute,
   OauthErrorRoute: OauthErrorRoute,
   OauthSuccessRoute: OauthSuccessRoute,
+  SignInVerifyRoute: SignInVerifyRoute,
   DashboardIndexRoute: DashboardIndexRoute,
+  SignInIndexRoute: SignInIndexRoute,
   DashboardTransactionsIdRoute: DashboardTransactionsIdRoute,
 }
 export const routeTree = rootRouteImport

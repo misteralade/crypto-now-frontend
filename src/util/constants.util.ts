@@ -6,12 +6,18 @@ export const TIME_IN_MILLISECONDS = {
 }
 
 export const ROUTES = {
-  LOGIN: "/",
-  HOMEPAGE: "/dashboard",
+  HOMEPAGE: "/",
+  SIGNIN: "/sign-in",
+  SIGNUP: "/sign-up",
+  TWO_FACTOR_VERIFY: "/sign-in/verify",
+  DASHBOARD: "/dashboard",
   ORGANIZATIONS: "/dashboard/organizations",
-  TRADE_CRYPTO: "/trade-crypto",
   TRANSACTION_DETAILS: '/dashboard/transactions/$id',
   PROFILE: '/dashboard/profile',
+  TRADE_CRYPTO: "/trade-crypto",
+  
+  ABOUT: "/about",
+  CONTACT: "/contact",
 }
 
 export const QUERY_KEYS = {

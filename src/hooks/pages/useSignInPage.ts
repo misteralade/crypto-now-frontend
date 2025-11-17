@@ -1,8 +1,9 @@
 import { type FormEvent, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import type { AuthResponse } from "../../types/response.payload.types.ts";
 import { authServiceApi } from "../../api/auth.api.ts";
 import { BASIC } from "../../config/index.config.ts";
+import {ROUTES} from "../../util/constants.util.ts";
+import {toast} from "react-toastify";
 
 export const useSignInPage = () => {
   const navigate = useNavigate();
@@ -26,7 +27,7 @@ export const useSignInPage = () => {
     }
 
     try {
-      const { success, message }: AuthResponse = await authServiceApi.login({
+      const { success, message, data } = await authServiceApi.login({
         email,
         password,
         keepLoggedIn,
@@ -35,7 +36,10 @@ export const useSignInPage = () => {
       if (!success) {
         setError(message || "Login failed. Please check your credentials.");
       } else {
-        navigate({ to: "/dashboard" });
+        toast.success(message);
+        setTimeout(() => {
+          navigate({ to: data ? ROUTES.TWO_FACTOR_VERIFY : ROUTES.DASHBOARD });
+        }, 3000)
       }
     } catch (error: any) {
       const apiMessage =
