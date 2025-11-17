@@ -36,6 +36,12 @@ export type SupportedCryptoOrCurrencyResponse = {
   code: string;
   symbol: string;
   logoUrl: string;
+  buyRate: string;
+  sellRate: string;
+  minTransactionLimit: string;
+  maxTransactionLimit: string;
+  minTradeAmountForAnonymous: string;
+  maxTradeAmountForAnonymous: string;
 }
 
 export type SupportedExchangeRateResponse = {

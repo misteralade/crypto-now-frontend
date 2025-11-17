@@ -29,3 +29,12 @@ export const extractErrorMessage = (error: AxiosServerError): string | undefined
   const { response } = error;
   return response ? response?.data?.error?.message || response?.data?.message : undefined
 }
+
+export const formatCurrency = (amount: number, currency?: string) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: currency || 'NGN',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(amount)
+}

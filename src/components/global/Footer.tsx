@@ -17,6 +17,11 @@ export default function Footer() {
                 </a>
               </li>
               <li>
+                <a href={ROUTES.RATES} className="text-gray-600 hover:text-gray-900">
+                  Rates
+                </a>
+              </li>
+              <li>
                 <a href={`#${ROUTES.IN_PAGE_ROUTES.FAQ}`} className="text-gray-600 hover:text-gray-900">
                   FAQs
                 </a>

@@ -14,6 +14,7 @@ import { Route as TradeCryptoRouteImport } from './routes/trade-crypto'
 import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
 import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RatesRouteImport } from './routes/rates'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as ContactRouteImport } from './routes/contact'
@@ -52,6 +53,11 @@ const SignUpRoute = SignUpRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RatesRoute = RatesRouteImport.update({
+  id: '/rates',
+  path: '/rates',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
@@ -133,6 +139,7 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
+  '/rates': typeof RatesRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sign-up': typeof SignUpRoute
   '/terms-of-service': typeof TermsOfServiceRoute
@@ -154,6 +161,7 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
+  '/rates': typeof RatesRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sign-up': typeof SignUpRoute
   '/terms-of-service': typeof TermsOfServiceRoute
@@ -176,6 +184,7 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
+  '/rates': typeof RatesRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sign-up': typeof SignUpRoute
   '/terms-of-service': typeof TermsOfServiceRoute
@@ -199,6 +208,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/forgot-password'
     | '/privacy-policy'
+    | '/rates'
     | '/reset-password'
     | '/sign-up'
     | '/terms-of-service'
@@ -220,6 +230,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/forgot-password'
     | '/privacy-policy'
+    | '/rates'
     | '/reset-password'
     | '/sign-up'
     | '/terms-of-service'
@@ -241,6 +252,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/forgot-password'
     | '/privacy-policy'
+    | '/rates'
     | '/reset-password'
     | '/sign-up'
     | '/terms-of-service'
@@ -263,6 +275,7 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
+  RatesRoute: typeof RatesRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignUpRoute: typeof SignUpRoute
   TermsOfServiceRoute: typeof TermsOfServiceRoute
@@ -312,6 +325,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rates': {
+      id: '/rates'
+      path: '/rates'
+      fullPath: '/rates'
+      preLoaderRoute: typeof RatesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy-policy': {
@@ -423,6 +443,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
+  RatesRoute: RatesRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SignUpRoute: SignUpRoute,
   TermsOfServiceRoute: TermsOfServiceRoute,
