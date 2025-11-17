@@ -6,6 +6,7 @@ import { useState } from "react";
 import { handleLogout } from "../../../util/index.util.ts";
 import { useUserQuery } from "../../../queries/user.query.ts";
 import LogoutIcon from "../../../assets/icons/logout.svg";
+import {ROUTES} from "../../../util/constants.util.ts";
 
 export default function ProfileNav() {
   const { userProfileData, loadingUserProfile } = useUserQuery();
@@ -57,7 +58,7 @@ export default function ProfileNav() {
                             shadow-xl right-0 space-y-3 py-5 px-4 min-w-[200px] z-50`}
             >
               <div>
-                <a href={`/profile`}>Profile</a>
+                <a href={ROUTES.PROFILE}>Profile</a>
               </div>
 
               <div className={`flex items-center gap-2`} onClick={handleLogout}>

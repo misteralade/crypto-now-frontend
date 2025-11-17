@@ -1,5 +1,5 @@
 import { ChevronDown } from "lucide-react";
-import { useState, useId, useRef, useEffect } from "react";
+import { useState, useId, useRef, useEffect, type KeyboardEvent } from "react";
 import type { AllBanksResponse } from "../../types/response.payload.types.ts";
 
 interface BankSelectorProps {
@@ -67,7 +67,7 @@ const BankSelector = ({
     setIsOpen(true);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+  const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (!isOpen) return;
 
     if (e.key === "ArrowDown") {

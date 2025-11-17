@@ -1,10 +1,10 @@
-import CustomButton from "../../components/global/Button.tsx";
+import CustomButton from "../../global/Button.tsx";
 interface ProfileSecuritySettingsSectionProps {
     onEnableTwoFactor: () => void
     onChangePassword: () => void
 }
 
-export default function ProfileSecuritySettingsSection({ onEnableTwoFactor, onChangePassword }: ProfileSecuritySettingsSectionProps) {
+const ProfileSecuritySettingsSection = ({ onEnableTwoFactor, onChangePassword }: ProfileSecuritySettingsSectionProps) => {
     return (
         <div className="space-y-6">
             <h2 className="text-2xl font-semibold text-gray-900">Security settings</h2>
@@ -13,10 +13,12 @@ export default function ProfileSecuritySettingsSection({ onEnableTwoFactor, onCh
                     <span className="text-base text-gray-900">Two-factor authentication</span>
                     <CustomButton buttonText={`Enable`} onClick={onEnableTwoFactor} />
                 </div>
-                <button onClick={onChangePassword} className="text-lg text-primary transition-colors">
+                <button onClick={onChangePassword} className="text-lg text-primary transition-colors hover:cursor-pointer">
                     Change password
                 </button>
             </div>
         </div>
     )
 }
+
+export default ProfileSecuritySettingsSection

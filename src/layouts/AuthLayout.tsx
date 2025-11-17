@@ -2,13 +2,7 @@ import { Link } from "@tanstack/react-router";
 import AuthBg from "../assets/backgrounds/auth-bg.webp";
 import Logo from "../assets/logo/logo.svg";
 
-export default function AuthLayout({
-  children,
-  layoutType,
-}: {
-  children: any;
-  layoutType: number;
-}) {
+const AuthLayout = ({ children, layoutType }: { children: any; layoutType: number; }) => {
   return (
     <div className="min-h-screen flex">
       {layoutType === 1 ? (
@@ -53,3 +47,5 @@ export default function AuthLayout({
     </div>
   );
 }
+
+export default AuthLayout;

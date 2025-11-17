@@ -1,6 +1,6 @@
 import { Plus } from "lucide-react"
-import {CustomInput} from "../../components/global/CustomInput.tsx";
-import CustomSelector from  "../../components/global/CustomSelector.tsx"
+import {CustomInput} from "../../global/CustomInput.tsx";
+import CustomSelector from "../../global/CustomSelector.tsx"
 
 interface ProfileAddressDetailsSectionProps {
     selectedCoin: string

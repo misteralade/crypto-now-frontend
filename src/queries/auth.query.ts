@@ -1,35 +1,60 @@
 import { useMutation } from "@tanstack/react-query";
-// import type {LoginRequestSchema} from "../schema/auth.schema.ts";
 import {authServiceApi} from "../api/auth.api.ts";
 import {useState} from "react";
 import {toast} from "react-toastify";
 import {ROUTES} from "../util/constants.util.ts";
+import type {AxiosServerError} from "../types/response.payload.types.ts";
 
 export const useAuthQuery = () => {
   const [loggingInLoading, setLoggingInLoading] = useState(false);
 
   const loginMutation = useMutation({
     mutationFn: async (data: any) => {
+      toast.loading("Logging in...");
       setLoggingInLoading(true);
       return await authServiceApi.login(data);
     },
-
-    onError: async (error: Error) => {
+    onSuccess: ({ success, message }) => {
+      toast.dismiss();
+      toast.success("Login successfully.");
       setLoggingInLoading(false);
-      toast.error(error.message);
-    },
-
-    onSuccess: async (result) => {
-      setLoggingInLoading(false);
-      if (result?.success) {
-        toast.success(result?.message);
+      if (success) {
+        toast.success(message);
         setTimeout(() => {
           window.location.href = ROUTES.HOMEPAGE;
         }, 3000);
       } else {
-        toast.error(result?.message || "Login failed");
+        toast.error(message || "Login failed");
       }
-    }
+    },
+    onError: ( error: AxiosServerError ) => {
+      toast.dismiss();
+      setLoggingInLoading(false);
+      const { response } = error;
+      const message = response ? response.data.error.message : 'Failed to initiate password change'
+      toast.error(message);
+    },
+  });
+  
+  const userRequestPasswordChangeMutation = useMutation({
+    mutationFn: async () => {
+      toast.loading(`Request password update...`);
+      return await authServiceApi.changePassword();
+    },
+    onSuccess: ({ success, message }) => {
+      toast.dismiss();
+      if (success) {
+        toast.success(message);
+      } else {
+        toast.error(message || "Failed to change password");
+      }
+    },
+    onError: ( error: AxiosServerError ) => {
+      toast.dismiss();
+      const { response } = error;
+      const message = response ? response.data.error.message : 'Failed to initiate password change'
+      toast.error(message);
+    },
   })
 
   return {
@@ -38,5 +63,6 @@ export const useAuthQuery = () => {
 
     // Functions
     loginMutation,
+    userRequestPasswordChangeMutation,
   };
 };

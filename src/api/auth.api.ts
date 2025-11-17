@@ -1,6 +1,6 @@
 import {axiosPostRequestHandler, axiosGetRequestHandler, axiosPatchRequestHandler} from "./index.ts";
 import type {AuthRequestSchema} from "../types/request.api.types.ts";
-import type { AuthResponse } from "../types/response.payload.types.ts";
+import type {AuthResponse, BaseApiResponse} from "../types/response.payload.types.ts";
 
 // import {LoginRequestSchema} from "../schema/auth.schema.ts";
 
@@ -18,7 +18,7 @@ class AuthServiceApi {
     }
 
     async login(payload: AuthRequestSchema): Promise<AuthResponse> {
-        return await axiosPostRequestHandler("/user/auth/sign-in", payload);
+        return await axiosPostRequestHandler("/user/auth/sign-in", payload) as BaseApiResponse<null>;
     }
 
     async signup(payload: AuthRequestSchema) {
@@ -28,11 +28,15 @@ class AuthServiceApi {
     async forgotPassword(email: string) {
         return await axiosGetRequestHandler(`/user/auth/password-reset/request?email=${email}`);
     }
+    
+    async changePassword() {
+        return await axiosGetRequestHandler(`/user/auth/change-password/request`) as BaseApiResponse<null>;
+    }
 
     async confirmPasswordRequest(token: string, newPassword: string, confirmPassword: string) {
         return await axiosPatchRequestHandler(`/user/auth/password-reset/confirm`, { token, password: newPassword, confirmPassword });
     }
-
+    
     // async activateAccount(token: string) {
     //     return await axiosPatchRequestHandler(`/user/auth/activate?token=${token}`);
     // }

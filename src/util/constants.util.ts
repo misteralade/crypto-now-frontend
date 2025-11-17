@@ -10,7 +10,8 @@ export const ROUTES = {
   HOMEPAGE: "/dashboard",
   ORGANIZATIONS: "/dashboard/organizations",
   TRADE_CRYPTO: "/trade-crypto",
-  TRANSACTION_DETAILS: '/dashboard/transactions/$id'
+  TRANSACTION_DETAILS: '/dashboard/transactions/$id',
+  PROFILE: '/dashboard/profile',
 }
 
 export const QUERY_KEYS = {

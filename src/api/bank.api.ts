@@ -1,4 +1,4 @@
-import { axiosGetRequestHandler, axiosPostRequestHandler } from "./index.ts";
+import {axiosGetRequestHandler, axiosPatchRequestHandler, axiosPostRequestHandler} from "./index.ts";
 import type {
   AllBanksResponse, BaseApiResponse,
   SupportedPlatformBankAccountResponse, UserBanksAPIResponse
@@ -41,6 +41,14 @@ class BankServiceApi {
   
   async createAnonymousUserBankAccount(payload: Record<string, any>) {
     return await axiosPostRequestHandler("/bank/anonymous-user/create", payload) as BaseApiResponse<null>;
+  }
+  
+  async makeBankAccountDefault(id: string) {
+    return await axiosPatchRequestHandler(`/bank/user/${id}/make-default`) as BaseApiResponse<null>
+  }
+  
+  async deleteBankAccount(id: string) {
+    return await axiosPatchRequestHandler(`/bank//user/${id}/delete`) as BaseApiResponse<null>
   }
 }
 

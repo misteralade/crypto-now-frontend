@@ -71,8 +71,11 @@ export type UserBankAccountResponse = {
   id: string;
   bankName: string;
   bankLogo: string;
+  label: string;
+  isDefault: boolean;
   accountNumber: string;
   accountName: string;
+  isDeleted: boolean;
   createdAt: Date;
 }
 // Banks End

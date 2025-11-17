@@ -3,9 +3,12 @@ import {QUERY_KEYS} from "./query.keys.ts";
 import {bankServiceApi} from "../api/bank.api.ts";
 import {toast} from "react-toastify";
 import {type RootState, store} from "../store.ts";
+import {ROUTES} from "../util/constants.util.ts";
+import {useMatchRoute} from "@tanstack/react-router";
 
 export const useBankQuery = () => {
   const queryClient = useQueryClient();
+  const matchRoute = useMatchRoute();
 
   const { data: allBanks, isLoading: loadingAllBanks } = useQuery({
     queryKey: [QUERY_KEYS.BANK.ALL_BANKS],
@@ -44,6 +47,7 @@ export const useBankQuery = () => {
 
       return [];
     },
+    enabled: !!(matchRoute({ to: ROUTES.PROFILE }) || matchRoute({ to: ROUTES.TRADE_CRYPTO })),
   });
 
   const createUserBankAccountMutation = useMutation({
@@ -63,6 +67,7 @@ export const useBankQuery = () => {
         bankId: bank.createBankAccount.bankId,
         accountHolderName: bank.createBankAccount.accountName,
         accountNumber: bank.createBankAccount.accountNumber,
+        isDefault: bank.createBankAccount.isDefault,
       }
       
       if (userEmail) {
@@ -71,17 +76,83 @@ export const useBankQuery = () => {
 
       return bankServiceApi.createUserBankAccount(payload);
     },
-    onSuccess: () => {
+    onSuccess: ({ success, message}) => {
       // Invalidate and refetch user bank accounts after mutation
-      toast.dismiss(QUERY_KEYS.BANK.CREATE_USER_BANK_ACCOUNT);
-      toast.success("Account created successfully.");
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.BANK.USER_BANK_ACCOUNTS]
-      });
+      if (success) {
+        toast.dismiss(QUERY_KEYS.BANK.CREATE_USER_BANK_ACCOUNT);
+        toast.success(message || 'Account created successfully.');
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.BANK.USER_BANK_ACCOUNTS]
+        });
+      }
+      
+      return { success, message };
     },
     onError: () => {
       toast.dismiss(QUERY_KEYS.BANK.CREATE_USER_BANK_ACCOUNT);
       toast.error("Failed to create bank account. Please try again.", { toastId: QUERY_KEYS.BANK.CREATE_USER_BANK_ACCOUNT });
+    }
+  });
+  
+  const updateDefaultBankAccountMutation = useMutation({
+    mutationKey: [QUERY_KEYS.BANK.UPDATE_DEFAULT_BANK_ACCOUNT],
+    mutationFn: async () => {
+      toast.loading(`Making bank account a default...`)
+      const rootState = store.getState() as RootState;
+      const id = rootState.bank.update.selectedBankAccountId;
+      
+      if (!id) {
+        throw new Error(`No bank selected`)
+      }
+      
+      return await bankServiceApi.makeBankAccountDefault(id);
+    },
+    onSuccess: ({ success, message}) => {
+      // Invalidate and refetch user bank accounts after mutation
+      if (success) {
+        toast.dismiss(QUERY_KEYS.BANK.CREATE_USER_BANK_ACCOUNT);
+        toast.success(message || 'Default bank account updated successfully.');
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.BANK.USER_BANK_ACCOUNTS]
+        });
+      }
+      
+      return { success, message };
+    },
+    onError: () => {
+      toast.dismiss(QUERY_KEYS.BANK.CREATE_USER_BANK_ACCOUNT);
+      toast.error("Failed to update bank account default. Please try again.", { toastId: QUERY_KEYS.BANK.CREATE_USER_BANK_ACCOUNT });
+    }
+  });
+  
+  const deleteBankAccountMutation = useMutation({
+    mutationKey: [QUERY_KEYS.BANK.UPDATE_DEFAULT_BANK_ACCOUNT],
+    mutationFn: async () => {
+      toast.loading(`Deleting bank account...`)
+      const rootState = store.getState() as RootState;
+      const id = rootState.bank.update.selectedBankAccountId;
+      
+      if (!id) {
+        throw new Error(`No bank selected`)
+      }
+      
+      return await bankServiceApi.deleteBankAccount(id);
+    },
+    onSuccess: ({ success, message}) => {
+      // Invalidate and refetch user bank accounts after mutation
+      if (success) {
+        toast.dismiss(QUERY_KEYS.BANK.CREATE_USER_BANK_ACCOUNT);
+        toast.success(message || 'Bank account successfully deleted.');
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.BANK.USER_BANK_ACCOUNTS]
+        });
+      }
+      
+      return { success, message };
+    },
+    onError: () => {
+      toast.dismiss(QUERY_KEYS.BANK.CREATE_USER_BANK_ACCOUNT);
+      toast.error("Failed to delete bank account. Please try again.", { toastId: QUERY_KEYS.BANK.CREATE_USER_BANK_ACCOUNT });
     }
   });
 
@@ -95,5 +166,7 @@ export const useBankQuery = () => {
     // Functions
     createUserBankAccountMutation,
     loadingUserBankAccounts,
+    updateDefaultBankAccountMutation,
+    deleteBankAccountMutation,
   };
 };
