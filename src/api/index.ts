@@ -37,7 +37,7 @@ API_KIT.interceptors.response.use(
     if (axios.isAxiosError(error)) {
       if (error.response?.data?.message?.toLowerCase() === "jwt token error") {
         setTimeout(() => {
-          window.location.href = ROUTES.LOGIN;
+          window.location.href = ROUTES.SIGNIN;
         }, 3000);
       }
     }
