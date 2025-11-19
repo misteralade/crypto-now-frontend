@@ -4,6 +4,8 @@ import type { TransactionAction } from "../schemas/enum.schema.ts";
 
 export interface StandardizedServerError {
   success: false;
+  message: string;
+  data: any;
   error: {
     code: string;
     message: string;
@@ -34,6 +36,12 @@ export type SupportedCryptoOrCurrencyResponse = {
   code: string;
   symbol: string;
   logoUrl: string;
+  buyRate: string;
+  sellRate: string;
+  minTransactionLimit: string;
+  maxTransactionLimit: string;
+  minTradeAmountForAnonymous: string;
+  maxTradeAmountForAnonymous: string;
 }
 
 export type SupportedExchangeRateResponse = {
@@ -71,8 +79,11 @@ export type UserBankAccountResponse = {
   id: string;
   bankName: string;
   bankLogo: string;
+  label: string;
+  isDefault: boolean;
   accountNumber: string;
   accountName: string;
+  isDeleted: boolean;
   createdAt: Date;
 }
 // Banks End
@@ -88,6 +99,7 @@ export type UserCryptoWalletResponse = {
   isPrimary: boolean;
   isVerified: boolean;
   createdAt: Date;
+  cryptocurrency: CryptoCurrencyResponseEntity | undefined;
 }
 
 export type UserProfilePayload = {
@@ -111,6 +123,7 @@ export type GetUserProfileResponse = {
   id: string;
   email: string;
   createdAt: Date;
+  twoFactorEnabled: boolean;
   profile: UserProfilePayload;
 }
 

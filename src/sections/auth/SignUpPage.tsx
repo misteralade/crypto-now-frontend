@@ -3,6 +3,7 @@ import AuthLayout from "../../layouts/AuthLayout";
 import {Link} from "@tanstack/react-router";
 import OtpSent from "./forgot-password/OtpSent.tsx";
 import { useSignUpPage } from "../../hooks/pages/useSignUpPage.ts";
+import {ROUTES} from "../../util/constants.util.ts";
 
 export default function SignUpPage() {
  const {
@@ -136,7 +137,7 @@ export default function SignUpPage() {
           <button
             type="button"
             onClick={handleGoogleSignUp}
-            className="w-full h-[52px] flex items-center justify-center px-4 py-3 border border-[#E5E7EB] rounded-[26px] shadow-sm bg-white text-[16px] font-medium text-[#374151] hover:bg-[#F9FAFB] transition-colors duration-200"
+            className="w-full h-[52px] flex items-center justify-center px-4 py-3 border border-[#E5E7EB] rounded-[26px] shadow-sm bg-white text-[16px] font-medium text-[#374151] hover:bg-[#F9FAFB] transition-colors duration-200 hover:cursor-pointer"
           >
             <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
               <path
@@ -163,7 +164,7 @@ export default function SignUpPage() {
           <p className="text-center text-[14px] leading-[20px] text-[#6B7280] pt-2">
             Already have an account?{""}
             <Link
-              to="/sign-in"
+              to={ROUTES.SIGNIN}
               className="font-semibold text-[#1E1B4B] hover:text-[#2D2A5A] underline transition-colors duration-200"
             >
               Sign in

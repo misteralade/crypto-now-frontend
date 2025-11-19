@@ -3,6 +3,7 @@ import {ArrowLeft} from "lucide-react";
 import AuthLayout from "../../../layouts/AuthLayout.tsx";
 import {useNavigate} from "@tanstack/react-router";
 import CustomButton from "../../../components/global/Button.tsx";
+import {ROUTES} from "../../../util/constants.util.ts";
 
 interface ForgotPasswordLayoutProp{
     children: ReactNode;
@@ -52,7 +53,7 @@ export default function ForgotPasswordLayout({children, loading, icon, heading, 
                 <div className="mt-5">
                     <button
                         type="button"
-                        onClick={() =>  navigate({ to: '/sign-in' })}
+                        onClick={() =>  navigate({ to: ROUTES.SIGNIN })}
                         className="inline-flex items-center text-[16px] font-medium text-[#6B7280] cursor-pointer hover:text-[#1E1B4B] transition-colors duration-200"
                     >
                         <ArrowLeft className="mr-2" size={20} />

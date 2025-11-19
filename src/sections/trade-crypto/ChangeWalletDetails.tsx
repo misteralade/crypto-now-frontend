@@ -4,16 +4,13 @@ import { CustomInput } from "../../components/global/CustomInput.tsx"
 import { CustomSelect } from "../../components/global/CustomSelect.tsx"
 import { setUserCreateCrypto } from "../../redux/crypto.slice.ts"
 import {type RootState, store} from "../../store.ts";
+import {cryptoNetworkTypes} from "../../util/constants.util.ts";
 
 interface CryptoWalletDetailsProps {
   onConfirm: () => void
   onGoBack: () => void
   canGoBack?: boolean
 }
-
-const networkTypes = [
-  "BEP20", "ERC20", "TRC20", "BTC", "SOLANA"
-]
 
 
 // const networkTypes = [
@@ -60,7 +57,7 @@ const ChangeCryptoWalletDetails = ({ onConfirm, onGoBack, canGoBack = true }: Cr
 
       <div className="space-y-7">
         <CustomInput
-          label="Wallet label"
+          label="Wallet nickname"
           placeholder="e.g My USDT Wallet"
           value={walletLabel}
           onChange={(e) => setWalletLabel(e.target.value)}
@@ -77,7 +74,7 @@ const ChangeCryptoWalletDetails = ({ onConfirm, onGoBack, canGoBack = true }: Cr
         <CustomSelect
           label="Network type"
           placeholder="Select network"
-          options={networkTypes}
+          options={cryptoNetworkTypes}
           value={network}
           onValueChange={setNetwork}
         />

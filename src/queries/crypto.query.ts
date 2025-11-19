@@ -3,10 +3,14 @@ import {cryptoServiceApi} from "../api/crypto.api.ts";
 import {QUERY_KEYS} from "./query.keys.ts";
 import {type RootState, store} from "../store.ts";
 import {toast} from "react-toastify";
-import {SESSION_STORAGE_KEYS} from "../util/constants.util.ts";
+import {ROUTES, SESSION_STORAGE_KEYS} from "../util/constants.util.ts";
+import {useMatchRoute} from "@tanstack/react-router";
+import type {AxiosServerError} from "../types/response.payload.types.ts";
+import {extractErrorMessage} from "../util/index.util.ts";
 
 export const useCryptoQuery = () => {
   const queryClient = useQueryClient();
+  const matchRoute = useMatchRoute();
 
   const { data: supportedCryptoCurrencies, isLoading: loadingSupportedCryptocurrencies } = useQuery({
     queryKey: [QUERY_KEYS.CRYPTO.SUPPORTED_CRYPTO],
@@ -70,6 +74,20 @@ export const useCryptoQuery = () => {
     },
     enabled: !!(store.getState() as RootState).crypto.tradeCrypto.selectedCryptoId && !!sessionStorage.getItem(SESSION_STORAGE_KEYS.SESSION_ID), // Only run this query if selectedCryptoId and userId are available
   });
+  
+  const { data: allUserCryptoWallets, isLoading: loadingAllUserCryptoWallets } = useQuery({
+    queryKey: [QUERY_KEYS.CRYPTO.GET_USER_ALL_CRYPTO_WALLETS, (store.getState() as RootState).crypto.tradeCrypto.selectedCryptoId],
+    queryFn: async () => {
+      const { data, success } = await cryptoServiceApi.getAllUserCryptoWallets();
+
+      if (success) {
+        return data;
+      }
+
+      return [];
+    },
+    enabled: !!matchRoute({ to: ROUTES.PROFILE })
+  });
 
   const createUserCryptoWalletMutation = useMutation({
     mutationKey: [QUERY_KEYS.CRYPTO.USER_CREATE_CRYPTO_WALLET],
@@ -93,19 +111,105 @@ export const useCryptoQuery = () => {
 
       return cryptoServiceApi.userCreateCryptoWallet(rootState.crypto.tradeCrypto.selectedCryptoId, createCryptoPayload);
     },
-    onSuccess: () => {
-      // Invalidate and refetch user crypto wallets after mutation
-      toast.dismiss(QUERY_KEYS.CRYPTO.USER_CREATE_CRYPTO_WALLET);
-      toast.success("Crypto wallet created successfully.");
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.CRYPTO.GET_USER_CRYPTO_WALLETS]
-      });
+    onSuccess: ( { success, message }) => {
+      toast.dismiss();
+      if (success) {
+        toast.success(message);
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.CRYPTO.GET_USER_ALL_CRYPTO_WALLETS]
+        });
+      } else {
+        toast.error(message);
+      }
     },
-    onError: () => {
-      toast.dismiss(QUERY_KEYS.CRYPTO.USER_CREATE_CRYPTO_WALLET);
-      toast.error("Failed to create crypto wallet. Please try again.", { toastId: QUERY_KEYS.CRYPTO.USER_CREATE_CRYPTO_WALLET });
-    }
-  })
+    onError: ( error: AxiosServerError ) => {
+      toast.dismiss();
+      const message = extractErrorMessage(error) || 'Failed to create crypto wallet. Please try again."'
+      toast.error(message);
+    },
+  });
+  
+  const createUserWalletMutation = useMutation(({
+    mutationKey: [QUERY_KEYS.CRYPTO.USER_CREATE_CRYPTO_WALLET],
+    mutationFn: async () => {
+      toast.loading("Creating crypto wallet...", { toastId: QUERY_KEYS.CRYPTO.USER_CREATE_CRYPTO_WALLET });
+      const rootState = store.getState() as RootState;
+      
+      const payload = rootState.crypto.profile.createWallet;
+      const cryptoId = payload.cryptoId || '';
+      return await cryptoServiceApi.userCreateCryptoWallet(cryptoId, payload);
+    },
+    onSuccess: ( { success, message }) => {
+      toast.dismiss();
+      if (success) {
+        toast.success(message);
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.CRYPTO.GET_USER_ALL_CRYPTO_WALLETS]
+        });
+      } else {
+        toast.error(message);
+      }
+    },
+    onError: ( error: AxiosServerError ) => {
+      toast.dismiss();
+      const message = extractErrorMessage(error) || 'Failed to create crypto wallet. Please try again."'
+      toast.error(message);
+    },
+  }));
+  
+  const makeWalletPrimaryMutation = useMutation({
+    mutationKey: [QUERY_KEYS.CRYPTO.USER_MAKE_WALLET_PRIMARY],
+    mutationFn: async () => {
+      toast.loading("Making wallet primary...")
+      const rootState = store.getState() as RootState;
+      const id = rootState.crypto.profile.update.walletId;
+      
+      return await cryptoServiceApi.userMakeWalletPrimary(id || '');
+    },
+    onSuccess: ( { success, message }) => {
+      toast.dismiss();
+      if (success) {
+        toast.success(message);
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.CRYPTO.GET_USER_ALL_CRYPTO_WALLETS]
+        });
+      } else {
+        toast.error(message);
+      }
+    },
+    onError: ( error: AxiosServerError ) => {
+      toast.dismiss();
+      const message = extractErrorMessage(error) || 'Failed to make primary wallet'
+      toast.error(message);
+    },
+  });
+  
+  const deleteUserWalletMutation = useMutation({
+    mutationKey: [QUERY_KEYS.CRYPTO.DELETE_WALLET],
+    mutationFn: async () => {
+      toast.loading("Making wallet primary...")
+      const rootState = store.getState() as RootState;
+      const id = rootState.crypto.profile.update.walletId;
+      
+      return await cryptoServiceApi.userDeleteCryptoWallet(id || '');
+    },
+    onSuccess: ( { success, message }) => {
+      toast.dismiss();
+      if (success) {
+        toast.success(message);
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.CRYPTO.GET_USER_ALL_CRYPTO_WALLETS]
+        });
+      } else {
+        toast.error(message);
+      }
+    },
+    onError: ( error: AxiosServerError ) => {
+      toast.dismiss();
+      const message = extractErrorMessage(error) || 'Failed to delete wallet'
+      toast.error(message);
+    },
+  });
 
   return {
     // Values
@@ -115,8 +219,13 @@ export const useCryptoQuery = () => {
     loadingSupportedCrypto,
     userCryptoWallets,
     loadingUserCryptoWallets,
+    allUserCryptoWallets,
+    loadingAllUserCryptoWallets,
 
     // Mutations
     createUserCryptoWalletMutation,
+    createUserWalletMutation,
+    makeWalletPrimaryMutation,
+    deleteUserWalletMutation,
   };
 };

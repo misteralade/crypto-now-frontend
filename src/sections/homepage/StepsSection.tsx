@@ -1,12 +1,13 @@
 import CustomButton from "../../components/global/Button";
 import stepsImage from "../../assets/illustrations/steps-img.png";
+import {ROUTES} from "../../util/constants.util.ts";
 interface StepsSectionProps {
   tradeCrypto: () => void;
 }
 
 const StepsSection = ({ tradeCrypto }: StepsSectionProps) => {
   return (
-    <section className="sm:mt-20 mt-14 md:mt-40 max-md:px-4 w-full md:w-[90%] 2xl:max-w-7xl mx-auto ">
+    <section className="sm:mt-20 mt-14 md:mt-40 max-md:px-4 w-full md:w-[90%] 2xl:max-w-7xl mx-auto" id={ROUTES.IN_PAGE_ROUTES.HOW_IT_WORKS}>
       <div className="max-w-7xl mx-auto">
         <div className="grid md:grid-cols-2 gap-12 items-start">
           <div className="max-md:order-2">

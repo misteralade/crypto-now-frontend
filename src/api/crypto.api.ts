@@ -1,4 +1,9 @@
-import {axiosGetRequestHandler, axiosPostRequestHandler} from "./index.ts";
+import {
+  axiosDeleteRequestHandler,
+  axiosGetRequestHandler,
+  axiosPatchRequestHandler,
+  axiosPostRequestHandler
+} from "./index.ts";
 import type {
   BaseApiResponse,
   SupportedCryptoOrCurrencyResponse,
@@ -40,6 +45,12 @@ class CryptoServiceApi {
     return { data: data.data as UserCryptoWalletResponse[], message, success };
   }
   
+  async getAllUserCryptoWallets() {
+    const { data, message, success }: { data: any, message: string, success: boolean} = await axiosGetRequestHandler(`/crypto/user/wallets`);
+    
+    return { data: data.data as UserCryptoWalletResponse[], message, success };
+  }
+  
   async getAnonymousUserCryptoWallets(selectedCryptoId: string, email: string ) {
     const { data, message, success }: { data: any, message: string, success: boolean} = await axiosGetRequestHandler(`/crypto/anonymous-user/wallets/${selectedCryptoId}`, { email });
     
@@ -52,6 +63,14 @@ class CryptoServiceApi {
   
   async anonymousUserCreateCryptoWallet(selectedCryptoId: string, payload: Record<string, any>) {
     return await axiosPostRequestHandler(`/crypto/anonymous-user/wallet/${selectedCryptoId}/create`, payload) as BaseApiResponse<null>;
+  }
+  
+  async userMakeWalletPrimary(walletId: string) {
+    return await axiosPatchRequestHandler(`/crypto/user/${walletId}/make-primary`) as BaseApiResponse<null>;
+  }
+  
+  async userDeleteCryptoWallet(walletId: string) {
+    return await axiosDeleteRequestHandler(`/crypto/user/${walletId}/delete`) as BaseApiResponse<null>;
   }
 }
 

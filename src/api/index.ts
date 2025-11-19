@@ -37,7 +37,7 @@ API_KIT.interceptors.response.use(
     if (axios.isAxiosError(error)) {
       if (error.response?.data?.message?.toLowerCase() === "jwt token error") {
         setTimeout(() => {
-          window.location.href = ROUTES.LOGIN;
+          window.location.href = ROUTES.SIGNIN;
         }, 3000);
       }
     }
@@ -108,9 +108,9 @@ export const axiosGetRequestHandler = async (url: string, params?: any) => {
   }
 };
 
-export const axiosPatchRequestHandler = async (url: string, params?: any) => {
+export const axiosPatchRequestHandler = async (url: string, payload?: any) => {
   try{
-    const request = await API_KIT.patch(url, params);
+    const request = await API_KIT.patch(url, payload);
 
     return request.data as BaseApiResponse<any>;
   }catch(error){
