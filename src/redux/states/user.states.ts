@@ -1,4 +1,4 @@
-import type {UserProfileUpdateRequestType} from "../../schemas/user.schema.ts";
+import type {CreateUserRequestType, UserProfileUpdateRequestType} from "../../schemas/user.schema.ts";
 
 export const personalInformationInitialState: UserProfileUpdateRequestType = {
   firstName: '',
@@ -6,4 +6,11 @@ export const personalInformationInitialState: UserProfileUpdateRequestType = {
   phoneNumber: '',
   dob: '',
   profileImg: '',
+};
+
+export const newUserInitialState: CreateUserRequestType = {
+  email: '',
+  firstName: '',
+  lastName: '',
+  password: '',
 }
