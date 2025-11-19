@@ -1,4 +1,4 @@
-import accessIcon from "../../assets/icons/access-icon.svg";
+import accessIcon from "../../assets/icons/Access-icon.svg";
 import growthIcon from "../../assets/icons/Growth-icon.svg";
 import secureIcon from "../../assets/icons/Secure-icon.svg";
 import simplicityIcon from "../../assets/icons/simplicity-icon.svg";
