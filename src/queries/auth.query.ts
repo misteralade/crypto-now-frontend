@@ -5,6 +5,8 @@ import {toast} from "react-toastify";
 import {ROUTES} from "../util/constants.util.ts";
 import type {AxiosServerError} from "../types/response.payload.types.ts";
 import {QUERY_KEYS} from "./query.keys.ts";
+import {type RootState, store} from "../store.ts";
+import {extractErrorMessage} from "../util/index.util.ts";
 
 export const useAuthQuery = () => {
   const queryClient = useQueryClient();
@@ -38,6 +40,29 @@ export const useAuthQuery = () => {
       toast.error(message);
     },
   });
+  
+  const userCreateAccountMutation = useMutation({
+    mutationFn: async () => {
+      toast.loading(`Signing up...`)
+      const rootState = store.getState() as RootState;
+      const payload = rootState.user.createUser;
+      
+      return await authServiceApi.signup(payload);
+    },
+    onSuccess: ({ success, message }) => {
+      toast.dismiss();
+      if (success) {
+        toast.success(message);
+      } else {
+        toast.error(message);
+      }
+    },
+    onError: ( error: AxiosServerError ) => {
+      toast.dismiss();
+      const message = extractErrorMessage(error)
+      toast.error(message || 'Failed to create new account');
+    },
+  })
   
   const userRequestPasswordChangeMutation = useMutation({
     mutationFn: async () => {
@@ -113,5 +138,6 @@ export const useAuthQuery = () => {
     userRequestPasswordChangeMutation,
     userToggleTwoFactorAuthenticationMutation,
     verifyCodeMutation,
+    userCreateAccountMutation,
   };
 };

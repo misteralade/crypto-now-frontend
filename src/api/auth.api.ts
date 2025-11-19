@@ -1,6 +1,7 @@
 import {axiosPostRequestHandler, axiosGetRequestHandler, axiosPatchRequestHandler} from "./index.ts";
 import type {AuthRequestSchema} from "../types/request.api.types.ts";
 import type { BaseApiResponse} from "../types/response.payload.types.ts";
+import type {CreateUserRequestType} from "../schemas/user.schema.ts";
 
 // import {LoginRequestSchema} from "../schema/auth.schema.ts";
 
@@ -21,7 +22,7 @@ class AuthServiceApi {
     return await axiosPostRequestHandler("/user/auth/sign-in", payload) as BaseApiResponse<null | { twoFactorRequired: boolean }>;
   }
   
-  async signup(payload: AuthRequestSchema) {
+  async signup(payload: CreateUserRequestType) {
     return await axiosPostRequestHandler("/user/auth/sign-up", payload);
   }
   
