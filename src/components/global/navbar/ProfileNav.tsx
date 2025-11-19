@@ -3,16 +3,22 @@ import AlertIcon from "../../../assets/icons/Ellipse_12.svg";
 import TestDP from "../../../assets/icons/male_11.svg";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
-import { handleLogout } from "../../../util/index.util.ts";
 import { useUserQuery } from "../../../queries/user.query.ts";
 import LogoutIcon from "../../../assets/icons/logout.svg";
-import {ROUTES} from "../../../util/constants.util.ts";
+import {LOCAL_STORAGE_KEYS, ROUTES} from "../../../util/constants.util.ts";
+import { useNavigate } from "@tanstack/react-router";
 
-export default function ProfileNav() {
+const ProfileNav = () => {
+  const navigate = useNavigate();
   const { userProfileData, loadingUserProfile } = useUserQuery();
-
+  
   const notificationsCount: number = 1;
   const [openLogoutDropdown, setOpenLogoutDropdown] = useState(false);
+  
+  const handleLogout = () => {
+    localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+    navigate({ to: ROUTES.TRADE_CRYPTO })
+  }
 
   return (
     <div className={`flex items-center xl:gap-7`}>
@@ -74,3 +80,5 @@ export default function ProfileNav() {
     </div>
   );
 }
+
+export default ProfileNav;

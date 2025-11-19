@@ -3,7 +3,6 @@ import { useNavigate } from "@tanstack/react-router";
 import { authServiceApi } from "../../api/auth.api.ts";
 import { BASIC } from "../../config/index.config.ts";
 import {ROUTES} from "../../util/constants.util.ts";
-import {toast} from "react-toastify";
 
 export const useSignInPage = () => {
   const navigate = useNavigate();
@@ -36,10 +35,7 @@ export const useSignInPage = () => {
       if (!success) {
         setError(message || "Login failed. Please check your credentials.");
       } else {
-        toast.success(message);
-        setTimeout(() => {
-          navigate({ to: data ? ROUTES.TWO_FACTOR_VERIFY : ROUTES.DASHBOARD });
-        }, 3000)
+        navigate({ to: data ? ROUTES.TWO_FACTOR_VERIFY : ROUTES.DASHBOARD });
       }
     } catch (error: any) {
       const apiMessage =

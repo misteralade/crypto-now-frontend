@@ -1,26 +1,24 @@
 "use client";
 
 import {useState, useRef, Fragment} from "react";
-import { Menu } from "lucide-react";
+import { Menu, ChevronDown } from "lucide-react";
+import {Link, useNavigate, useLocation} from "@tanstack/react-router";
 import Button from "../Button.tsx";
 import Logo from "../../../assets/logo/logo.svg";
-import { Link } from "@tanstack/react-router";
 import NavbarDropdown from "./NavbarDropdown.tsx";
-import { ChevronDown } from "lucide-react";
 import type { DropItem } from "../../../types/navbar.types.ts";
 import ProfileNav from "./ProfileNav.tsx";
 import {LOCAL_STORAGE_KEYS, ROUTES} from "../../../util/constants.util.ts";
-import { handleLogout } from "../../../util/index.util.ts";
 import useClickOutside from "../../../hooks/useClickOutside.ts";
-import { useLocation } from "@tanstack/react-router";
 
 export default function Navbar() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const isLoggedIn =
-    localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN) !== null;
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const location = useLocation();
+  const isLoggedIn = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN) !== null;
 
   const dropItems: DropItem[] = [
     {
@@ -42,6 +40,11 @@ export default function Navbar() {
   };
 
   useClickOutside(dropdownRef, () => setIsDropdownOpen(false));
+  
+  const handleLogout = () => {
+    localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+    navigate({ to: ROUTES.TRADE_CRYPTO })
+  }
 
   return (
     <>
