@@ -51,12 +51,7 @@ const shallowEqual = (a: any, b: any) => {
   return true;
 };
 
-export const useTradeStepDisplay = (
-  token: string,
-  activeTab: TradeType,
-  currency: string,
-  setStep: (value: number) => void
-) => {
+export const useTradeStepDisplay = ( token: string, activeTab: TradeType, currency: string, setStep: (value: number) => void, initialAmount?: string ) => {
   const rootState = store.getState() as RootState;
   
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -73,17 +68,12 @@ export const useTradeStepDisplay = (
   const isAnonymousUser = rootState.user.trade.anonymous.isAnonymousUser
 
   const [transactionSessionId, setTransactionSessionId] = useState<string>();
-  const [selectedToken, setSelectedToken] =
-    useState<SupportedCryptoOrCurrencyResponse>();
-  const [selectedCurrency, setSelectedCurrency] =
-    useState<SupportedCryptoOrCurrencyResponse>();
+  const [selectedToken, setSelectedToken] = useState<SupportedCryptoOrCurrencyResponse>();
+  const [selectedCurrency, setSelectedCurrency] = useState<SupportedCryptoOrCurrencyResponse>();
   const [countdown, setCountdown] = useState<string>("");
-  const [transactionForm, setTransactionForm] =
-    useState<InitiateTransactionRequestPayload>();
-  const transactionFormRef = useRef<
-    InitiateTransactionRequestPayload | undefined
-  >(undefined);
-
+  const [transactionForm, setTransactionForm] = useState<InitiateTransactionRequestPayload>();
+  const transactionFormRef = useRef<InitiateTransactionRequestPayload | undefined>(undefined);
+  
   const [isCountdownLocked, setIsCountdownLocked] = useState(false);
   const { exchangeRate, loadingExchangeRate } = useRateQuery(
     selectedToken?.id || "",
@@ -94,7 +84,7 @@ export const useTradeStepDisplay = (
   const [numberOfToken, setNumberOfToken] = useState<string | number>("");
   const [exchangeRateId, setExchangeRateId] = useState("");
   const [validUntil, setValidUntil] = useState<Date>();
-  const [amountToBuy, setAmountToBuy] = useState<string | number>("");
+  const [amountToBuy, setAmountToBuy] = useState<string | number>(initialAmount || "");
 
   // Modals
   const [showPaymentReceivingModal, setShowPaymentReceivingModal] = useState(false);

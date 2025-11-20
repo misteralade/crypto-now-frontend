@@ -26,17 +26,16 @@ const HomePage = () => {
   const [selectedAction, setSelectedAction] = useState<"BUY" | "SELL">("BUY");
 
   useEffect(() => {
-    setSelectedAction("BUY");
     if (supportedCryptoCurrencies && supportedCryptoCurrencies.length > 0) {
       setSelectedCrypto(supportedCryptoCurrencies[0].id);
     }
-  }, [loadingSupportedCrypto]);
+  }, [loadingSupportedCrypto, supportedCryptoCurrencies]);
 
   useEffect(() => {
     if (supportedCurrencies && supportedCurrencies.length > 0) {
       setSupportedCurrency(supportedCurrencies[0].id);
     }
-  }, [loadingSupportedCurrencies]);
+  }, [loadingSupportedCurrencies, supportedCurrencies]);
 
   const handleTradeCrypto = () => {
     navigate({
