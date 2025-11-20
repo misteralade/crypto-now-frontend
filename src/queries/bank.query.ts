@@ -144,10 +144,6 @@ export const useBankQuery = () => {
     },
     onSuccess: ({ success, message}) => {
       // Invalidate and refetch user bank accounts after mutation
-      console.log({
-        success,
-        message
-      })
       toast.dismiss();
       if (success) {
         toast.success(message || 'Bank account successfully deleted.');

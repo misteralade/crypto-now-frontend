@@ -185,6 +185,7 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, cryptoAccou
   const renderWalletList = () => (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-center mb-4">Select Wallet</h3>
+      
       <div className="space-y-3 max-h-60 overflow-y-auto">
         {cryptoAccounts && cryptoAccounts.length > 0 && cryptoAccounts.map((wallet) => (
           <div
@@ -407,7 +408,7 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, cryptoAccou
         {/* Close Button */}
         <button
           onClick={() => setShowConfirmBankDetails(false)}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors hover:cursor-pointer"
         >
           <svg
             className="w-6 h-6"

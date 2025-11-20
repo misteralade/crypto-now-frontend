@@ -19,12 +19,11 @@ import {
   setAmountToSend, setInitiateTransactionField,
 } from "../../../redux/transaction.slice.ts";
 import { setSelectedCryptoId } from "../../../redux/crypto.slice.ts";
-import { SESSION_STORAGE_KEYS } from "../../../util/constants.util.ts";
+import {LOCAL_STORAGE_KEYS, SESSION_STORAGE_KEYS} from "../../../util/constants.util.ts";
 import {
   loadTradeProgress,
   saveTradeProgress,
 } from "../../../util/tradeProgress.storage.util.ts";
-import {useUserQuery} from "../../../queries/user.query.ts";
 import {type RootState, store} from "../../../store.ts";
 import {setAnonymousUserEmail} from "../../../redux/user.slice.ts";
 
@@ -59,14 +58,11 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   const countdownIntervalRef = useRef<any>();
   const queryClient = useQueryClient();
   const dispatch = useDispatch();
-  useUserQuery();
-  const { userBankAccounts } = useBankQuery();
+  const { userBankAccounts, loadingUserBankAccounts } = useBankQuery();
   const { supportedCurrencies } = useCurrencyQuery();
-  const { supportedCryptoCurrencies, userCryptoWallets } = useCryptoQuery();
+  const { supportedCryptoCurrencies, loadingSupportedCryptocurrencies, userCryptoWallets, loadingUserCryptoWallets } = useCryptoQuery();
   const { calculatedAmount, loadingCalculation, initiateTransactionMutation, makePaymentTransactionMutation, receivingPaymentAccountConfirmationMutation } = useTransactionQuery();
   
-  const isAnonymousUser = rootState.user.trade.anonymous.isAnonymousUser
-
   const [transactionSessionId, setTransactionSessionId] = useState<string>();
   const [selectedToken, setSelectedToken] = useState<SupportedCryptoOrCurrencyResponse>();
   const [selectedCurrency, setSelectedCurrency] = useState<SupportedCryptoOrCurrencyResponse>();
@@ -105,10 +101,10 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   
   // Update the show Enter email modal for anonymous users
   useEffect(() => {
-    if (isAnonymousUser !== undefined && isAnonymousUser) {
-      toggleShowUserEnterEmail();
+    if ((rootState.user.trade.anonymous.isAnonymousUser !== undefined && rootState.user.trade.anonymous.isAnonymousUser) || (localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN) === undefined)) {
+      setShowUserEnterEmail(true);
     }
-  }, [isAnonymousUser])
+  }, [rootState.user.trade.anonymous.isAnonymousUser])
 
   // 🔹 Hydration guard to avoid saving empty defaults on first paint
   const hydratedRef = useRef(false);
@@ -524,6 +520,9 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     userCryptoWallets,
     isInitiatingTrade: initiateTransactionMutation.isPending,
     showUserEnterEmail,
+    loadingSupportedCryptocurrencies,
+    loadingUserCryptoWallets,
+    loadingUserBankAccounts,
 
     // Functions
     setAmountToBuy,
@@ -537,6 +536,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     makePaymentTransaction,
     handleConfirmBankDetails,
     handleAnonymousUserEmailInput,
-    toggleShowUserEnterEmail
+    toggleShowUserEnterEmail,
+    togglePaymentReceivingModal,
   };
 };
