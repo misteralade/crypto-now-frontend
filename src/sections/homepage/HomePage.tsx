@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from "react";
+import { Fragment } from "react";
 import Navbar from "../../components/global/navbar/Navbar.tsx";
 import HeroSection from "./HeroSection.tsx";
 import InstantTradeSection from "./InstantTradeSection.tsx";
@@ -8,41 +8,25 @@ import AllInOne from "./AllInOne.tsx";
 import Testimonials from "./Testimonials.tsx";
 import CustomButton from "../../components/global/Button.tsx";
 import Footer from "../../components/global/Footer.tsx";
-import { useCryptoQuery } from "../../queries/crypto.query.ts";
-import { useCurrencyQuery } from "../../queries/currency.query.ts";
-import { ROUTES } from "../../util/constants.util.ts";
-import { useNavigate } from "@tanstack/react-router";
 import FAQs from "./FAQs.tsx";
+import {useTradeCryptoCurrenciesButton} from "../../hooks/components/useTradeCryptoCurrenciesButton.ts";
 
 const HomePage = () => {
-  const navigate = useNavigate();
-  const { supportedCryptoCurrencies, loadingSupportedCrypto } =
-    useCryptoQuery();
-  const { supportedCurrencies, loadingSupportedCurrencies } =
-    useCurrencyQuery();
-
-  const [selectedCrypto, setSelectedCrypto] = useState<string>("");
-  const [supportedCurrency, setSupportedCurrency] = useState("");
-  const [selectedAction, setSelectedAction] = useState<"BUY" | "SELL">("BUY");
-
-  useEffect(() => {
-    setSelectedAction("BUY");
-    if (supportedCryptoCurrencies && supportedCryptoCurrencies.length > 0) {
-      setSelectedCrypto(supportedCryptoCurrencies[0].id);
-    }
-  }, [loadingSupportedCrypto]);
-
-  useEffect(() => {
-    if (supportedCurrencies && supportedCurrencies.length > 0) {
-      setSupportedCurrency(supportedCurrencies[0].id);
-    }
-  }, [loadingSupportedCurrencies]);
-
-  const handleTradeCrypto = () => {
-    navigate({
-      to: `${ROUTES.TRADE_CRYPTO}?option=${selectedAction.toLowerCase()}&currency=${supportedCurrency}&token=${selectedCrypto}`,
-    });
-  };
+  const {
+    // Values
+    supportedCryptoCurrencies,
+    supportedCurrencies,
+    selectedCrypto,
+    supportedCurrency,
+    selectedAction,
+    
+    
+    // Functions
+    setSelectedCrypto,
+    setSupportedCurrency,
+    setSelectedAction,
+    handleTradeCrypto,
+  } = useTradeCryptoCurrenciesButton()
 
   return (
     <Fragment>

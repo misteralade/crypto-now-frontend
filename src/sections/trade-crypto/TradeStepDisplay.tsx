@@ -59,6 +59,9 @@ export default function TradeStepDisplay({
     userBankAccounts,
     userCryptoWallets,
     showUserEnterEmail,
+    loadingSupportedCryptocurrencies,
+    loadingUserCryptoWallets,
+    loadingUserBankAccounts,
 
     // Functions
     setAmountToBuy,
@@ -67,13 +70,13 @@ export default function TradeStepDisplay({
     setSelectedToken,
     handleReceiptUrl,
     handleTransactionHash,
-    toggleConfirmBankDetails,
     initiateTransaction,
     makePaymentTransaction,
     handleConfirmBankDetails,
     handleAnonymousUserEmailInput,
     toggleShowUserEnterEmail,
-  } = useTradeStepDisplay(token, activeTab, currency, setStep);
+    togglePaymentReceivingModal,
+  } = useTradeStepDisplay(token, activeTab, currency, setStep, initialAmount);
 
   // prefill amt on first load if provided in the URL and fields are empty
   useEffect(() => {
@@ -155,7 +158,7 @@ export default function TradeStepDisplay({
             selectedCurrency={selectedCurrency}
             selectedToken={selectedToken}
             availableCurrencies={supportedCurrencies || []}
-            availableTokens={supportedCryptoCurrencies || []}
+            availableTokens={!loadingSupportedCryptocurrencies && supportedCryptoCurrencies || []}
             isInitiatingTrade={isInitiatingTrade}
           />
         )}
@@ -177,14 +180,16 @@ export default function TradeStepDisplay({
       </div>
 
       {/*<PaymentConfirmationModal isOpen={showPaymentReceivingModal} />*/}
-      <ConfirmBankDetailsModal
-        isOpen={showPaymentReceivingModal}
-        bankAccounts={userBankAccounts}
-        cryptoAccounts={userCryptoWallets}
-        tradeType={activeTab}
-        onProceed={handleConfirmBankDetails}
-        setShowConfirmBankDetails={toggleConfirmBankDetails}
-      />
+      {!loadingUserCryptoWallets && !loadingUserBankAccounts &&
+        <ConfirmBankDetailsModal
+          isOpen={showPaymentReceivingModal}
+          bankAccounts={userBankAccounts}
+          cryptoAccounts={userCryptoWallets}
+          tradeType={activeTab}
+          onProceed={handleConfirmBankDetails}
+          setShowConfirmBankDetails={togglePaymentReceivingModal}
+        />
+      }
 
       <EmailModal
         open={showUserEnterEmail}

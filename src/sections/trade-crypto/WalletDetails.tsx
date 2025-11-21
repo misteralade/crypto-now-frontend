@@ -5,7 +5,7 @@ interface WalletDetailsProps {
     walletData: UserCryptoWalletResponse;
 }
 
-export default function WalletDetails({walletData}: WalletDetailsProps) {
+const WalletDetails = ({walletData}: WalletDetailsProps) => {
     return (
         <div className={`space-y-7`}>
             <h2 className="text-2xl font-medium text-center">Confirm your Wallet details</h2>
@@ -17,3 +17,5 @@ export default function WalletDetails({walletData}: WalletDetailsProps) {
         </div>
     )
 }
+
+export default WalletDetails;

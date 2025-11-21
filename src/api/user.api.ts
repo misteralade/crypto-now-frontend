@@ -1,6 +1,6 @@
 import {axiosGetRequestHandler, axiosPatchRequestHandler, axiosPostRequestHandler} from "./index.ts";
 import type {BaseApiResponse, GetUserProfileResponse} from "../types/response.payload.types.ts";
-import type {UserProfileUpdateRequestType} from "../schemas/user.schema.ts";
+import type {ContactUsRequestType, UserProfileUpdateRequestType} from "../schemas/user.schema.ts";
 
 // import {LoginRequestSchema} from "../schema/auth.schema.ts";
 
@@ -47,6 +47,10 @@ class UserServiceApi {
   
   async updateUserProfile(payload: UserProfileUpdateRequestType) {
     return await axiosPatchRequestHandler("/user/profile", payload);
+  }
+  
+  async contactUsMessage(payload: ContactUsRequestType) {
+    return await axiosPostRequestHandler("/contact-us/user/message", payload) as BaseApiResponse<null>;
   }
 }
 
