@@ -1,6 +1,6 @@
 import {createSlice, type PayloadAction} from "@reduxjs/toolkit";
-import {newUserInitialState, personalInformationInitialState} from "./states/user.states.ts";
-import type {CreateUserRequestType} from "../schemas/user.schema.ts";
+import {contactUsInitialState, newUserInitialState, personalInformationInitialState} from "./states/user.states.ts";
+import type {ContactUsRequestType, CreateUserRequestType} from "../schemas/user.schema.ts";
 
 const userSlice = createSlice({
   name: "user",
@@ -15,6 +15,7 @@ const userSlice = createSlice({
       personalInfo: personalInformationInitialState,
     },
     createUser: newUserInitialState,
+    contactUs: contactUsInitialState,
   },
   reducers: {
     // Sets
@@ -35,6 +36,9 @@ const userSlice = createSlice({
     setCreateUser: (state, action:PayloadAction<CreateUserRequestType>) => {
       state.createUser = action.payload;
     },
+    setContactUs: (state, action:PayloadAction<ContactUsRequestType>) => {
+      state.contactUs = action.payload;
+    },
 
     // Clears
     clearIsAnonymousUser: (state) => {
@@ -48,7 +52,10 @@ const userSlice = createSlice({
     },
     clearCreateUserField: (state) => {
       state.createUser = { ...newUserInitialState };
-    }
+    },
+    clearContactUs: (state) => {
+      state.contactUs = contactUsInitialState;
+    },
   },
 });
 
@@ -59,11 +66,13 @@ export const {
   setProfilePersonalInfoField,
   setCreateUserField,
   setCreateUser,
+  setContactUs,
   
   // Clears
   clearIsAnonymousUser,
   clearAnonymousUserEmail,
   clearProfilePersonalInfoField,
   clearCreateUserField,
+  clearContactUs,
 } = userSlice.actions;
 export default userSlice.reducer;

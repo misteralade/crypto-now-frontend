@@ -16,7 +16,15 @@ export const CreateUserRequestSchema = z.object({
   lastName: z.coerce.string().min(3, { message: 'Too short, name must be at least 3 characters long' }).max(60),
   // phoneNumber: z.coerce.string().max(255).optional().describe("Phone number"),
   // dob: IsoDateStringSchema.optional().describe("Date of Birth"),
-})
+});
+
+export const ContactUsRequestSchema = z.object({
+  email: EmailSchema.describe("Email address"),
+  firstName: z.coerce.string().min(3, { message: "Must be at least 3 characters long" }).max(55, { message: 'Name too long, maximum 55 characters long' }),
+  lastName: z.coerce.string().min(3, { message: "Must be at least 3 characters long" }).max(55, { message: 'Name too long, maximum 55 characters long' }),
+  message: z.coerce.string().min(100, { message: "Message too short" }).max(2000, { message: 'Message too long' }),
+});
 
 export type UserProfileUpdateRequestType = z.infer<typeof UserProfileUpdateRequestSchema>;
 export type CreateUserRequestType = z.infer<typeof CreateUserRequestSchema>;
+export type ContactUsRequestType = z.infer<typeof ContactUsRequestSchema>;

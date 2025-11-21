@@ -71,6 +71,30 @@ export const useUserQuery = () => {
       const message = response ? response.data.error.message : 'Failed to update profile';
       toast.error(message);
     },
+  });
+  
+  const contactUsMutation = useMutation({
+    mutationFn: async () => {
+      toast.loading(`Sending Message...`)
+      const rootState = store.getState() as RootState;
+      const payload = rootState.user.contactUs;
+      
+      return await userServiceApi.contactUsMessage(payload);
+    },
+    onSuccess: ({ success, message }) => {
+      toast.dismiss();
+      if (success) {
+        toast.success(message);
+      } else {
+        toast.error(message);
+      }
+    },
+    onError: ( error: AxiosServerError ) => {
+      toast.dismiss();
+      const { response } = error;
+      const message = response ? response.data.error.message : 'Failed to Send Message';
+      toast.error(message);
+    },
   })
 
   return {
@@ -79,5 +103,6 @@ export const useUserQuery = () => {
     
     // Mutation Function
     updateProfileMutation,
+    contactUsMutation,
   }
 }

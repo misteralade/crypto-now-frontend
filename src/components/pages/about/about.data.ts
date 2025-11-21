@@ -1,10 +1,10 @@
-import accessIcon from "../../assets/icons/Access-icon.svg";
-import growthIcon from "../../assets/icons/Growth-icon.svg";
-import secureIcon from "../../assets/icons/Secure-icon.svg";
-import simplicityIcon from "../../assets/icons/simplicity-icon.svg";
-import supportIcon from "../../assets/icons/support-icon.svg";
-import accessibilityIcon from "../../assets/icons/accessibility-icon.svg";
-import securityIcon from "../../assets/icons/security-icon.svg";
+import accessIcon from "../../../assets/icons/Access-icon.svg";
+import growthIcon from "../../../assets/icons/Growth-icon.svg";
+import secureIcon from "../../../assets/icons/Secure-icon.svg";
+import simplicityIcon from "../../../assets/icons/simplicity-icon.svg";
+import supportIcon from "../../../assets/icons/support-icon.svg";
+import accessibilityIcon from "../../../assets/icons/accessibility-icon.svg";
+import securityIcon from "../../../assets/icons/security-icon.svg";
 
 export const WhyChooseUs = [
   {

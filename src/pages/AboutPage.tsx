@@ -1,10 +1,10 @@
-import Navbar from "../../components/global/navbar/Navbar.tsx";
-import Footer from "../../components/global/Footer.tsx";
-import aboutImage from "../../assets/backgrounds/crypto-about.png";
-import { WhatWeDo, WhyChooseUs } from "./about.data";
-import CustomButton from "../../components/global/Button.tsx";
+import Navbar from "../components/global/navbar/Navbar.tsx";
+import Footer from "../components/global/Footer.tsx";
+import aboutImage from "../assets/backgrounds/crypto-about.png";
+import { WhatWeDo, WhyChooseUs } from "../components/pages/about/about.data.ts";
+import CustomButton from "../components/global/Button.tsx";
 import {Fragment} from "react";
-import {useTradeCryptoCurrenciesButton} from "../../hooks/components/useTradeCryptoCurrenciesButton.ts";
+import {useTradeCryptoCurrenciesButton} from "../hooks/components/useTradeCryptoCurrenciesButton.ts";
 
 const AboutPage = () => {
   const { handleTradeCrypto } = useTradeCryptoCurrenciesButton();
