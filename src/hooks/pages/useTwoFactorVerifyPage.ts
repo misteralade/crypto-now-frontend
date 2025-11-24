@@ -6,7 +6,7 @@ import {toast} from "react-toastify";
 
 export const useTwoFactorVerifyPage = () => {
   const navigate = useNavigate();
-  const { verifyCodeMutation } = useAuthQuery();
+  const { verifyCodeMutation, resendTwoFactorCodeMutation } = useAuthQuery();
   const [verificationCode, setVerificationCode] = useState<string[]>(Array(8).fill(""))
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
   
@@ -71,6 +71,10 @@ export const useTwoFactorVerifyPage = () => {
       handleSubmit(pastedData)
     }
   }
+
+  const handleResendCode = async () => {
+    await resendTwoFactorCodeMutation.mutateAsync();
+  }
   
   return {
     // Values
@@ -82,5 +86,6 @@ export const useTwoFactorVerifyPage = () => {
     handleKeyDown,
     handlePaste,
     verifyCodeMutation,
+    handleResendCode,
   }
 }

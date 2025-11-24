@@ -149,6 +149,37 @@ export const useAuthQuery = () => {
     },
   });
 
+  const resendTwoFactorCodeMutation = useMutation({
+    mutationFn: async () => {
+      toast.loading(`Resending code...`);
+      const rootState = store.getState() as RootState;
+      const email = rootState.user.authentication.email;
+
+      console.log({
+        email
+      })
+
+      if (!email) {
+        throw new Error("Email not found in state");
+      }
+
+      return await authServiceApi.resendTwoFactorAuthenticationCode(email);
+    },
+    onSuccess: ({ success, message }) => {
+      toast.dismiss();
+      if (success) {
+        toast.success(message);
+      } else {
+        toast.error(message || "Failed to resend code");
+      }
+    },
+    onError: ( error: AxiosServerError ) => {
+      toast.dismiss();
+      const message = extractErrorMessage(error)
+      toast.error(message || 'Failed to resend code');
+    },
+  });
+
   return {
     // Values
     loggingInLoading,
@@ -160,5 +191,6 @@ export const useAuthQuery = () => {
     verifyCodeMutation,
     userCreateAccountMutation,
     userSignInMutation,
+    resendTwoFactorCodeMutation,
   };
 };

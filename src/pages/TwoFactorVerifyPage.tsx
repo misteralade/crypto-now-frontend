@@ -14,6 +14,7 @@ const TwoFactorVerifyPage = () => {
     handleKeyDown,
     handlePaste,
     verifyCodeMutation,
+    handleResendCode,
   } = useTwoFactorVerifyPage();
   
   return (
@@ -59,6 +60,17 @@ const TwoFactorVerifyPage = () => {
                 <span>Verifying...</span>
               </div>
             )}
+
+            {/*Resend Code Link*/}
+            <div className="text-center">
+              <button
+                type="button"
+                className="text-sm text-blue-600 hover:cursor-pointer"
+                onClick={handleResendCode}
+              >
+                Resend code
+              </button>
+            </div>
             
             {/* Back to Sign In */}
             <div className="text-center pt-4">

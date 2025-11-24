@@ -1,13 +1,16 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { BASIC } from "../../config/index.config.ts";
-import {ROUTES} from "../../util/constants.util.ts";
+import { ROUTES } from "../../util/constants.util.ts";
 import type {AuthenticationRequestType} from "../../schemas/user.schema.ts";
 import {useAuthQuery} from "../../queries/auth.query.ts";
 import type {AuthRequestSchema} from "../../types/request.api.types.ts";
+import {useDispatch} from "react-redux";
+import {setSignInEmail} from "../../redux/user.slice.ts";
 
 export const useSignInPage = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { userSignInMutation } = useAuthQuery();
 
   const [showPassword, setShowPassword] = useState(false);
@@ -19,6 +22,7 @@ export const useSignInPage = () => {
   }
 
   const handleSubmit = async (values: AuthenticationRequestType) => {
+    dispatch(setSignInEmail(values.email));
     const payload:AuthRequestSchema = {
       email: values.email,
       password: values.password,
