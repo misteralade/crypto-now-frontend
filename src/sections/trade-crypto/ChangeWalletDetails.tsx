@@ -9,7 +9,7 @@ import {cryptoNetworkTypes} from "../../util/constants.util.ts";
 interface CryptoWalletDetailsProps {
   onConfirm: () => void
   onGoBack: () => void
-  canGoBack?: boolean
+  canGoBack: boolean
 }
 
 
@@ -57,7 +57,7 @@ const ChangeCryptoWalletDetails = ({ onConfirm, onGoBack, canGoBack = true }: Cr
 
       <div className="space-y-7">
         <CustomInput
-          label="Wallet nickname"
+          label="Wallet Nickname"
           placeholder="e.g My USDT Wallet"
           value={walletLabel}
           onChange={(e) => setWalletLabel(e.target.value)}
@@ -123,7 +123,7 @@ const ChangeCryptoWalletDetails = ({ onConfirm, onGoBack, canGoBack = true }: Cr
           type="button"
           onClick={handleConfirm}
           disabled={!isFormValid}
-          className={`${canGoBack ? "flex-1" : "w-full"} h-12 rounded-full font-semibold text-lg bg-primary text-white disabled:bg-gray-300`}
+          className={`${canGoBack ? "flex-1" : "w-full"} h-12 rounded-full font-semibold text-lg bg-primary text-white disabled:bg-gray-300 hover:cursor-pointer`}
         >
           Confirm
         </button>
