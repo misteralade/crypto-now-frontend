@@ -28,9 +28,15 @@ const NewBankAccountModal = ({ isOpen, banks, selectedBankId, onClose, onSubmit,
       document.body.style.overflow = "unset"
     }
   }, [isOpen])
+
+  const handleSubmit = () => {
+    setAccountNumber('');
+    setAccountName('');
+    onSubmit();
+  }
   
   if (!isOpen) return null
-  
+
   return (
     <Fragment>
       <div className="z-50 fixed inset-0 flex items-center justify-center p-4">
@@ -104,7 +110,7 @@ const NewBankAccountModal = ({ isOpen, banks, selectedBankId, onClose, onSubmit,
                 Cancel
               </button>
               <button
-                onClick={onSubmit}
+                onClick={handleSubmit}
                 className="flex-1 h-12 rounded-full font-semibold text-base bg-[#1a1f5c] transition-colors text-white disabled:bg-gray-300 disabled:text-gray-500 hover:bg-[#151842] hover:cursor-pointer"
               >
                 Confirm
