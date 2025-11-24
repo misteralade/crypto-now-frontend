@@ -28,6 +28,7 @@ export const ROUTES = {
     TIK_TOK: "https://www.tiktok.com/@cryptonownaija?_r=1&_t=ZS-91QM2DxOqpO",
     INSTAGRAM: "https://www.instagram.com/cryptonow.ng?igsh=MTZqZWk5enRiMjQ2Zg==",
     TWITTER: "https://x.com/cryptonownaija?t=wQ23QgGSUyB9YH5fPFXrBw&s=09",
+    WHATSAPP: "https://wa.me/message/FASHZ7NI2RSJA1"
   },
   IN_PAGE_ROUTES: {
     FAQ: "faq",
