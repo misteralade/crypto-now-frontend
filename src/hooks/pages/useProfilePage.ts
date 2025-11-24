@@ -82,6 +82,7 @@ export const useProfilePage = () => {
     const { success } = await createUserBankAccountMutation.mutateAsync();
     if (success) {
       toggleShowCreateNewBankAccount();
+      setSelectedBank('')
       dispatch(clearNewBankAccount())
     }
   }

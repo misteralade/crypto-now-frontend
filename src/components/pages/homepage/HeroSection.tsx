@@ -1,6 +1,6 @@
-import CustomButton from "../../components/global/Button";
-import UserIllustration from "../../assets/illustrations/image-container.png";
-import Arrow from "../../assets/icons/banner-arrow.svg";
+import CustomButton from "../../global/Button.tsx";
+import UserIllustration from "../../../assets/illustrations/image-container.png";
+import Arrow from "../../../assets/icons/banner-arrow.svg";
 
 interface HeroSectionProps {
   tradeCrypto: () => void;

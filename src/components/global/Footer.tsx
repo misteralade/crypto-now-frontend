@@ -1,4 +1,4 @@
-import {FaFacebookF, FaInstagram, FaTiktok, FaTwitter} from "react-icons/fa6";
+import {FaFacebookF, FaInstagram, FaTiktok, FaTwitter, FaWhatsapp} from "react-icons/fa6";
 import {ROUTES} from "../../util/constants.util.ts";
 
 export default function Footer() {
@@ -76,9 +76,23 @@ export default function Footer() {
           {/* Contact info */}
           <div className="max-sm:col-span-2">
             <h3 className="font-semibold text-gray-900 mb-4">Contact info</h3>
-            <div className="space-y-3">
-              <p className="text-gray-600 underline">help@cryptonow.com</p>
-              <p className="text-gray-600">Chat us on WhatsApp</p>
+            <div className="space-y-3 gap-0.5 flex flex-col">
+              <a
+                  href="mailto:cryptonownaijahelpdesk@gmail.com"
+                  target="_blank"
+                  className="text-gray-600 hover:text-gray-900"
+              >
+                cryptonownaijahelpdesk@gmail.com
+              </a>
+
+              <a
+                  href={ROUTES.SOCIALS.WHATSAPP}
+                  target="_blank"
+                  className="text-gray-600 hover:text-gray-900"
+              >
+                Chat us on WhatsApp
+              </a>
+
               <p className="text-gray-600">Lagos, Nigeria</p>
             </div>
           </div>
@@ -105,6 +119,11 @@ export default function Footer() {
               {/* Facebook */}
               <a href={ROUTES.SOCIALS.FACEBOOK} target="_blank" className="text-gray-600 hover:text-gray-900">
                 <FaFacebookF size={24}/>
+              </a>
+
+              {/* WhatsApp */}
+              <a href={ROUTES.SOCIALS.WHATSAPP} target="_blank" className="text-gray-600 hover:text-gray-900">
+                <FaWhatsapp size={24}/>
               </a>
             </div>
           </div>

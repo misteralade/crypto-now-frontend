@@ -14,12 +14,11 @@ const AboutPage = () => {
       <Navbar />
       <main className="w-full md:w-[90%] 2xl:max-w-7xl mx-auto px-4 md:px-0 mt-[64px] mb-[30px] lg:mb-[121px] text-lg text-[#454745]">
         <aside className="xl:pr-56">
-          <h1 className="text-3xl tracking-wide lg:text-5xl xl:text-[64px] xl:leading-[70px] text-[#0E0F0C] font-bold mb-6 xl">
-            Making Cryptocurrency Simple and Accessible for Everyone
+          <h1 className="text-3xl tracking-normal lg:text-3xl xl:text-[64px] xl:leading-[70px] text-[#0E0F0C] font-bold mb-6 xl">
+            WE ARE MAKING CRYPTO AVAILABLE TO EVERYONE IN NIGERIA
           </h1>
           <p className="text-[#0E0F0C] font-light mt-4 text-xl">
-            Buy, sell, and manage your digital assets with ease — built for
-            everyone, everywhere.
+            Buy and sell crypto conveniently - you do not need a wallet,  just straight forward exchange of crypto for naira
           </p>
         </aside>
         
@@ -37,7 +36,7 @@ const AboutPage = () => {
                 Our Mission
               </h3>
               <p className="font-normal text-lg md:text-xl mt-2">
-                We believe in the future of finance.
+                We make the exchange of naira to crypto available to everyone.
               </p>
             </aside>
             <aside className="text-[#454745] text-lg md:text-2xl font-normal">
@@ -62,9 +61,7 @@ const AboutPage = () => {
                 What we do
               </h3>
               <p className="text-center mt-4">
-                CryptoNow is the easiest way to buy, store, and manage your
-                cryptocurrency. We bridge the gap between traditional finance and
-                the digital asset world.
+                CryptoNow is the easiest way to buy and sell cryptocurrency in Nigeria.
               </p>
             </div>
             

@@ -36,12 +36,24 @@ const ContactPage = () => {
           </p>
           <div className="mt-4 md:mt-8">
             <p className="text-xl">Email</p>
-            <p className="text-xl hover:text-blue-800">support@cryptonow.dev</p>
+            {/*Email me, should have a Subject attached to the email*/}
+            <a
+              href="mailto:cryptonownaijahelpdesk@gmail.com?subject=Contact%20Us%20Inquiry"
+              className="text-xl hover:text-blue-800"
+              target="_blank"
+            >
+              cryptonownaijahelpdesk@gmail.com
+            </a>
           </div>
           
           <div className="mt-4 md:mt-8">
             <p className="text-xl">Phone</p>
-            <p className="text-xl hover:text-blue-800">+234 801 000 222</p>
+            <a href="tel:+2347016568181"
+               className="text-xl hover:text-blue-800"
+               target="_blank"
+            >
+              +234 701 6568 181
+            </a>
           </div>
         </aside>
         

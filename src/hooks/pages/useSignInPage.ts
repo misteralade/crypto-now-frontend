@@ -1,56 +1,34 @@
-import { type FormEvent, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { authServiceApi } from "../../api/auth.api.ts";
 import { BASIC } from "../../config/index.config.ts";
 import {ROUTES} from "../../util/constants.util.ts";
+import type {AuthenticationRequestType} from "../../schemas/user.schema.ts";
+import {useAuthQuery} from "../../queries/auth.query.ts";
+import type {AuthRequestSchema} from "../../types/request.api.types.ts";
 
 export const useSignInPage = () => {
   const navigate = useNavigate();
+  const { userSignInMutation } = useAuthQuery();
 
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [keepLoggedIn, setKeepLoggedIn] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError("");
+  const signInInitialState:AuthenticationRequestType = {
+    email: "",
+    password: "",
+    rememberMe: false,
+  }
 
-    if (!email || !password) {
-      setError("Please fill in all fields");
-      setIsLoading(false);
-      return;
+  const handleSubmit = async (values: AuthenticationRequestType) => {
+    const payload:AuthRequestSchema = {
+      email: values.email,
+      password: values.password,
+      keepLoggedIn: values.rememberMe,
     }
 
-    try {
-      const { success, message, data } = await authServiceApi.login({
-        email,
-        password,
-        keepLoggedIn,
-      });
+    const { success, data } = await userSignInMutation.mutateAsync(payload);
 
-      if (!success) {
-        setError(message || "Login failed. Please check your credentials.");
-      } else {
-        navigate({ to: data ? ROUTES.TWO_FACTOR_VERIFY : ROUTES.DASHBOARD });
-      }
-    } catch (error: any) {
-      const apiMessage =
-        error?.response?.data?.message ||
-        error?.response?.data?.error?.message ||
-        "";
-    
-      const normalizedMsg =
-        apiMessage && !/schema validation/i.test(apiMessage)
-          ? apiMessage
-          : "Login failed. Please check your email and password.";
-    
-      setError(normalizedMsg);
-    } finally {
-      setIsLoading(false);
+    if (success) {
+      navigate({ to: data ? ROUTES.TWO_FACTOR_VERIFY : ROUTES.DASHBOARD });
     }
   };
 
@@ -61,19 +39,12 @@ export const useSignInPage = () => {
 
   return {
     // Values
-    error,
-    email,
-    password,
     showPassword,
-    keepLoggedIn,
-    isLoading,
+    signInInitialState,
 
     // Functions
     handleSubmit,
-    setEmail,
-    setPassword,
     setShowPassword,
-    setKeepLoggedIn,
     handleGoogleSignIn,
   };
 };

@@ -1,5 +1,5 @@
-import CustomButton from "../../components/global/Button";
-import allInOneImage from "../../assets/illustrations/all-in-one.png";
+import CustomButton from "../../global/Button.tsx";
+import allInOneImage from "../../../assets/illustrations/all-in-one.png";
 
 interface AllInOneProps {
   tradeCrypto: () => void;

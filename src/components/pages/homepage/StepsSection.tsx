@@ -1,6 +1,6 @@
-import CustomButton from "../../components/global/Button";
-import stepsImage from "../../assets/illustrations/steps-img.png";
-import {ROUTES} from "../../util/constants.util.ts";
+import CustomButton from "../../global/Button.tsx";
+import stepsImage from "../../../assets/illustrations/steps-img.png";
+import {ROUTES} from "../../../util/constants.util.ts";
 interface StepsSectionProps {
   tradeCrypto: () => void;
 }
@@ -35,8 +35,7 @@ const StepsSection = ({ tradeCrypto }: StepsSectionProps) => {
                     Create Your Account
                   </h3>
                   <p className="text-[#454745] max-w-[360px]">
-                    Sign up with just your email and password. Secure your
-                    account with 2FA if you like.
+                    Sign up with just your email and password, add 2fa for extra security
                   </p>
                 </div>
               </div>

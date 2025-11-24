@@ -25,6 +25,13 @@ export const ContactUsRequestSchema = z.object({
   message: z.coerce.string().min(100, { message: "Message too short" }).max(2000, { message: 'Message too long' }),
 });
 
+export const AuthenticationRequestSchema = z.object({
+  email: EmailSchema,
+  password: PasswordSchema,
+  rememberMe: z.boolean().optional(),
+});
+
 export type UserProfileUpdateRequestType = z.infer<typeof UserProfileUpdateRequestSchema>;
 export type CreateUserRequestType = z.infer<typeof CreateUserRequestSchema>;
 export type ContactUsRequestType = z.infer<typeof ContactUsRequestSchema>;
+export type AuthenticationRequestType = z.infer<typeof AuthenticationRequestSchema>;

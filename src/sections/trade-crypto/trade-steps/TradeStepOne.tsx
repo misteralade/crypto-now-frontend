@@ -1,12 +1,12 @@
+import {useDispatch} from "react-redux";
+import { ArrowUpDown } from 'lucide-react';
 import TradeFormInput from '../TradeFormInput.tsx'
 import CustomButton from "../../../components/global/Button.tsx";
 import type {TradeType, TradeAdditionalInfoInterface} from "../../../types/trade.types.ts";
-import SwapIcon from "../../../assets/icons/fluent_arrow-swap-20-regular.svg"
 import {type FormEvent} from "react";
 import TradeInputDropdown from "../TradeInputDropdown.tsx";
 import TradeAdditionalInfo from "../TradeAdditionalInfo.tsx";
 import type {SupportedCryptoOrCurrencyResponse} from "../../../types/response.payload.types.ts";
-import {useDispatch} from "react-redux";
 import { setInitiateTransactionField } from '../../../redux/transaction.slice.ts';
 
 interface TradeStepOneProps {
@@ -26,9 +26,10 @@ interface TradeStepOneProps {
   availableTokens: SupportedCryptoOrCurrencyResponse[];
   token: string;
   isInitiatingTrade: boolean;
+  setActiveTab: (value: 'buy' | 'sell') => void;
 }
 
-export default function TradeStepOne({setAmountToBuy, isInitiatingTrade, numberOfToken, setNumberOfToken, amountToBuy,selectedCurrency, setSelectedCurrency, setSelectedToken,selectedToken, tradeType, handleProceedToPayment, orderDetails, availableCurrencies, availableTokens}: TradeStepOneProps) {
+const TradeStepOne = ({ setAmountToBuy, isInitiatingTrade, numberOfToken, setNumberOfToken, amountToBuy,selectedCurrency, setSelectedCurrency, setSelectedToken,selectedToken, tradeType, handleProceedToPayment, orderDetails, availableCurrencies, availableTokens, setActiveTab }: TradeStepOneProps) => {
   const dispatch = useDispatch();
   
   const submitInvalid = numberOfToken === "" || amountToBuy === "";
@@ -77,7 +78,18 @@ export default function TradeStepOne({setAmountToBuy, isInitiatingTrade, numberO
             </TradeFormInput>
           </div>
           
-          <img src={SwapIcon} alt="Swap icon" className={`block mx-auto`}/>
+          <div className="h-20 w-full flex items-center justify-center">
+            <div
+              className="p-2.5 rounded-full bg-[#948EEE] hover:cursor-pointer hover:bg-[#7b68ee] transition-all"
+              onClick={() => setActiveTab(tradeType === 'sell' ? 'buy' : 'sell')}
+            >
+              <ArrowUpDown
+                color="white"
+                size={30}
+                onClick={() => setActiveTab(tradeType === 'sell' ? 'buy' : 'sell')}
+              />
+            </div>
+          </div>
           
           {/*Currency*/}
           <div>
@@ -112,3 +124,5 @@ export default function TradeStepOne({setAmountToBuy, isInitiatingTrade, numberO
     </form>
   )
 }
+
+export default TradeStepOne;

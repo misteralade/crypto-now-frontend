@@ -8,6 +8,7 @@ export const TIME_IN_MILLISECONDS = {
 export const ROUTES = {
   HOMEPAGE: "/",
   SIGNIN: "/sign-in",
+  FORGOT_PASSWORD: "forgot-password",
   SIGNUP: "/sign-up",
   TWO_FACTOR_VERIFY: "/sign-in/verify",
   DASHBOARD: "/dashboard",
@@ -15,7 +16,8 @@ export const ROUTES = {
   TRANSACTION_DETAILS: '/dashboard/transactions/$id',
   PROFILE: '/dashboard/profile',
   TRADE_CRYPTO: "/trade-crypto",
-  
+
+
   ABOUT: "/about",
   CONTACT: "/contact",
   TERMS_OF_SERVICES: "/terms-of-service",
@@ -28,6 +30,7 @@ export const ROUTES = {
     TIK_TOK: "https://www.tiktok.com/@cryptonownaija?_r=1&_t=ZS-91QM2DxOqpO",
     INSTAGRAM: "https://www.instagram.com/cryptonow.ng?igsh=MTZqZWk5enRiMjQ2Zg==",
     TWITTER: "https://x.com/cryptonownaija?t=wQ23QgGSUyB9YH5fPFXrBw&s=09",
+    WHATSAPP: "https://wa.me/message/FASHZ7NI2RSJA1"
   },
   IN_PAGE_ROUTES: {
     FAQ: "faq",
