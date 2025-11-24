@@ -8,6 +8,7 @@ export const TIME_IN_MILLISECONDS = {
 export const ROUTES = {
   HOMEPAGE: "/",
   SIGNIN: "/sign-in",
+  FORGOT_PASSWORD: "forgot-password",
   SIGNUP: "/sign-up",
   TWO_FACTOR_VERIFY: "/sign-in/verify",
   DASHBOARD: "/dashboard",
@@ -15,7 +16,8 @@ export const ROUTES = {
   TRANSACTION_DETAILS: '/dashboard/transactions/$id',
   PROFILE: '/dashboard/profile',
   TRADE_CRYPTO: "/trade-crypto",
-  
+
+
   ABOUT: "/about",
   CONTACT: "/contact",
   TERMS_OF_SERVICES: "/terms-of-service",

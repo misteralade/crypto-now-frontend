@@ -7,6 +7,7 @@ import type {AxiosServerError} from "../types/response.payload.types.ts";
 import {QUERY_KEYS} from "./query.keys.ts";
 import {type RootState, store} from "../store.ts";
 import {extractErrorMessage} from "../util/index.util.ts";
+import type {AuthRequestSchema} from "../types/request.api.types.ts";
 
 export const useAuthQuery = () => {
   const queryClient = useQueryClient();
@@ -123,11 +124,30 @@ export const useAuthQuery = () => {
     },
     onError: ( error: AxiosServerError ) => {
       toast.dismiss();
-      const { response } = error;
-      const message = response ? response.data.error.message : 'Failed to verify your code'
-      toast.error(message);
+      const message = extractErrorMessage(error)
+      toast.error(message || 'Failed to verify your code');
     },
-  })
+  });
+
+  const userSignInMutation = useMutation({
+    mutationFn: async (data: AuthRequestSchema) => {
+      toast.loading(`Logging in...`);
+      return await authServiceApi.login(data);
+    },
+    onSuccess: ({ success, message }) => {
+      toast.dismiss();
+      if (success) {
+        toast.success(message);
+      } else {
+        toast.error(message || "Failed to login");
+      }
+    },
+    onError: ( error: AxiosServerError ) => {
+      toast.dismiss();
+      const message = extractErrorMessage(error)
+      toast.error(message || 'Failed to login');
+    },
+  });
 
   return {
     // Values
@@ -139,5 +159,6 @@ export const useAuthQuery = () => {
     userToggleTwoFactorAuthenticationMutation,
     verifyCodeMutation,
     userCreateAccountMutation,
+    userSignInMutation,
   };
 };

@@ -1,7 +1,7 @@
 import {axiosPostRequestHandler, axiosGetRequestHandler, axiosPatchRequestHandler} from "./index.ts";
-import type {AuthRequestSchema} from "../types/request.api.types.ts";
 import type { BaseApiResponse} from "../types/response.payload.types.ts";
-import type {CreateUserRequestType} from "../schemas/user.schema.ts";
+import type { CreateUserRequestType} from "../schemas/user.schema.ts";
+import type {AuthRequestSchema} from "../types/request.api.types.ts";
 
 // import {LoginRequestSchema} from "../schema/auth.schema.ts";
 
