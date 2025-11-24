@@ -7,7 +7,7 @@ const userSlice = createSlice({
   initialState: {
     trade: {
       anonymous: {
-        isAnonymousUser: undefined as boolean | undefined,
+        isAnonymousUser: false as boolean | undefined,
         email: undefined as string | undefined,
       }
     },
