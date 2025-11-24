@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { faqs } from "../../data/faqs";
-import {ROUTES} from "../../util/constants.util.ts";
+import { faqs } from "../../../data/faqs.ts";
+import {ROUTES} from "../../../util/constants.util.ts";
 
 const FAQs = () => {
   type FAQItemProps = {

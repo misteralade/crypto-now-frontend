@@ -43,20 +43,19 @@ export const WhatWeDo = [
     title: "Simple Crypto Access",
     icon: accessIcon,
     description:
-      "We offer innovative products like crypto vouchers that make your first step into crypto as easy as buying a gift card.",
+      "Buy and sell in a simple and easy way.",
   },
   {
     id: 2,
     title: "Secure Wallet Solutions",
     icon: secureIcon,
     description:
-      "We provide user-friendly wallets that give you full control of your assets.",
+      "We don’t keep your money in mobile wallets or offer custodian wallets, just straight forward exchange .",
   },
   {
     id: 3,
     title: "A Platform for Growth",
     icon: growthIcon,
-    description:
-      "Our platform is designed for both beginners and experienced traders. Easily buy, sell, and track your assets, all in one place.",
+    description: "Our platform is designed for both beginners and experienced traders. Our product can be used across all device , ( mobile phone , laptop , any device that can access the internet ) ",
   },
 ];

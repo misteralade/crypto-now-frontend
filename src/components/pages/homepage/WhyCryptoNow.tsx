@@ -1,8 +1,8 @@
-import VerifiedIcon from "../../assets/icons/verified.svg";
-import BitCoinIcon from "../../assets/icons/bitcoin.svg";
-import LightIcon from "../../assets/icons/lightning.svg";
+import VerifiedIcon from "../../../assets/icons/verified.svg";
+import BitCoinIcon from "../../../assets/icons/bitcoin.svg";
+import LightIcon from "../../../assets/icons/lightning.svg";
 
-export default function WhyCryptoNow() {
+const WhyCryptoNow = () => {
   return (
     <section className="py-14 px-4 bg-[#F5F5FF] sm:mt-24 mt-16 md:mt-40">
       <div className="max-w-6xl mx-auto">
@@ -21,7 +21,7 @@ export default function WhyCryptoNow() {
               Admin-Verified Transactions
             </h3>
             <p className="text-[#454745] text-lg leading-normal font-normal text-center">
-              Every trade is reviewed for accuracy and security.
+              Every single transaction is checked and verified by our team for accuracy and efficiency.
             </p>
           </div>
 
@@ -35,7 +35,7 @@ export default function WhyCryptoNow() {
               Fixed Exchange Rates
             </h3>
             <p className="text-[#454745] text-lg leading-normal font-normal text-center">
-              No last-minute price changes, what you see is what you get.
+              Your rate is locked and  fixed for several minutes, giving you ample time to complete the transaction without any slippage or surprises.
             </p>
           </div>
 
@@ -49,8 +49,7 @@ export default function WhyCryptoNow() {
               Lightning-Fast Processing
             </h3>
             <p className="text-[#454745] text-lg leading-normal font-normal text-center">
-              Most trades are completed in under 10 minutes. Clear costs
-              upfront, no surprises.
+              Trades execute at lightning speed , zero delays , fast processing
             </p>
           </div>
         </div>
@@ -58,3 +57,5 @@ export default function WhyCryptoNow() {
     </section>
   );
 }
+
+export default WhyCryptoNow;

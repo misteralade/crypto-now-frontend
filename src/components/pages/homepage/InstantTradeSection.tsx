@@ -1,11 +1,11 @@
-import CustomButton from "../../components/global/Button";
-import type {SupportedCryptoOrCurrencyResponse} from "../../types/response.payload.types.ts";
-import CurrencySelector from "../../components/global/CurrencySelector.tsx";
+import CustomButton from "../../global/Button.tsx";
+import type {SupportedCryptoOrCurrencyResponse} from "../../../types/response.payload.types.ts";
+import CurrencySelector from "../../global/CurrencySelector.tsx";
 import {useEffect, useState} from "react";
 import {useNavigate} from "@tanstack/react-router";
-import {LOCAL_STORAGE_KEYS, ROUTES} from "../../util/constants.util.ts";
-import {type RootState, store} from "../../store.ts";
-import {useUserQuery} from "../../queries/user.query.ts";
+import {LOCAL_STORAGE_KEYS, ROUTES} from "../../../util/constants.util.ts";
+import {type RootState, store} from "../../../store.ts";
+import {useUserQuery} from "../../../queries/user.query.ts";
 
 interface InstantTradeSectionProps {
   cryptoCurrencies: Array<SupportedCryptoOrCurrencyResponse> | undefined;
