@@ -48,11 +48,15 @@ export const useCryptoQuery = () => {
   })
 
   const { data: userCryptoWallets, isLoading: loadingUserCryptoWallets } = useQuery({
-    queryKey: [QUERY_KEYS.CRYPTO.GET_USER_CRYPTO_WALLETS, (store.getState() as RootState).crypto.tradeCrypto.selectedCryptoId],
+    queryKey: [QUERY_KEYS.CRYPTO.GET_USER_CRYPTO_WALLETS],
     queryFn: async () => {
       const rootState = store.getState() as RootState;
       const selectedCryptoId = rootState.crypto.tradeCrypto.selectedCryptoId || "";
       const userEmail = rootState.user.trade.anonymous.email;
+
+      if (!selectedCryptoId) {
+        return null;
+      }
 
       if (userEmail) {
         const { data, success } = await cryptoServiceApi.getAnonymousUserCryptoWallets(selectedCryptoId, userEmail);
@@ -73,6 +77,7 @@ export const useCryptoQuery = () => {
       return [];
     },
     enabled: !!(store.getState() as RootState).crypto.tradeCrypto.selectedCryptoId && !!sessionStorage.getItem(SESSION_STORAGE_KEYS.SESSION_ID), // Only run this query if selectedCryptoId and userId are available
+    refetchInterval: 2000, // refetch every 2 seconds to get real-time updates
   });
   
   const { data: allUserCryptoWallets, isLoading: loadingAllUserCryptoWallets } = useQuery({
@@ -116,7 +121,7 @@ export const useCryptoQuery = () => {
       if (success) {
         toast.success(message);
         queryClient.invalidateQueries({
-          queryKey: [QUERY_KEYS.CRYPTO.GET_USER_ALL_CRYPTO_WALLETS]
+          queryKey: [QUERY_KEYS.CRYPTO.GET_USER_ALL_CRYPTO_WALLETS, QUERY_KEYS.CRYPTO.GET_USER_CRYPTO_WALLETS]
         });
       } else {
         toast.error(message);

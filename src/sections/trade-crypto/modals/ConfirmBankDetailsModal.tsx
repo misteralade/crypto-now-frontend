@@ -13,7 +13,7 @@ import {Fragment} from "react";
 interface ConfirmBankDetailsModalProps {
   isOpen: boolean;
   tradeType: TradeType;
-  cryptoAccounts: UserCryptoWalletResponse[] | undefined;
+  cryptoAccounts: UserCryptoWalletResponse[] | undefined | null;
   bankAccounts: UserBankAccountResponse[] | undefined;
   onProceed: (value: number) => void;
   setShowConfirmBankDetails: (showConfirmBankDetails: boolean) => void;
@@ -297,7 +297,7 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, cryptoAccou
             <ChangeWalletDetails
               onGoBack={() => setViewState("select-wallet")}
               onConfirm={handleSubmitWalletDetails}
-              canGoBack={cryptoAccounts && cryptoAccounts.length > 0}
+              canGoBack={(cryptoAccounts && cryptoAccounts.length > 0) as boolean}
             />
           );
         case "wallet-details":
@@ -455,7 +455,7 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, cryptoAccou
 
             {/* Selected Summary */}
             {tradeType === "sell" &&
-              selectedBank &&
+              selectedBank && selectedBankId &&
               viewState === "select-bank" && (
                 <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
                   <div className="flex items-center space-x-3">
@@ -481,7 +481,7 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, cryptoAccou
               )}
 
             {tradeType === "buy" &&
-              selectedWallet &&
+              selectedWallet && selectedWalletId &&
               viewState === "select-wallet" && (
                 <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
                   <div className="flex items-center space-x-3">
