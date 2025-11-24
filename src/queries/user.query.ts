@@ -25,7 +25,7 @@ export const useUserQuery = () => {
 
       return data;
     },
-    enabled: !!localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN),
+    enabled: !!localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN) && !matchRoute({ to: ROUTES.HOMEPAGE }),
   })
   
   useQuery({
@@ -44,7 +44,7 @@ export const useUserQuery = () => {
     refetchInterval: 100000,
     refetchIntervalInBackground: true, // ✅ keeps pinging even when tab is inactive
     refetchOnWindowFocus: false,
-    enabled: !!matchRoute({ to: ROUTES.TRADE_CRYPTO })
+    enabled: !!matchRoute({ to: ROUTES.TRADE_CRYPTO }) || !!matchRoute({ to: ROUTES.HOMEPAGE })
   });
   
   const updateProfileMutation = useMutation({

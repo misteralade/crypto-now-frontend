@@ -160,6 +160,7 @@ export default function TradeStepDisplay({
             availableCurrencies={supportedCurrencies || []}
             availableTokens={!loadingSupportedCryptocurrencies && supportedCryptoCurrencies || []}
             isInitiatingTrade={isInitiatingTrade}
+            setActiveTab={setActiveTab}
           />
         )}
         {step === 2 && (
