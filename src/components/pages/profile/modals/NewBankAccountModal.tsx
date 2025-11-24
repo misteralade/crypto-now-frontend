@@ -1,5 +1,5 @@
 import {Fragment, useEffect, useState} from "react";
-import { X} from "lucide-react";
+import {AlertCircle, X} from "lucide-react";
 import type {AllBanksResponse} from "../../../../types/response.payload.types.ts";
 import type {CreateBankAccountRequestPayload} from "../../../../types/request.payload.types.ts";
 import BankSelector from "../../../global/BankSelector.tsx";
@@ -52,6 +52,19 @@ const NewBankAccountModal = ({ isOpen, banks, selectedBankId, onClose, onSubmit,
               <button onClick={onClose}>
                 <X className="w-6 h-6"/>
               </button>
+            </div>
+
+            {/* Disclaimer */}
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex gap-3">
+              <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm text-amber-800 font-medium">
+                  Important: Account holder name must match your profile name
+                </p>
+                <p className="text-xs text-amber-700 mt-1">
+                  Ensure the name on your bank account matches the name registered on your profile. Any mismatch may result in verification failure.
+                </p>
+              </div>
             </div>
             
             <div>
