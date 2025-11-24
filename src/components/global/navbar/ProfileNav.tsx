@@ -17,7 +17,7 @@ const ProfileNav = () => {
   
   const handleLogout = () => {
     localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
-    navigate({ to: ROUTES.TRADE_CRYPTO })
+    navigate({ to: ROUTES.HOMEPAGE })
   }
 
   return (

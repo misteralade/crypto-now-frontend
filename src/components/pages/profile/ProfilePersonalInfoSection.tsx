@@ -150,14 +150,18 @@ export default function ProfilePersonalInfoSection({ firstName, lastName, email,
           label="First name"
           type="text"
           placeholder={firstName}
-          onChange={(e) => handleFieldChange("firstName", e.target.value)}
+          value={firstName}
+          disabled
+          readOnly
         />
         
         <CustomInput
           label="Last name"
           type="text"
           placeholder={lastName}
-          onChange={(e) => handleFieldChange("lastName", e.target.value)}
+          value={lastName}
+          disabled
+          readOnly
         />
       </div>
       
