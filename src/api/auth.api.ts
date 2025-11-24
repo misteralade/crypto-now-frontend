@@ -45,6 +45,10 @@ class AuthServiceApi {
   async verifyTwoFactorAuthenticationCode(code: string) {
     return await axiosPostRequestHandler(`/user/auth/two-factor-authentication/verify`, { code }) as BaseApiResponse<null>;
   }
+
+  async resendTwoFactorAuthenticationCode(email: string) {
+    return await axiosGetRequestHandler(`/user/auth/two-factor-authentication/resend-code?email=${email}`) as BaseApiResponse<null>;
+  }
   
   // async activateAccount(token: string) {
   //     return await axiosPatchRequestHandler(`/user/auth/activate?token=${token}`);
