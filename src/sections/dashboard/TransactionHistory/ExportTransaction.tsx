@@ -1,7 +1,7 @@
 import {ArrowUpFromLine, ChevronDown, ChevronUp} from "lucide-react";
 import {useState} from "react";
 
-export default function ExportTransaction() {
+const ExportTransaction = () => {
     const [showDropdown, setShowDropdown] = useState(false)
 
     const handleDropdown = () => {
@@ -20,7 +20,7 @@ export default function ExportTransaction() {
             {showDropdown ? <ChevronUp className={`text-white w-5 h-5`} />:   <ChevronDown className={`text-white w-5 h-5`} />}
 
             {showDropdown &&
-                <div className={`absolute top-14 right-0 border border-greyBg rounded-2xl py-5 px-10 space-y-3 bg-white min-w-[200px] shadow-lg`}>
+                <div className={`absolute top-14 right-0 border border-greyBg rounded-2xl py-5 px-10 space-y-3 bg-white min-w-[200px] shadow-lg z-1`}>
                     <button className={`text-primary cursor-pointer text-lg block`}>Export as CSV</button>
                     <button className={`text-primary cursor-pointer text-lg block`}>Export as PDF</button>
                  </div>
@@ -29,3 +29,5 @@ export default function ExportTransaction() {
         </div>
     )
 }
+
+export default ExportTransaction;

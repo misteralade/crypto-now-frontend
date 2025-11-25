@@ -6,6 +6,7 @@ import {
 } from "./index.ts";
 import type {SearchTransactionsRequestPayload} from "../types/request.payload.types.ts";
 import type {
+  BaseApiResponse,
   GetTransactionDetailsAPIResponse,
   InitiateTransactionAPIResponse,
   TransactionSummaryResponse,
@@ -185,6 +186,10 @@ class TransactionServiceApi {
   
   async getTransactionDetails(sessionId: string) {
     return await axiosGetRequestHandler(`/transaction/details/${sessionId}`) as GetTransactionDetailsAPIResponse
+  }
+
+  async downloadSingleTransactionDetails(sessionId: string) {
+    return await axiosGetRequestHandler(`/transaction/csv-download/${sessionId}`) as BaseApiResponse<BlobPart>
   }
 }
 
