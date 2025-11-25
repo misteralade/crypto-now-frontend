@@ -1,5 +1,5 @@
 import { useState } from "react"
-import {CustomInput} from "../../components/global/CustomInput.tsx";
+import { CustomInput } from "../../components/global/CustomInput.tsx";
 import {useBankQuery} from "../../queries/bank.query.ts";
 import BankSelector from "../../components/global/BankSelector.tsx";
 import {useDispatch} from "react-redux";

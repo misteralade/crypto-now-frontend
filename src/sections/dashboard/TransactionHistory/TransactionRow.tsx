@@ -5,6 +5,7 @@ import momentClient from "../../../lib/moment.ts";
 import {getStatusColor, getStatusDot} from "../../../util/transaction.util.ts";
 import {useNavigate} from "@tanstack/react-router";
 import {ROUTES} from "../../../util/constants.util.ts";
+import {useTransactionQuery} from "../../../queries/transaction.query.ts";
 
 interface TransactionRowProps {
   transaction: TransactionResponseEntity;
@@ -12,10 +13,30 @@ interface TransactionRowProps {
 }
 
 const TransactionRow = ({transaction, isLast}: TransactionRowProps) => {
+  const { downloadSingleTransactionMutation } = useTransactionQuery();
   const navigate = useNavigate();
   
   const handleViewTransaction = () => {
     navigate({to: `${ROUTES.TRANSACTION}/${transaction.sessionId}`});
+  }
+
+
+  const handleDownloadTransaction = async (sessionId: string) => {
+    const { success, data} = await downloadSingleTransactionMutation.mutateAsync(sessionId);
+
+    if (success && data) {
+      const blob = new Blob([data], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `${sessionId}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } else {
+      console.error("Download failed");
+    }
   }
   
   return (
@@ -40,6 +61,7 @@ const TransactionRow = ({transaction, isLast}: TransactionRowProps) => {
           <ArrowDownToLine
             size={18}
             className={`${transaction.status === "COMPLETED" || transaction.status === "FAILED" ? "text-accent1 cursor-pointer" : "text-grey4 cursor-not-allowed"}`}
+            onClick={() => handleDownloadTransaction(transaction.sessionId)}
           />
         </button>
         

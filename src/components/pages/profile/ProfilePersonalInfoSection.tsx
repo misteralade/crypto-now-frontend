@@ -18,6 +18,8 @@ export default function ProfilePersonalInfoSection({ firstName, lastName, email,
   const [imagePreview, setImagePreview] = useState<string | null>(profileImg || null);
   const [imageError, setImageError] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [phone, setPhone] = useState(phoneNumber);
+  const [dateOfBirth, setDateOfBirth] = useState(dob)
   
   const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -174,11 +176,16 @@ export default function ProfilePersonalInfoSection({ firstName, lastName, email,
           disabled
           readOnly
         />
+
         <CustomInput
           label="Phone number"
           type="tel"
           placeholder={phoneNumber}
-          onChange={(e) => handleFieldChange("phoneNumber", e.target.value)}
+          value={phone}
+          onChange={(e) => {
+            setPhone(e.target.value)
+            handleFieldChange("phoneNumber", e.target.value)
+          }}
         />
       </div>
       
@@ -187,9 +194,10 @@ export default function ProfilePersonalInfoSection({ firstName, lastName, email,
         <CustomInput
           label="Date of Birth"
           type="date"
-          value={dob}
+          value={dateOfBirth}
           onChange={(e) => {
             const isoString = momentClient.toISOStringFromDate(new Date(e.target.value));
+            setDateOfBirth(e.target.value)
             handleFieldChange("dob", isoString);
           }}
           max={new Date().toISOString().split('T')[0]}

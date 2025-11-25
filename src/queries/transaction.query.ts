@@ -9,6 +9,7 @@ import type {AxiosServerError} from "../types/response.payload.types.ts";
 import {clearTradeProgress} from "../util/tradeProgress.storage.util.ts";
 import {disputeServiceApi} from "../api/dispute.api.ts";
 import type {MessageAttachment} from "../types/transaction.types.ts";
+import {extractErrorMessage} from "../util/index.util.ts";
 
 export const useTransactionQuery = () => {
   const queryClient = useQueryClient();
@@ -311,6 +312,30 @@ export const useTransactionQuery = () => {
       const message = response ? response.data.error.message : 'Failed to send dispute message. Please try again.'
       toast.error(message);
     },
+  });
+
+  const downloadSingleTransactionMutation= useMutation({
+    mutationFn: async (sessionId: string) => {
+      toast.loading(`Downloading Transaction Details...`)
+      if (!sessionId) {
+        throw new Error(`No Valid Session ID is provided`)
+      }
+
+      return await transactionServiceApi.downloadSingleTransactionDetails(sessionId)
+    },
+    onSuccess: ({ message, success }) => {
+      toast.dismiss();
+      if (success) {
+        toast.success(message);
+      } else {
+        toast.error(message)
+      }
+    },
+    onError: ( error: AxiosServerError ) => {
+      toast.dismiss();
+      const message = extractErrorMessage(error)
+      toast.error(message || 'Error downloading transaction details');
+    },
   })
   
   return {
@@ -335,6 +360,7 @@ export const useTransactionQuery = () => {
     receivingPaymentAccountConfirmationMutation,
     disputeTransactionInitiationMutation,
     userSendDisputeMutation,
+    downloadSingleTransactionMutation,
 
     // Functions
   };
