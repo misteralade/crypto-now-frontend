@@ -22,7 +22,7 @@ export const ContactUsRequestSchema = z.object({
   email: EmailSchema.describe("Email address"),
   firstName: z.coerce.string().min(3, { message: "Must be at least 3 characters long" }).max(55, { message: 'Name too long, maximum 55 characters long' }),
   lastName: z.coerce.string().min(3, { message: "Must be at least 3 characters long" }).max(55, { message: 'Name too long, maximum 55 characters long' }),
-  message: z.coerce.string().min(100, { message: "Message too short" }).max(2000, { message: 'Message too long' }),
+  message: z.coerce.string().min(10, { message: "Message too short" }).max(2000, { message: 'Message too long' }),
 });
 
 export const AuthenticationRequestSchema = z.object({

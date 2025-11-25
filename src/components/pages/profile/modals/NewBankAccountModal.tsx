@@ -3,7 +3,7 @@ import {AlertCircle, X} from "lucide-react";
 import type {AllBanksResponse} from "../../../../types/response.payload.types.ts";
 import type {CreateBankAccountRequestPayload} from "../../../../types/request.payload.types.ts";
 import BankSelector from "../../../global/BankSelector.tsx";
-import {CustomInput} from "../../../global/CustomInput.tsx";
+import { CustomInput } from "../../../global/CustomInput.tsx";
 
 interface NewBankAccountModalProps {
   isOpen: boolean;
