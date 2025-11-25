@@ -36,20 +36,12 @@ const AboutPage = () => {
                 Our Mission
               </h3>
               <p className="font-normal text-lg md:text-xl mt-2">
-                We make the exchange of naira to crypto available to everyone.
+                We are determined to be different.
               </p>
             </aside>
             <aside className="text-[#454745] text-lg md:text-2xl font-normal">
               <p className="mb-6">
-                In a world that’s becoming more digital every day, digital money
-                has the power to create a fairer, more transparent, and more
-                efficient financial system.
-              </p>
-              <p>
-                Our mission is to make cryptocurrency accessible to everyone.
-                We’re breaking down barriers, removing complexity, and building
-                simple, secure tools that empower anyone to join the crypto
-                revolution.
+                Our platform makes crypto adoption in Nigeria effortless for everyone. We break down the barriers and ensure that anyone can conveniently and easily trade crypto for Naira.
               </p>
             </aside>
           </div>
