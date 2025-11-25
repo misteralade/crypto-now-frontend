@@ -7,7 +7,7 @@ export const attachmentTypes = z.object({
   size: z.number().min(0).describe("The size of the attachment in bytes."),
   mimeType: z.string().describe("The MIME type of the attachment."),
   uploadedAt: z.coerce.date().describe("The date and time when the attachment was uploaded."),
-  metadata: z.record(z.any()).optional().describe("Optional metadata for the attachment."),
+  metadata: z.object(z.any()).optional().describe("Optional metadata for the attachment."),
 })
 
 export const CreateDisputeRequestSchema = z.object({
