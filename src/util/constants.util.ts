@@ -1,6 +1,7 @@
 export const TIME_IN_MILLISECONDS = {
   FIVE_HUNDRED_MILLISECONDS: 500,
   ONE_SECOND: 1000,
+  FIVE_SECONDS: 5 * 1000,
   TEN_SECONDS: 10 * 1000,
   ONE_HOUR: 60 * 60 * 1000,
 }
@@ -13,9 +14,11 @@ export const ROUTES = {
   TWO_FACTOR_VERIFY: "/sign-in/verify",
   DASHBOARD: "/dashboard",
   ORGANIZATIONS: "/dashboard/organizations",
-  TRANSACTION_DETAILS: '/dashboard/transactions/$id',
   PROFILE: '/dashboard/profile',
   TRADE_CRYPTO: "/trade-crypto",
+  TRANSACTION: '/dashboard/transactions',
+  TRANSACTION_DETAILS: '/dashboard/transactions/$id',
+  DISPUTE_DETAILS: '/dispute/$id',
 
 
   ABOUT: "/about",
@@ -257,6 +260,51 @@ export const transactionStatusStyles: Record<
     message: `Your payment account has been confirmed. You can now proceed with your transactions.`
   },
 }
+
+export const ATTACHMENT_TYPE = {
+  IMAGE: 'IMAGE',
+  VIDEO: 'VIDEO',
+  PDF: 'PDF',
+  DOCUMENT: 'DOCUMENT',
+  AUDIO: 'AUDIO',
+  SPREADSHEET: 'SPREADSHEET',
+  OTHER: 'OTHER',
+} as const;
+
+// Type derived from the const object
+export type AttachmentType = typeof ATTACHMENT_TYPE[keyof typeof ATTACHMENT_TYPE];
+
+// Legacy FileType as const object (keep for backward compatibility if needed)
+export const FileType = {
+  IMAGE: 'IMAGE',
+  VIDEO: 'VIDEO',
+  PDF: 'PDF',
+  DOCUMENT: 'DOCUMENT',
+  AUDIO: 'AUDIO',
+  SPREADSHEET: 'SPREADSHEET',
+} as const;
+
+// Type derived from FileType
+export type FileTypeValue = typeof FileType[keyof typeof FileType];
+
+// Other constants
+export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+export const MAX_FILES_PER_DISPUTE = 5;
+
+export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'] as const;
+export const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/quicktime', 'video/x-msvideo'] as const;
+export const ALLOWED_DOCUMENT_TYPES = [
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'text/plain',
+] as const;
+export const ALLOWED_AUDIO_TYPES = ['audio/mpeg', 'audio/wav', 'audio/ogg'] as const;
+export const ALLOWED_SPREADSHEET_TYPES = [
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'text/csv',
+] as const;
 
 export const cryptoNetworkTypes = [
   "BTC",

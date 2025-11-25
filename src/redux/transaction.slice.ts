@@ -7,6 +7,7 @@ import {
   initiateTransactionInitialState,
   userSearchTransactionInitialState
 } from "./states/initial-transaction.state.ts";
+import type {MessageAttachment} from "../types/transaction.types.ts";
 
 const transactionSlice = createSlice({
   name: "transaction",
@@ -21,6 +22,19 @@ const transactionSlice = createSlice({
     },
     details: {
       sessionId: undefined as string | undefined,
+    },
+    dispute: {
+      create: {
+        reason: undefined as string | undefined,
+        attachments: undefined as Array<MessageAttachment> | undefined,
+      },
+      details: {
+        id: undefined as string | undefined,
+        message: {
+          text: undefined as string | undefined,
+          attachments: undefined as Array<MessageAttachment> | undefined,
+        }
+      }
     }
   },
   reducers: {
@@ -46,19 +60,37 @@ const transactionSlice = createSlice({
     setTransactionDetailSessionId: (state, action: PayloadAction<string>) => {
       state.details.sessionId = action.payload;
     },
+    setDisputeReason: (state, action: PayloadAction<string>) => {
+      state.dispute.create.reason = action.payload;
+    },
+    setDisputeAttachments: (state, action: PayloadAction<Array<MessageAttachment>>) => {
+      state.dispute.create.attachments = action.payload;
+    },
+    addDisputeAttachment: (state, action: PayloadAction<MessageAttachment>) => {
+      if (!state.dispute.create.attachments) {
+        state.dispute.create.attachments = [];
+      }
+      state.dispute.create.attachments.push(action.payload);
+    },
+    removeDisputeAttachment: (state, action: PayloadAction<number>) => {
+      const index = action.payload;
+      if (state.dispute.create.attachments && index >= 0 && index < state.dispute.create.attachments.length) {
+        state.dispute.create.attachments.splice(index, 1);
+      }
+    },
+    setDisputeDetailsId: (state, action: PayloadAction<string>) => {
+      state.dispute.details.id = action.payload;
+    },
+    setDisputeMessageText: (state, action: PayloadAction<string>) => {
+      state.dispute.details.message.text = action.payload;
+    },
+    setDisputeMessageAttachments: (state, action: PayloadAction<Array<MessageAttachment>>) => {
+      state.dispute.details.message.attachments = action.payload;
+    },
     
     // Clear States
     clearInitiateTransaction: (state) => {
-      state.initiate.initiateTransaction = {
-        exchangeRateId: undefined,
-        action: undefined,
-        tokenId: undefined,
-        currencyId: undefined,
-        amountToReceive: undefined,
-        amountToSend: undefined,
-        receiptUrl: undefined,
-        transactionHash: undefined,
-      }
+      state.initiate.initiateTransaction = {...initiateTransactionInitialState}
     },
     clearInitiateTransactionField: (state, action: PayloadAction<keyof InitiateTransactionRequestPayload>) => {
       const field = action.payload;
@@ -77,7 +109,22 @@ const transactionSlice = createSlice({
     },
     clearTransactionDetailSessionId: (state) => {
       state.details.sessionId = undefined;
-    }
+    },
+    clearDisputeReason: (state) => {
+      state.dispute.create.reason = undefined;
+    },
+    clearDisputeAttachments: (state) => {
+      state.dispute.create.attachments = undefined;
+    },
+    clearDisputeDetailsId: (state) => {
+      state.dispute.details.id = undefined;
+    },
+    clearDisputeMessageText: (state) => {
+      state.dispute.details.message.text = undefined;
+    },
+    clearDisputeMessageAttachments: (state) => {
+      state.dispute.details.message.attachments = undefined;
+    },
   },
 });
 
@@ -89,6 +136,13 @@ export const {
   setAmountToSend,
   setSearchUserTransactions,
   setTransactionDetailSessionId,
+  setDisputeReason,
+  setDisputeAttachments,
+  addDisputeAttachment,
+  removeDisputeAttachment,
+  setDisputeDetailsId,
+  setDisputeMessageText,
+  setDisputeMessageAttachments,
   
   // Clear States
   clearInitiateTransaction,
@@ -97,5 +151,10 @@ export const {
   clearAmountToSend,
   clearSearchUserTransactions,
   clearTransactionDetailSessionId,
+  clearDisputeReason,
+  clearDisputeAttachments,
+  clearDisputeDetailsId,
+  clearDisputeMessageText,
+  clearDisputeMessageAttachments,
 } = transactionSlice.actions;
 export default transactionSlice.reducer;

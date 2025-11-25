@@ -4,6 +4,7 @@ import type {AxiosServerError} from "../types/response.payload.types.ts";
 import {userServiceApi} from "../api/user.api.ts";
 import {QUERY_KEYS} from "./query.keys.ts";
 import {extractErrorMessage} from "../util/index.util.ts";
+import {transactionServiceApi} from "../api/transaction.api.ts";
 
 export const useUploadQuery = () => {
   const uploadProfilePictureMutation = useMutation({
@@ -24,8 +25,34 @@ export const useUploadQuery = () => {
       toast.error(message);
     },
   });
+
+  const uploadFileMutation = useMutation({
+    mutationFn: async (formData: FormData) => {
+      const toastId = toast.loading("Uploading file...");
+      try {
+        const { url } = await transactionServiceApi.uploadDisputeAttachment(formData);
+        toast.dismiss(toastId);
+        toast.success("File uploaded successfully");
+        return url;
+      } catch (error) {
+        toast.dismiss(toastId);
+        toast.error("Failed to upload file");
+        throw error;
+      }
+    },
+    onError: (error: AxiosServerError) => {
+      toast.dismiss();
+      const message = extractErrorMessage(error) || 'Failed to upload file';
+      toast.error(message);
+    },
+    onSuccess: () => {
+      toast.dismiss();
+      toast.success(`Upload picture successfully uploaded`);
+    },
+  });
   
   return {
+    uploadFileMutation,
     uploadProfilePictureMutation,
   }
 }

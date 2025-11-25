@@ -45,6 +45,25 @@ class TransactionServiceApi {
       toast.error(response.message);
     }
   }
+  
+  async uploadDisputeAttachment(formData: FormData) {
+    const response =  await axiosPostRequestHandler(
+      `/upload/transaction/dispute/attachment-upload`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    )
+    
+    if (response.success) {
+      toast.success(response.message);
+      return response.data;
+    } else {
+      toast.error(response.message);
+    }
+  }
 
   async calculateAmountToReceive(exchangeRateId: string, amountToSend: number) {
     const { data, success }: { data: string, success: boolean} = await axiosPostRequestHandler(

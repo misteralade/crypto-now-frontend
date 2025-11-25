@@ -1,14 +1,17 @@
-import {useMutation, useQuery} from "@tanstack/react-query";
+import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {toast} from "react-toastify";
 import {useMatchRoute} from "@tanstack/react-router";
 import {QUERY_KEYS} from "./query.keys.ts";
 import {transactionServiceApi} from "../api/transaction.api.ts";
 import {type RootState, store} from "../store.ts";
-import {ROUTES, SESSION_STORAGE_KEYS} from "../util/constants.util.ts";
+import {ROUTES, SESSION_STORAGE_KEYS, TIME_IN_MILLISECONDS} from "../util/constants.util.ts";
 import type {AxiosServerError} from "../types/response.payload.types.ts";
 import {clearTradeProgress} from "../util/tradeProgress.storage.util.ts";
+import {disputeServiceApi} from "../api/dispute.api.ts";
+import type {MessageAttachment} from "../types/transaction.types.ts";
 
 export const useTransactionQuery = () => {
+  const queryClient = useQueryClient();
   const matchRoute = useMatchRoute();
 
   // Calculate Amount to Receive
@@ -68,7 +71,7 @@ export const useTransactionQuery = () => {
     },
     enabled: !!matchRoute({ to: ROUTES.DASHBOARD }),
   })
-  
+
   // Get transaction Details
   const { data: transactionDetails, isLoading: loadingTransactionDetails } = useQuery({
     queryKey: [QUERY_KEYS.TRANSACTION.USER_TRANSACTION_DETAILS, store.getState().transaction.details.sessionId],
@@ -89,7 +92,52 @@ export const useTransactionQuery = () => {
       return null;
     },
     enabled: !!store.getState().transaction.details.sessionId && !!matchRoute({ to: ROUTES.TRANSACTION_DETAILS }),
-  })
+  });
+  
+  // Get Dispute Messages
+  const { data: disputeMessages, isLoading: loadingDisputeMessages } = useQuery({
+    queryKey: [QUERY_KEYS.DISPUTE.GET_DISPUTE_MESSAGES, store.getState().transaction.dispute.details.id],
+    queryFn: async () => {
+      const rootState = store.getState() as RootState;
+      const disputeId = rootState.transaction.dispute.details.id;
+
+      if (!disputeId) {
+        return;
+      }
+
+      const { data, success } = await disputeServiceApi.getDisputeMessage(disputeId);
+
+      if (success) {
+        return data;
+      }
+
+      return null;
+    },
+    enabled: !!store.getState().transaction.dispute.details.id && !!matchRoute({ to: ROUTES.DISPUTE_DETAILS }),
+    refetchInterval: TIME_IN_MILLISECONDS.FIVE_SECONDS,
+  });
+  
+  // Get Dispute Details
+  const { data: disputeDetails, isLoading: loadingDisputeDetails } = useQuery({
+    queryKey: [QUERY_KEYS.DISPUTE.GET_DISPUTE_DETAILS, store.getState().transaction.dispute.details.id],
+    queryFn: async () => {
+      const rootState = store.getState() as RootState;
+      const disputeId = rootState.transaction.dispute.details.id;
+
+      if (!disputeId) {
+        return;
+      }
+
+      const { data, success } = await disputeServiceApi.getDisputeDetails(disputeId);
+
+      if (success) {
+        return data;
+      }
+
+      return null;
+    },
+    enabled: !!store.getState().transaction.dispute.details.id && !!matchRoute({ to: ROUTES.DISPUTE_DETAILS }),
+  });
 
   // Initiate Transaction Mutation
   const initiateTransactionMutation = useMutation({
@@ -208,6 +256,63 @@ export const useTransactionQuery = () => {
     }
   });
   
+  const disputeTransactionInitiationMutation = useMutation({
+    mutationKey: [QUERY_KEYS.DISPUTE.INITIATE_DISPUTE_TRANSACTION],
+    mutationFn: async () => {
+      const sessionId = store.getState().transaction.details.sessionId;
+      const reason = store.getState().transaction.dispute.create.reason;
+      const attachments = store.getState().transaction.dispute.create.attachments;
+      
+      if (!sessionId || !reason) {
+        throw new Error("Session ID and reason are required to initiate a dispute.");
+      }
+      
+      toast.loading(`Initiating dispute...`, { toastId: QUERY_KEYS.DISPUTE.INITIATE_DISPUTE_TRANSACTION });
+      return await disputeServiceApi.initiateDisputeTransaction(sessionId, { reason, attachments: attachments as any });
+    },
+    onSuccess: ({ message, data }) => {
+      toast.dismiss(QUERY_KEYS.DISPUTE.INITIATE_DISPUTE_TRANSACTION);
+      toast.success(message);
+      return data;
+    },
+    onError: ( error: AxiosServerError ) => {
+      toast.dismiss(QUERY_KEYS.DISPUTE.INITIATE_DISPUTE_TRANSACTION);
+      const { response } = error;
+      const message = response ? response.data.error.message : 'Failed to initiate dispute. Please try again.'
+      toast.error(message);
+    },
+  })
+  
+  const userSendDisputeMutation = useMutation({
+    mutationKey: [QUERY_KEYS.DISPUTE.USER_SEND_DISPUTE_MESSAGE],
+    mutationFn: async () => {
+      const rootState = store.getState() as RootState;
+      const message = rootState.transaction.dispute.details.message.text;
+      const attachments = rootState.transaction.dispute.details.message.attachments;
+      const disputeId = rootState.transaction.dispute.details.id;
+      
+      if (!disputeId || !message) {
+        throw new Error("Dispute ID and message are required to send a dispute message.");
+      }
+      
+      toast.loading(`Sending message...`, { toastId: QUERY_KEYS.DISPUTE.USER_SEND_DISPUTE_MESSAGE });
+      return await disputeServiceApi.sendDisputeMessage(disputeId, message, attachments as Array<MessageAttachment>);
+    },
+    onSuccess: ({ message }) => {
+      toast.dismiss(QUERY_KEYS.DISPUTE.USER_SEND_DISPUTE_MESSAGE);
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.DISPUTE.GET_DISPUTE_MESSAGES]
+      });
+      toast.success(message);
+    },
+    onError: ( error: AxiosServerError ) => {
+      toast.dismiss(QUERY_KEYS.DISPUTE.USER_SEND_DISPUTE_MESSAGE);
+      const { response } = error;
+      const message = response ? response.data.error.message : 'Failed to send dispute message. Please try again.'
+      toast.error(message);
+    },
+  })
+  
   return {
     // Values
     calculatedAmount,
@@ -218,11 +323,18 @@ export const useTransactionQuery = () => {
     loadingTransactionSummary,
     transactionDetails,
     loadingTransactionDetails,
+    disputeMessages,
+    loadingDisputeMessages,
+    disputeDetails,
+    loadingDisputeDetails,
+    
 
     // Mutations
     initiateTransactionMutation,
     makePaymentTransactionMutation,
     receivingPaymentAccountConfirmationMutation,
+    disputeTransactionInitiationMutation,
+    userSendDisputeMutation,
 
     // Functions
   };

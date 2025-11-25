@@ -1,6 +1,7 @@
 import type {AxiosError} from "axios";
 import type {TradeType, TransactionPriority, TransactionStatus} from "./request.payload.types.ts";
 import type { TransactionAction } from "../schemas/enum.schema.ts";
+import type {MessageAttachment} from "./transaction.types.ts";
 
 export interface StandardizedServerError {
   success: false;
@@ -150,6 +151,7 @@ export type CryptoCurrencyResponseEntity = {
 export type UserResponseEntity = {
   id: string;
   email: string;
+  profile?: UserProfilePayload;
   isVerified: boolean;
   createdAt: Date;
 };
@@ -261,6 +263,39 @@ export type UserTransactionsHistoryResponse = {
 
 // Stat Transaction
 export type GetTransactionDetailsAPIResponse = BaseApiResponse<SearchTransactionsResponse>
+
+export type GetDisputeMessagesAPIResponse = BaseApiResponse<Array<DisputeMessageResponse>>
+
+export type GetDisputeDetailsAPIResponse = BaseApiResponse<DisputeDetailsResponse>
+
+export type DisputeDetailsResponse = {
+  id: string;
+  disputeReason: string;
+  status: 'OPEN' | 'UNDER_REVIEW' | 'AWAITING_EVIDENCE' | 'AWAITING_USER_RESPONSE' | 'AWAITING_ADMIN_RESPONSE' | 'ESCALATED' | 'RESOLVED' | 'REJECTED' | 'CLOSED';
+  priority: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+  lastMessageAt: Date;
+  attachments: MessageAttachment[];
+  resolutionNotes: string | null;
+  transaction: SearchTransactionsResponse | null;
+  creator: UserResponseEntity | null;
+  resolver: AdminResponseEntity | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type DisputeMessageResponse = {
+  id: string;
+  disputeId: string;
+  messageText: string;
+  attachments: MessageAttachment[];
+  senderType: 'USER' | 'ADMIN';
+  adminId: string | null;
+  userId: string | null;
+  email: string;
+  admin: AdminResponseEntity;
+  user: UserResponseEntity;
+  createdAt: Date;
+}
 
 export type SearchTransactionsResponse = {
   adminPaymentReceiptUrl: string | undefined;
