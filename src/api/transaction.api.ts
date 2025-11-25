@@ -189,7 +189,11 @@ class TransactionServiceApi {
   }
 
   async downloadSingleTransactionDetails(sessionId: string) {
-    return await axiosGetRequestHandler(`/transaction/csv-download/${sessionId}`) as BaseApiResponse<BlobPart>
+    return await axiosGetRequestHandler(`/transaction/user/csv-download/${sessionId}`) as BaseApiResponse<BlobPart>
+  }
+
+  async downloadAllTransactionDetails(payload: SearchTransactionsRequestPayload, fileType: "CSV" | "PDF") {
+    return await axiosPostRequestHandler(`/transaction/user/csv-download/all?fileType=${fileType}`, payload) as BaseApiResponse<null>
   }
 }
 

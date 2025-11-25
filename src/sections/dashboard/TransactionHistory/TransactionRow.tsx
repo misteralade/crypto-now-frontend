@@ -38,7 +38,7 @@ const TransactionRow = ({transaction, isLast}: TransactionRowProps) => {
       console.error("Download failed");
     }
   }
-  
+
   return (
     <tr className={`hover:bg-muted/30 transition-colors ${!isLast ? "border-b border-border" : ""}`}>
       <td className="p-4 text-sm text-foreground font-mono">
