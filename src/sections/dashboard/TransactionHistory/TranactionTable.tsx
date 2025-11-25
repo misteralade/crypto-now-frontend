@@ -2,6 +2,7 @@ import TransactionPagination from "./TransactionPagination.tsx";
 import type {TransactionResponseEntity} from "../../../types/response.payload.types.ts";
 import CustomLoader from "../../../components/global/Loader.tsx";
 import TransactionRow from "./TransactionRow.tsx";
+import { Link } from "@tanstack/react-router";
 
 export interface FilterState {
   fromDate: string | undefined;
@@ -38,7 +39,17 @@ const TransactionTable = ({ transactions, isLoading, totalPages, onPageChange, c
       return (
         <tr>
           <td colSpan={COL_COUNT} className="text-center p-8 text-lg text-gray-500">
-            No transactions found.
+            <div className={`flex flex-col gap-7 items-center justify-center text-center`}>
+              <h2 className={`text-primary text-[40px] font-semibold w-4/5 leading-12`}>No transaction had been performed yet</h2>
+
+              <Link
+                to={`/trade-crypto`}
+                type="button"
+                className={`py-4 md:py-2 rounded-full block md:order-2 w-full md:w-1/2 text-lg text-center font-semibold bg-primary text-white disabled:bg-gray-300 disabled:text-gray-500`}
+              >
+                Buy / Sell Crypto
+              </Link>
+            </div>
           </td>
         </tr>
       );
