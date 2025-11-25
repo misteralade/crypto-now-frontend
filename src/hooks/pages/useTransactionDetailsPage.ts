@@ -1,9 +1,10 @@
-import { useParams } from "@tanstack/react-router";
+import {useParams} from "@tanstack/react-router";
 import {useEffect, useState} from "react";
-import { useDispatch } from "react-redux";
+import {useDispatch} from "react-redux";
 import {setDisputeAttachments, setDisputeReason, setTransactionDetailSessionId} from "../../redux/transaction.slice.ts";
 import {useTransactionQuery} from "../../queries/transaction.query.ts";
 import type {MessageAttachment} from "../../types/transaction.types.ts";
+import {convertToMillify} from "../../util/index.util.ts";
 
 export const useTransactionDetailsPage = () => {
   const dispatch = useDispatch();
@@ -35,6 +36,14 @@ export const useTransactionDetailsPage = () => {
     
     disputeTransactionInitiationMutation.mutate()
   }
+
+  const openDisputeMailTo = () => {
+    const email = "cryptonownaijahelpdesk@gmail.com";
+    const subject = `Dispute Transaction - ${transactionDetails?.sessionId || ''}`;
+    const body = `Hello,\n\nI would like to dispute a transaction with the following details:\n\nTransaction ID: ${transactionDetails?.sessionId || ''}\nAmount: ${convertToMillify(Number(transactionDetails?.amountFiat)) || ''} ${transactionDetails?.currency || ''}\nDate: ${transactionDetails?.createdAt || ''}\n\nReason for Dispute:\n\n[Please provide your reason here]\n\nThank you.`;
+
+    window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  }
   
   const toggleDisputeTransaction = () => setShowDisputeTransaction(!showDisputeTransaction)
   
@@ -50,5 +59,6 @@ export const useTransactionDetailsPage = () => {
     handleDisputeReason,
     copyToClipboard,
     handleSubmitDispute,
+    openDisputeMailTo,
   }
 }

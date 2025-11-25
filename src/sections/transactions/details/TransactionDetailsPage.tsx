@@ -21,9 +21,9 @@ const TransactionDetailsPage = () => {
     toggleDisputeTransaction,
     copyToClipboard,
     handleSubmitDispute,
+    openDisputeMailTo,
   } = useTransactionDetailsPage();
-  
-  
+
   const transactionColorScheme = transactionStatusStyles[transaction?.status as keyof typeof transactionStatusStyles];
   const transactionMessage = transactionStatusMessages[transaction?.status as keyof typeof transactionStatusStyles];
   
@@ -307,7 +307,10 @@ const TransactionDetailsPage = () => {
                     <p className="text-sm text-gray-600 mb-4">
                       If you have any questions about your transaction, feel free to contact our support team.
                     </p>
-                    <button className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-md transition-colors">
+                    <button
+                      className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-md transition-colors hover:cursor-pointer"
+                      onClick={openDisputeMailTo}
+                    >
                       Contact Support
                     </button>
                   </div>

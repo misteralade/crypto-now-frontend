@@ -4,7 +4,7 @@ import {useMatchRoute} from "@tanstack/react-router";
 import {QUERY_KEYS} from "./query.keys.ts";
 import {transactionServiceApi} from "../api/transaction.api.ts";
 import {type RootState, store} from "../store.ts";
-import {ROUTES, SESSION_STORAGE_KEYS} from "../util/constants.util.ts";
+import {ROUTES, SESSION_STORAGE_KEYS, TIME_IN_MILLISECONDS} from "../util/constants.util.ts";
 import type {AxiosServerError} from "../types/response.payload.types.ts";
 import {clearTradeProgress} from "../util/tradeProgress.storage.util.ts";
 import {disputeServiceApi} from "../api/dispute.api.ts";
@@ -114,6 +114,7 @@ export const useTransactionQuery = () => {
       return null;
     },
     enabled: !!store.getState().transaction.dispute.details.id && !!matchRoute({ to: ROUTES.DISPUTE_DETAILS }),
+    refetchInterval: TIME_IN_MILLISECONDS.FIVE_SECONDS,
   });
   
   // Get Dispute Details
