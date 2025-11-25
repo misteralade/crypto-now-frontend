@@ -336,6 +336,31 @@ export const useTransactionQuery = () => {
       const message = extractErrorMessage(error)
       toast.error(message || 'Error downloading transaction details');
     },
+  });
+
+  const downloadAllTransactionMutation = useMutation({
+    mutationFn: async (fileType: "CSV" | "PDF") => {
+      const rootState = store.getState() as RootState;
+
+      if (!rootState?.transaction?.dashboard?.searchUserTransactions) {
+        throw new Error(`Failed to send transaction history download request`)
+      }
+
+      return await transactionServiceApi.downloadAllTransactionDetails(rootState?.transaction?.dashboard?.searchUserTransactions, fileType);
+    },
+    onSuccess: ({ message, success }) => {
+      toast.dismiss();
+      if (success) {
+        toast.success(message);
+      } else {
+        toast.error(message)
+      }
+    },
+    onError: ( error: AxiosServerError ) => {
+      toast.dismiss();
+      const message = extractErrorMessage(error)
+      toast.error(message || 'Error downloading transaction history');
+    },
   })
   
   return {
@@ -361,6 +386,7 @@ export const useTransactionQuery = () => {
     disputeTransactionInitiationMutation,
     userSendDisputeMutation,
     downloadSingleTransactionMutation,
+    downloadAllTransactionMutation,
 
     // Functions
   };
