@@ -1,9 +1,31 @@
 import {useMutation} from "@tanstack/react-query";
 import {toast} from "react-toastify";
-import {transactionServiceApi} from "../api/transaction.api.ts";
 import type {AxiosServerError} from "../types/response.payload.types.ts";
+import {userServiceApi} from "../api/user.api.ts";
+import {QUERY_KEYS} from "./query.keys.ts";
+import {extractErrorMessage} from "../util/index.util.ts";
+import {transactionServiceApi} from "../api/transaction.api.ts";
 
 export const useUploadQuery = () => {
+  const uploadProfilePictureMutation = useMutation({
+    mutationKey: [QUERY_KEYS.USER.UPLOAD_PROFILE_PICTURE],
+    mutationFn: async (formData: FormData) => {
+      const file:any = formData.get("file");
+      toast.loading(`Upload picture: ${file["name"]}`);
+      const { url } = await userServiceApi.uploadProfilePicture(formData);
+      return url;
+    },
+    onSuccess: () => {
+      toast.dismiss();
+      toast.success(`Upload picture successfully uploaded`);
+    },
+    onError: (error: AxiosServerError) => {
+      toast.dismiss();
+      const message = extractErrorMessage(error) || 'Failed to upload file';
+      toast.error(message);
+    },
+  });
+
   const uploadFileMutation = useMutation({
     mutationFn: async (formData: FormData) => {
       const toastId = toast.loading("Uploading file...");
@@ -19,13 +41,18 @@ export const useUploadQuery = () => {
       }
     },
     onError: (error: AxiosServerError) => {
-      toast.dismiss()
-      const { data } = error.response as { data: { error: { message: string } } };
-      toast.error(data.error.message)
+      toast.dismiss();
+      const message = extractErrorMessage(error) || 'Failed to upload file';
+      toast.error(message);
+    },
+    onSuccess: () => {
+      toast.dismiss();
+      toast.success(`Upload picture successfully uploaded`);
     },
   });
   
   return {
     uploadFileMutation,
+    uploadProfilePictureMutation,
   }
 }

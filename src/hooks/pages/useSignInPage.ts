@@ -1,70 +1,54 @@
-import {type FormEvent, useState} from "react";
-import {useNavigate} from "@tanstack/react-router";
-import type {AuthResponse} from "../../types/response.payload.types.ts";
-import {authServiceApi} from "../../api/auth.api.ts";
+import { useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { BASIC } from "../../config/index.config.ts";
+import { ROUTES } from "../../util/constants.util.ts";
+import type {AuthenticationRequestType} from "../../schemas/user.schema.ts";
+import {useAuthQuery} from "../../queries/auth.query.ts";
+import type {AuthRequestSchema} from "../../types/request.api.types.ts";
+import {useDispatch} from "react-redux";
+import {setSignInEmail} from "../../redux/user.slice.ts";
 
 export const useSignInPage = () => {
-  const navigate = useNavigate()
-  
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { userSignInMutation } = useAuthQuery();
+
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [keepLoggedIn, setKeepLoggedIn] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError("");
-    
-    if (!email || !password) {
-      setError("Please fill in all fields");
-      setIsLoading(false);
-      return;
+
+  const signInInitialState:AuthenticationRequestType = {
+    email: "",
+    password: "",
+    rememberMe: false,
+  }
+
+  const handleSubmit = async (values: AuthenticationRequestType) => {
+    dispatch(setSignInEmail(values.email));
+    const payload:AuthRequestSchema = {
+      email: values.email,
+      password: values.password,
+      keepLoggedIn: values.rememberMe,
     }
-    
-    try {
-      const {success, message}: AuthResponse = await authServiceApi.login({
-        email,
-        password,
-        keepLoggedIn
-      });
-      
-      if (!success) {
-        setError(message || 'Login failed. Please check your credentials.');
-      } else{
-        navigate({to: '/dashboard'});
-      }
-      
-    } catch (error: any) {
-      setError(error.response.data.message || 'Login failed. Please check your credentials.');
-    } finally {
-      setIsLoading(false);
+
+    const { success, data } = await userSignInMutation.mutateAsync(payload);
+
+    if (success) {
+      navigate({ to: data ? ROUTES.TWO_FACTOR_VERIFY : ROUTES.DASHBOARD });
     }
   };
-  
+
   const handleGoogleSignIn = () => {
     // Redirect to your backend OAuth endpoint
     window.location.href = `${BASIC.API_BASE_URL}/user/auth/google-signup`;
   };
-  
+
   return {
     // Values
-    error,
-    email,
-    password,
     showPassword,
-    keepLoggedIn,
-    isLoading,
-    
+    signInInitialState,
+
     // Functions
     handleSubmit,
-    setEmail,
-    setPassword,
     setShowPassword,
-    setKeepLoggedIn,
     handleGoogleSignIn,
-  }
-}
+  };
+};

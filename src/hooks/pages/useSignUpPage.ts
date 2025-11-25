@@ -1,64 +1,44 @@
-import {type FormEvent, useState} from "react";
-import {authServiceApi} from "../../api/auth.api.ts";
+import { useState } from "react";
 import {BASIC} from "../../config/index.config.ts";
-import type {AuthResponse} from "../../types/response.payload.types.ts";
+import { useDispatch } from "react-redux";
+import { setCreateUser } from "../../redux/user.slice.ts";
+import type {CreateUserRequestType} from "../../schemas/user.schema.ts";
+import {useAuthQuery} from "../../queries/auth.query.ts";
+import {useNavigate} from "@tanstack/react-router";
+import {ROUTES} from "../../util/constants.util.ts";
+import {toast} from "react-toastify";
 
 export const useSignUpPage = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { userCreateAccountMutation } = useAuthQuery();
+  
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [otpSent, setOtpSent] = useState(false);
-  const [error, setError] = useState("");
+  const [otpSent, ] = useState(false);
   
   const handleGoogleSignUp = () => {
     // Redirect to your backend OAuth endpoint
     window.location.href = `${BASIC.API_BASE_URL}/user/auth/google-signup`;
   };
   
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError("");
-    
-    if (!email || !password) {
-      setError("Please fill in all fields");
-      setIsLoading(false);
-      return;
+  const handleSubmit = async (data: CreateUserRequestType) => {
+    dispatch(setCreateUser(data));
+    const { success } = await userCreateAccountMutation.mutateAsync();
+    if (success) {
+      toast.info(`Account activation link sent to your email`)
+      setTimeout(() => {
+        navigate({ to: ROUTES.SIGNIN })
+      })
     }
-    
-    try {
-      const {success, message}: AuthResponse = await authServiceApi.signup({
-        email,
-        password,
-      });
-      
-      if (!success) {
-        setError(message || 'Sign-Up failed. Please check your credentials.');
-      } else {
-        setOtpSent(true)
-      }
-      
-    } catch (error: any) {
-      setError(error.response.data.message || 'Sign-Up failed. Please check your credentials.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }
   
   return {
     // Values
     otpSent,
-    error,
-    email,
-    password,
     showPassword,
-    isLoading,
     
     // Functions
     handleSubmit,
-    setEmail,
-    setPassword,
     setShowPassword,
     handleGoogleSignUp,
   }

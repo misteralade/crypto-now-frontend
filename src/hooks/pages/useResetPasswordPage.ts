@@ -3,6 +3,7 @@ import {useState} from "react";
 import {authServiceApi} from "../../api/auth.api.ts";
 import { toast } from 'react-toastify';
 import {useMutation} from "@tanstack/react-query";
+import {ROUTES} from "../../util/constants.util.ts";
 
 export const useResetPasswordPage = () => {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -33,7 +34,7 @@ export const useResetPasswordPage = () => {
       }
       setTimeout(() => {
         setIsPasswordChanged(true);
-        navigate({to: '/sign-in'});
+        navigate({to: ROUTES.SIGNIN});
       }, 5000)
     },
     onError: async (data: Record<string, any>) => {
@@ -68,7 +69,7 @@ export const useResetPasswordPage = () => {
   }
   
   const navigateToLogin = () => {
-    navigate({ to: '/sign-in' })
+    navigate({ to: ROUTES.SIGNIN })
   }
   
   return {

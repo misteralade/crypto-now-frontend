@@ -26,6 +26,7 @@ export default function ChangeBankDetails({ onConfirm, onGoBack, canGoBack = tru
         bankId: selectedBank,
         accountName,
         accountNumber,
+        isDefault: false,
       }));
 
       onConfirm()

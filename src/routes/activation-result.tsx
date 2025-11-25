@@ -1,5 +1,6 @@
 import {createFileRoute, redirect} from '@tanstack/react-router'
 import {toast} from "react-toastify";
+import {ROUTES} from "../util/constants.util.ts";
 
 export const Route = createFileRoute('/activation-result')({
   beforeLoad: ({ search }) => {
@@ -16,7 +17,7 @@ export const Route = createFileRoute('/activation-result')({
     
     // Redirect immediately to /dashboard
     throw redirect({
-      to: '/sign-in',
+      to: ROUTES.SIGNIN,
     })
   },
   component: RouteComponent,

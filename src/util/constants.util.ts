@@ -6,13 +6,38 @@ export const TIME_IN_MILLISECONDS = {
 }
 
 export const ROUTES = {
-  LOGIN: "/",
-  HOMEPAGE: "/dashboard",
+  HOMEPAGE: "/",
+  SIGNIN: "/sign-in",
+  FORGOT_PASSWORD: "forgot-password",
+  SIGNUP: "/sign-up",
+  TWO_FACTOR_VERIFY: "/sign-in/verify",
+  DASHBOARD: "/dashboard",
   ORGANIZATIONS: "/dashboard/organizations",
+  PROFILE: '/dashboard/profile',
   TRADE_CRYPTO: "/trade-crypto",
   TRANSACTION: '/dashboard/transactions',
   TRANSACTION_DETAILS: '/dashboard/transactions/$id',
   DISPUTE_DETAILS: '/dispute/$id',
+
+
+  ABOUT: "/about",
+  CONTACT: "/contact",
+  TERMS_OF_SERVICES: "/terms-of-service",
+  PRIVACY_POLICY: "/privacy-policy",
+  AML_POLICY: "aml-policy",
+  RATES: "/rates",
+  
+  SOCIALS: {
+    FACEBOOK: "https://www.facebook.com/share/1DhKLD85Ho/",
+    TIK_TOK: "https://www.tiktok.com/@cryptonownaija?_r=1&_t=ZS-91QM2DxOqpO",
+    INSTAGRAM: "https://www.instagram.com/cryptonow.ng?igsh=MTZqZWk5enRiMjQ2Zg==",
+    TWITTER: "https://x.com/cryptonownaija?t=wQ23QgGSUyB9YH5fPFXrBw&s=09",
+    WHATSAPP: "https://wa.me/message/FASHZ7NI2RSJA1"
+  },
+  IN_PAGE_ROUTES: {
+    FAQ: "faq",
+    HOW_IT_WORKS: "how-it-works",
+  }
 }
 
 export const QUERY_KEYS = {
@@ -279,3 +304,34 @@ export const ALLOWED_SPREADSHEET_TYPES = [
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   'text/csv',
 ] as const;
+
+export const cryptoNetworkTypes = [
+  "BTC",
+  "ERC20",
+  "TRC20",
+  "BEP20",
+  "SOLANA",
+  "POLYGON",
+  "ARBITRUM",
+  "OPTIMISM",
+  "AVALANCHE",
+  "FANTOM",
+  "BSC",
+  "CARDANO",
+  "POLKADOT",
+  "COSMOS",
+  "TERRA",
+  "NEAR",
+  "HARMONY",
+  "MOONBEAM",
+  "CRONOS",
+  "KCC",
+  "HECO",
+  "XDAI",
+  "CELO",
+  "ALGORAND",
+  "TEZOS",
+  "ELROND",
+  "KLAYTN",
+  "OKEX",
+]

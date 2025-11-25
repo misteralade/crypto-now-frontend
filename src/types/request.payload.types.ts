@@ -16,6 +16,7 @@ export type CreateBankAccountRequestPayload = {
   bankId: string | null;
   accountName: string | null;
   accountNumber: string | null;
+  isDefault: boolean | null;
 }
 
 export type UserCreateCryptoWalletRequestPayload = {
@@ -23,6 +24,7 @@ export type UserCreateCryptoWalletRequestPayload = {
   network: string;
   isVerified: boolean;
   isPrimary: boolean;
+  cryptoId?: string;
   walletLabel?: string | null;
 }
 

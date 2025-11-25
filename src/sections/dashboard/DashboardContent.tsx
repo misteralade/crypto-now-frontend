@@ -33,7 +33,7 @@ export default function DashboardContent(){
           />
         ))}
         <DashboardDataUI imgSrc={OrderIcon} Data={[
-          { title: 'Total Orders', value: `$ ${Number(orderTotal.toFixed(2)).toLocaleString()}` }
+          { title: 'Total Completed Orders', value: `$ ${Number(orderTotal.toFixed(2)).toLocaleString()}` }
         ]} />
       </div>
       

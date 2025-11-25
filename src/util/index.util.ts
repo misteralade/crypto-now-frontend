@@ -1,5 +1,6 @@
 import millify from "millify";
 import {LOCAL_STORAGE_KEYS} from "./constants.util.ts";
+import type {AxiosServerError} from "../types/response.payload.types.ts";
 
 export const formatTime = (seconds: number) => {
   const mins = Math.floor(seconds / 60)
@@ -40,3 +41,17 @@ export const formatFileSize = (bytes: number) => {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
 };
+
+export const extractErrorMessage = (error: AxiosServerError): string | undefined => {
+  const { response } = error;
+  return response ? response?.data?.error?.message || response?.data?.message : undefined
+}
+
+export const formatCurrency = (amount: number, currency?: string) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: currency || 'NGN',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(amount)
+}

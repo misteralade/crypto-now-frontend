@@ -20,7 +20,7 @@ type ViewState =
   | "create-wallet";
 
 export const useConfirmBankDetailsModal = (
-  cryptoAccounts: UserCryptoWalletResponse[] | undefined,
+  cryptoAccounts: UserCryptoWalletResponse[] | null,
   bankAccounts: UserBankAccountResponse[] | undefined,
   tradeType: TradeType,
   onProceed: (value: number) => void,
@@ -122,10 +122,12 @@ export const useConfirmBankDetailsModal = (
     dispatch(setSelectedWalletAccountId(walletId))
   };
   
-  const handleSubmitWalletDetails = () => {
+  const handleSubmitWalletDetails = async () => {
     if (newCryptoWallet) {
-      createUserCryptoWalletMutation.mutate(newCryptoWallet)
-      setViewState("select-wallet")
+      const { success } = await createUserCryptoWalletMutation.mutateAsync(newCryptoWallet)
+      if (success) {
+        setViewState("select-wallet")
+      }
     }
   }
   
