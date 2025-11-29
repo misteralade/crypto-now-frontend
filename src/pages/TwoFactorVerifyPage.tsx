@@ -30,7 +30,7 @@ const TwoFactorVerifyPage = () => {
               <label className="block text-sm font-medium text-gray-700">
                 Enter verification code
               </label>
-              <div className="flex gap-2 md:gap-3">
+              <div className="flex gap-2 items-center justify-around md:gap-3">
                 {verificationCode.map((digit, index) => (
                   <input
                     key={index}
