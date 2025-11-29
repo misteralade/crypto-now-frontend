@@ -37,58 +37,53 @@ export const useConfirmBankDetailsModal = (
   const [selectedWallet, setSelectedWallet] = useState<UserCryptoWalletResponse | null>()
   const [viewState, setViewState] = useState<ViewState>(tradeType === "sell" ? "select-bank" : "select-wallet");
   
-  // Track if we've initialized to prevent resets
-  const [hasInitialized, setHasInitialized] = useState(false);
+  // Track if we've initialized view state to prevent resets
+  const [hasInitializedView, setHasInitializedView] = useState(false);
   
-  // Single initialization effect
+  // Initialize view state based on trade type and account availability
   useEffect(() => {
-    if (hasInitialized) return;
+    if (hasInitializedView) return;
     
     if (tradeType === "sell") {
       if (!bankAccounts || bankAccounts.length === 0) {
         setViewState("create-bank");
       } else {
         setViewState("select-bank");
-        setSelectedBankId(bankAccounts[0].id);
       }
     } else if (tradeType === "buy") {
       if (!cryptoAccounts || cryptoAccounts.length === 0) {
         setViewState("create-wallet");
       } else {
         setViewState("select-wallet");
-        setSelectedWalletId(cryptoAccounts[0].id);
       }
     }
     
-    if (bankAccounts && bankAccounts.length > 0) {
-      setSelectedBankId(bankAccounts[0].id);
-      setSelectedBank(bankAccounts[0]);
-      dispatch(clearSelectedWalletId())
-      dispatch(setSelectedBankAccountId(bankAccounts[0].id))
-    }
-    
-    if (cryptoAccounts && cryptoAccounts.length > 0) {
-      setSelectedWalletId(cryptoAccounts[0].id);
-      setSelectedWallet(cryptoAccounts[0]);
-      dispatch(clearSelectedBankAccountId())
-      dispatch(setSelectedWalletAccountId(cryptoAccounts[0].id))
-    }
-    
-    setHasInitialized(true);
-  }, [tradeType, bankAccounts, cryptoAccounts, hasInitialized]);
+    setHasInitializedView(true);
+  }, [tradeType, bankAccounts, cryptoAccounts, hasInitializedView]);
   
-  // Update selected IDs when new accounts are added (but don't reset view)
+  // Always select the first bank account when available (for SELL transactions)
+  // This ensures Redux state is updated even if accounts load after component mount
   useEffect(() => {
-    if (hasInitialized && bankAccounts && bankAccounts.length > 0 && !selectedBankId) {
-      setSelectedBankId(bankAccounts[0].id);
+    if (tradeType === "sell" && bankAccounts && bankAccounts.length > 0 && !selectedBankId) {
+      const firstBank = bankAccounts[0];
+      setSelectedBankId(firstBank.id);
+      setSelectedBank(firstBank);
+      dispatch(clearSelectedWalletId());
+      dispatch(setSelectedBankAccountId(firstBank.id));
     }
-  }, [bankAccounts, selectedBankId, hasInitialized]);
+  }, [tradeType, bankAccounts, selectedBankId, dispatch]);
   
+  // Always select the first wallet when available (for BUY transactions)
+  // This ensures Redux state is updated even if accounts load after component mount
   useEffect(() => {
-    if (hasInitialized && cryptoAccounts && cryptoAccounts.length > 0 && !selectedWalletId) {
-      setSelectedWalletId(cryptoAccounts[0].id);
+    if (tradeType === "buy" && cryptoAccounts && cryptoAccounts.length > 0 && !selectedWalletId) {
+      const firstWallet = cryptoAccounts[0];
+      setSelectedWalletId(firstWallet.id);
+      setSelectedWallet(firstWallet);
+      dispatch(clearSelectedBankAccountId());
+      dispatch(setSelectedWalletAccountId(firstWallet.id));
     }
-  }, [cryptoAccounts, selectedWalletId, hasInitialized]);
+  }, [tradeType, cryptoAccounts, selectedWalletId, dispatch]);
   
   /** ---------------- BANK LOGIC ---------------- */
   const handleBankSelection = (bankId: string) => {

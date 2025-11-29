@@ -5,6 +5,7 @@ import {useTradeStepTwo} from "../../../hooks/components/trade/useTradeStepTwo.t
 import type {SupportedCryptoOrCurrencyResponse} from "../../../types/response.payload.types.ts";
 import TradePaymentUpload from "../TradePaymentUpload.tsx";
 import CopyAccountDetails from "../CopyAccountDetails.tsx";
+import type React from "react";
 
 interface TradeStepTwoProps {
   amountToBuy: number;
@@ -18,9 +19,11 @@ interface TradeStepTwoProps {
   transactionRef: string | undefined;
   handleTransactionHash: (string: string) => void;
   handleSubmitPaymentProof: () => void;
+  formatReceiveAmount: (amount: number | string, currencyCode: string | undefined) => string | React.ReactNode;
+  formatSendAmount: (amount: number | string, currencyCode: string | undefined) => string | React.ReactNode;
 }
 
-export default function TradeStepTwo({ amountToBuy, tradeType, numberOfToken, additionalInfo, handleReceiptUrl, selectedToken, selectedCurrency, exchangeRateId, transactionRef, handleTransactionHash, handleSubmitPaymentProof }: TradeStepTwoProps) {
+export default function TradeStepTwo({ amountToBuy, tradeType, numberOfToken, additionalInfo, handleReceiptUrl, selectedToken, selectedCurrency, exchangeRateId, transactionRef, handleTransactionHash, handleSubmitPaymentProof, formatReceiveAmount, formatSendAmount }: TradeStepTwoProps) {
   const {
     // Values
     // files,
@@ -97,11 +100,24 @@ export default function TradeStepTwo({ amountToBuy, tradeType, numberOfToken, ad
           <>
             <p className="text-sm">
               <span className="text-gray-600">You pay:</span>
-              <span className="font-semibold ml-2">{amountToBuy.toLocaleString()} {selectedCurrency?.code}</span>
+              <span className="font-semibold ml-2">
+              {formatSendAmount && typeof formatSendAmount === 'function'
+                  ? formatSendAmount(amountToBuy.toLocaleString(), selectedCurrency?.code)
+                  : `${amountToBuy} ${selectedCurrency?.code}`}
+              </span>
+
+              {/* <span className="font-semibold ml-2">{amountToBuy.toLocaleString()} {selectedCurrency?.code}</span> */}
             </p>
             <p className="text-sm">
               <span className="text-gray-600">You receive:</span>
-              <span className="font-semibold ml-2">{numberOfToken} {selectedToken?.symbol}</span>
+
+              
+              <span className="font-semibold ml-2">
+              {formatReceiveAmount && typeof formatReceiveAmount === 'function'
+                ? formatReceiveAmount(amountToBuy, selectedCurrency?.code)
+                : `${amountToBuy} ${selectedCurrency?.code}`}
+              </span>
+
             </p>
           </>
         ) : (
@@ -112,7 +128,11 @@ export default function TradeStepTwo({ amountToBuy, tradeType, numberOfToken, ad
             </p>
             <p className="text-sm">
               <span className="text-gray-600">You receive:</span>
-              <span className="font-semibold ml-2">{amountToBuy} {selectedCurrency?.code}</span>
+              <span className="font-semibold ml-2">
+                {formatReceiveAmount && typeof formatReceiveAmount === 'function'
+                  ? formatReceiveAmount(amountToBuy, selectedCurrency?.code)
+                  : `${amountToBuy} ${selectedCurrency?.code}`}
+              </span>
             </p>
           </>
         )}

@@ -27,6 +27,41 @@ const TransactionDetailsPage = () => {
   const transactionColorScheme = transactionStatusStyles[transaction?.status as keyof typeof transactionStatusStyles];
   const transactionMessage = transactionStatusMessages[transaction?.status as keyof typeof transactionStatusStyles];
   
+  // Helper function to get USD to NGN rate
+  const getUsdToNgnRate = (): number => {
+    // Try to get rate from exchangeRate if available
+    if (transaction?.exchangeRate) {
+      const { fromCurrency, toCurrency, rate } = transaction.exchangeRate;
+      // If exchangeRate is USD to NGN, use that rate
+      if (fromCurrency === 'USD' && toCurrency === 'NGN') {
+        return parseFloat(rate);
+      }
+      // If exchangeRate is NGN to USD, use inverse
+      if (fromCurrency === 'NGN' && toCurrency === 'USD') {
+        return 1 / parseFloat(rate);
+      }
+    }
+    // Default fallback rate (can be updated or fetched from API)
+    // Using a reasonable default of ~1500 NGN per USD
+    return 1500;
+  };
+  
+  // Helper function to format fiat amount with NGN conversion
+  const formatFiatAmount = () => {
+    if (!transaction) return '';
+    
+    const amount = parseFloat(transaction.amountFiat);
+    const currency = transaction.currency;
+    
+    if (currency === 'USD') {
+      const ngnAmount = amount * getUsdToNgnRate();
+      return `₦ ${formatNumber(ngnAmount)} ($${formatNumber(amount)})`;
+    } else {
+      // For NGN and other currencies, show as is
+      return currency === 'NGN' ? `₦ ${formatNumber(amount)}` : `${currency} ${formatNumber(amount)}`;
+    }
+  };
+  
   const CopyButton = ({ text, field }: { text: string, field: string }) => (
     <button
       onClick={() => copyToClipboard(text, field)}
@@ -102,7 +137,7 @@ const TransactionDetailsPage = () => {
                       <div>
                         <p className="text-sm text-gray-500 mb-1">Fiat Amount</p>
                         <p className="text-2xl font-bold text-gray-900">
-                          {transaction.currency} {formatNumber(transaction.amountFiat)}
+                          {formatFiatAmount()}
                         </p>
                       </div>
                       <div>

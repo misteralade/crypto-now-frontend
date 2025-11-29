@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useRef } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useDispatch } from "react-redux";
 
@@ -21,6 +21,7 @@ import {
 import { setSelectedCryptoId } from "../../../redux/crypto.slice.ts";
 import {LOCAL_STORAGE_KEYS, SESSION_STORAGE_KEYS} from "../../../util/constants.util.ts";
 import {
+  clearTradeProgress,
   loadTradeProgress,
   saveTradeProgress,
 } from "../../../util/tradeProgress.storage.util.ts";
@@ -50,7 +51,7 @@ const shallowEqual = (a: any, b: any) => {
   return true;
 };
 
-export const useTradeStepDisplay = ( token: string, activeTab: TradeType, currency: string, setStep: (value: number) => void, initialAmount?: string ) => {
+export const useTradeStepDisplay = ( token: string, activeTab: TradeType, currency: string, setStep: (value: number) => void, setActiveTab: (value: TradeType) => void, initialAmount?: string ) => {
   const rootState = store.getState() as RootState;
   
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -76,6 +77,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     selectedCurrency?.id || "",
     activeTab.toUpperCase() === "BUY" ? "BUY" : "SELL"
   );
+
 
   const [numberOfToken, setNumberOfToken] = useState<string | number>("");
   const [exchangeRateId, setExchangeRateId] = useState("");
@@ -198,9 +200,20 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     dispatch,
   ]);
 
+  // Get the correct rate for calculations based on currency
+  // When USD: use usdRate, when NGN: use fiatRate
+  const getCalculationRate = (): number | null => {
+    if (!exchangeRate) return null;
+    if (exchangeRate.currency === "USD" && exchangeRate.usdRate !== undefined) {
+      return exchangeRate.usdRate;
+    }
+    return exchangeRate.fiatRate;
+  };
+
   // Auto-calc opposite field (guarded)
   useEffect(() => {
-    if (!exchangeRate?.fiatRate || loadingExchangeRate || isCountdownLocked)
+    const calculationRate = getCalculationRate();
+    if (!calculationRate || loadingExchangeRate || isCountdownLocked)
       return;
 
     let nextAmountToBuy = amountToBuy;
@@ -211,13 +224,13 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       numberOfToken !== "" &&
       Number(numberOfToken) > 0
     ) {
-      nextAmountToBuy = (Number(numberOfToken) * exchangeRate.fiatRate).toFixed(
+      nextAmountToBuy = (Number(numberOfToken) * calculationRate).toFixed(
         5
       );
       if (nextAmountToBuy !== amountToBuy) setAmountToBuy(nextAmountToBuy);
     }
     if (activeTab === "buy" && amountToBuy !== "" && Number(amountToBuy) > 0) {
-      nextNumberOfToken = (Number(amountToBuy) / exchangeRate.fiatRate).toFixed(
+      nextNumberOfToken = (Number(amountToBuy) / calculationRate).toFixed(
         8
       );
       if (nextNumberOfToken !== numberOfToken)
@@ -258,6 +271,8 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     amountToBuy,
     activeTab,
     exchangeRate?.fiatRate,
+    exchangeRate?.usdRate,
+    exchangeRate?.currency,
     loadingExchangeRate,
     isCountdownLocked,
   ]);
@@ -362,7 +377,8 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     if (calculatedAmount && !loadingCalculation && !isDebouncing) {
       return Number(calculatedAmount);
     }
-    if (exchangeRate?.fiatRate && amountToSend > 0) {
+    const calculationRate = getCalculationRate();
+    if (calculationRate && amountToSend > 0) {
       return activeTab === "sell"
         ? Number(amountToBuy) || 0
         : Number(numberOfToken) || 0;
@@ -373,18 +389,34 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     loadingCalculation,
     isDebouncing,
     exchangeRate?.fiatRate,
+    exchangeRate?.usdRate,
+    exchangeRate?.currency,
     amountToSend,
     activeTab,
     amountToBuy,
     numberOfToken,
   ]);
 
+  // Format rate display - show NGN rate in parentheses when currency is USD
+  const formatRateDisplay = () => {
+    if (loadingExchangeRate) return "Loading...";
+    if (!exchangeRate) return "0";
+    
+    // When currency is USD:
+    // - usdRate is the USD rate (e.g., 1)
+    // - fiatRate is the NGN rate (e.g., 1570)
+    if (exchangeRate.currency === "USD" && exchangeRate.usdRate !== undefined) {
+      return `1 ${selectedToken?.symbol} = ${exchangeRate.usdRate.toLocaleString()} USD (${exchangeRate.fiatRate.toLocaleString()} NGN)`;
+    }
+    
+    // When currency is NGN, fiatRate is the NGN rate
+    return `1 ${selectedToken?.symbol} = ${exchangeRate.fiatRate.toLocaleString()} ${selectedCurrency?.code}`;
+  };
+
   const AdditionalInfo: TradeAdditionalInfoInterface[] = [
     {
       title: "Rate",
-      value: loadingExchangeRate
-        ? "Loading..."
-        : `1 ${selectedToken?.symbol} = ${exchangeRate?.fiatRate?.toLocaleString() || 0} ${selectedCurrency?.code}`,
+      value: formatRateDisplay(),
     },
     {
       title: "Valid until",
@@ -462,10 +494,19 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   };
 
   const handleConfirmBankDetails = async (step: number) => {
-    await receivingPaymentAccountConfirmationMutation.mutateAsync();
-    toggleConfirmBankDetails();
-    togglePaymentReceivingModal();
-    setStep(step);
+    try {
+      console.log('handleConfirmBankDetails', step);
+      await receivingPaymentAccountConfirmationMutation.mutateAsync();
+      // Clear trade progress and reset to step 1, like Cancel Order
+      clearTradeProgress();
+      setStep(1);
+      setActiveTab("buy");
+      setShowPaymentReceivingModal(false);
+      setShowConfirmBankDetails(false);
+    } catch (error) {
+      // Error is already handled by the mutation's onError
+      console.error("Failed to confirm bank details:", error);
+    }
   };
   
   const handleAnonymousUserEmailInput = (value: string) => {
@@ -497,6 +538,82 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     if (transactionSessionId) saveTradeProgress({ transactionSessionId });
   }, [transactionSessionId]);
 
+  const formatReceiveAmount = (amount: number | string, currencyCode: string | undefined): string | React.ReactNode => {
+    if (!exchangeRate || !currencyCode) return String(amount);
+    
+    const amountNum = Number(amount);
+    if (isNaN(amountNum) || amountNum === 0) return String(amount);
+    
+    // For BUY transactions, just show the crypto amount
+    if (activeTab.toLocaleLowerCase() === 'buy') {
+      return `${Number(numberOfToken)} ${selectedToken?.symbol}`;
+    }
+    
+    // For SELL transactions, show fiat conversions
+    // When currency is USD, show both USD and NGN amounts
+    if (exchangeRate.currency === "USD" && exchangeRate.fiatRate && exchangeRate.usdRate) {
+      // Calculate NGN amount: USD amount * (NGN rate / USD rate)
+      const ngnAmount = amountNum * (exchangeRate.fiatRate / exchangeRate.usdRate);
+      return React.createElement(
+        'span',
+        null,
+        `${amountNum.toLocaleString()} ${currencyCode} (`,
+        React.createElement('strong', null, `${ngnAmount.toLocaleString()} NGN`),
+        ')'
+      );
+    }
+    
+    // When currency is NGN, just show NGN amount in bold
+    if (exchangeRate.currency === "NGN") {
+      return React.createElement(
+        'span',
+        null,
+        React.createElement('strong', null, `${amountNum.toLocaleString()} ${currencyCode}`)
+      );
+    }
+    
+    // Fallback: just show the amount
+    return `${amountNum.toLocaleString()} ${currencyCode}`;
+  };
+
+  const formatSendAmount = (amount: number | string, currencyCode: string | undefined): string | React.ReactNode => {
+    if (!exchangeRate || !currencyCode) return String(amount);
+    
+    const amountNum = Number(String(amount).replace(/,/g, '')); // Remove commas before parsing
+    if (isNaN(amountNum) || amountNum === 0) return String(amount);
+    
+    // For SELL transactions, show the crypto amount being sent
+    if (activeTab.toLowerCase() === 'sell') {
+      return `${Number(numberOfToken).toLocaleString()} ${selectedToken?.symbol}`;
+    }
+    
+    // For BUY transactions, show fiat amount with proper formatting
+    // When currency is NGN, show NGN amount in bold
+    if (exchangeRate.currency === "NGN") {
+      return React.createElement(
+        'span',
+        null,
+        React.createElement('strong', null, `${amountNum.toLocaleString()} ${currencyCode}`)
+      );
+    }
+    
+    // When currency is USD, show both USD and NGN amounts
+    if (exchangeRate.currency === "USD" && exchangeRate.fiatRate && exchangeRate.usdRate) {
+      // Calculate NGN amount: USD amount * (NGN rate / USD rate)
+      const ngnAmount = amountNum * (exchangeRate.fiatRate / exchangeRate.usdRate);
+      return React.createElement(
+        'span',
+        null,
+        `${amountNum.toLocaleString()} ${currencyCode} (`,
+        React.createElement('strong', null, `${ngnAmount.toLocaleString()} NGN`),
+        ')'
+      );
+    }
+    
+    // Fallback: show the amount with currency code
+    return `${amountNum.toLocaleString()} ${currencyCode}`;
+  };
+
   return {
     // Values
     selectedToken,
@@ -510,6 +627,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     supportedCryptoCurrencies,
     countdown,
     exchangeRateId,
+    exchangeRate,
     loadingCalculation,
     isDebouncing,
     transactionForm,
@@ -538,5 +656,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     handleAnonymousUserEmailInput,
     toggleShowUserEnterEmail,
     togglePaymentReceivingModal,
+    formatReceiveAmount,
+    formatSendAmount,
   };
 };
