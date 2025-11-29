@@ -6,7 +6,6 @@ import {transactionServiceApi} from "../api/transaction.api.ts";
 import {type RootState, store} from "../store.ts";
 import {ROUTES, SESSION_STORAGE_KEYS, TIME_IN_MILLISECONDS} from "../util/constants.util.ts";
 import type {AxiosServerError} from "../types/response.payload.types.ts";
-import {clearTradeProgress} from "../util/tradeProgress.storage.util.ts";
 import {disputeServiceApi} from "../api/dispute.api.ts";
 import type {MessageAttachment} from "../types/transaction.types.ts";
 import {extractErrorMessage} from "../util/index.util.ts";
