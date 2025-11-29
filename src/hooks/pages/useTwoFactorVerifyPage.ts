@@ -7,7 +7,7 @@ import {toast} from "react-toastify";
 export const useTwoFactorVerifyPage = () => {
   const navigate = useNavigate();
   const { verifyCodeMutation, resendTwoFactorCodeMutation } = useAuthQuery();
-  const [verificationCode, setVerificationCode] = useState<string[]>(Array(8).fill(""))
+  const [verificationCode, setVerificationCode] = useState<string[]>(Array(6).fill(""))
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
   
   useEffect(() => {
@@ -33,13 +33,13 @@ export const useTwoFactorVerifyPage = () => {
     setVerificationCode(newCode)
     
     // Auto-focus next input
-    if (value && index < 7) {
+    if (value && index < 5) {
       inputRefs.current[index + 1]?.focus()
     }
     
     // Auto-submit when last character is entered
     const fullCode = newCode.join("")
-    if (fullCode.length === 8 && index === 7) {
+    if (fullCode.length === 6 && index === 5) {
       handleSubmit(fullCode)
     }
   }
@@ -63,11 +63,11 @@ export const useTwoFactorVerifyPage = () => {
     
     // Focus the next empty input or the last input
     const nextEmptyIndex = newCode.findIndex(code => code === "")
-    const focusIndex = nextEmptyIndex === -1 ? 7 : nextEmptyIndex
+    const focusIndex = nextEmptyIndex === -1 ? 5 : nextEmptyIndex
     inputRefs.current[focusIndex]?.focus()
     
-    // Auto-submit if pasted code is 8 characters
-    if (pastedData.length === 8) {
+    // Auto-submit if pasted code is 6 characters
+    if (pastedData.length === 6) {
       handleSubmit(pastedData)
     }
   }
