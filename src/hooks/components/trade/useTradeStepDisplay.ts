@@ -21,6 +21,7 @@ import {
 import { setSelectedCryptoId } from "../../../redux/crypto.slice.ts";
 import {LOCAL_STORAGE_KEYS, SESSION_STORAGE_KEYS} from "../../../util/constants.util.ts";
 import {
+  clearTradeProgress,
   loadTradeProgress,
   saveTradeProgress,
 } from "../../../util/tradeProgress.storage.util.ts";
@@ -50,7 +51,7 @@ const shallowEqual = (a: any, b: any) => {
   return true;
 };
 
-export const useTradeStepDisplay = ( token: string, activeTab: TradeType, currency: string, setStep: (value: number) => void, initialAmount?: string ) => {
+export const useTradeStepDisplay = ( token: string, activeTab: TradeType, currency: string, setStep: (value: number) => void, setActiveTab: (value: TradeType) => void, initialAmount?: string ) => {
   const rootState = store.getState() as RootState;
   
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -462,10 +463,18 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   };
 
   const handleConfirmBankDetails = async (step: number) => {
-    await receivingPaymentAccountConfirmationMutation.mutateAsync();
-    toggleConfirmBankDetails();
-    togglePaymentReceivingModal();
-    setStep(step);
+    try {
+      await receivingPaymentAccountConfirmationMutation.mutateAsync();
+      // Clear trade progress and reset to step 1, like Cancel Order
+      clearTradeProgress();
+      setStep(1);
+      setActiveTab("buy");
+      toggleConfirmBankDetails();
+      togglePaymentReceivingModal();
+    } catch (error) {
+      // Error is already handled by the mutation's onError
+      console.error("Failed to confirm bank details:", error);
+    }
   };
   
   const handleAnonymousUserEmailInput = (value: string) => {

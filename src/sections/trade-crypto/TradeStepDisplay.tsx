@@ -76,7 +76,7 @@ export default function TradeStepDisplay({
     handleAnonymousUserEmailInput,
     toggleShowUserEnterEmail,
     togglePaymentReceivingModal,
-  } = useTradeStepDisplay(token, activeTab, currency, setStep, initialAmount);
+  } = useTradeStepDisplay(token, activeTab, currency, setStep, setActiveTab, initialAmount);
 
   // prefill amt on first load if provided in the URL and fields are empty
   useEffect(() => {

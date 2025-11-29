@@ -243,13 +243,8 @@ export const useTransactionQuery = () => {
     onSuccess: () => {
       toast.dismiss('confirm-receiving-account');
       toast.success('Successfully confirmed receiving account');
-      clearTradeProgress();
+      // Note: clearTradeProgress and step reset are handled in handleConfirmBankDetails
       sessionStorage.removeItem(SESSION_STORAGE_KEYS.SESSION_ID);
-      
-      setTimeout(() => {
-        // Reload the page to reset the state
-        window.location.reload();
-      }, 5000)
     },
     onError: () => {
       toast.dismiss('confirm-receiving-account');
