@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useRef } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useDispatch } from "react-redux";
 
@@ -495,13 +495,14 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
 
   const handleConfirmBankDetails = async (step: number) => {
     try {
+      console.log('handleConfirmBankDetails', step);
       await receivingPaymentAccountConfirmationMutation.mutateAsync();
       // Clear trade progress and reset to step 1, like Cancel Order
       clearTradeProgress();
       setStep(1);
       setActiveTab("buy");
-      toggleConfirmBankDetails();
-      togglePaymentReceivingModal();
+      setShowPaymentReceivingModal(false);
+      setShowConfirmBankDetails(false);
     } catch (error) {
       // Error is already handled by the mutation's onError
       console.error("Failed to confirm bank details:", error);
@@ -537,6 +538,82 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     if (transactionSessionId) saveTradeProgress({ transactionSessionId });
   }, [transactionSessionId]);
 
+  const formatReceiveAmount = (amount: number | string, currencyCode: string | undefined): string | React.ReactNode => {
+    if (!exchangeRate || !currencyCode) return String(amount);
+    
+    const amountNum = Number(amount);
+    if (isNaN(amountNum) || amountNum === 0) return String(amount);
+    
+    // For BUY transactions, just show the crypto amount
+    if (activeTab.toLocaleLowerCase() === 'buy') {
+      return `${Number(numberOfToken)} ${selectedToken?.symbol}`;
+    }
+    
+    // For SELL transactions, show fiat conversions
+    // When currency is USD, show both USD and NGN amounts
+    if (exchangeRate.currency === "USD" && exchangeRate.fiatRate && exchangeRate.usdRate) {
+      // Calculate NGN amount: USD amount * (NGN rate / USD rate)
+      const ngnAmount = amountNum * (exchangeRate.fiatRate / exchangeRate.usdRate);
+      return React.createElement(
+        'span',
+        null,
+        `${amountNum.toLocaleString()} ${currencyCode} (`,
+        React.createElement('strong', null, `${ngnAmount.toLocaleString()} NGN`),
+        ')'
+      );
+    }
+    
+    // When currency is NGN, just show NGN amount in bold
+    if (exchangeRate.currency === "NGN") {
+      return React.createElement(
+        'span',
+        null,
+        React.createElement('strong', null, `${amountNum.toLocaleString()} ${currencyCode}`)
+      );
+    }
+    
+    // Fallback: just show the amount
+    return `${amountNum.toLocaleString()} ${currencyCode}`;
+  };
+
+  const formatSendAmount = (amount: number | string, currencyCode: string | undefined): string | React.ReactNode => {
+    if (!exchangeRate || !currencyCode) return String(amount);
+    
+    const amountNum = Number(String(amount).replace(/,/g, '')); // Remove commas before parsing
+    if (isNaN(amountNum) || amountNum === 0) return String(amount);
+    
+    // For SELL transactions, show the crypto amount being sent
+    if (activeTab.toLowerCase() === 'sell') {
+      return `${Number(numberOfToken).toLocaleString()} ${selectedToken?.symbol}`;
+    }
+    
+    // For BUY transactions, show fiat amount with proper formatting
+    // When currency is NGN, show NGN amount in bold
+    if (exchangeRate.currency === "NGN") {
+      return React.createElement(
+        'span',
+        null,
+        React.createElement('strong', null, `${amountNum.toLocaleString()} ${currencyCode}`)
+      );
+    }
+    
+    // When currency is USD, show both USD and NGN amounts
+    if (exchangeRate.currency === "USD" && exchangeRate.fiatRate && exchangeRate.usdRate) {
+      // Calculate NGN amount: USD amount * (NGN rate / USD rate)
+      const ngnAmount = amountNum * (exchangeRate.fiatRate / exchangeRate.usdRate);
+      return React.createElement(
+        'span',
+        null,
+        `${amountNum.toLocaleString()} ${currencyCode} (`,
+        React.createElement('strong', null, `${ngnAmount.toLocaleString()} NGN`),
+        ')'
+      );
+    }
+    
+    // Fallback: show the amount with currency code
+    return `${amountNum.toLocaleString()} ${currencyCode}`;
+  };
+
   return {
     // Values
     selectedToken,
@@ -550,6 +627,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     supportedCryptoCurrencies,
     countdown,
     exchangeRateId,
+    exchangeRate,
     loadingCalculation,
     isDebouncing,
     transactionForm,
@@ -578,5 +656,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     handleAnonymousUserEmailInput,
     toggleShowUserEnterEmail,
     togglePaymentReceivingModal,
+    formatReceiveAmount,
+    formatSendAmount,
   };
 };

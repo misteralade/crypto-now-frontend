@@ -76,6 +76,8 @@ export default function TradeStepDisplay({
     handleAnonymousUserEmailInput,
     toggleShowUserEnterEmail,
     togglePaymentReceivingModal,
+    formatReceiveAmount,
+    formatSendAmount,
   } = useTradeStepDisplay(token, activeTab, currency, setStep, setActiveTab, initialAmount);
 
   // prefill amt on first load if provided in the URL and fields are empty
@@ -176,6 +178,8 @@ export default function TradeStepDisplay({
             transactionRef={transactionSessionId}
             handleTransactionHash={handleTransactionHash}
             handleSubmitPaymentProof={makePaymentTransaction}
+            formatReceiveAmount={formatReceiveAmount}
+            formatSendAmount={formatSendAmount}
           />
         )}
       </div>

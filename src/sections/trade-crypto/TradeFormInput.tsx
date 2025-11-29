@@ -4,7 +4,7 @@ import type {ChangeEvent, ReactNode} from "react";
 interface TradeFormInputProps {
     label: string;
     name: string;
-    value: string;
+    value: string | ReactNode;
     onInputChange?: (value: string) => void;
     isReadOnly?: boolean
     tradeType: TradeType
@@ -25,16 +25,22 @@ export default function TradeFormInput({ label, name, value, onInputChange, chil
             <label htmlFor={name} className={`text-grey uppercase text-sm block`}>{label}</label>
 
             <div className={`flex items-center justify-between gap-2`}>
-                <input
-                    type="number"
-                    name={name}
-                    id={name}
-                    value={value}
-                    onChange={handleInputChange}
-                    className={`font-semibold text-4xl text-black outline-none border-none w-full ${isReadOnly && "cursor-not-allowed"}`}
-                    placeholder={`0`}
-                    readOnly={isReadOnly}
-                />
+                {isReadOnly && typeof value !== 'string' ? (
+                    <div className={`font-semibold text-4xl text-black w-full ${isReadOnly && "cursor-not-allowed"}`}>
+                        {value}
+                    </div>
+                ) : (
+                    <input
+                        type="number"
+                        name={name}
+                        id={name}
+                        value={typeof value === 'string' ? value : ''}
+                        onChange={handleInputChange}
+                        className={`font-semibold text-4xl text-black outline-none border-none w-full ${isReadOnly && "cursor-not-allowed"}`}
+                        placeholder={`0`}
+                        readOnly={isReadOnly}
+                    />
+                )}
 
                 {children}
             </div>
