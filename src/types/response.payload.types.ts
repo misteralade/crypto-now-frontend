@@ -48,8 +48,10 @@ export type SupportedCryptoOrCurrencyResponse = {
 export type SupportedExchangeRateResponse = {
   fiatRate: number;
   coinGeckoRate: number;
+  currency: string; // "NGN" or "USD"
   validUntil: string; // ISO date string
   rateId: string;
+  usdRate?: number; // Only present when currency is "USD"
 }
 
 export type SupportedPlatformBankAccountResponse = {
