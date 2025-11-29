@@ -306,6 +306,14 @@ export const ALLOWED_SPREADSHEET_TYPES = [
   'text/csv',
 ] as const;
 
+export const TESTIMONIAL_CONTENT_TYPES = {
+  VIDEO: 'VIDEO',
+  IMAGE: 'IMAGE',
+  TEXT: 'TEXT',
+} as const;
+
+export type TestimonialContentType = typeof TESTIMONIAL_CONTENT_TYPES[keyof typeof TESTIMONIAL_CONTENT_TYPES];
+
 export const cryptoNetworkTypes = [
   "BTC",
   "ERC20",

@@ -383,3 +383,31 @@ export type TransactionSummaryResponse = {
 }
 // End Transactions
 
+// Testimonials
+export type TestimonialResponse = {
+  id: string;
+  creatorId: string;
+  isPublished: boolean;
+  contentLink: string;
+  name: string;
+  description: string;
+  contentType: 'VIDEO' | 'IMAGE' | 'TEXT';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type TestimonialPaginationResponse = {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export type TestimonialsDataResponse = {
+  testimonials: TestimonialResponse[];
+  pagination: TestimonialPaginationResponse;
+}
+
+export type GetTestimonialsAPIResponse = BaseApiResponse<TestimonialsDataResponse>
+// End Testimonials
+
