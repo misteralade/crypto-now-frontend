@@ -159,7 +159,7 @@ export default function TradeStepTwo({ amountToBuy, tradeType, numberOfToken, ad
         {tradeType === "sell" && (
           <div className="w-full md:w-3/4 mx-auto">
             <label htmlFor="transactionHash" className="block text-sm font-medium text-gray-700 mb-2">
-              Transaction Hash *
+              Transaction Hash
             </label>
             <input
               type="text"
@@ -171,7 +171,6 @@ export default function TradeStepTwo({ amountToBuy, tradeType, numberOfToken, ad
               }}
               placeholder="Enter blockchain transaction hash (e.g., 0x123abc...)"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              required
             />
             <p className="text-xs text-gray-500 mt-1">
               Provide the transaction hash from your crypto wallet after sending the {selectedToken?.symbol}
@@ -210,10 +209,7 @@ export default function TradeStepTwo({ amountToBuy, tradeType, numberOfToken, ad
           />
           {submitInvalid && (
             <p className="text-xs text-red-500 mt-2 text-center">
-              {tradeType === "sell"
-                ? "Please provide transaction hash and upload proof (file must be successfully uploaded)"
-                : "Please upload payment proof (file must be successfully uploaded)"
-              }
+              Please upload {tradeType === "sell" ? "transaction" : "payment"} proof (file must be successfully uploaded)
             </p>
           )}
         </div>

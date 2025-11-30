@@ -27,6 +27,7 @@ import {
 } from "../../../util/tradeProgress.storage.util.ts";
 import {type RootState, store} from "../../../store.ts";
 import {setAnonymousUserEmail} from "../../../redux/user.slice.ts";
+import { convertToMillify, formatNumber } from "../../../util/index.util.ts";
 
 // Debounce
 const useDebounce = (value: any, delay: number) => {
@@ -402,15 +403,27 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     if (loadingExchangeRate) return "Loading...";
     if (!exchangeRate) return "0";
     
-    // When currency is USD:
-    // - usdRate is the USD rate (e.g., 1)
-    // - fiatRate is the NGN rate (e.g., 1570)
+    const tokenSymbol = selectedToken?.symbol;
+    const currencyCode = selectedCurrency?.code;
+    
+    // Build the market rate string
+    let rateDisplay = "";
+    
     if (exchangeRate.currency === "USD" && exchangeRate.usdRate !== undefined) {
-      return `1 ${selectedToken?.symbol} = ${exchangeRate.usdRate.toLocaleString()} USD (${exchangeRate.fiatRate.toLocaleString()} NGN)`;
+      // Show both USD and NGN for USD currency
+      rateDisplay = `1 ${tokenSymbol} = ${convertToMillify(Number(exchangeRate.usdRate))} USD (${convertToMillify(Number(exchangeRate.fiatRate))} NGN)`;
+    } else {
+      // Show fiat rate for other currencies
+      rateDisplay = `1 ${tokenSymbol} = ${convertToMillify(exchangeRate.fiatRate)} ${currencyCode}`;
     }
     
-    // When currency is NGN, fiatRate is the NGN rate
-    return `1 ${selectedToken?.symbol} = ${exchangeRate.fiatRate.toLocaleString()} ${selectedCurrency?.code}`;
+    // Add platform rate if available
+    if (exchangeRate.platformRate !== undefined) {
+      const platformCurrency = exchangeRate.currency === "USD" ? "NGN" : currencyCode;
+      rateDisplay += ` • Our rate: ${formatNumber(exchangeRate.platformRate)} ${platformCurrency}/${tokenSymbol}`;
+    }
+    
+    return rateDisplay;
   };
 
   const AdditionalInfo: TradeAdditionalInfoInterface[] = [

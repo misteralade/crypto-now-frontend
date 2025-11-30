@@ -56,6 +56,7 @@ export type SupportedExchangeRateResponse = {
   validUntil: string; // ISO date string
   rateId: string;
   usdRate?: number; // Only present when currency is "USD"
+  platformRate: string;
 }
 
 export type SupportedPlatformBankAccountResponse = {
