@@ -75,11 +75,8 @@ export const useTradeStepTwo = ({
       enabled: !!exchangeRateId,
     });
 
-  // Validation based on trade type
-  const submitInvalid =
-    tradeType === "sell"
-      ? transactionHash.trim() === "" || !uploadedFileUrl
-      : !uploadedFileUrl;
+  // Validation based on trade type - only require uploaded file
+  const submitInvalid = !uploadedFileUrl;
 
   useEffect(() => {
     const saved = loadTradeProgress();
