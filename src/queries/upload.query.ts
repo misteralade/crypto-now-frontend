@@ -40,14 +40,14 @@ export const useUploadQuery = () => {
         throw error;
       }
     },
-    onError: (error: AxiosServerError) => {
-      toast.dismiss();
-      const message = extractErrorMessage(error) || 'Failed to upload file';
-      toast.error(message);
-    },
     onSuccess: () => {
       toast.dismiss();
       toast.success(`Upload picture successfully uploaded`);
+    },
+    onError: ( error: AxiosServerError ) => {
+      toast.dismiss();
+      const message = extractErrorMessage(error) || "Failed to upload file. Please try again."
+      toast.error(message);
     },
   });
   

@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { EmailSchema } from '../../../schemas/common.schema'
+import { ZodError } from 'zod'
 
 interface EmailModalProps {
   open: boolean
@@ -8,11 +10,32 @@ interface EmailModalProps {
 
 const EmailModal = ({ open, onClose, onConfirm }: EmailModalProps) => {
   const [email, setEmail] = useState('')
+  const [errorMessage, setErrorMessage] = useState<string>('')
+  const [isValid, setIsValid] = useState(false)
   
   if (!open) return null
   
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setEmail(value)
+    
+    // Validate email
+    try {
+      EmailSchema.parse(value)
+      setIsValid(true)
+      setErrorMessage('')
+    } catch (error) {
+      setIsValid(false)
+      if (error instanceof ZodError && error.issues?.[0]?.message) {
+        setErrorMessage(error.issues[0].message)
+      } else {
+        setErrorMessage('Invalid email address')
+      }
+    }
+  }
+  
   const handleConfirm = () => {
-    if (email) {
+    if (email && isValid) {
       onConfirm(email)
     }
   }
@@ -35,13 +58,22 @@ const EmailModal = ({ open, onClose, onConfirm }: EmailModalProps) => {
               Enter your email to receive updates about your transaction
             </div>
             
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="your@email.com"
-              className="w-full px-4 py-3 rounded-lg border border-[#ECECEC] text-[16px] focus:outline-none focus:border-[#03034D]"
-            />
+            <div className="space-y-2">
+              <input
+                type="email"
+                value={email}
+                onChange={handleEmailChange}
+                placeholder="your@email.com"
+                className={`w-full px-4 py-3 rounded-lg border text-[16px] focus:outline-none ${
+                  errorMessage && email
+                    ? 'border-red-500 focus:border-red-500'
+                    : 'border-[#ECECEC] focus:border-[#03034D]'
+                }`}
+              />
+              {errorMessage && email && (
+                <p className="text-sm text-red-500">{errorMessage}</p>
+              )}
+            </div>
           </div>
           
           <div className="px-6 pb-6 flex flex-col md:flex-row items-center justify-center gap-4 border-t border-[#ECECEC] pt-4">
@@ -54,7 +86,7 @@ const EmailModal = ({ open, onClose, onConfirm }: EmailModalProps) => {
             <button
               className="rounded-full bg-[#03034D] hover:bg-[#FF8B5A] text-white px-12 py-4 text-lg font-semibold w-full md:w-fit disabled:opacity-50 disabled:cursor-not-allowed hover:cursor-pointer"
               onClick={handleConfirm}
-              disabled={!email}
+              disabled={!email || !isValid}
             >
               Continue
             </button>

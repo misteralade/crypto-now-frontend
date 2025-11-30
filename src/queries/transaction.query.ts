@@ -170,8 +170,10 @@ export const useTransactionQuery = () => {
     },
     onError: ( error: AxiosServerError ) => {
       toast.dismiss(QUERY_KEYS.TRANSACTION.INITIATE_TRANSACTION);
-      const { response } = error;
-      const message = response ? response.data.error.message : 'Failed to initiate transaction. Please try again.'
+      const message = extractErrorMessage(error) || "Failed to initiate transaction. Please try again."
+      console.log({
+        message
+      })
       toast.error(message);
     },
   });
@@ -202,6 +204,11 @@ export const useTransactionQuery = () => {
         sessionId: transactionSessionId,
         coinId: transactionForm?.tokenId,
       });
+    },
+    onError: ( error: AxiosServerError ) => {
+      toast.dismiss();
+      const message = extractErrorMessage(error) || "Failed to update transaction payment. Please try again."
+      toast.error(message);
     },
   });
   
@@ -245,10 +252,11 @@ export const useTransactionQuery = () => {
       // Note: clearTradeProgress and step reset are handled in handleConfirmBankDetails
       sessionStorage.removeItem(SESSION_STORAGE_KEYS.SESSION_ID);
     },
-    onError: () => {
+    onError: ( error: AxiosServerError ) => {
       toast.dismiss('confirm-receiving-account');
-      toast.error('Failed to confirm receiving account');
-    }
+      const message = extractErrorMessage(error) || "Failed to confirm receiving account. Please try again."
+      toast.error(message);
+    },
   });
   
   const disputeTransactionInitiationMutation = useMutation({
@@ -272,8 +280,7 @@ export const useTransactionQuery = () => {
     },
     onError: ( error: AxiosServerError ) => {
       toast.dismiss(QUERY_KEYS.DISPUTE.INITIATE_DISPUTE_TRANSACTION);
-      const { response } = error;
-      const message = response ? response.data.error.message : 'Failed to initiate dispute. Please try again.'
+      const message = extractErrorMessage(error) || "Failed to initiate dispute. Please try again."
       toast.error(message);
     },
   })
@@ -302,8 +309,7 @@ export const useTransactionQuery = () => {
     },
     onError: ( error: AxiosServerError ) => {
       toast.dismiss(QUERY_KEYS.DISPUTE.USER_SEND_DISPUTE_MESSAGE);
-      const { response } = error;
-      const message = response ? response.data.error.message : 'Failed to send dispute message. Please try again.'
+      const message = extractErrorMessage(error) || "Failed to send dispute message. Please try again."
       toast.error(message);
     },
   });
@@ -327,8 +333,8 @@ export const useTransactionQuery = () => {
     },
     onError: ( error: AxiosServerError ) => {
       toast.dismiss();
-      const message = extractErrorMessage(error)
-      toast.error(message || 'Error downloading transaction details');
+      const message = extractErrorMessage(error) || "Failed to download transaction details. Please try again."
+      toast.error(message);
     },
   });
 
@@ -352,8 +358,8 @@ export const useTransactionQuery = () => {
     },
     onError: ( error: AxiosServerError ) => {
       toast.dismiss();
-      const message = extractErrorMessage(error)
-      toast.error(message || 'Error downloading transaction history');
+      const message = extractErrorMessage(error) || "Failed to download transaction history. Please try again."
+      toast.error(message);
     },
   })
   

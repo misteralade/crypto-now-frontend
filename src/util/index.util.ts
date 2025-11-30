@@ -1,6 +1,7 @@
 import millify from "millify";
 import {LOCAL_STORAGE_KEYS} from "./constants.util.ts";
 import type {AxiosServerError} from "../types/response.payload.types.ts";
+import {ZodError} from "zod";
 
 export const formatTime = (seconds: number) => {
   const mins = Math.floor(seconds / 60)
@@ -42,9 +43,122 @@ export const formatFileSize = (bytes: number) => {
   return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
 };
 
-export const extractErrorMessage = (error: AxiosServerError): string | undefined => {
-  const { response } = error;
-  return response ? response?.data?.error?.message || response?.data?.message : undefined
+/**
+ * Extracts error messages from various error types including:
+ * - Axios server errors with StandardizedServerError format
+ * - ZodError instances (client-side validation)
+ * - Server-side Zod validation errors in BaseApiResponse format
+ * - Generic Error objects
+ * 
+ * @param error - The error object to extract message from
+ * @returns A formatted error message string or undefined
+ */
+export const extractErrorMessage = (error: AxiosServerError | ZodError | Error | unknown): string | undefined => {
+  // Handle ZodError instances (client-side validation)
+  // Handle server-side ZodError
+  if (error && typeof error === 'object' && 'response' in error) {
+    const axiosError = error as AxiosServerError;
+    const errorData = axiosError?.response?.data?.error;
+    
+    if (errorData && typeof errorData === 'object' && 'name' in errorData && errorData.name === 'ZodError' && 'errors' in errorData) {
+      const errors = errorData.errors as Record<string, { _errors?: string[] }>;
+      const validationErrors: string[] = [];
+      
+      for (const [field, fieldError] of Object.entries(errors)) {
+        if (field !== '_errors' && fieldError && typeof fieldError === 'object' && '_errors' in fieldError) {
+          const errorMessages = (fieldError as { _errors?: string[] })._errors;
+          if (errorMessages && Array.isArray(errorMessages)) {
+            errorMessages.forEach((msg: string) => {
+              validationErrors.push(`${field}: ${msg}`);
+            });
+          }
+        }
+      }
+      
+      if (validationErrors.length > 0) {
+        return validationErrors.join('; ');
+      }
+    }
+  }
+
+  // Handle client-side ZodError instances
+  if (error instanceof ZodError) {
+    const issues = error.issues.map(issue => {
+      const path = issue.path.join('.');
+      return path ? `${path}: ${issue.message}` : issue.message;
+    });
+    return issues.join('; ');
+  }
+
+  // Handle AxiosError with StandardizedServerError response
+  if (error && typeof error === 'object' && 'response' in error) {
+    const axiosError = error as AxiosServerError;
+    const { response } = axiosError;
+
+    if (response?.data) {
+      // Check for standardized error format
+      if (response.data.error?.message) {
+        return response.data.error.message;
+      }
+
+      // Check for direct message field
+      if (response.data.message) {
+        return response.data.message;
+      }
+
+      // Check for Zod validation errors in BaseApiResponse format
+      if (response.data.error && typeof response.data.error === 'object') {
+        const validationErrors: string[] = [];
+        
+        for (const [field, fieldError] of Object.entries(response.data.error)) {
+          if (fieldError && typeof fieldError === 'object' && '_errors' in fieldError) {
+            const errors = (fieldError as { _errors?: string[] })._errors;
+            if (errors && Array.isArray(errors)) {
+              const messages = errors.map((msg: string) => `${field}: ${msg}`);
+              validationErrors.push(...messages);
+            }
+          }
+        }
+
+        if (validationErrors.length > 0) {
+          return validationErrors.join('; ');
+        }
+      }
+    }
+
+    // Check if response exists but is not yet accessed in the log
+    // Sometimes response.data might be undefined but the error is still valid
+    if (!response) {
+      // No response means network error or request was cancelled
+      if ('code' in axiosError && typeof axiosError.code === 'string') {
+        const code = axiosError.code;
+        if (code === 'ERR_NETWORK') {
+          return 'Network error. Please check your internet connection.';
+        }
+        if (code === 'ECONNABORTED' || code === 'ERR_CANCELED') {
+          return 'Request was cancelled or timed out.';
+        }
+      }
+    }
+
+    // Fallback to axios error message
+    if ('message' in axiosError && axiosError.message) {
+      return axiosError.message;
+    }
+  }
+
+  // Handle generic Error objects
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  // Handle string errors
+  if (typeof error === 'string') {
+    return error;
+  }
+
+  // Fallback for unknown error types
+  return 'An unexpected error occurred';
 }
 
 export const formatCurrency = (amount: number, currency?: string) => {
