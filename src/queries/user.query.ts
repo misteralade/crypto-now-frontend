@@ -8,6 +8,7 @@ import { setIsAnonymousUser } from "../redux/user.slice.ts";
 import { type RootState, store } from "../store.ts";
 import { toast } from "react-toastify";
 import type { AxiosServerError } from "../types/response.payload.types.ts";
+import { extractErrorMessage } from "../util/index.util.ts";
 
 export const useUserQuery = () => {
   const matchRoute = useMatchRoute();
@@ -67,8 +68,7 @@ export const useUserQuery = () => {
     },
     onError: ( error: AxiosServerError ) => {
       toast.dismiss();
-      const { response } = error;
-      const message = response ? response.data.error.message : 'Failed to update profile';
+      const message = extractErrorMessage(error) || "Failed to update profile. Please try again."
       toast.error(message);
     },
   });
@@ -91,8 +91,7 @@ export const useUserQuery = () => {
     },
     onError: ( error: AxiosServerError ) => {
       toast.dismiss();
-      const { response } = error;
-      const message = response ? response.data.error.message : 'Failed to Send Message';
+      const message = extractErrorMessage(error) || "Failed to send message. Please try again."
       toast.error(message);
     },
   })

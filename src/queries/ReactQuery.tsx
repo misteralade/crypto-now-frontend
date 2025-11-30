@@ -12,9 +12,15 @@ export default function ReactQueryRegistry({
       new QueryClient({
         defaultOptions: {
           queries: {
+            retry: 3,
+            retryDelay: TIME_IN_MILLISECONDS.THREE_SECONDS,
             staleTime: TIME_IN_MILLISECONDS.TEN_SECONDS,
             gcTime: TIME_IN_MILLISECONDS.ONE_HOUR,
             refetchOnWindowFocus: false,
+          },
+          mutations: {
+            retry: 1,
+            retryDelay: TIME_IN_MILLISECONDS.THREE_SECONDS,
           },
         },
       })

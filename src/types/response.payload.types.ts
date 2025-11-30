@@ -19,7 +19,11 @@ export type AxiosServerError = AxiosError<StandardizedServerError>;
 export type BaseApiResponse<T> = {
   success: boolean;
   message: string;
-  error: any;
+  error: {
+    [key: string]: {
+      _errors?: string[];
+    };
+  } | any;
   data: T;
 };
 

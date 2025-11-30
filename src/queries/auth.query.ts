@@ -35,9 +35,7 @@ export const useAuthQuery = () => {
     },
     onError: ( error: AxiosServerError ) => {
       toast.dismiss();
-      setLoggingInLoading(false);
-      const { response } = error;
-      const message = response ? response.data.error.message : 'Failed to initiate password change'
+      const message = extractErrorMessage(error) || "Failed to initiate password change"
       toast.error(message);
     },
   });
@@ -60,8 +58,8 @@ export const useAuthQuery = () => {
     },
     onError: ( error: AxiosServerError ) => {
       toast.dismiss();
-      const message = extractErrorMessage(error)
-      toast.error(message || 'Failed to create new account');
+      const message = extractErrorMessage(error) || "Failed to create new account"
+      toast.error(message);
     },
   })
   
@@ -80,8 +78,7 @@ export const useAuthQuery = () => {
     },
     onError: ( error: AxiosServerError ) => {
       toast.dismiss();
-      const { response } = error;
-      const message = response ? response.data.error.message : 'Failed to initiate password change'
+      const message = extractErrorMessage(error) || "Failed to change password"
       toast.error(message);
     },
   });
@@ -102,8 +99,7 @@ export const useAuthQuery = () => {
     },
     onError: ( error: AxiosServerError ) => {
       toast.dismiss();
-      const { response } = error;
-      const message = response ? response.data.error.message : 'Failed to update Two-Factor authentication'
+      const message = extractErrorMessage(error) || "Failed to update Two-Factor authentication"
       toast.error(message);
     },
   });
@@ -124,8 +120,8 @@ export const useAuthQuery = () => {
     },
     onError: ( error: AxiosServerError ) => {
       toast.dismiss();
-      const message = extractErrorMessage(error)
-      toast.error(message || 'Failed to verify your code');
+      const message = extractErrorMessage(error) || "Failed to verify your code"
+      toast.error(message);
     },
   });
 
@@ -144,8 +140,8 @@ export const useAuthQuery = () => {
     },
     onError: ( error: AxiosServerError ) => {
       toast.dismiss();
-      const message = extractErrorMessage(error)
-      toast.error(message || 'Failed to login');
+      const message = extractErrorMessage(error) || "Failed to login"
+      toast.error(message);
     },
   });
 
@@ -175,8 +171,8 @@ export const useAuthQuery = () => {
     },
     onError: ( error: AxiosServerError ) => {
       toast.dismiss();
-      const message = extractErrorMessage(error)
-      toast.error(message || 'Failed to resend code');
+      const message = extractErrorMessage(error) || 'Failed to resend code'
+      toast.error(message);
     },
   });
 
