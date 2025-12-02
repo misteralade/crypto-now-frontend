@@ -475,7 +475,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   ]);
 
   // Format rate display - show NGN rate in parentheses when currency is USD
-  const formatRateDisplay = () => {
+  const formatRateDisplay = (): string | React.ReactNode => {
     if (loadingExchangeRate) return "Loading...";
     if (!exchangeRate) return "0";
     
@@ -483,23 +483,30 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     const currencyCode = selectedCurrency?.code;
     
     // Build the market rate string
-    let rateDisplay = "";
+    let marketRate = "";
     
     if (exchangeRate.currency === "USD" && exchangeRate.usdRate !== undefined) {
       // Show both USD and NGN for USD currency
-      rateDisplay = `1 ${tokenSymbol} = ${convertToMillify(Number(exchangeRate.usdRate))} USD (${convertToMillify(Number(exchangeRate.fiatRate))} NGN)`;
+      marketRate = `1 ${tokenSymbol} = ${convertToMillify(Number(exchangeRate.usdRate))} USD (${convertToMillify(Number(exchangeRate.fiatRate))} NGN)`;
     } else {
       // Show fiat rate for other currencies
-      rateDisplay = `1 ${tokenSymbol} = ${convertToMillify(exchangeRate.fiatRate)} ${currencyCode}`;
+      marketRate = `1 ${tokenSymbol} = ${convertToMillify(exchangeRate.fiatRate)} ${currencyCode}`;
     }
     
-    // Add platform rate if available
+    // Add platform rate if available - return as ReactNode to allow wrapping on mobile
     if (exchangeRate.platformRate !== undefined) {
       const platformCurrency = exchangeRate.currency === "USD" ? "NGN" : currencyCode;
-      rateDisplay += ` • Our rate: ${formatNumber(exchangeRate.platformRate)} ${platformCurrency}/${tokenSymbol}`;
+      const ourRate = `Our rate: ${formatNumber(exchangeRate.platformRate)} ${platformCurrency}/${tokenSymbol}`;
+      
+      return React.createElement(
+        'span',
+        { className: 'flex flex-col md:flex-row md:items-center gap-1 md:gap-2' },
+        React.createElement('span', null, marketRate),
+        React.createElement('span', { className: 'text-black' }, `• ${ourRate}`)
+      );
     }
     
-    return rateDisplay;
+    return marketRate;
   };
 
   const AdditionalInfo: TradeAdditionalInfoInterface[] = [
