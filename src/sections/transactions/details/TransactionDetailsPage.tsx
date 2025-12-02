@@ -16,6 +16,8 @@ const TransactionDetailsPage = () => {
     loadingTransactionDetails,
     showDisputeTransaction,
     copiedField,
+    disputeCountdown,
+    canDispute,
     
     // ⚙️ Functions
     toggleDisputeTransaction,
@@ -97,10 +99,22 @@ const TransactionDetailsPage = () => {
                 
                 <button
                   onClick={toggleDisputeTransaction}
-                  className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors hover:cursor-pointer"
+                  disabled={!canDispute}
+                  className={`flex items-center gap-2 px-4 py-2 font-medium rounded-lg transition-colors ${
+                    canDispute
+                      ? "bg-red-600 hover:bg-red-700 text-white hover:cursor-pointer"
+                      : "bg-gray-400 text-white cursor-not-allowed opacity-60"
+                  }`}
                 >
                   <AlertTriangle className="w-4 h-4" />
-                  Dispute Transaction
+                  {canDispute ? (
+                    "Dispute Transaction"
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      <Clock className="w-4 h-4" />
+                      Dispute Available in: {disputeCountdown}
+                    </span>
+                  )}
                 </button>
               </div>
               
