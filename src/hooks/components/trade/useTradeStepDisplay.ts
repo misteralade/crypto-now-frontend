@@ -617,8 +617,9 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       return React.createElement(
         'span',
         null,
-        `${amountNum.toLocaleString()} ${currencyCode} (`,
         React.createElement('strong', null, `${ngnAmount.toLocaleString()} NGN`),
+        ' (',
+        `${amountNum.toLocaleString()} ${currencyCode}`,
         ')'
       );
     }
