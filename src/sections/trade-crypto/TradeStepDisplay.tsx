@@ -78,6 +78,10 @@ export default function TradeStepDisplay({
     togglePaymentReceivingModal,
     formatReceiveAmount,
     formatSendAmount,
+    handleFocusNumberOfToken,
+    handleFocusAmountToBuy,
+    handleBlurNumberOfToken,
+    handleBlurAmountToBuy,
   } = useTradeStepDisplay(token, activeTab, currency, setStep, setActiveTab, initialAmount);
 
   // prefill amt on first load if provided in the URL and fields are empty
@@ -163,6 +167,10 @@ export default function TradeStepDisplay({
             availableTokens={!loadingSupportedCryptocurrencies && supportedCryptoCurrencies || []}
             isInitiatingTrade={isInitiatingTrade}
             setActiveTab={setActiveTab}
+            handleFocusNumberOfToken={handleFocusNumberOfToken}
+            handleFocusAmountToBuy={handleFocusAmountToBuy}
+            handleBlurNumberOfToken={handleBlurNumberOfToken}
+            handleBlurAmountToBuy={handleBlurAmountToBuy}
           />
         )}
         {step === 2 && (
