@@ -5,11 +5,11 @@ import type {
 } from "../../schemas/user.schema.ts";
 
 export const personalInformationInitialState: UserProfileUpdateRequestType = {
-  firstName: '',
-  lastName: '',
-  phoneNumber: '',
-  dob: '',
-  profileImg: '',
+  firstName: undefined,
+  lastName: undefined,
+  phoneNumber: undefined,
+  dob: undefined,
+  profileImg: undefined,
 };
 
 export const newUserInitialState: CreateUserRequestType = {
