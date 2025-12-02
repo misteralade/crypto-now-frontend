@@ -72,6 +72,21 @@ export const useTransactionQuery = () => {
     enabled: !!matchRoute({ to: ROUTES.DASHBOARD }),
   })
 
+  // Get Incomplete Transactions Count
+  const { data: incompleteTransactionsCount, isLoading: loadingIncompleteTransactionsCount } = useQuery({
+    queryKey: [QUERY_KEYS.TRANSACTION.USER_INCOMPLETE_TRANSACTIONS_COUNT],
+    queryFn: async () => {
+      const { data, success } = await transactionServiceApi.getIncompleteTransactionsCount();
+
+      if (success) {
+        return data;
+      }
+
+      return null;
+    },
+    enabled: !!matchRoute({ to: ROUTES.DASHBOARD }),
+  })
+
   // Get transaction Details
   const { data: transactionDetails, isLoading: loadingTransactionDetails } = useQuery({
     queryKey: [QUERY_KEYS.TRANSACTION.USER_TRANSACTION_DETAILS, store.getState().transaction.details.sessionId],
@@ -371,13 +386,15 @@ export const useTransactionQuery = () => {
     loadingUserTransactionHistory,
     transactionSummary,
     loadingTransactionSummary,
+    incompleteTransactionsCount,
+    loadingIncompleteTransactionsCount,
     transactionDetails,
     loadingTransactionDetails,
     disputeMessages,
     loadingDisputeMessages,
     disputeDetails,
     loadingDisputeDetails,
-    
+
 
     // Mutations
     initiateTransactionMutation,

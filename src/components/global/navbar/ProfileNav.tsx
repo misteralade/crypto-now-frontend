@@ -39,7 +39,7 @@ const ProfileNav = () => {
           Hello,{" "}
           {!loadingUserProfile &&
             userProfileData?.profile?.firstName &&
-            userProfileData?.email}
+            userProfileData?.profile.firstName}
         </h2>
         <div className={`w-9 h-9 rounded-full`}>
           <img src={TestDP} className={`w-full h-full`} />
