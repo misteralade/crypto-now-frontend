@@ -12,7 +12,6 @@ const ProfileNav = () => {
   const navigate = useNavigate();
   const { userProfileData, loadingUserProfile } = useUserQuery();
   
-  const notificationsCount: number = 1;
   const [openLogoutDropdown, setOpenLogoutDropdown] = useState(false);
   
   const handleLogout = () => {
