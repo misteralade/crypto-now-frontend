@@ -34,6 +34,17 @@ export const useTransactionBoard = () => {
     dispatch(setSearchUserTransactions(updatedPayload))
   }
 
+  const handlePageSizeChange = (size: number) => {
+    const searchTransactionPayload = (store.getState() as RootState)?.transaction?.dashboard?.searchUserTransactions as SearchTransactionsRequestPayload;
+    const updatedPayload: SearchTransactionsRequestPayload = {
+      ...searchTransactionPayload,
+      size,
+      page: 1, // Reset to first page when page size changes
+    };
+
+    dispatch(setSearchUserTransactions(updatedPayload))
+  }
+
   const handleFiltersChange = (newFilters: FilterState) => {
     const searchTransactionPayload = (store.getState() as RootState)?.transaction?.dashboard?.searchUserTransactions as SearchTransactionsRequestPayload;
     const updatedPayload: SearchTransactionsRequestPayload = {
@@ -50,7 +61,8 @@ export const useTransactionBoard = () => {
     setFilters(newFilters)
   }
 
-  const handleSearchChange = useMemo(
+  // Debounced function that only dispatches to Redux (triggers API call)
+  const debouncedDispatch = useMemo(
     () =>
       debounce((query: string) => {
         const updatedPayload = {
@@ -58,10 +70,17 @@ export const useTransactionBoard = () => {
           searchQuery: query || undefined,
         };
         dispatch(setSearchUserTransactions(updatedPayload as SearchTransactionsRequestPayload));
-        setSearchQuery(query);
       }, TIME_IN_MILLISECONDS.FIVE_HUNDRED_MILLISECONDS),
     [dispatch]
   );
+
+  // Handler that updates input immediately and triggers debounced dispatch
+  const handleSearchChange = (query: string) => {
+    // Update input value immediately for responsive UI
+    setSearchQuery(query);
+    // Dispatch to Redux after debounce delay (triggers API call)
+    debouncedDispatch(query);
+  };
 
   return {
     // Values
@@ -77,6 +96,7 @@ export const useTransactionBoard = () => {
     setSearchQuery,
     setShowFilters,
     handlePageChange,
+    handlePageSizeChange,
     handleFiltersChange,
     handleSearchChange,
   }
