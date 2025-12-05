@@ -42,8 +42,6 @@ export const useTransactionQuery = () => {
   const { data: userTransactionHistory, isLoading: loadingUserTransactionHistory } = useQuery({
     queryKey: [QUERY_KEYS.TRANSACTION.USER_SEARCH_TRANSACTION_HISTORY, searchTransactionPayload],
     queryFn: async () => {
-      const rootState = store.getState() as RootState;
-
       if (!searchTransactionPayload) {
         return;
       }

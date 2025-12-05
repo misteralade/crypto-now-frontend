@@ -33,7 +33,7 @@ interface TradeStepOneProps {
   handleBlurAmountToBuy: () => void;
 }
 
-const TradeStepOne = ({ setAmountToBuy, isInitiatingTrade, numberOfToken, setNumberOfToken, amountToBuy,selectedCurrency, setSelectedCurrency, setSelectedToken,selectedToken, tradeType, handleProceedToPayment, orderDetails, availableCurrencies, availableTokens, setActiveTab, handleFocusNumberOfToken, handleFocusAmountToBuy, handleBlurNumberOfToken, handleBlurAmountToBuy }: TradeStepOneProps) => {
+const TradeStepOne = ({ setAmountToBuy, isInitiatingTrade, numberOfToken, setNumberOfToken, amountToBuy,selectedCurrency, setSelectedCurrency, setSelectedToken,selectedToken, tradeType, handleProceedToPayment, orderDetails, availableCurrencies, availableTokens, handleFocusNumberOfToken, handleFocusAmountToBuy, handleBlurNumberOfToken, handleBlurAmountToBuy }: TradeStepOneProps) => {
   const dispatch = useDispatch();
 
   const [switchAmountInputsSetup, setSwitchAmountInputsSetup] = useState<boolean>(false);

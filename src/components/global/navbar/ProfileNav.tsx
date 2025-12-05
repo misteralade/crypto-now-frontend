@@ -1,5 +1,3 @@
-import NotificationsIcon from "../../../assets/icons/ri_notification-line.svg";
-import AlertIcon from "../../../assets/icons/Ellipse_12.svg";
 import TestDP from "../../../assets/icons/male_11.svg";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
