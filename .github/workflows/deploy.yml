@@ -23,11 +23,13 @@ jobs:
             echo "FIREBASE_TARGET=cryptonow-ng-dev" >> $GITHUB_ENV
             echo "FIREBASE_PROJECT=${{ secrets.FIREBASE_PROJECT_DEV }}" >> $GITHUB_ENV
             echo "FIREBASE_SITE_ID=${{ secrets.FIREBASE_PROJECT_DEV }}" >> $GITHUB_ENV
+            echo "FIREBASE_SERVICE_ACCOUNT_JSON=${{ secrets.FIREBASE_SERVICE_ACCOUNT_DEV }}" >> $GITHUB_ENV
             echo "DEPLOY_ENV=development" >> $GITHUB_ENV
           elif [ "${{ github.ref }}" == "refs/heads/master" ]; then
             echo "FIREBASE_TARGET=cryptonow-ng" >> $GITHUB_ENV
             echo "FIREBASE_PROJECT=${{ secrets.FIREBASE_PROJECT_PROD }}" >> $GITHUB_ENV
             echo "FIREBASE_SITE_ID=${{ secrets.FIREBASE_PROJECT_PROD }}" >> $GITHUB_ENV
+            echo "FIREBASE_SERVICE_ACCOUNT_JSON=${{ secrets.FIREBASE_SERVICE_ACCOUNT_PROD }}" >> $GITHUB_ENV
             echo "DEPLOY_ENV=production" >> $GITHUB_ENV
           fi
 
@@ -67,8 +69,9 @@ jobs:
 
       - name: Setup Firebase Service Account
         run: |
-          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > $HOME/gcloud-service-key.json
+          echo '${{ env.FIREBASE_SERVICE_ACCOUNT_JSON }}' > $HOME/gcloud-service-key.json
           echo "GOOGLE_APPLICATION_CREDENTIALS=$HOME/gcloud-service-key.json" >> $GITHUB_ENV
+          echo "✓ Service account configured for ${{ env.DEPLOY_ENV }}"
 
       - name: Configure Firebase project and targets
         run: |
