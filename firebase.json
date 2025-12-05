@@ -1,7 +1,7 @@
 {
   "hosting": [
     {
-      "target": "crypto-now-dev",
+      "target": "cryptonow-ng-dev",
       "public": "dist",
       "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
       "rewrites": [
@@ -12,7 +12,7 @@
       ]
     },
     {
-      "target": "crypto-now-prod",
+      "target": "cryptonow-ng",
       "public": "dist",
       "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
       "rewrites": [
