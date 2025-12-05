@@ -1,22 +1,64 @@
 import type {TradeType} from "../../types/trade.types.ts";
-import type {ChangeEvent, ReactNode} from "react";
+import type {ChangeEvent, ReactNode, KeyboardEvent} from "react";
 
 interface TradeFormInputProps {
     label: string;
     name: string;
     value: string | ReactNode;
     onInputChange?: (value: string) => void;
+    onFocus?: () => void;
+    onBlur?: () => void;
     isReadOnly?: boolean
     tradeType: TradeType
     children: ReactNode
 }
 
-export default function TradeFormInput({ label, name, value, onInputChange, children, isReadOnly, }: TradeFormInputProps) {
+export default function TradeFormInput({ label, name, value, onInputChange, onFocus, onBlur, children, isReadOnly, }: TradeFormInputProps) {
     const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-        const {value} = e.target
+        let {value} = e.target
 
-        if(onInputChange){
-            onInputChange(value);
+        // Prevent negative numbers
+        // Remove minus sign if present
+        value = value.replace(/^-/, '');
+        
+        // If value is empty or just a decimal point, allow it
+        if (value === '' || value === '.') {
+            if(onInputChange){
+                onInputChange(value);
+            }
+            return;
+        }
+
+        // Parse the value and ensure it's not negative
+        const numValue = Number(value);
+        if (!isNaN(numValue) && numValue >= 0) {
+            if(onInputChange){
+                onInputChange(value);
+            }
+        } else if (value === '') {
+            // Allow empty string
+            if(onInputChange){
+                onInputChange(value);
+            }
+        }
+    }
+    
+    const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+        // Prevent minus key
+        if (e.key === '-' || e.key === 'e' || e.key === 'E') {
+            e.preventDefault();
+        }
+    }
+    
+    const handleFocus = () => {
+        if(onFocus){
+            onFocus();
+        }
+    }
+    
+    const handleBlur = () => {
+        if(onBlur){
+            onBlur();
         }
     }
 
@@ -36,6 +78,11 @@ export default function TradeFormInput({ label, name, value, onInputChange, chil
                         id={name}
                         value={typeof value === 'string' ? value : ''}
                         onChange={handleInputChange}
+                        onKeyDown={handleKeyDown}
+                        onFocus={handleFocus}
+                        onBlur={handleBlur}
+                        min="0"
+                        step="any"
                         className={`font-semibold text-4xl text-black outline-none border-none w-full ${isReadOnly && "cursor-not-allowed"}`}
                         placeholder={`0`}
                         readOnly={isReadOnly}

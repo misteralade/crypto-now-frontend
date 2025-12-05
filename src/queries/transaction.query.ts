@@ -9,10 +9,12 @@ import type {AxiosServerError} from "../types/response.payload.types.ts";
 import {disputeServiceApi} from "../api/dispute.api.ts";
 import type {MessageAttachment} from "../types/transaction.types.ts";
 import {extractErrorMessage} from "../util/index.util.ts";
+import { useSelector } from "react-redux";
 
 export const useTransactionQuery = () => {
   const queryClient = useQueryClient();
   const matchRoute = useMatchRoute();
+  const searchTransactionPayload = useSelector((state: RootState) => state.transaction.dashboard.searchUserTransactions);
 
   // Calculate Amount to Receive
   const { data: calculatedAmount, isLoading: loadingCalculation } = useQuery({
@@ -38,15 +40,15 @@ export const useTransactionQuery = () => {
   });
 
   const { data: userTransactionHistory, isLoading: loadingUserTransactionHistory } = useQuery({
-    queryKey: [QUERY_KEYS.TRANSACTION.USER_SEARCH_TRANSACTION_HISTORY, (store.getState() as RootState)?.transaction?.dashboard?.searchUserTransactions],
+    queryKey: [QUERY_KEYS.TRANSACTION.USER_SEARCH_TRANSACTION_HISTORY, searchTransactionPayload],
     queryFn: async () => {
       const rootState = store.getState() as RootState;
 
-      if (!rootState?.transaction?.dashboard?.searchUserTransactions) {
+      if (!searchTransactionPayload) {
         return;
       }
 
-      const { data, success } = await transactionServiceApi.searchUserTransactions(rootState?.transaction?.dashboard?.searchUserTransactions);
+      const { data, success } = await transactionServiceApi.searchUserTransactions(searchTransactionPayload);
 
       if (success) {
         return data;
@@ -62,6 +64,21 @@ export const useTransactionQuery = () => {
     queryKey: [QUERY_KEYS.TRANSACTION.USER_TRANSACTION_SUMMARY],
     queryFn: async () => {
       const { data, success } = await transactionServiceApi.getUserTransactionSummary();
+
+      if (success) {
+        return data;
+      }
+
+      return null;
+    },
+    enabled: !!matchRoute({ to: ROUTES.DASHBOARD }),
+  })
+
+  // Get Incomplete Transactions Count
+  const { data: incompleteTransactionsCount, isLoading: loadingIncompleteTransactionsCount } = useQuery({
+    queryKey: [QUERY_KEYS.TRANSACTION.USER_INCOMPLETE_TRANSACTIONS_COUNT],
+    queryFn: async () => {
+      const { data, success } = await transactionServiceApi.getIncompleteTransactionsCount();
 
       if (success) {
         return data;
@@ -371,13 +388,15 @@ export const useTransactionQuery = () => {
     loadingUserTransactionHistory,
     transactionSummary,
     loadingTransactionSummary,
+    incompleteTransactionsCount,
+    loadingIncompleteTransactionsCount,
     transactionDetails,
     loadingTransactionDetails,
     disputeMessages,
     loadingDisputeMessages,
     disputeDetails,
     loadingDisputeDetails,
-    
+
 
     // Mutations
     initiateTransactionMutation,

@@ -1,8 +1,8 @@
-import TransactionPagination from "./TransactionPagination.tsx";
 import type {TransactionResponseEntity} from "../../../types/response.payload.types.ts";
 import CustomLoader from "../../../components/global/Loader.tsx";
 import TransactionRow from "./TransactionRow.tsx";
 import { Link } from "@tanstack/react-router";
+import TableFooter from "../../../components/global/table/TableFooter.tsx";
 
 export interface FilterState {
   fromDate: string | undefined;
@@ -13,13 +13,16 @@ export interface FilterState {
 
 interface TransactionTableProps {
   transactions: TransactionResponseEntity[];
-  totalPages: number
+  totalPages: number;
   currentPage: number;
-  onPageChange: (page: number) => void
+  pageSize: number;
+  totalItems: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (size: number) => void;
   isLoading: boolean;
 }
 
-const TransactionTable = ({ transactions, isLoading, totalPages, onPageChange, currentPage }: TransactionTableProps) => {
+const TransactionTable = ({ transactions, isLoading, totalPages, currentPage, pageSize, totalItems, onPageChange, onPageSizeChange }: TransactionTableProps) => {
   const COL_COUNT = 7;
   
   const renderTableBody = () => {
@@ -88,11 +91,14 @@ const TransactionTable = ({ transactions, isLoading, totalPages, onPageChange, c
         </div>
       </div>
       
-      {totalPages > 1 && !isLoading && (
-        <TransactionPagination
+      {!isLoading && (
+        <TableFooter
           currentPage={currentPage}
           totalPages={totalPages}
+          pageSize={pageSize}
+          totalItems={totalItems}
           onPageChange={onPageChange}
+          onPageSizeChange={onPageSizeChange}
         />
       )}
     </div>

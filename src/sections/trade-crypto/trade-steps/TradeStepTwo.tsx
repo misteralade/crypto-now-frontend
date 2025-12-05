@@ -23,7 +23,7 @@ interface TradeStepTwoProps {
   formatSendAmount: (amount: number | string, currencyCode: string | undefined) => string | React.ReactNode;
 }
 
-export default function TradeStepTwo({ amountToBuy, tradeType, numberOfToken, additionalInfo, handleReceiptUrl, selectedToken, selectedCurrency, exchangeRateId, transactionRef, handleTransactionHash, handleSubmitPaymentProof, formatReceiveAmount, formatSendAmount }: TradeStepTwoProps) {
+const TradeStepTwo = ({ amountToBuy, tradeType, numberOfToken, additionalInfo, handleReceiptUrl, selectedToken, selectedCurrency, exchangeRateId, transactionRef, handleTransactionHash, handleSubmitPaymentProof, formatReceiveAmount, formatSendAmount }: TradeStepTwoProps) => {
   const {
     // Values
     // files,
@@ -66,6 +66,10 @@ export default function TradeStepTwo({ amountToBuy, tradeType, numberOfToken, ad
     );
   }
 
+  const amountToPay = (amountToBuy: number, selectedCurrency?: SupportedCryptoOrCurrencyResponse) => formatSendAmount && typeof formatSendAmount === 'function'
+    ? formatSendAmount(amountToBuy.toLocaleString(), selectedCurrency?.code)
+    : `${amountToBuy} ${selectedCurrency?.code}`
+
   return (
     <div className="space-y-7">
       {/* Trade Type Specific Instructions */}
@@ -76,7 +80,7 @@ export default function TradeStepTwo({ amountToBuy, tradeType, numberOfToken, ad
               💳 Payment Instructions (Buy Order)
             </h3>
             <p className="text-blue-700 text-sm">
-              Please transfer <strong>{amountToBuy} {selectedCurrency?.code}</strong> to the bank account details below,
+              Please transfer <strong>{amountToPay(amountToBuy, selectedCurrency)}</strong> to the bank account details below,
               then upload your payment receipt/proof.
             </p>
           </div>
@@ -101,9 +105,7 @@ export default function TradeStepTwo({ amountToBuy, tradeType, numberOfToken, ad
             <p className="text-sm">
               <span className="text-gray-600">You pay:</span>
               <span className="font-semibold ml-2">
-              {formatSendAmount && typeof formatSendAmount === 'function'
-                  ? formatSendAmount(amountToBuy.toLocaleString(), selectedCurrency?.code)
-                  : `${amountToBuy} ${selectedCurrency?.code}`}
+                {amountToPay(amountToBuy, selectedCurrency)}
               </span>
 
               {/* <span className="font-semibold ml-2">{amountToBuy.toLocaleString()} {selectedCurrency?.code}</span> */}
@@ -222,7 +224,7 @@ export default function TradeStepTwo({ amountToBuy, tradeType, numberOfToken, ad
           {tradeType === "buy" ? (
             <>
               <li>• Double-check the bank details before making the transfer</li>
-              <li>• Use the exact amount: <strong>{amountToBuy.toLocaleString()} {selectedCurrency?.code}</strong></li>
+              <li>• Use the exact amount: <strong>{amountToPay(amountToBuy, selectedCurrency)}</strong></li>
               <li>• Include your order reference if requested by your bank</li>
               <li>• Keep your payment receipt for verification</li>
             </>
@@ -239,3 +241,5 @@ export default function TradeStepTwo({ amountToBuy, tradeType, numberOfToken, ad
     </div>
   );
 }
+
+export default TradeStepTwo;

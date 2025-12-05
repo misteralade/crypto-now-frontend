@@ -84,6 +84,12 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   const [exchangeRateId, setExchangeRateId] = useState("");
   const [validUntil, setValidUntil] = useState<Date>();
   const [amountToBuy, setAmountToBuy] = useState<string | number>(initialAmount || "");
+  
+  // Track last calculation to prevent circular updates
+  const lastCalculationRef = useRef<{from: "numberOfToken" | "amountToBuy", to: "numberOfToken" | "amountToBuy"} | null>(null);
+  
+  // Track which field is currently focused to prevent calculations while typing
+  const focusedFieldRef = useRef<"numberOfToken" | "amountToBuy" | null>(null);
 
   // Modals
   const [showPaymentReceivingModal, setShowPaymentReceivingModal] = useState(false);
@@ -219,23 +225,90 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
 
     let nextAmountToBuy = amountToBuy;
     let nextNumberOfToken = numberOfToken;
+    let calculationPerformed = false;
 
+    // Determine which field is being edited based on focus
+    const isEditingNumberOfToken = focusedFieldRef.current === "numberOfToken";
+    const isEditingAmountToBuy = focusedFieldRef.current === "amountToBuy";
+    const noFieldFocused = focusedFieldRef.current === null;
+
+    // Forward calculations: from "enter amount" to "You will receive"
+    // For SELL: numberOfToken (enter amount) -> amountToBuy (receive)
+    // Calculate when user is editing numberOfToken OR when no field is focused (initial/after blur)
     if (
       activeTab === "sell" &&
       numberOfToken !== "" &&
-      Number(numberOfToken) > 0
+      Number(numberOfToken) > 0 &&
+      (isEditingNumberOfToken || (noFieldFocused && lastCalculationRef.current?.from !== "amountToBuy")) &&
+      lastCalculationRef.current?.from !== "amountToBuy"
     ) {
-      nextAmountToBuy = (Number(numberOfToken) * calculationRate).toFixed(
-        5
-      );
-      if (nextAmountToBuy !== amountToBuy) setAmountToBuy(nextAmountToBuy);
+      const calculated = (Number(numberOfToken) * calculationRate).toFixed(5);
+      // Update the receive field (user is not typing here, so it's safe to format)
+      if (calculated !== String(amountToBuy)) {
+        nextAmountToBuy = calculated;
+        setAmountToBuy(nextAmountToBuy);
+        lastCalculationRef.current = { from: "numberOfToken", to: "amountToBuy" };
+        calculationPerformed = true;
+      }
     }
-    if (activeTab === "buy" && amountToBuy !== "" && Number(amountToBuy) > 0) {
-      nextNumberOfToken = (Number(amountToBuy) / calculationRate).toFixed(
-        8
-      );
-      if (nextNumberOfToken !== numberOfToken)
+    // For BUY: amountToBuy (enter amount) -> numberOfToken (receive)
+    // Calculate when user is editing amountToBuy OR when no field is focused (initial/after blur)
+    if (
+      activeTab === "buy" &&
+      amountToBuy !== "" &&
+      Number(amountToBuy) > 0 &&
+      (isEditingAmountToBuy || (noFieldFocused && lastCalculationRef.current?.from !== "numberOfToken")) &&
+      lastCalculationRef.current?.from !== "numberOfToken" &&
+      !calculationPerformed
+    ) {
+      const calculated = (Number(amountToBuy) / calculationRate).toFixed(8);
+      // Update the receive field (user is not typing here, so it's safe to format)
+      if (calculated !== String(numberOfToken)) {
+        nextNumberOfToken = calculated;
         setNumberOfToken(nextNumberOfToken);
+        lastCalculationRef.current = { from: "amountToBuy", to: "numberOfToken" };
+        calculationPerformed = true;
+      }
+    }
+
+    // Reverse calculations: from "You will receive" to "enter amount"
+    // Only run if forward calculation didn't run (prevents circular updates)
+    if (!calculationPerformed) {
+      // For SELL: amountToBuy (receive) -> numberOfToken (enter amount)
+      // Calculate when user is editing amountToBuy OR when no field is focused (initial/after blur)
+      if (
+        activeTab === "sell" &&
+        amountToBuy !== "" &&
+        Number(amountToBuy) > 0 &&
+        (isEditingAmountToBuy || (noFieldFocused && lastCalculationRef.current?.from !== "numberOfToken")) &&
+        lastCalculationRef.current?.from !== "numberOfToken"
+      ) {
+        const calculated = (Number(amountToBuy) / calculationRate).toFixed(8);
+        // Update the enter amount field (user is not typing here, so it's safe to format)
+        if (calculated !== String(numberOfToken) && Number(calculated) > 0) {
+          nextNumberOfToken = calculated;
+          setNumberOfToken(nextNumberOfToken);
+          lastCalculationRef.current = { from: "amountToBuy", to: "numberOfToken" };
+          calculationPerformed = true;
+        }
+      }
+      // For BUY: numberOfToken (receive) -> amountToBuy (enter amount)
+      // Calculate when user is editing numberOfToken OR when no field is focused (initial/after blur)
+      if (
+        activeTab === "buy" &&
+        numberOfToken !== "" &&
+        Number(numberOfToken) > 0 &&
+        (isEditingNumberOfToken || (noFieldFocused && lastCalculationRef.current?.from !== "amountToBuy")) &&
+        lastCalculationRef.current?.from !== "amountToBuy"
+      ) {
+        const calculated = (Number(numberOfToken) * calculationRate).toFixed(5);
+        // Update the enter amount field (user is not typing here, so it's safe to format)
+        if (calculated !== String(amountToBuy) && Number(calculated) > 0) {
+          nextAmountToBuy = calculated;
+          setAmountToBuy(nextAmountToBuy);
+          lastCalculationRef.current = { from: "numberOfToken", to: "amountToBuy" };
+        }
+      }
     }
 
     const partial: Partial<InitiateTransactionRequestPayload> = {
@@ -333,6 +406,8 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     setValidUntil(
       exchangeRate?.validUntil ? new Date(exchangeRate.validUntil) : undefined
     );
+    // Reset calculation tracking when exchange rate changes to allow recalculation
+    lastCalculationRef.current = null;
 
     const partial: Partial<InitiateTransactionRequestPayload> = {
       exchangeRateId: rateId,
@@ -366,6 +441,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       setNumberOfToken("");
       setAmountToBuy("");
       setIsCountdownLocked(false);
+      lastCalculationRef.current = null;
       prevActiveTabRef.current = activeTab;
     }
     // if same tab, do nothing (prevents clearing after refresh)
@@ -399,7 +475,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   ]);
 
   // Format rate display - show NGN rate in parentheses when currency is USD
-  const formatRateDisplay = () => {
+  const formatRateDisplay = (): string | React.ReactNode => {
     if (loadingExchangeRate) return "Loading...";
     if (!exchangeRate) return "0";
     
@@ -407,23 +483,30 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     const currencyCode = selectedCurrency?.code;
     
     // Build the market rate string
-    let rateDisplay = "";
+    let marketRate = "";
     
     if (exchangeRate.currency === "USD" && exchangeRate.usdRate !== undefined) {
       // Show both USD and NGN for USD currency
-      rateDisplay = `1 ${tokenSymbol} = ${convertToMillify(Number(exchangeRate.usdRate))} USD (${convertToMillify(Number(exchangeRate.fiatRate))} NGN)`;
+      marketRate = `1 ${tokenSymbol} = ${convertToMillify(Number(exchangeRate.usdRate))} USD (${convertToMillify(Number(exchangeRate.fiatRate))} NGN)`;
     } else {
       // Show fiat rate for other currencies
-      rateDisplay = `1 ${tokenSymbol} = ${convertToMillify(exchangeRate.fiatRate)} ${currencyCode}`;
+      marketRate = `1 ${tokenSymbol} = ${convertToMillify(exchangeRate.fiatRate)} ${currencyCode}`;
     }
     
-    // Add platform rate if available
+    // Add platform rate if available - return as ReactNode to allow wrapping on mobile
     if (exchangeRate.platformRate !== undefined) {
       const platformCurrency = exchangeRate.currency === "USD" ? "NGN" : currencyCode;
-      rateDisplay += ` • Our rate: ${formatNumber(exchangeRate.platformRate)} ${platformCurrency}/${tokenSymbol}`;
+      const ourRate = `Our rate: ${formatNumber(exchangeRate.platformRate)} ${platformCurrency}/${tokenSymbol}`;
+      
+      return React.createElement(
+        'span',
+        { className: 'flex flex-col md:flex-row md:items-center gap-1 md:gap-2' },
+        React.createElement('span', null, marketRate),
+        React.createElement('span', { className: 'text-black' }, `• ${ourRate}`)
+      );
     }
     
-    return rateDisplay;
+    return marketRate;
   };
 
   const AdditionalInfo: TradeAdditionalInfoInterface[] = [
@@ -512,7 +595,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       await receivingPaymentAccountConfirmationMutation.mutateAsync();
       // Clear trade progress and reset to step 1, like Cancel Order
       clearTradeProgress();
-      setStep(1);
+      // setStep(1);
       setActiveTab("buy");
       setShowPaymentReceivingModal(false);
       setShowConfirmBankDetails(false);
@@ -617,14 +700,37 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       return React.createElement(
         'span',
         null,
-        `${amountNum.toLocaleString()} ${currencyCode} (`,
         React.createElement('strong', null, `${ngnAmount.toLocaleString()} NGN`),
+        ' (',
+        `${amountNum.toLocaleString()} ${currencyCode}`,
         ')'
       );
     }
     
     // Fallback: show the amount with currency code
     return `${amountNum.toLocaleString()} ${currencyCode}`;
+  };
+
+  // Handle focus events to prevent calculations while typing
+  const handleFocusNumberOfToken = () => {
+    focusedFieldRef.current = "numberOfToken";
+  };
+
+  const handleFocusAmountToBuy = () => {
+    focusedFieldRef.current = "amountToBuy";
+  };
+
+  // Handle blur events to trigger calculation
+  const handleBlurNumberOfToken = () => {
+    focusedFieldRef.current = null;
+    // Reset calculation ref to allow recalculation when user finishes editing
+    lastCalculationRef.current = null;
+  };
+
+  const handleBlurAmountToBuy = () => {
+    focusedFieldRef.current = null;
+    // Reset calculation ref to allow recalculation when user finishes editing
+    lastCalculationRef.current = null;
   };
 
   return {
@@ -671,5 +777,9 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     togglePaymentReceivingModal,
     formatReceiveAmount,
     formatSendAmount,
+    handleFocusNumberOfToken,
+    handleFocusAmountToBuy,
+    handleBlurNumberOfToken,
+    handleBlurAmountToBuy,
   };
 };

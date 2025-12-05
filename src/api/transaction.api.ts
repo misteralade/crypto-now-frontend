@@ -180,7 +180,13 @@ class TransactionServiceApi {
   
   async getUserTransactionSummary() {
     const { data, message, success }: { data: TransactionSummaryResponse, message: string, success: boolean } = await axiosGetRequestHandler("/transaction/user/summary");
-    
+
+    return { data, message, success };
+  }
+
+  async getIncompleteTransactionsCount() {
+    const { data, message, success }: { data: number, message: string, success: boolean } = await axiosGetRequestHandler("/transaction/user/incomplete-transactions/count");
+
     return { data, message, success };
   }
   

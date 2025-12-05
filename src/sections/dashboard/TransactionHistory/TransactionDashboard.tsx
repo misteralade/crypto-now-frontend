@@ -20,6 +20,7 @@ export function TransactionDashboard() {
     handleSearchChange,
     handleFiltersChange,
     handlePageChange,
+    handlePageSizeChange,
   } = useTransactionBoard();
 
   return (
@@ -45,7 +46,10 @@ export function TransactionDashboard() {
         transactions={!loadingUserTransactionHistory && userTransactionHistory?.transactions || []}
         totalPages={!loadingUserTransactionHistory && userTransactionHistory?.totalPages || 1}
         currentPage={!loadingUserTransactionHistory && userTransactionHistory?.page || 1}
+        pageSize={!loadingUserTransactionHistory && userTransactionHistory?.limit || 10}
+        totalItems={!loadingUserTransactionHistory && userTransactionHistory?.count || 0}
         onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
         isLoading={loadingUserTransactionHistory}
       />
     </div>

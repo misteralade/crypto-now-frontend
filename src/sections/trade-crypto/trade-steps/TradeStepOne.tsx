@@ -3,7 +3,7 @@ import { ArrowUpDown } from 'lucide-react';
 import TradeFormInput from '../TradeFormInput.tsx'
 import CustomButton from "../../../components/global/Button.tsx";
 import type {TradeType, TradeAdditionalInfoInterface} from "../../../types/trade.types.ts";
-import {type FormEvent} from "react";
+import {useState, type FormEvent} from "react";
 import TradeInputDropdown from "../TradeInputDropdown.tsx";
 import TradeAdditionalInfo from "../TradeAdditionalInfo.tsx";
 import type {SupportedCryptoOrCurrencyResponse} from "../../../types/response.payload.types.ts";
@@ -27,10 +27,18 @@ interface TradeStepOneProps {
   token: string;
   isInitiatingTrade: boolean;
   setActiveTab: (value: 'buy' | 'sell') => void;
+  handleFocusNumberOfToken: () => void;
+  handleFocusAmountToBuy: () => void;
+  handleBlurNumberOfToken: () => void;
+  handleBlurAmountToBuy: () => void;
 }
 
-const TradeStepOne = ({ setAmountToBuy, isInitiatingTrade, numberOfToken, setNumberOfToken, amountToBuy,selectedCurrency, setSelectedCurrency, setSelectedToken,selectedToken, tradeType, handleProceedToPayment, orderDetails, availableCurrencies, availableTokens, setActiveTab }: TradeStepOneProps) => {
+const TradeStepOne = ({ setAmountToBuy, isInitiatingTrade, numberOfToken, setNumberOfToken, amountToBuy,selectedCurrency, setSelectedCurrency, setSelectedToken,selectedToken, tradeType, handleProceedToPayment, orderDetails, availableCurrencies, availableTokens, setActiveTab, handleFocusNumberOfToken, handleFocusAmountToBuy, handleBlurNumberOfToken, handleBlurAmountToBuy }: TradeStepOneProps) => {
   const dispatch = useDispatch();
+
+  const [switchAmountInputsSetup, setSwitchAmountInputsSetup] = useState<boolean>(false);
+
+  const toggleAmountInputsSetup = () => setSwitchAmountInputsSetup(!switchAmountInputsSetup);
   
   const submitInvalid = numberOfToken === "" || amountToBuy === "";
   const handleSubmit = (e: FormEvent) => {
@@ -60,14 +68,16 @@ const TradeStepOne = ({ setAmountToBuy, isInitiatingTrade, numberOfToken, setNum
       {/*Inputs && Additional info*/}
       <div className="space-y-5">
         {/*Inputs*/}
-        <div className="space-y-2">
+        <div className={`space-y-2 flex items-center justify-center w-full ${switchAmountInputsSetup ? "flex-col" : "flex-col-reverse"}`}>
           {/*Token*/}
-          <div>
+          <div className="w-full">
             <TradeFormInput
               name={`${tradeType === "sell" ? "token": "currency"}`}
               label={`enter amount`}
               value={`${tradeType === "sell" ? numberOfToken : amountToBuy}`}
               onInputChange={tradeType === "sell" ? setNumberOfToken: setAmountToBuy}
+              onFocus={tradeType === "sell" ? handleFocusNumberOfToken : handleFocusAmountToBuy}
+              onBlur={tradeType === "sell" ? handleBlurNumberOfToken : handleBlurAmountToBuy}
               tradeType={tradeType}
               isReadOnly={false}
             >
@@ -81,23 +91,26 @@ const TradeStepOne = ({ setAmountToBuy, isInitiatingTrade, numberOfToken, setNum
           <div className="h-20 w-full flex items-center justify-center">
             <div
               className="p-2.5 rounded-full bg-[#948EEE] hover:cursor-pointer hover:bg-[#7b68ee] transition-all"
-              onClick={() => setActiveTab(tradeType === 'sell' ? 'buy' : 'sell')}
+              onClick={toggleAmountInputsSetup}
             >
               <ArrowUpDown
                 color="white"
                 size={30}
-                onClick={() => setActiveTab(tradeType === 'sell' ? 'buy' : 'sell')}
+                onClick={toggleAmountInputsSetup}
               />
             </div>
           </div>
           
           {/*Currency*/}
-          <div>
+          <div className="w-full">
             <TradeFormInput
               name={`${tradeType === "sell" ? "currency": "token"}`}
               label={`You will receive`}
               value={`${tradeType === "sell" ? amountToBuy : numberOfToken}`}
-              isReadOnly={true}
+              onInputChange={tradeType === "sell" ? setAmountToBuy : setNumberOfToken}
+              onFocus={tradeType === "sell" ? handleFocusAmountToBuy : handleFocusNumberOfToken}
+              onBlur={tradeType === "sell" ? handleBlurAmountToBuy : handleBlurNumberOfToken}
+              isReadOnly={false}
               tradeType={tradeType}
             >
               {tradeType === "sell" ?
