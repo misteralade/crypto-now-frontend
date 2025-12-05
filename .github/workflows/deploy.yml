@@ -20,12 +20,14 @@ jobs:
       - name: Set target environment and project
         run: |
           if [ "${{ github.ref }}" == "refs/heads/dev" ]; then
-            echo "FIREBASE_TARGET=${{ secrets.FIREBASE_PROJECT_DEV }}" >> $GITHUB_ENV
+            echo "FIREBASE_TARGET=crypto-now-dev" >> $GITHUB_ENV
             echo "FIREBASE_PROJECT=${{ secrets.FIREBASE_PROJECT_DEV }}" >> $GITHUB_ENV
+            echo "FIREBASE_SITE_ID=${{ secrets.FIREBASE_PROJECT_DEV }}" >> $GITHUB_ENV
             echo "DEPLOY_ENV=development" >> $GITHUB_ENV
           elif [ "${{ github.ref }}" == "refs/heads/master" ]; then
-            echo "FIREBASE_TARGET=${{ secrets.FIREBASE_PROJECT_PROD }}" >> $GITHUB_ENV
+            echo "FIREBASE_TARGET=crypto-now-prod" >> $GITHUB_ENV
             echo "FIREBASE_PROJECT=${{ secrets.FIREBASE_PROJECT_PROD }}" >> $GITHUB_ENV
+            echo "FIREBASE_SITE_ID=${{ secrets.FIREBASE_PROJECT_PROD }}" >> $GITHUB_ENV
             echo "DEPLOY_ENV=production" >> $GITHUB_ENV
           fi
 
@@ -68,14 +70,27 @@ jobs:
           echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > $HOME/gcloud-service-key.json
           echo "GOOGLE_APPLICATION_CREDENTIALS=$HOME/gcloud-service-key.json" >> $GITHUB_ENV
 
-      - name: Configure Firebase project
+      - name: Configure Firebase project and targets
         run: |
-          echo '{
+          cat > .firebaserc << EOF
+          {
             "projects": {
               "default": "${{ env.FIREBASE_PROJECT }}"
+            },
+            "targets": {
+              "${{ env.FIREBASE_PROJECT }}": {
+                "hosting": {
+                  "${{ env.FIREBASE_TARGET }}": [
+                    "${{ env.FIREBASE_SITE_ID }}"
+                  ]
+                }
+              }
             }
-          }' > .firebaserc
-          echo "✓ Firebase project configured: ${{ env.FIREBASE_PROJECT }}"
+          }
+          EOF
+          
+          echo "✓ Firebase configuration:"
+          cat .firebaserc
 
       - name: Deploy to Firebase Hosting
         run: |
@@ -95,6 +110,7 @@ jobs:
           echo "Environment: ${{ env.DEPLOY_ENV }}"
           echo "Target: ${{ env.FIREBASE_TARGET }}"
           echo "Project: ${{ env.FIREBASE_PROJECT }}"
+          echo "Site ID: ${{ env.FIREBASE_SITE_ID }}"
           echo "Branch: ${{ github.ref_name }}"
           echo "Commit: ${{ github.sha }}"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
