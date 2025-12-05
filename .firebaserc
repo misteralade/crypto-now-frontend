@@ -1,13 +1,19 @@
 {
   "projects": {
-    "default": "crypto-now-8d762"
+    "default": "cryptonow-ng-dev",
+    "dev": "cryptonow-ng-dev",
+    "prod": "cryptonow-ng"
   },
   "targets": {
-      "crypto-now-8d762": {
-        "hosting": {
-          "crypto-now-dev": ["crypto-now-dev"],
-          "crypto-now-prod": ["crypto-now-prod"]
-        }
+    "cryptonow-ng-dev": {
+      "hosting": {
+        "crypto-now-dev": ["crypto-now-dev"]
       }
+    },
+    "cryptonow-ng": {
+      "hosting": {
+        "crypto-now-prod": ["crypto-now-prod"]
+      }
+    }
   }
 }
