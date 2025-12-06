@@ -57,6 +57,13 @@ export default function TradeStepDisplayHeading({
               </button>
             </div>
           </div>
+        ) : step === 3 ? (
+          <button
+            onClick={handleCancel}
+            className={`text-accent1 hover:text-accent1/80 font-semibold hover:underline cursor-pointer transition-colors`}
+          >
+            New Transaction
+          </button>
         ) : (
           <button
             onClick={handleCancel}
