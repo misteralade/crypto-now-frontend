@@ -24,3 +24,8 @@ dist-ssr
 *.sw?
 
 .env
+
+.firebase
+
+# Ignore all json files
+*.json

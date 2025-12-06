@@ -1,5 +1,55 @@
 @import "tailwindcss";
 
+@theme {
+    --color-grey: #9A9A9A;
+    --color-FormFocusRing: #3B82F6;
+    --color-desc: #454745;
+    --color-greyBg: #F5F5FF;
+    --color-greyBg2: #D5D3F8;
+    --color-grey2: #828282;
+    --color-grey3: #828282;
+    --color-grey4: #BDBDBD;
+    --color-accent: #948EEE;
+    --color-accent1: #575AE5;
+    --color-accent2: #948EEE;
+    --color-accent3: #FF4F64;
+    --color-accent4: #E9E9FC;
+    --color-fadeBg: #F2F2FD;
+    --color-fadeText: #A0A3BD;
+    --color-black: #0E0F0C;
+    --color-body: #454745;
+    --color-red:#EB5757;
+    --color-primary: #03034D;
+    --color-formGroupBg: #F0F0FF;
+    --color-border: #ECECEC;
+    --color-placeholder: #97A0B2;
+    --color-strokeLightGrey:#E7E7E7;
+    --color-textSec: #6D6D6D;
+    --color-dataColum: #EEEEEE26;
+    --color-filter: #667085;
+    --color-success: #037847;
+    --color-bgSuccess: #ECFDF3;
+    --color-bgExpired: #F2F4F7;
+    --color-expired: #6C778B;
+    --color-bgFailed: #FDF1F1;
+    --color-altWhite: #FAFAFA;
+    --color-titleColor: #0E0F0C;
+    --color-accentBg: #E6E6FE;
+
+}
+
 body {
   font-family: "DM Sans", sans-serif;
+}
+
+/* For Webkit-based browsers (Chrome, Safari, Edge) */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0; /* Ensures no extra space is left behind */
+}
+
+/* For Firefox */
+input[type="number"] {
+    -moz-appearance: textfield;
 }

@@ -1,17 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios, { type AxiosRequestHeaders } from "axios";
 import {BASIC} from "../config/index.config.ts";
-import {ROUTES} from "../util/constants.ts";
-import type {BaseApiResponse} from "../types/response.api.types.ts";
+import {LOCAL_STORAGE_KEYS, ROUTES} from "../util/constants.util.ts";
+import type {BaseApiResponse} from "../types/response.payload.types.ts";
 
-export const userInstance = axios.create({
+export const API_KIT = axios.create({
   baseURL: BASIC.API_BASE_URL,
   // timeout: 20000,
   // withCredentials: true,
 });
 
-userInstance.interceptors.request.use(async (config) => {
-  const token = localStorage.getItem("accessToken");
+API_KIT.interceptors.request.use(async (config) => {
+  const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
   if (token) {
     config.headers = {
       ...config.headers,
@@ -21,15 +21,15 @@ userInstance.interceptors.request.use(async (config) => {
   return config;
 });
 
-userInstance.interceptors.response.use(
+API_KIT.interceptors.response.use(
   (response) => {
-    const accessToken = response.headers["x-api-key"];
+    const accessToken = response.headers["x-access-token"];
     if (
       accessToken &&
       typeof accessToken === "string" &&
       accessToken.trim() !== ""
     ) {
-      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN, accessToken);
     }
     return response;
   },
@@ -37,7 +37,7 @@ userInstance.interceptors.response.use(
     if (axios.isAxiosError(error)) {
       if (error.response?.data?.message?.toLowerCase() === "jwt token error") {
         setTimeout(() => {
-          window.location.href = ROUTES.LOGIN;
+          window.location.href = ROUTES.SIGNIN;
         }, 3000);
       }
     }
@@ -51,10 +51,10 @@ export const axiosPostRequestHandler = async (
   config?: any
 ) => {
   try {
-    const request = await userInstance.post(url, data, {
+    const request = await API_KIT.post(url, data, {
       ...config,
     });
-    return request.data;
+    return request.data as BaseApiResponse<any>;
   } catch (error) {
     if (axios.isAxiosError(error)) {
       throw error;
@@ -66,7 +66,7 @@ export const axiosPostRequestHandler = async (
 
 export const axiosPutRequestHandler = async (url: string, data: any) => {
   try {
-    const request = await userInstance.put(url, data);
+    const request = await API_KIT.put(url, data);
 
     return request.data as BaseApiResponse<any>;
   } catch (error) {
@@ -80,7 +80,7 @@ export const axiosPutRequestHandler = async (url: string, data: any) => {
 
 export const axiosDeleteRequestHandler = async (url: string) => {
   try {
-    const request = await userInstance.delete(url);
+    const request = await API_KIT.delete(url);
 
     return request.data;
   } catch (error) {
@@ -94,7 +94,7 @@ export const axiosDeleteRequestHandler = async (url: string) => {
 
 export const axiosGetRequestHandler = async (url: string, params?: any) => {
   try {
-    const request = await userInstance.get(url, {
+    const request = await API_KIT.get(url, {
       params,
     });
 
@@ -103,6 +103,20 @@ export const axiosGetRequestHandler = async (url: string, params?: any) => {
     if (axios.isAxiosError(error)) {
       throw error;
     } else {
+      throw new Error("An unexpected error occurred");
+    }
+  }
+};
+
+export const axiosPatchRequestHandler = async (url: string, payload?: any) => {
+  try{
+    const request = await API_KIT.patch(url, payload);
+
+    return request.data as BaseApiResponse<any>;
+  }catch(error){
+    if(axios.isAxiosError(error)){
+      throw error;
+    }else{
       throw new Error("An unexpected error occurred");
     }
   }
