@@ -247,16 +247,14 @@ export const useTransactionQuery = () => {
       }
       
       if (userEmail) {
-        await transactionServiceApi.confirmAnonymousUserReceivingPaymentAccount(transactionSessionId, {
+        return await transactionServiceApi.confirmAnonymousUserReceivingPaymentAccount(transactionSessionId, {
           walletId,
           accountId,
           email: userEmail,
         })
-        
-        return;
       }
       
-      await transactionServiceApi.confirmReceivingPaymentAccount(transactionSessionId, {
+      return await transactionServiceApi.confirmReceivingPaymentAccount(transactionSessionId, {
         walletId,
         accountId,
       });

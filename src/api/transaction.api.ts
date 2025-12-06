@@ -128,48 +128,24 @@ class TransactionServiceApi {
   }
 
   async confirmReceivingPaymentAccount(sessionId: string, accountData: Record<string, any>) {
-    const {data, message, success, error}: {
-      data: { sessionId: string },
-      message: string,
-      success: boolean,
-      error: any
-    } = await axiosPatchRequestHandler(
+     return await axiosPatchRequestHandler(
       `/transaction/confirm-receiving-payment-account/${sessionId}`,
       {
         ...(accountData.walletId ? { walletId: accountData.walletId } : {}),
         ...(accountData.accountId ? { accountId: accountData.accountId } : {}),
       }
-    )
-
-    if (!success || error) {
-      toast.error(error.message || message || error || "Failed to confirm receiving account");
-      return;
-    }
-
-    return data.sessionId;
+    ) as BaseApiResponse<{ sessionId: string }>
   }
   
   async confirmAnonymousUserReceivingPaymentAccount(sessionId: string, accountData: Record<string, any>) {
-    const {data, message, success, error}: {
-      data: { sessionId: string },
-      message: string,
-      success: boolean,
-      error: any
-    } = await axiosPatchRequestHandler(
+    return await axiosPatchRequestHandler(
       `/transaction/confirm-receiving-payment-account/${sessionId}/anonymous`,
       {
         ...(accountData.walletId ? { walletId: accountData.walletId } : {}),
         ...(accountData.accountId ? { accountId: accountData.accountId } : {}),
         ...(accountData.email ? { email: accountData.email }: {}),
       }
-    )
-
-    if (!success || error) {
-      toast.error(error.message || message || error || "Failed to confirm receiving account");
-      return;
-    }
-
-    return data.sessionId;
+    ) as BaseApiResponse<{ sessionId: string }>
   }
 
   async searchUserTransactions(payload: SearchTransactionsRequestPayload) {

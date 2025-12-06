@@ -28,6 +28,7 @@ import {
 import {type RootState, store} from "../../../store.ts";
 import {setAnonymousUserEmail} from "../../../redux/user.slice.ts";
 import { convertToMillify, formatNumber } from "../../../util/index.util.ts";
+import { toast } from "react-toastify";
 
 // Debounce
 const useDebounce = (value: any, delay: number) => {
@@ -592,16 +593,17 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   const handleConfirmBankDetails = async (step: number) => {
     try {
       console.log('handleConfirmBankDetails', step);
-      await receivingPaymentAccountConfirmationMutation.mutateAsync();
-      // Clear trade progress and reset to step 1, like Cancel Order
-      clearTradeProgress();
-      // setStep(1);
-      setActiveTab("buy");
-      setShowPaymentReceivingModal(false);
-      setShowConfirmBankDetails(false);
+      const { success } = await receivingPaymentAccountConfirmationMutation.mutateAsync();
+      if (success) {
+        clearTradeProgress();
+        setStep(3);
+        // setActiveTab("buy");
+        setShowPaymentReceivingModal(false);
+        setShowConfirmBankDetails(false);
+      }
     } catch (error) {
-      // Error is already handled by the mutation's onError
       console.error("Failed to confirm bank details:", error);
+      toast.error("Failed to confirm bank details. Please try again.");
     }
   };
   
