@@ -54,6 +54,15 @@ input[type="number"] {
     -moz-appearance: textfield;
 }
 
+/* Prevent number input overflow in trade form */
+.bg-formGroupBg input[type="number"] {
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 /* Toast styles for mobile */
 @media (max-width: 768px) {
   .Toastify__toast {
