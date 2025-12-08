@@ -501,9 +501,9 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       
       return React.createElement(
         'span',
-        { className: 'flex flex-col md:flex-row md:items-center gap-1 md:gap-2' },
-        React.createElement('span', null, marketRate),
-        React.createElement('span', { className: 'text-black' }, `• ${ourRate}`)
+        { className: 'flex flex-col md:flex-row md:items-center gap-1 md:justify-end md:gap-2' },
+        React.createElement('span', { className: 'text-black text-end md:text-start' }, marketRate),
+        React.createElement('span', { className: 'text-black text-end md:text-start' }, `• ${ourRate}`)
       );
     }
     
