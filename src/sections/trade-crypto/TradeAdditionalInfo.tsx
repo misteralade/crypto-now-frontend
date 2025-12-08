@@ -31,7 +31,7 @@ export default function TradeAdditionalInfo ({ heading, additionalInfo = [] }: T
 
               {/* Render copyable fields with CopyAccountDetails */}
               {isCopyableField(item.title) && typeof item.value === 'string' ? (
-                <CopyAccountDetails accountNumber={item.value} />
+                <CopyAccountDetails accountNumber={item.value} className="justify-end md:justify-start !max-w-[150px] md:!max-w-fit w-3/4 md:w-fit"/>
               ) : (
                 /* Render regular fields */
                 typeof item.value === 'string' ?

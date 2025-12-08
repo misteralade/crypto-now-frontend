@@ -143,7 +143,7 @@ const TradeStepTwo = ({ amountToBuy, tradeType, numberOfToken, additionalInfo, h
       {/* Account Details & Order Info */}
       <div className="space-y-3">
         <div className="flex w-full justify-between">
-          <h1>Transaction Ref:</h1>
+          <h1 className="text-md text-gray-600 font-bold">Session ID:</h1>
 
           <CopyAccountDetails accountNumber={transactionRef || ''}/>
         </div>
@@ -152,6 +152,7 @@ const TradeStepTwo = ({ amountToBuy, tradeType, numberOfToken, additionalInfo, h
           heading={tradeType === "buy" ? "Bank Account Details" : "Crypto Wallet Details"}
           additionalInfo={accountDetails}
         />
+        
         <TradeAdditionalInfo heading="Order Details" additionalInfo={additionalInfo} />
       </div>
 
