@@ -6,6 +6,7 @@ import BankSelector from "../../../global/BankSelector.tsx";
 import {CustomInput} from "../../../global/CustomInput.tsx";
 import {CustomSelect} from "../../../global/CustomSelect.tsx";
 import {cryptoNetworkTypes} from "../../../../util/constants.util.ts";
+import { walletAddressRegex } from "../../../../util/regex.util.ts";
 
 interface NewCryptoWalletModalProps {
   isOpen: boolean;
@@ -18,10 +19,44 @@ interface NewCryptoWalletModalProps {
 
 const NewCryptoWalletModal = ({ isOpen, supportedCryptoWallet, selectedWalletId, onClose, onSubmit, handleChangeField }: NewCryptoWalletModalProps) => {
   const [walletAddress, setWalletAddress] = useState('');
+  const [walletAddressError, setWalletAddressError] = useState('');
   const [network, setNetwork] = useState('')
   const [walletLabel, setWalletLabel] = useState('')
   
   const selectedOption = supportedCryptoWallet && supportedCryptoWallet?.find((opt) => opt.id === selectedWalletId);
+
+  const validateWalletAddress = (address: string) => {
+    if (!address || address.trim() === "") {
+      setWalletAddressError("Wallet address is required");
+      return false;
+    }
+    
+    const trimmedAddress = address.trim();
+    if (!walletAddressRegex.test(trimmedAddress)) {
+      setWalletAddressError("Please enter a valid wallet address");
+      return false;
+    }
+    
+    setWalletAddressError("");
+    return true;
+  }
+
+  const handleWalletAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setWalletAddress(value);
+    handleChangeField("walletAddress", value);
+    
+    // Only validate if user has started typing (not empty)
+    if (value.trim() !== "") {
+      validateWalletAddress(value);
+    } else {
+      setWalletAddressError("");
+    }
+  }
+
+  const handleWalletAddressBlur = () => {
+    validateWalletAddress(walletAddress);
+  }
   
   
   useEffect(() => {
@@ -94,10 +129,9 @@ const NewCryptoWalletModal = ({ isOpen, supportedCryptoWallet, selectedWalletId,
                   label="Wallet Address"
                   type="text"
                   value={walletAddress}
-                  onChange={(e) => {
-                    handleChangeField("walletAddress", e.target.value)
-                    setWalletAddress(e.target.value)
-                  }}
+                  onChange={handleWalletAddressChange}
+                  onBlur={handleWalletAddressBlur}
+                  error={walletAddressError}
                 />
                 
                 
