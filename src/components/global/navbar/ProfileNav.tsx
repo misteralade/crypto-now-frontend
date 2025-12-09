@@ -27,7 +27,18 @@ const ProfileNav = () => {
             userProfileData?.profile.firstName}
         </h2>
         <div className={`w-9 h-9 rounded-full`}>
-          <img src={TestDP} className={`w-full h-full`} />
+          <img 
+            src={userProfileData?.profile?.profileImg || TestDP} 
+            alt="Profile" 
+            className={`w-full h-full object-cover rounded-full`}
+            onError={(e) => {
+              // Fallback to default image if profile image fails to load
+              const target = e.target as HTMLImageElement;
+              if (target.src !== TestDP) {
+                target.src = TestDP;
+              }
+            }}
+          />
         </div>
 
         <div className={`relative`}>

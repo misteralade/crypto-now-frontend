@@ -66,30 +66,39 @@ export default function TradeFormInput({ label, name, value, onInputChange, onFo
         <div className={`bg-formGroupBg rounded-lg p-5 space-y-3 border border-border`}>
             <label htmlFor={name} className={`text-grey uppercase text-sm block`}>{label}</label>
 
-            <div className={`flex items-center justify-between gap-2`}>
-                {isReadOnly && typeof value !== 'string' ? (
-                    <div className={`font-semibold text-4xl text-black w-full ${isReadOnly && "cursor-not-allowed"}`}>
-                        {value}
-                    </div>
-                ) : (
-                    <input
-                        type="number"
-                        name={name}
-                        id={name}
-                        value={typeof value === 'string' ? value : ''}
-                        onChange={handleInputChange}
-                        onKeyDown={handleKeyDown}
-                        onFocus={handleFocus}
-                        onBlur={handleBlur}
-                        min="0"
-                        step="any"
-                        className={`font-semibold text-4xl text-black outline-none border-none w-full ${isReadOnly && "cursor-not-allowed"}`}
-                        placeholder={`0`}
-                        readOnly={isReadOnly}
-                    />
-                )}
+            <div className={`flex items-center justify-between gap-2 min-w-0 w-full`}>
+                <div className="flex-1 min-w-0 overflow-hidden max-w-full">
+                    {isReadOnly && typeof value !== 'string' ? (
+                        <div className={`font-semibold text-xl sm:text-2xl md:text-3xl text-black w-full overflow-hidden break-all ${isReadOnly && "cursor-not-allowed"}`}>
+                            {value}
+                        </div>
+                    ) : (
+                        <input
+                            type="number"
+                            name={name}
+                            id={name}
+                            value={typeof value === 'string' ? value : ''}
+                            onChange={handleInputChange}
+                            onKeyDown={handleKeyDown}
+                            onFocus={handleFocus}
+                            onBlur={handleBlur}
+                            min="0"
+                            step="any"
+                            className={`font-semibold text-xl sm:text-2xl md:text-3xl text-black outline-none border-none w-full ${isReadOnly && "cursor-not-allowed"}`}
+                            placeholder={`0`}
+                            readOnly={isReadOnly}
+                            style={{
+                                maxWidth: '100%',
+                                width: '100%',
+                                boxSizing: 'border-box'
+                            }}
+                        />
+                    )}
+                </div>
 
-                {children}
+                <div className="flex-shrink-0">
+                    {children}
+                </div>
             </div>
         </div>
     )

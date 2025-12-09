@@ -230,6 +230,14 @@ export default function Navbar() {
               Contact
             </a>
 
+            <a
+              href={ROUTES.HOMEPAGE}
+              onClick={handleMenuItemClick}
+              className="text-gray-700 hover:text-gray-900 font-medium py-2 border-b border-gray-100"
+            >
+              Home
+            </a>
+
             {/* Auth Buttons in Mobile Drawer */}
             {isLoggedIn ? (
               <div className={`absolute bottom-5`}>

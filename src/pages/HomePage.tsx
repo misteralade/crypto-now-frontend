@@ -19,6 +19,7 @@ const HomePage = () => {
     selectedCrypto,
     supportedCurrency,
     selectedAction,
+    isRegisteredUser,
     
     
     // Functions
@@ -35,16 +36,18 @@ const HomePage = () => {
 
         <HeroSection tradeCrypto={handleTradeCrypto} />
 
-        <InstantTradeSection
-          cryptoCurrencies={supportedCryptoCurrencies || undefined}
-          currencies={supportedCurrencies || undefined}
-          selectedCryptoId={selectedCrypto}
-          selectedCurrencyId={supportedCurrency}
-          selectedAction={selectedAction}
-          onCryptoChange={setSelectedCrypto}
-          onCurrencyChange={setSupportedCurrency}
-          onActionChange={setSelectedAction}
-        />
+        {isRegisteredUser && (
+          <InstantTradeSection
+            cryptoCurrencies={supportedCryptoCurrencies || undefined}
+            currencies={supportedCurrencies || undefined}
+            selectedCryptoId={selectedCrypto}
+            selectedCurrencyId={supportedCurrency}
+            selectedAction={selectedAction}
+            onCryptoChange={setSelectedCrypto}
+            onCurrencyChange={setSupportedCurrency}
+            onActionChange={setSelectedAction}
+          />
+        )}
 
         <StepsSection tradeCrypto={handleTradeCrypto} />
 

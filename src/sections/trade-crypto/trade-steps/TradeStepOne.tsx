@@ -3,7 +3,7 @@ import { ArrowUpDown } from 'lucide-react';
 import TradeFormInput from '../TradeFormInput.tsx'
 import CustomButton from "../../../components/global/Button.tsx";
 import type {TradeType, TradeAdditionalInfoInterface} from "../../../types/trade.types.ts";
-import {useState, type FormEvent} from "react";
+import {useState, useEffect, type FormEvent} from "react";
 import TradeInputDropdown from "../TradeInputDropdown.tsx";
 import TradeAdditionalInfo from "../TradeAdditionalInfo.tsx";
 import type {SupportedCryptoOrCurrencyResponse} from "../../../types/response.payload.types.ts";
@@ -36,9 +36,14 @@ interface TradeStepOneProps {
 const TradeStepOne = ({ setAmountToBuy, isInitiatingTrade, numberOfToken, setNumberOfToken, amountToBuy,selectedCurrency, setSelectedCurrency, setSelectedToken,selectedToken, tradeType, handleProceedToPayment, orderDetails, availableCurrencies, availableTokens, handleFocusNumberOfToken, handleFocusAmountToBuy, handleBlurNumberOfToken, handleBlurAmountToBuy }: TradeStepOneProps) => {
   const dispatch = useDispatch();
 
-  const [switchAmountInputsSetup, setSwitchAmountInputsSetup] = useState<boolean>(false);
+  const [switchAmountInputsSetup, setSwitchAmountInputsSetup] = useState<boolean>(true);
 
   const toggleAmountInputsSetup = () => setSwitchAmountInputsSetup(!switchAmountInputsSetup);
+  
+  // Reset to show "Enter amount" first whenever trade type changes
+  useEffect(() => {
+    setSwitchAmountInputsSetup(true);
+  }, [tradeType]);
   
   const submitInvalid = numberOfToken === "" || amountToBuy === "";
   const handleSubmit = (e: FormEvent) => {

@@ -1,11 +1,9 @@
 import CustomButton from "../../global/Button.tsx";
 import type {SupportedCryptoOrCurrencyResponse} from "../../../types/response.payload.types.ts";
 import CurrencySelector from "../../global/CurrencySelector.tsx";
-import {useEffect, useState} from "react";
+import { useState } from "react";
 import {useNavigate} from "@tanstack/react-router";
-import {LOCAL_STORAGE_KEYS, ROUTES} from "../../../util/constants.util.ts";
-import {type RootState, store} from "../../../store.ts";
-import {useUserQuery} from "../../../queries/user.query.ts";
+import { ROUTES} from "../../../util/constants.util.ts";
 
 interface InstantTradeSectionProps {
   cryptoCurrencies: Array<SupportedCryptoOrCurrencyResponse> | undefined;
@@ -19,22 +17,15 @@ interface InstantTradeSectionProps {
 }
 
 const  InstantTradeSection = ({ cryptoCurrencies, currencies, selectedCryptoId, selectedCurrencyId, selectedAction, onCryptoChange, onCurrencyChange, onActionChange }: InstantTradeSectionProps) => {
-  useUserQuery();
   const navigate = useNavigate();
-  const rootState = store.getState() as RootState;
 
   const [fiatAmount, setFiatAmount] = useState(0)
-  const [isRegisteredUser, setIsRegisteredUser] = useState(false);
+
   
   const handleSubmit = () => {
     navigate({ to: `${ROUTES.TRADE_CRYPTO}?option=${selectedAction.toLowerCase()}&currency=${selectedCurrencyId}&token=${selectedCryptoId}&amount=${fiatAmount}` });
   }
 
-  useEffect(() => {
-    if ((rootState.user.trade.anonymous.isAnonymousUser !== undefined && rootState.user.trade.anonymous.isAnonymousUser) || (localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN) === undefined)) {
-      setIsRegisteredUser(true);
-    }
-  }, [rootState.user.trade.anonymous.isAnonymousUser])
   
   return (
     <section className="max-md:px-4">
@@ -42,7 +33,7 @@ const  InstantTradeSection = ({ cryptoCurrencies, currencies, selectedCryptoId, 
         {/* Header Section */}
         <div className="text-center mb-8 md:mb-12">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-normal md:tracking-[1px] text-[#0E0F0C] mb-3">
-            Instant trade {isRegisteredUser ? 'as a Guest' : ''}
+            Instant trade as a Guest
           </h2>
           <p className="text-gray-600 text-base sm:text-lg md:text-xl max-w-xl mx-auto leading-relaxed">
             You can also buy and sell your crypto coins without having to sign

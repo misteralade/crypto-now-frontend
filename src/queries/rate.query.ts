@@ -11,6 +11,8 @@ export const useRateQuery = (cryptoId: string, currencyId: string, action: 'BUY'
       return data;
     },
     enabled: enabled && !!cryptoId && !!currencyId && !!action,
+    refetchOnWindowFocus: enabled, // Only refetch on window focus if not locked
+    refetchOnMount: enabled, // Only refetch on mount if not locked
   });
 
   return {

@@ -26,12 +26,12 @@ export default function TradeAdditionalInfo ({ heading, additionalInfo = [] }: T
         {additionalInfo.map((item, index) => {
           const isRateField = item.title === 'Rate';
           return (
-            <div key={index} className={`flex ${isRateField ? 'flex-col md:flex-row' : ''} ${typeof item.value === 'string' ? "items-center": "md:items-end items-center"} gap-2 md:gap-5 ${isRateField ? '' : 'justify-between'}`} >
+            <div key={index} className={`flex ${isRateField ? 'flex-row' : ''} ${typeof item.value === 'string' ? "items-center": "md:items-end items-center"} gap-2 md:gap-5 ${isRateField ? '' : 'justify-between'}`} >
               <h3 className={`text-grey2 font-medium ${isRateField ? '' : 'flex-shrink-0'}`}>{item.title}</h3>
 
               {/* Render copyable fields with CopyAccountDetails */}
               {isCopyableField(item.title) && typeof item.value === 'string' ? (
-                <CopyAccountDetails accountNumber={item.value} />
+                <CopyAccountDetails accountNumber={item.value} className="justify-end md:justify-start !max-w-[150px] md:!max-w-fit w-3/4 md:w-fit"/>
               ) : (
                 /* Render regular fields */
                 typeof item.value === 'string' ?

@@ -64,9 +64,13 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, cryptoAccou
                   src={bank.bankLogo}
                   alt={`${bank.bankName} logo`}
                   className="w-12 h-12 rounded-full object-cover bg-gray-100"
-                  onError={(e: any) => {
-                    e.currentTarget.style.display = "none";
-                    e.currentTarget.nextElementSibling!.style.display = "flex";
+                  onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+                    const target = e.currentTarget;
+                    target.style.display = "none";
+                    const nextSibling = target.nextElementSibling as HTMLElement;
+                    if (nextSibling) {
+                      nextSibling.style.display = "flex";
+                    }
                   }}
                 />
                 <div className="w-12 h-12 rounded-full bg-blue-100 items-center justify-center text-blue-600 font-semibold text-sm hidden">
@@ -112,7 +116,7 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, cryptoAccou
           <CustomButton
             buttonText="View Details & Proceed"
             onClick={handleViewSelectedBankDetails}
-            className="w-full h-12"
+            className="w-full h-12 text-xs sm:text-sm whitespace-normal break-words px-2"
           />
         </div>
       )}
@@ -237,7 +241,7 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, cryptoAccou
           <CustomButton
             buttonText="View Details & Proceed"
             onClick={handleViewSelectedWalletDetails}
-            className="w-full h-12"
+            className="w-full h-12 text-xs sm:text-sm whitespace-normal break-words px-2"
           />
         </div>
       )}
@@ -446,7 +450,7 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, cryptoAccou
               <CustomButton
                 className={`${
                   showChangeButton() ? "flex-1" : "w-full"
-                } h-12`}
+                } h-12 text-xs sm:text-sm whitespace-normal break-words px-2`}
                 buttonText={getActionButtonText()}
                 type="button"
                 onClick={handleMainAction}

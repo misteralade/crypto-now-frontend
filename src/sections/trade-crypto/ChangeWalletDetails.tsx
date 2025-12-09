@@ -5,6 +5,7 @@ import { CustomSelect } from "../../components/global/CustomSelect.tsx"
 import { setUserCreateCrypto } from "../../redux/crypto.slice.ts"
 import {type RootState, store} from "../../store.ts";
 import {cryptoNetworkTypes} from "../../util/constants.util.ts";
+import { walletAddressRegex } from "../../util/regex.util.ts";
 
 interface CryptoWalletDetailsProps {
   onConfirm: () => void
@@ -29,16 +30,49 @@ const ChangeCryptoWalletDetails = ({ onConfirm, onGoBack, canGoBack = true }: Cr
 
   const [walletLabel, setWalletLabel] = useState("")
   const [walletAddress, setWalletAddress] = useState("")
+  const [walletAddressError, setWalletAddressError] = useState("")
   const [network, setNetwork] = useState("")
   const [isPrimary, setIsPrimary] = useState(false)
   const [isVerified, setIsVerified] = useState(false)
 
+  const validateWalletAddress = (address: string) => {
+    if (!address || address.trim() === "") {
+      setWalletAddressError("Wallet address is required");
+      return false;
+    }
+    
+    const trimmedAddress = address.trim();
+    if (!walletAddressRegex.test(trimmedAddress)) {
+      setWalletAddressError("Please enter a valid wallet address");
+      return false;
+    }
+    
+    setWalletAddressError("");
+    return true;
+  }
+
+  const handleWalletAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setWalletAddress(value);
+    
+    // Only validate if user has started typing (not empty)
+    if (value.trim() !== "") {
+      validateWalletAddress(value);
+    } else {
+      setWalletAddressError("");
+    }
+  }
+
+  const handleWalletAddressBlur = () => {
+    validateWalletAddress(walletAddress);
+  }
+
   const handleConfirm = () => {
-    if (walletLabel && walletAddress && network) {
+    if (walletLabel && walletAddress && network && validateWalletAddress(walletAddress)) {
       dispatch(
         setUserCreateCrypto({
           walletLabel,
-          walletAddress,
+          walletAddress: walletAddress.trim(),
           network,
           isPrimary,
           isVerified,
@@ -49,7 +83,7 @@ const ChangeCryptoWalletDetails = ({ onConfirm, onGoBack, canGoBack = true }: Cr
     }
   }
 
-  const isFormValid = walletLabel && walletAddress && network
+  const isFormValid = walletLabel && walletAddress && network && !walletAddressError
 
   return (
     <div className="space-y-10">
@@ -67,7 +101,9 @@ const ChangeCryptoWalletDetails = ({ onConfirm, onGoBack, canGoBack = true }: Cr
           label="Wallet address"
           placeholder="0x0000000000000000000000000000000000000000"
           value={walletAddress}
-          onChange={(e) => setWalletAddress(e.target.value)}
+          onChange={handleWalletAddressChange}
+          onBlur={handleWalletAddressBlur}
+          error={walletAddressError}
           className="font-mono text-sm"
         />
 

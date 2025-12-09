@@ -25,7 +25,7 @@ export const useSignUpPage = () => {
     dispatch(setCreateUser(data));
     const { success } = await userCreateAccountMutation.mutateAsync();
     if (success) {
-      toast.info(`Account activation link sent to your email`)
+      toast.info(`Account activation link sent to your email. If you don't see it in your inbox, please check your spam folder.`)
       setTimeout(() => {
         navigate({ to: ROUTES.SIGNIN })
       })
