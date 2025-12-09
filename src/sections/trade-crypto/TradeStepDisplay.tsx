@@ -82,7 +82,7 @@ export default function TradeStepDisplay({
     handleFocusAmountToBuy,
     handleBlurNumberOfToken,
     handleBlurAmountToBuy,
-  } = useTradeStepDisplay(token, activeTab, currency, setStep, setActiveTab, initialAmount);
+  } = useTradeStepDisplay(token, activeTab, currency, setStep, setActiveTab, initialAmount, step);
 
   // prefill amt on first load if provided in the URL and fields are empty
   useEffect(() => {
@@ -175,9 +175,9 @@ export default function TradeStepDisplay({
         )}
         {step === 2 && (
           <TradeStepTwo
-            amountToBuy={Number(amountToBuy)}
+            amountToBuy={typeof amountToBuy === 'string' ? (amountToBuy ? Number(amountToBuy) : 0) : (amountToBuy || 0)}
             tradeType={activeTab}
-            numberOfToken={Number(numberOfToken)}
+            numberOfToken={typeof numberOfToken === 'string' ? (numberOfToken ? Number(numberOfToken) : 0) : (numberOfToken || 0)}
             additionalInfo={AdditionalInfo}
             selectedToken={selectedToken}
             selectedCurrency={selectedCurrency}

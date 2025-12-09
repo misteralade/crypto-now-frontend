@@ -5,6 +5,8 @@ import {useTradeStepTwo} from "../../../hooks/components/trade/useTradeStepTwo.t
 import type {SupportedCryptoOrCurrencyResponse} from "../../../types/response.payload.types.ts";
 import TradePaymentUpload from "../TradePaymentUpload.tsx";
 import CopyAccountDetails from "../CopyAccountDetails.tsx";
+import {SESSION_STORAGE_KEYS} from "../../../util/constants.util.ts";
+import {useState, useEffect} from "react";
 import type React from "react";
 
 interface TradeStepTwoProps {
@@ -39,6 +41,25 @@ const TradeStepTwo = ({ amountToBuy, tradeType, numberOfToken, additionalInfo, h
     setUploadedFileUrl,
   } = useTradeStepTwo({tradeType, exchangeRateId, amountToBuy, numberOfToken, selectedToken, selectedCurrency });
   
+  // Retrieve stored values from session storage (if receipt was uploaded)
+  // Only use stored values if they exist and are not empty
+  const [storedYouPay, setStoredYouPay] = useState<string | null>(null);
+  const [storedYouReceive, setStoredYouReceive] = useState<string | null>(null);
+  
+  useEffect(() => {
+    const youPayValue = sessionStorage.getItem(SESSION_STORAGE_KEYS.YOU_PAY_VALUE);
+    const youReceiveValue = sessionStorage.getItem(SESSION_STORAGE_KEYS.YOU_RECEIVE_VALUE);
+    
+    // Only set if value exists and is not "[object Object]"
+    if (youPayValue && youPayValue !== "[object Object]" && youPayValue.trim() !== "") {
+      setStoredYouPay(youPayValue);
+    }
+    
+    if (youReceiveValue && youReceiveValue !== "[object Object]" && youReceiveValue.trim() !== "") {
+      setStoredYouReceive(youReceiveValue);
+    }
+  }, []);
+  
   // Loading state
   if (paymentDetailsLoading) {
     return (
@@ -66,9 +87,33 @@ const TradeStepTwo = ({ amountToBuy, tradeType, numberOfToken, additionalInfo, h
     );
   }
 
-  const amountToPay = (amountToBuy: number, selectedCurrency?: SupportedCryptoOrCurrencyResponse) => formatSendAmount && typeof formatSendAmount === 'function'
-    ? formatSendAmount(amountToBuy.toLocaleString(), selectedCurrency?.code)
-    : `${amountToBuy} ${selectedCurrency?.code}`
+  const amountToPay = (amountToBuy: number, selectedCurrency?: SupportedCryptoOrCurrencyResponse) => {
+    // Use stored value if available (after receipt upload)
+    if (storedYouPay) {
+      return storedYouPay;
+    }
+    // Otherwise calculate
+    return formatSendAmount && typeof formatSendAmount === 'function'
+      ? formatSendAmount(amountToBuy.toLocaleString(), selectedCurrency?.code)
+      : `${amountToBuy} ${selectedCurrency?.code}`;
+  };
+  
+  const amountToReceive = () => {
+    // Use stored value if available (after receipt upload)
+    if (storedYouReceive) {
+      return storedYouReceive;
+    }
+    // Otherwise calculate
+    if (tradeType === "buy") {
+      return formatReceiveAmount && typeof formatReceiveAmount === 'function'
+        ? formatReceiveAmount(amountToBuy, selectedCurrency?.code)
+        : `${amountToBuy} ${selectedCurrency?.code}`;
+    } else {
+      return formatReceiveAmount && typeof formatReceiveAmount === 'function'
+        ? formatReceiveAmount(amountToBuy, selectedCurrency?.code)
+        : `${amountToBuy} ${selectedCurrency?.code}`;
+    }
+  };
 
   return (
     <div className="space-y-7">
@@ -112,14 +157,9 @@ const TradeStepTwo = ({ amountToBuy, tradeType, numberOfToken, additionalInfo, h
             </p>
             <p className="text-sm">
               <span className="text-gray-600">You receive:</span>
-
-              
               <span className="font-semibold ml-2">
-              {formatReceiveAmount && typeof formatReceiveAmount === 'function'
-                ? formatReceiveAmount(amountToBuy, selectedCurrency?.code)
-                : `${amountToBuy} ${selectedCurrency?.code}`}
+                {amountToReceive()}
               </span>
-
             </p>
           </>
         ) : (
@@ -131,9 +171,7 @@ const TradeStepTwo = ({ amountToBuy, tradeType, numberOfToken, additionalInfo, h
             <p className="text-sm">
               <span className="text-gray-600">You receive:</span>
               <span className="font-semibold ml-2">
-                {formatReceiveAmount && typeof formatReceiveAmount === 'function'
-                  ? formatReceiveAmount(amountToBuy, selectedCurrency?.code)
-                  : `${amountToBuy} ${selectedCurrency?.code}`}
+                {amountToReceive()}
               </span>
             </p>
           </>

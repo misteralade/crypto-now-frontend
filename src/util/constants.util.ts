@@ -47,7 +47,9 @@ export const QUERY_KEYS = {
 }
 
 export const SESSION_STORAGE_KEYS = {
-  SESSION_ID: "transactionSessionId"
+  SESSION_ID: "transactionSessionId",
+  YOU_PAY_VALUE: "youPayValue",
+  YOU_RECEIVE_VALUE: "youReceiveValue"
 }
 
 export const LOCAL_STORAGE_KEYS = {

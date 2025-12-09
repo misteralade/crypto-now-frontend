@@ -53,7 +53,7 @@ const shallowEqual = (a: any, b: any) => {
   return true;
 };
 
-export const useTradeStepDisplay = ( token: string, activeTab: TradeType, currency: string, setStep: (value: number) => void, _setActiveTab: (value: TradeType) => void, initialAmount?: string ) => {
+export const useTradeStepDisplay = ( token: string, activeTab: TradeType, currency: string, setStep: (value: number) => void, _setActiveTab: (value: TradeType) => void, initialAmount?: string, currentStep?: number ) => {
   const rootState = store.getState() as RootState;
   
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -74,11 +74,17 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   const transactionFormRef = useRef<InitiateTransactionRequestPayload | undefined>(undefined);
   
   const [isCountdownLocked, setIsCountdownLocked] = useState(false);
+  
+  // Only disable rate query on Step 2 when receipt is uploaded
+  // On Step 1, always allow rate to load
+  const saved = useMemo(() => loadTradeProgress(), []);
+  const shouldDisableRateQuery = currentStep === 2 && isCountdownLocked && saved?.receiptUrl;
+  
   const { exchangeRate, loadingExchangeRate } = useRateQuery(
     selectedToken?.id || "",
     selectedCurrency?.id || "",
     activeTab.toUpperCase() === "BUY" ? "BUY" : "SELL",
-    !isCountdownLocked // Disable refetching when countdown is locked
+    !shouldDisableRateQuery // Only disable refetching on Step 2 when receipt is uploaded
   );
 
 
@@ -119,6 +125,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
 
   // 🔹 Hydration guard to avoid saving empty defaults on first paint
   const hydratedRef = useRef(false);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   // ---------- Restore persisted progress ----------
   useEffect(() => {
@@ -128,38 +135,132 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       return;
     }
 
-    // amounts & flags
-    if (saved.numberOfToken !== undefined)
-      setNumberOfToken(saved.numberOfToken);
-    if (saved.amountToBuy !== undefined) setAmountToBuy(saved.amountToBuy);
-    if (saved.isCountdownLocked !== undefined)
-      setIsCountdownLocked(saved.isCountdownLocked);
-    // Lock countdown if receipt was already uploaded
-    if (saved.receiptUrl && saved.receiptUrl.trim() !== "") {
-      setIsCountdownLocked(true);
+    // On reload, clear session storage values and don't restore locked state
+    // This allows rate to be refetched and fresh data to be loaded
+    const nav = performance?.getEntriesByType?.("navigation")?.[0] as
+      | PerformanceNavigationTiming
+      | undefined;
+    const isReload = nav?.type === "reload";
+    
+    if (isReload) {
+      // Clear session storage values on reload
+      sessionStorage.removeItem(SESSION_STORAGE_KEYS.YOU_PAY_VALUE);
+      sessionStorage.removeItem(SESSION_STORAGE_KEYS.YOU_RECEIVE_VALUE);
+      // Don't restore locked state - allow fresh rate fetch
+      setIsCountdownLocked(false);
+    } else {
+      // Only restore locked state if not a reload
+      if (saved.isCountdownLocked !== undefined)
+        setIsCountdownLocked(saved.isCountdownLocked);
+      // Lock countdown if receipt was already uploaded (only if not reload)
+      if (saved.receiptUrl && saved.receiptUrl.trim() !== "") {
+        setIsCountdownLocked(true);
+        setCountdown("Rate Locked");
+      }
     }
-    if (saved.exchangeRateId) setExchangeRateId(saved.exchangeRateId);
-    if (saved.transactionSessionId)
+
+    // amounts & flags - ensure they're not empty strings or 0
+    if (saved.numberOfToken !== undefined && saved.numberOfToken !== "" && Number(saved.numberOfToken) > 0)
+      setNumberOfToken(saved.numberOfToken);
+    if (saved.amountToBuy !== undefined && saved.amountToBuy !== "" && Number(saved.amountToBuy) > 0) 
+      setAmountToBuy(saved.amountToBuy);
+    
+    // Only restore receipt URL if not a reload (treat reload as fresh start)
+    if (!isReload && saved.receiptUrl && saved.receiptUrl.trim() !== "") {
+      // Restore receipt URL to Redux state and transaction form
+      const receiptPartial: Partial<InitiateTransactionRequestPayload> = {
+        receiptUrl: saved.receiptUrl,
+      };
+      const receiptMerged: InitiateTransactionRequestPayload = {
+        ...(transactionFormRef.current || {}),
+        ...receiptPartial,
+      } as InitiateTransactionRequestPayload;
+      transactionFormRef.current = receiptMerged;
+      setTransactionForm(receiptMerged);
+      dispatch(setInitiateTransactionField({
+        field: "receiptUrl",
+        value: saved.receiptUrl
+      }));
+    }
+    
+    // Always restore exchangeRateId (needed for bank details query)
+    if (saved.exchangeRateId) {
+      setExchangeRateId(saved.exchangeRateId);
+      // Restore exchangeRateId to Redux state and transaction form
+      const ratePartial: Partial<InitiateTransactionRequestPayload> = {
+        exchangeRateId: saved.exchangeRateId,
+      };
+      const rateMerged: InitiateTransactionRequestPayload = {
+        ...(transactionFormRef.current || {}),
+        ...ratePartial,
+      } as InitiateTransactionRequestPayload;
+      transactionFormRef.current = rateMerged;
+      setTransactionForm(rateMerged);
+      dispatch(setInitiateTransactionField({
+        field: "exchangeRateId",
+        value: saved.exchangeRateId
+      }));
+    }
+    // Restore transaction session ID from saved progress or sessionStorage
+    const sessionIdFromStorage = sessionStorage.getItem(SESSION_STORAGE_KEYS.SESSION_ID);
+    if (saved.transactionSessionId) {
       setTransactionSessionId(saved.transactionSessionId);
+      // Also ensure it's in sessionStorage
+      if (!sessionIdFromStorage) {
+        sessionStorage.setItem(SESSION_STORAGE_KEYS.SESSION_ID, saved.transactionSessionId);
+      }
+    } else if (sessionIdFromStorage) {
+      // If not in saved progress but exists in sessionStorage, restore it
+      setTransactionSessionId(sessionIdFromStorage);
+      saveTradeProgress({ transactionSessionId: sessionIdFromStorage });
+    }
+    // Restore transaction hash if exists
+    if (saved.transactionHash) {
+      const hashPartial: Partial<InitiateTransactionRequestPayload> = {
+        transactionHash: saved.transactionHash,
+      };
+      const hashMerged: InitiateTransactionRequestPayload = {
+        ...(transactionFormRef.current || {}),
+        ...hashPartial,
+      } as InitiateTransactionRequestPayload;
+      transactionFormRef.current = hashMerged;
+      setTransactionForm(hashMerged);
+      dispatch(setInitiateTransactionField({
+        field: "transactionHash",
+        value: saved.transactionHash
+      }));
+    }
 
     // mark hydrated after we push restored state
     // small timeout ensures our "save" effects don't run with pre-hydrate empties
     setTimeout(() => {
       hydratedRef.current = true;
+      setIsHydrated(true);
     }, 0);
   }, []);
   
-  // Set the fields on the redux store
+  // Set the fields on the redux store (only if not already set from saved progress)
   useEffect(() => {
+    const saved = loadTradeProgress();
+    // Only set from URL params if not restored from saved progress
+    if (!saved?.selectedCurrencyId && currency) {
+      dispatch(setInitiateTransactionField({
+        field: "currencyId",
+        value: currency,
+      }));
+    }
+    if (!saved?.selectedTokenId && token) {
+      dispatch(setInitiateTransactionField({
+        field: "tokenId",
+        value: token,
+      }));
+    }
+    // Always set action based on activeTab
     dispatch(setInitiateTransactionField({
-      field: "currencyId",
-      value: currency,
-    }))
-    dispatch(setInitiateTransactionField({
-      field: "tokenId",
-      value: token,
+      field: "action",
+      value: activeTab,
     }));
-  }, [])
+  }, [currency, token, activeTab, dispatch])
 
   // Countdown
   useEffect(() => {
@@ -235,8 +336,11 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
 
   // Auto-calc opposite field (guarded)
   useEffect(() => {
+    // Don't run calculations if we're still hydrating or if countdown is locked
+    if (!isHydrated || isCountdownLocked) return;
+    
     const calculationRate = getCalculationRate();
-    if (!calculationRate || loadingExchangeRate || isCountdownLocked)
+    if (!calculationRate || loadingExchangeRate)
       return;
 
     let nextAmountToBuy = amountToBuy;
@@ -357,6 +461,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
+    isHydrated,
     numberOfToken,
     amountToBuy,
     activeTab,
@@ -404,15 +509,47 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       const found = supportedCryptoCurrencies.find(
         (c) => c.id === saved.selectedTokenId
       );
-      if (found) setSelectedToken(found);
+      if (found) {
+        setSelectedToken(found);
+        // Restore tokenId to Redux state and transaction form
+        dispatch(setInitiateTransactionField({
+          field: "tokenId",
+          value: found.id
+        }));
+        const tokenPartial: Partial<InitiateTransactionRequestPayload> = {
+          tokenId: found.id,
+        };
+        const tokenMerged: InitiateTransactionRequestPayload = {
+          ...(transactionFormRef.current || {}),
+          ...tokenPartial,
+        } as InitiateTransactionRequestPayload;
+        transactionFormRef.current = tokenMerged;
+        setTransactionForm(tokenMerged);
+      }
     }
     if (saved.selectedCurrencyId && supportedCurrencies?.length) {
       const found = supportedCurrencies.find(
         (c) => c.id === saved.selectedCurrencyId
       );
-      if (found) setSelectedCurrency(found);
+      if (found) {
+        setSelectedCurrency(found);
+        // Restore currencyId to Redux state and transaction form
+        dispatch(setInitiateTransactionField({
+          field: "currencyId",
+          value: found.id
+        }));
+        const currencyPartial: Partial<InitiateTransactionRequestPayload> = {
+          currencyId: found.id,
+        };
+        const currencyMerged: InitiateTransactionRequestPayload = {
+          ...(transactionFormRef.current || {}),
+          ...currencyPartial,
+        } as InitiateTransactionRequestPayload;
+        transactionFormRef.current = currencyMerged;
+        setTransactionForm(currencyMerged);
+      }
     }
-  }, [supportedCryptoCurrencies, supportedCurrencies]);
+  }, [supportedCryptoCurrencies, supportedCurrencies, dispatch]);
 
   // Exchange rate updates (guarded)
   useEffect(() => {
@@ -562,7 +699,6 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
         value: url
       }));
     }
-    saveTradeProgress({ receiptUrl: url });
     
     // Lock the exchange rate when receipt is uploaded (non-empty URL)
     if (url && url.trim() !== "") {
@@ -573,7 +709,109 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       }
       setIsCountdownLocked(true);
       setCountdown("Rate Locked");
-      saveTradeProgress({ isCountdownLocked: true });
+      
+      // Ensure amounts are saved when receipt is uploaded
+      // This ensures they persist correctly after refresh
+      saveTradeProgress({ 
+        receiptUrl: url,
+        isCountdownLocked: true,
+        numberOfToken,
+        amountToBuy
+      });
+      
+      // Store formatted "You pay" and "You receive" values in session storage
+      if (numberOfToken && amountToBuy && selectedToken && selectedCurrency) {
+        const numToken = Number(numberOfToken);
+        const numAmount = Number(amountToBuy);
+        
+        if (!isNaN(numToken) && !isNaN(numAmount) && numToken > 0 && numAmount > 0) {
+          // Format "You pay" value - convert ReactNode to string if needed
+          const youPayFormatted = formatSendAmount 
+            ? formatSendAmount(activeTab.toUpperCase() === "SELL" ? numToken : numAmount, activeTab.toUpperCase() === "SELL" ? selectedToken?.symbol : selectedCurrency?.code)
+            : activeTab.toUpperCase() === "SELL" 
+              ? `${numToken} ${selectedToken?.symbol}`
+              : `${numAmount} ${selectedCurrency?.code}`;
+          
+          // Format "You receive" value - convert ReactNode to string if needed
+          const youReceiveFormatted = formatReceiveAmount
+            ? formatReceiveAmount(activeTab.toUpperCase() === "SELL" ? numAmount : numToken, activeTab.toUpperCase() === "SELL" ? selectedCurrency?.code : selectedToken?.symbol)
+            : activeTab.toUpperCase() === "SELL"
+              ? `${numAmount} ${selectedCurrency?.code}`
+              : `${numToken} ${selectedToken?.symbol}`;
+          
+          // Convert to string for storage (ReactNode can't be stored directly)
+          // Extract text content from ReactNode if it's an object
+          let youPayString: string;
+          let youReceiveString: string;
+          
+          if (typeof youPayFormatted === 'string') {
+            youPayString = youPayFormatted;
+          } else if (React.isValidElement(youPayFormatted)) {
+            // If it's a React element, extract text from children
+            const extractText = (node: any): string => {
+              if (typeof node === 'string') return node;
+              if (typeof node === 'number') return String(node);
+              if (Array.isArray(node)) return node.map(extractText).join('');
+              if (node?.props?.children) return extractText(node.props.children);
+              return '';
+            };
+            youPayString = extractText(youPayFormatted) || String(youPayFormatted);
+          } else {
+            // Fallback: use simple string conversion
+            youPayString = String(youPayFormatted);
+          }
+          
+          if (typeof youReceiveFormatted === 'string') {
+            youReceiveString = youReceiveFormatted;
+          } else if (React.isValidElement(youReceiveFormatted)) {
+            // If it's a React element, extract text from children
+            const extractText = (node: any): string => {
+              if (typeof node === 'string') return node;
+              if (typeof node === 'number') return String(node);
+              if (Array.isArray(node)) return node.map(extractText).join('');
+              if (node?.props?.children) return extractText(node.props.children);
+              return '';
+            };
+            youReceiveString = extractText(youReceiveFormatted) || String(youReceiveFormatted);
+          } else {
+            // Fallback: use simple string conversion
+            youReceiveString = String(youReceiveFormatted);
+          }
+          
+          // Store in session storage
+          sessionStorage.setItem(SESSION_STORAGE_KEYS.YOU_PAY_VALUE, youPayString);
+          sessionStorage.setItem(SESSION_STORAGE_KEYS.YOU_RECEIVE_VALUE, youReceiveString);
+          
+          const amountToReceive = activeTab.toUpperCase() === "SELL"
+            ? numAmount
+            : numToken;
+          const amountToSend = activeTab.toUpperCase() === "SELL"
+            ? numToken
+            : numAmount;
+          
+          const amountsPartial: Partial<InitiateTransactionRequestPayload> = {
+            amountToReceive,
+            amountToSend,
+          };
+          const amountsMerged: InitiateTransactionRequestPayload = {
+            ...(transactionFormRef.current || {}),
+            ...amountsPartial,
+          } as InitiateTransactionRequestPayload;
+          
+          transactionFormRef.current = amountsMerged;
+          setTransactionForm(amountsMerged);
+          dispatch(setInitiateTransactionField({
+            field: "amountToReceive",
+            value: amountToReceive
+          }));
+          dispatch(setInitiateTransactionField({
+            field: "amountToSend",
+            value: amountToSend
+          }));
+        }
+      }
+    } else {
+      saveTradeProgress({ receiptUrl: url });
     }
   };
 
@@ -655,6 +893,8 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
 
   useEffect(() => {
     if (!hydratedRef.current) return;
+    // Always save amounts and isCountdownLocked state
+    // The restoration logic will filter out invalid values
     saveTradeProgress({ numberOfToken, amountToBuy, isCountdownLocked });
   }, [numberOfToken, amountToBuy, isCountdownLocked]);
 
@@ -662,6 +902,80 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     if (!hydratedRef.current) return;
     if (exchangeRateId) saveTradeProgress({ exchangeRateId });
   }, [exchangeRateId]);
+
+  // Restore amounts to transaction form after restoration
+  // This should run even when countdown is locked to ensure amounts are set correctly
+  useEffect(() => {
+    if (!isHydrated) return;
+    
+    const saved = loadTradeProgress();
+    // Restore amounts if we're on step 2 and have the necessary data
+    // Also restore if countdown is locked (receipt uploaded) to ensure amounts persist
+    if ((saved?.step === 2 || isCountdownLocked || currentStep === 2) && selectedToken && selectedCurrency) {
+      // Use saved amounts if current state amounts are empty/0, otherwise use current state
+      const tokenValue = (numberOfToken && Number(numberOfToken) > 0) 
+        ? numberOfToken 
+        : (saved?.numberOfToken && Number(saved.numberOfToken) > 0) 
+          ? saved.numberOfToken 
+          : null;
+      const amountValue = (amountToBuy && Number(amountToBuy) > 0) 
+        ? amountToBuy 
+        : (saved?.amountToBuy && Number(saved.amountToBuy) > 0) 
+          ? saved.amountToBuy 
+          : null;
+      
+      if (!tokenValue || !amountValue) return;
+      
+      const numToken = Number(tokenValue);
+      const numAmount = Number(amountValue);
+      
+      // Only proceed if amounts are valid numbers
+      if (isNaN(numToken) || isNaN(numAmount) || numToken <= 0 || numAmount <= 0) {
+        return;
+      }
+      
+      // Update state if needed (only if they're different and valid)
+      if (tokenValue !== numberOfToken) {
+        if (typeof tokenValue === 'string' || typeof tokenValue === 'number') {
+          setNumberOfToken(tokenValue);
+        }
+      }
+      if (amountValue !== amountToBuy) {
+        if (typeof amountValue === 'string' || typeof amountValue === 'number') {
+          setAmountToBuy(amountValue);
+        }
+      }
+      
+      const amountToReceive = activeTab.toUpperCase() === "SELL"
+        ? numAmount
+        : numToken;
+      const amountToSend = activeTab.toUpperCase() === "SELL"
+        ? numToken
+        : numAmount;
+      
+      const amountsPartial: Partial<InitiateTransactionRequestPayload> = {
+        amountToReceive,
+        amountToSend,
+      };
+      const amountsMerged: InitiateTransactionRequestPayload = {
+        ...(transactionFormRef.current || {}),
+        ...amountsPartial,
+      } as InitiateTransactionRequestPayload;
+      
+      if (!shallowEqual(transactionFormRef.current, amountsMerged)) {
+        transactionFormRef.current = amountsMerged;
+        setTransactionForm(amountsMerged);
+        dispatch(setInitiateTransactionField({
+          field: "amountToReceive",
+          value: amountToReceive
+        }));
+        dispatch(setInitiateTransactionField({
+          field: "amountToSend",
+          value: amountToSend
+        }));
+      }
+    }
+  }, [isHydrated, numberOfToken, amountToBuy, selectedToken, selectedCurrency, activeTab, dispatch, isCountdownLocked, currentStep]);
 
   useEffect(() => {
     if (!hydratedRef.current) return;
