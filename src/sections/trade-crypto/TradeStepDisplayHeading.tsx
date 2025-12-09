@@ -20,7 +20,7 @@ const TradeStepDisplayHeading = ({ step, activeTab, setStep,setActiveTab,}: Trad
           return ""
       }
     } else {
-      return `Your order is been processed. You’ll get notified when we make your ${activeTab === "buy" ? "payment" : "crypto"} into your ${activeTab === "buy" ? "account" : "wallet"} via email.`
+      return `Your order is been processed. You’ll get notified when we make your ${activeTab === "buy" ? "crypto" : "payment"} into your ${activeTab === "buy" ? "wallet" : "account"} via email.`
     }
   }
 
