@@ -77,7 +77,8 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   const { exchangeRate, loadingExchangeRate } = useRateQuery(
     selectedToken?.id || "",
     selectedCurrency?.id || "",
-    activeTab.toUpperCase() === "BUY" ? "BUY" : "SELL"
+    activeTab.toUpperCase() === "BUY" ? "BUY" : "SELL",
+    !isCountdownLocked // Disable refetching when countdown is locked
   );
 
 
@@ -133,6 +134,10 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     if (saved.amountToBuy !== undefined) setAmountToBuy(saved.amountToBuy);
     if (saved.isCountdownLocked !== undefined)
       setIsCountdownLocked(saved.isCountdownLocked);
+    // Lock countdown if receipt was already uploaded
+    if (saved.receiptUrl && saved.receiptUrl.trim() !== "") {
+      setIsCountdownLocked(true);
+    }
     if (saved.exchangeRateId) setExchangeRateId(saved.exchangeRateId);
     if (saved.transactionSessionId)
       setTransactionSessionId(saved.transactionSessionId);
@@ -169,15 +174,25 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
         setCountdown("Expired");
         if (countdownIntervalRef.current)
           clearInterval(countdownIntervalRef.current);
-        setIsCountdownLocked(false);
-        if (selectedToken?.id && selectedCurrency?.id) {
-          queryClient.invalidateQueries({
-            queryKey: [
-              QUERY_KEYS.EXCHANGE_RATE.GET_CRYPTO_TO_CURRENCY_EXCHANGE_RATE,
-              selectedToken.id,
-              selectedCurrency.id,
-            ],
-          });
+        
+        // Don't unlock or refetch if receipt has been uploaded
+        const rootState = store.getState() as RootState;
+        const hasReceipt = rootState.transaction.initiate.initiateTransaction?.receiptUrl;
+        
+        if (!hasReceipt) {
+          setIsCountdownLocked(false);
+          if (selectedToken?.id && selectedCurrency?.id) {
+            queryClient.invalidateQueries({
+              queryKey: [
+                QUERY_KEYS.EXCHANGE_RATE.GET_CRYPTO_TO_CURRENCY_EXCHANGE_RATE,
+                selectedToken.id,
+                selectedCurrency.id,
+              ],
+            });
+          }
+        } else {
+          // Keep locked and show "Rate Locked" instead of "Expired"
+          setCountdown("Rate Locked");
         }
         return;
       }
@@ -431,7 +446,12 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       sessionStorage.setItem("exchangeRateId", rateId);
       saveTradeProgress({ exchangeRateId: rateId });
     }
-    if (rateId && isCountdownLocked) setIsCountdownLocked(false);
+    // Don't unlock countdown if receipt has been uploaded - check if receiptUrl exists
+    const rootState = store.getState() as RootState;
+    const hasReceipt = rootState.transaction.initiate.initiateTransaction?.receiptUrl;
+    if (rateId && isCountdownLocked && !hasReceipt) {
+      setIsCountdownLocked(false);
+    }
   }, [exchangeRate, dispatch, isCountdownLocked]);
 
   // 🔹 Only clear amounts when the tab ACTUALLY changes (not on mount)
@@ -543,6 +563,18 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       }));
     }
     saveTradeProgress({ receiptUrl: url });
+    
+    // Lock the exchange rate when receipt is uploaded (non-empty URL)
+    if (url && url.trim() !== "") {
+      // Clear the countdown interval immediately
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+        countdownIntervalRef.current = null;
+      }
+      setIsCountdownLocked(true);
+      setCountdown("Rate Locked");
+      saveTradeProgress({ isCountdownLocked: true });
+    }
   };
 
   const handleTransactionHash = (hash: string) => {
