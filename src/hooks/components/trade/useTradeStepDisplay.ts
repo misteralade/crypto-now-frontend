@@ -26,7 +26,7 @@ import {
   saveTradeProgress,
 } from "../../../util/tradeProgress.storage.util.ts";
 import {type RootState, store} from "../../../store.ts";
-import {setAnonymousUserEmail} from "../../../redux/user.slice.ts";
+import {setAnonymousUserEmail, clearAnonymousUserEmail} from "../../../redux/user.slice.ts";
 import { convertToMillify, formatNumber } from "../../../util/index.util.ts";
 import { toast } from "react-toastify";
 
@@ -866,6 +866,8 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       const { success } = await receivingPaymentAccountConfirmationMutation.mutateAsync();
       if (success) {
         clearTradeProgress();
+        // Clear guest user email when reaching Step 3
+        dispatch(clearAnonymousUserEmail());
         setStep(3);
         // setActiveTab("buy");
         setShowPaymentReceivingModal(false);
@@ -902,6 +904,13 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     if (!hydratedRef.current) return;
     if (exchangeRateId) saveTradeProgress({ exchangeRateId });
   }, [exchangeRateId]);
+
+  // Clear guest user email when reaching Step 3
+  useEffect(() => {
+    if (currentStep === 3) {
+      dispatch(clearAnonymousUserEmail());
+    }
+  }, [currentStep, dispatch]);
 
   // Restore amounts to transaction form after restoration
   // This should run even when countdown is locked to ensure amounts are set correctly
