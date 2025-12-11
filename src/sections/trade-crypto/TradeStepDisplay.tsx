@@ -25,21 +25,48 @@ export default function TradeStepDisplay({
   const searchParams: { amount?: string } = useSearch({ strict: false });
   const initialAmount = searchParams?.amount;
 
-  // Restore step/activeTab on mount
+  // 1) On mount: only keep progress if navigation type is "reload", and not step 3
   useEffect(() => {
+    const nav = performance?.getEntriesByType?.("navigation")?.[0] as
+      | PerformanceNavigationTiming
+      | undefined;
+
+    const isReload = nav?.type === "reload";
     const saved = loadTradeProgress();
-    if (!saved) return;
-    if (typeof saved.step === "number" && saved.step !== step) {
-      setStep(saved.step);
+    
+    // If step 3 is saved, always clear progress and reset to step 1
+    if (saved?.step === 3) {
+      clearTradeProgress();
+      setStep(1);
+      return;
     }
-    if (saved.activeTab && saved.activeTab !== activeTab) {
-      setActiveTab(saved.activeTab);
+    
+    // If not a reload, clear progress and start fresh
+    if (!isReload) {
+      clearTradeProgress();
+      setStep(1);
+      return;
+    }
+    
+    // Only restore if it's a reload and step is not 3
+    if (saved) {
+      if (typeof saved.step === "number" && saved.step !== step && saved.step !== 3) {
+        setStep(saved.step);
+      }
+      if (saved.activeTab && saved.activeTab !== activeTab) {
+        setActiveTab(saved.activeTab);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Persist whenever step / activeTab change
   useEffect(() => {
+    // Don't save step 3 to progress
+    if (step === 3) {
+      clearTradeProgress();
+      return;
+    }
     saveTradeProgress({ step, activeTab });
   }, [step, activeTab]);
 
@@ -103,18 +130,6 @@ export default function TradeStepDisplay({
     }
   }, []);
 
-  // 1) On mount: only keep progress if navigation type is "reload"
-  useEffect(() => {
-    const nav = performance?.getEntriesByType?.("navigation")?.[0] as
-      | PerformanceNavigationTiming
-      | undefined;
-
-    const isReload = nav?.type === "reload";
-    if (!isReload) {
-      // Not a refresh: ensure we start clean
-      clearTradeProgress();
-    }
-  }, []);
 
   // 2) On unmount: clear progress for SPA route changes, but keep it for reloads
   useEffect(() => {

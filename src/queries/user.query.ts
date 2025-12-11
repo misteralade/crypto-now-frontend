@@ -26,7 +26,7 @@ export const useUserQuery = () => {
 
       return data;
     },
-    enabled: !!localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN) && !matchRoute({ to: ROUTES.HOMEPAGE }),
+    enabled: !!localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN),
   })
   
   useQuery({
