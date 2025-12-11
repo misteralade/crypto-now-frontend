@@ -13,6 +13,7 @@ import { Route as VerifyAccountRouteImport } from './routes/verify-account'
 import { Route as TradeCryptoRouteImport } from './routes/trade-crypto'
 import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
 import { Route as SignUpRouteImport } from './routes/sign-up'
+import { Route as SecurityPolicyRouteImport } from './routes/security-policy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RatesRouteImport } from './routes/rates'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
@@ -49,6 +50,11 @@ const TermsOfServiceRoute = TermsOfServiceRouteImport.update({
 const SignUpRoute = SignUpRouteImport.update({
   id: '/sign-up',
   path: '/sign-up',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SecurityPolicyRoute = SecurityPolicyRouteImport.update({
+  id: '/security-policy',
+  path: '/security-policy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -147,6 +153,7 @@ export interface FileRoutesByFullPath {
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/rates': typeof RatesRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/security-policy': typeof SecurityPolicyRoute
   '/sign-up': typeof SignUpRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/trade-crypto': typeof TradeCryptoRoute
@@ -170,6 +177,7 @@ export interface FileRoutesByTo {
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/rates': typeof RatesRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/security-policy': typeof SecurityPolicyRoute
   '/sign-up': typeof SignUpRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/trade-crypto': typeof TradeCryptoRoute
@@ -194,6 +202,7 @@ export interface FileRoutesById {
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/rates': typeof RatesRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/security-policy': typeof SecurityPolicyRoute
   '/sign-up': typeof SignUpRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/trade-crypto': typeof TradeCryptoRoute
@@ -219,6 +228,7 @@ export interface FileRouteTypes {
     | '/privacy-policy'
     | '/rates'
     | '/reset-password'
+    | '/security-policy'
     | '/sign-up'
     | '/terms-of-service'
     | '/trade-crypto'
@@ -242,6 +252,7 @@ export interface FileRouteTypes {
     | '/privacy-policy'
     | '/rates'
     | '/reset-password'
+    | '/security-policy'
     | '/sign-up'
     | '/terms-of-service'
     | '/trade-crypto'
@@ -265,6 +276,7 @@ export interface FileRouteTypes {
     | '/privacy-policy'
     | '/rates'
     | '/reset-password'
+    | '/security-policy'
     | '/sign-up'
     | '/terms-of-service'
     | '/trade-crypto'
@@ -289,6 +301,7 @@ export interface RootRouteChildren {
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   RatesRoute: typeof RatesRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SecurityPolicyRoute: typeof SecurityPolicyRoute
   SignUpRoute: typeof SignUpRoute
   TermsOfServiceRoute: typeof TermsOfServiceRoute
   TradeCryptoRoute: typeof TradeCryptoRoute
@@ -331,6 +344,13 @@ declare module '@tanstack/react-router' {
       path: '/sign-up'
       fullPath: '/sign-up'
       preLoaderRoute: typeof SignUpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/security-policy': {
+      id: '/security-policy'
+      path: '/security-policy'
+      fullPath: '/security-policy'
+      preLoaderRoute: typeof SecurityPolicyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -465,6 +485,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   RatesRoute: RatesRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SecurityPolicyRoute: SecurityPolicyRoute,
   SignUpRoute: SignUpRoute,
   TermsOfServiceRoute: TermsOfServiceRoute,
   TradeCryptoRoute: TradeCryptoRoute,
