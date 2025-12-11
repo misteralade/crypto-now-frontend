@@ -28,6 +28,7 @@ export const ROUTES = {
   PRIVACY_POLICY: "/privacy-policy",
   AML_POLICY: "aml-policy",
   RATES: "/rates",
+  SECURITY_POLICY: "/security-policy",
   
   SOCIALS: {
     FACEBOOK: "https://www.facebook.com/share/1DhKLD85Ho/",

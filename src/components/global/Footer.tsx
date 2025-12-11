@@ -57,7 +57,7 @@ export default function Footer() {
               </li>
               
               <li>
-                <a href="#" className="text-gray-600 hover:text-gray-900">
+                <a href={ROUTES.SECURITY_POLICY} className="text-gray-600 hover:text-gray-900">
                   Security Policy
                 </a>
               </li>
