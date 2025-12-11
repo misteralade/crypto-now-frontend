@@ -39,6 +39,10 @@ const EmailModal = ({ open, onClose, onConfirm }: EmailModalProps) => {
       onConfirm(email)
     }
   }
+
+  const navigateToPreviousPage = () => {
+    window.history.back()
+  }
   
   return (
     <div className="fixed inset-0 z-50" role="dialog" aria-modal="true">
@@ -79,9 +83,9 @@ const EmailModal = ({ open, onClose, onConfirm }: EmailModalProps) => {
           <div className="px-6 pb-6 flex flex-col md:flex-row items-center justify-center gap-4 border-t border-[#ECECEC] pt-4">
             <button
               className="text-[#03034D] text-lg hover:bg-[#FF8B5A] rounded-full hover:text-white px-12 py-4 font-semibold w-full hover:cursor-pointer md:w-fit"
-              onClick={onClose}
+              onClick={navigateToPreviousPage}
             >
-              Cancel
+              Back
             </button>
             <button
               className="rounded-full bg-[#03034D] hover:bg-[#FF8B5A] text-white px-12 py-4 text-lg font-semibold w-full md:w-fit disabled:opacity-50 disabled:cursor-not-allowed hover:cursor-pointer"
