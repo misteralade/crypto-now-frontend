@@ -12,7 +12,7 @@ const SecurityPolicyPage = () => {
         {/* LHS Table of Content */}
         <nav
           aria-label="Table of contents"
-          className="w-full lg:w-[650px] text-nowrap font-medium lg:sticky lg:top-[34px] lg:self-start lg:max-h-[calc(100vh-68px)] lg:overflow-y-auto overflow-hidden"
+          className="w-full hidden lg:w-[650px] text-nowrap font-medium lg:sticky lg:top-[34px] lg:self-start lg:max-h-[calc(100vh-68px)] lg:overflow-y-auto overflow-hidden lg:block"
         >
           <h2 className="text-lg lg:text-2xl text-[#0E0F0C] mb-4">
             Table of content
