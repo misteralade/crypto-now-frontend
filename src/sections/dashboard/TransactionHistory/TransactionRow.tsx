@@ -79,11 +79,11 @@ const TransactionRow = ({transaction, isLast}: TransactionRowProps) => {
           </button>
 
           <button
-            disabled={!(transaction.status === "DISPUTED" && transaction.dispute?.id)}
-            className={`px-2.5 md:px-3 py-1 rounded-full text-xs md:text-xs font-medium transition-all ${
+            disabled={transaction.status !== "DISPUTED" || !transaction.dispute?.id}
+            className={`px-2.5 md:px-3 py-1 rounded-full text-xs md:text-xs font-medium transition-opacity ${
               transaction.status === "DISPUTED" && transaction.dispute?.id
                 ? "bg-[#FFE6E6] cursor-pointer hover:opacity-80 text-[#8B0000]"
-                : "bg-gray-200 cursor-not-allowed text-gray-400 opacity-60"
+                : "bg-gray-200 cursor-not-allowed text-gray-500 opacity-60"
             }`}
             onClick={handleViewDispute}
           >
