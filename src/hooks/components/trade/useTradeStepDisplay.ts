@@ -14,6 +14,8 @@ import { useTransactionQuery } from "../../../queries/transaction.query.ts";
 import { QUERY_KEYS } from "../../../queries/query.keys.ts";
 import type { InitiateTransactionRequestPayload } from "../../../types/request.payload.types.ts";
 import { useBankQuery } from "../../../queries/bank.query.ts";
+import { transactionServiceApi } from "../../../api/transaction.api.ts";
+import { useQuery } from "@tanstack/react-query";
 import {
   setExchangeRateId as setReduxExchangeRateId,
   setAmountToSend, setInitiateTransactionField,
@@ -53,7 +55,7 @@ const shallowEqual = (a: any, b: any) => {
   return true;
 };
 
-export const useTradeStepDisplay = ( token: string, activeTab: TradeType, currency: string, setStep: (value: number) => void, _setActiveTab: (value: TradeType) => void, initialAmount?: string, currentStep?: number ) => {
+export const useTradeStepDisplay = ( token: string, activeTab: TradeType, currency: string, setStep: (value: number) => void, _setActiveTab: (value: TradeType) => void, initialAmount?: string, currentStep?: number, sessionId?: string ) => {
   const rootState = store.getState() as RootState;
   
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -261,6 +263,115 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       value: activeTab,
     }));
   }, [currency, token, activeTab, dispatch])
+
+  // Fetch and restore transaction when sessionId is provided
+  const { data: restoredTransaction } = useQuery({
+    queryKey: [QUERY_KEYS.TRANSACTION.USER_TRANSACTION_DETAILS, sessionId],
+    queryFn: async () => {
+      if (!sessionId) return null;
+      const { data, success } = await transactionServiceApi.getTransactionDetails(sessionId);
+      if (success && data) {
+        return data;
+      }
+      return null;
+    },
+    enabled: !!sessionId,
+  });
+
+  // Restore transaction state when sessionId is provided
+  useEffect(() => {
+    if (!sessionId || !restoredTransaction) return;
+
+    const transaction = restoredTransaction;
+    
+    // Set session ID
+    setTransactionSessionId(sessionId);
+    sessionStorage.setItem(SESSION_STORAGE_KEYS.SESSION_ID, sessionId);
+    saveTradeProgress({ transactionSessionId: sessionId });
+
+    // Restore token using cryptocurrencyId
+    if (transaction.cryptocurrencyId && supportedCryptoCurrencies) {
+      const tokenObj = supportedCryptoCurrencies.find(t => t.id === transaction.cryptocurrencyId);
+      if (tokenObj) {
+        setSelectedToken(tokenObj);
+        dispatch(setSelectedCryptoId(tokenObj.id));
+        dispatch(setInitiateTransactionField({
+          field: "tokenId",
+          value: tokenObj.id,
+        }));
+        saveTradeProgress({ selectedTokenId: tokenObj.id });
+      }
+    }
+
+    // Restore currency using currency code
+    if (transaction.currency && supportedCurrencies) {
+      const currencyObj = supportedCurrencies.find(c => c.code === transaction.currency);
+      if (currencyObj) {
+        setSelectedCurrency(currencyObj);
+        dispatch(setInitiateTransactionField({
+          field: "currencyId",
+          value: currencyObj.id,
+        }));
+        saveTradeProgress({ selectedCurrencyId: currencyObj.id });
+      }
+    }
+
+    // Restore amounts
+    if (transaction.amountFiat) {
+      const fiatAmount = Number(transaction.amountFiat);
+      if (fiatAmount > 0) {
+        setAmountToBuy(fiatAmount);
+        saveTradeProgress({ amountToBuy: fiatAmount });
+      }
+    }
+
+    if (transaction.amountCrypto) {
+      const cryptoAmount = Number(transaction.amountCrypto);
+      if (cryptoAmount > 0) {
+        setNumberOfToken(cryptoAmount);
+        saveTradeProgress({ numberOfToken: cryptoAmount });
+      }
+    }
+
+    // Restore exchange rate ID
+    if (transaction.exchangeRateId) {
+      setExchangeRateId(transaction.exchangeRateId);
+      dispatch(setInitiateTransactionField({
+        field: "exchangeRateId",
+        value: transaction.exchangeRateId,
+      }));
+      saveTradeProgress({ exchangeRateId: transaction.exchangeRateId });
+    }
+
+    // Restore receipt URL if exists (check adminPaymentReceiptUrl for receipt)
+    if (transaction.adminPaymentReceiptUrl) {
+      dispatch(setInitiateTransactionField({
+        field: "receiptUrl",
+        value: transaction.adminPaymentReceiptUrl,
+      }));
+      saveTradeProgress({ receiptUrl: transaction.adminPaymentReceiptUrl });
+      setIsCountdownLocked(true);
+      setCountdown("Rate Locked");
+    }
+
+    // Determine step based on transaction status
+    // If transaction is INITIATED or PENDING, go to step 2 (payment step)
+    // If receipt is uploaded (AWAITING_PAYMENT or later), stay on step 2 but with receipt
+    const status = transaction.status;
+    if (['INITIATED', 'PENDING', 'AWAITING_PAYMENT', 'PAYMENT_RECEIVED', 'PAYMENT_CONFIRMED', 'PROCESSING', 'AWAITING_CRYPTO', 'CRYPTO_SENT', 'CRYPTO_RECEIVED', 'CRYPTO_CONFIRMED'].includes(status)) {
+      setStep(2);
+      saveTradeProgress({ step: 2 });
+    }
+
+    // Set active tab based on transaction type
+    if (transaction.type) {
+      const tradeType = transaction.type.toLowerCase() === 'sell' ? 'sell' : 'buy';
+      _setActiveTab(tradeType);
+      saveTradeProgress({ activeTab: tradeType });
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId, restoredTransaction, supportedCryptoCurrencies, supportedCurrencies, dispatch]);
 
   // Countdown
   useEffect(() => {

@@ -26,6 +26,31 @@ const TransactionRow = ({transaction, isLast}: TransactionRowProps) => {
     }
   }
 
+  const handleContinueTransaction = () => {
+    // Navigate to trade page with sessionId as query parameter
+    const tradeType = transaction.type.toLowerCase() === 'sell' ? 'sell' : 'buy';
+    navigate({
+      to: ROUTES.TRADE_CRYPTO,
+      search: {
+        sessionId: transaction.sessionId,
+        option: tradeType,
+        currency: transaction.currency || '',
+        token: transaction.cryptocurrencyId || '',
+      },
+    });
+  }
+
+  // Check if transaction can be continued (not completed, failed, expired, cancelled, disputed, refunding, refunded)
+  const canContinueTransaction = ![
+    'COMPLETED',
+    'FAILED',
+    'EXPIRED',
+    'CANCELLED',
+    'DISPUTED',
+    'REFUNDING',
+    'REFUNDED',
+  ].includes(transaction.status);
+
   const handleDownloadTransaction = async (sessionId: string) => {
     const { success, data} = await downloadSingleTransactionMutation.mutateAsync(sessionId);
 
@@ -89,6 +114,15 @@ const TransactionRow = ({transaction, isLast}: TransactionRowProps) => {
           >
             Dispute
           </button>
+
+          {canContinueTransaction && (
+            <button
+              className="px-2.5 md:px-3 py-1 rounded-full bg-[#E6F7E6] cursor-pointer hover:opacity-80 text-[#0D4D0D] text-xs md:text-xs font-medium"
+              onClick={handleContinueTransaction}
+            >
+              Continue
+            </button>
+          )}
         </div>
       </td>
     </tr>

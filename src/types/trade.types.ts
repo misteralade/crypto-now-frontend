@@ -8,6 +8,7 @@ export interface TradeCryptoPageProps {
     setStep: (value: number) => void
     activeTab: TradeType;
     setActiveTab: (value: TradeType) => void;
+    sessionId?: string;
 }
 
 export interface TradeStep {

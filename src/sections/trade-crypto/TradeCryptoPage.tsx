@@ -7,15 +7,15 @@ type tradeType = "buy" | "sell";
 
 
 export default function TradeCryptoPage() {
-    const searchParams: {option?: string, currency: string, token: string} = useSearch({ strict: false });
-    const { option: routeOption, currency, token } = searchParams;
+    const searchParams: {option?: string, currency: string, token: string, sessionId?: string} = useSearch({ strict: false });
+    const { option: routeOption, currency, token, sessionId } = searchParams;
 
     const option: tradeType = (routeOption?.toLowerCase() === 'sell' ? 'sell' : 'buy') as tradeType;
 
     return (
         <div className={`space-y-10 md:space-y-20`}>
             <Navbar />
-            <TradeCryptoLayout option={option} currency={currency} token={token} />
+            <TradeCryptoLayout option={option} currency={currency} token={token} sessionId={sessionId} />
             <Footer />
         </div>
     )
