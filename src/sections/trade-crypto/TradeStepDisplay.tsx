@@ -4,14 +4,14 @@ import TradeStepOne from "./trade-steps/TradeStepOne.tsx";
 import TradeStepTwo from "./trade-steps/TradeStepTwo.tsx";
 import { useTradeStepDisplay } from "../../hooks/components/trade/useTradeStepDisplay.ts";
 import ConfirmBankDetailsModal from "./modals/ConfirmBankDetailsModal.tsx";
-import { Fragment, useEffect } from "react";
+import { Fragment, useEffect, useRef } from "react";
 import {
   clearTradeProgress,
   loadTradeProgress,
   saveTradeProgress,
 } from "../../util/tradeProgress.storage.util.ts";
 import EmailModal from "./modals/EmailModal.tsx";
-import { useSearch } from "@tanstack/react-router";
+import { useSearch, useNavigate } from "@tanstack/react-router";
 
 export default function TradeStepDisplay({
   activeTab,
@@ -22,18 +22,28 @@ export default function TradeStepDisplay({
   setStep,
   sessionId,
 }: TradeCryptoPageProps) {
+  const navigate = useNavigate();
   // Read ?amount and ?sessionId from query to prefill from guest flow or restore transaction
-  const searchParams: { amount?: string; sessionId?: string } = useSearch({ strict: false });
+  const searchParams: { amount?: string; sessionId?: string; option?: string } = useSearch({ strict: false });
   const initialAmount = searchParams?.amount;
   const sessionIdFromQuery = sessionId || searchParams?.sessionId;
+  
+  // Track if restoration has already happened for current sessionId to prevent re-restoration
+  const hasRestoredRef = useRef<string | null>(null);
 
   // 1) On mount: only keep progress if navigation type is "reload", and not step 3
   // If sessionId is present, skip clearing to allow restoration and set step to 2
   useEffect(() => {
-    // If sessionId is present, set step to 2 immediately and let the restoration logic handle the rest
-    if (sessionIdFromQuery) {
+    // If sessionId is present and hasn't been restored yet for this sessionId, set step to 2 immediately
+    if (sessionIdFromQuery && hasRestoredRef.current !== sessionIdFromQuery) {
       setStep(2);
       saveTradeProgress({ step: 2 });
+      hasRestoredRef.current = sessionIdFromQuery;
+      return;
+    }
+    
+    // If sessionId is present but already restored for this sessionId, don't do anything
+    if (sessionIdFromQuery && hasRestoredRef.current === sessionIdFromQuery) {
       return;
     }
 
@@ -75,10 +85,21 @@ export default function TradeStepDisplay({
     // Don't save step 3 to progress
     if (step === 3) {
       clearTradeProgress();
+      
+      // Clear sessionId from query parameters when step 3 is reached
+      if (sessionIdFromQuery) {
+        const currentSearch = { ...searchParams };
+        delete currentSearch.sessionId;
+        navigate({
+          to: '/trade-crypto',
+          search: currentSearch,
+          replace: true,
+        });
+      }
       return;
     }
     saveTradeProgress({ step, activeTab });
-  }, [step, activeTab]);
+  }, [step, activeTab, sessionIdFromQuery, searchParams, navigate]);
 
   const {
     // Values
@@ -170,6 +191,7 @@ export default function TradeStepDisplay({
           setStep={setStep}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
+          sessionId={sessionIdFromQuery}
         />
 
         {/* Content*/}

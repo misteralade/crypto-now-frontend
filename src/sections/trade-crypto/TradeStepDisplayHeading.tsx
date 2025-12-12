@@ -6,9 +6,11 @@ interface TradeStepDisplayHeadingProps {
   activeTab: TradeType;
   setActiveTab: (activeTab: TradeType) => void;
   setStep: (step: number) => void;
+  sessionId?: string;
 }
 
-const TradeStepDisplayHeading = ({ step, activeTab, setStep,setActiveTab,}: TradeStepDisplayHeadingProps) => {
+const TradeStepDisplayHeading = ({ step, activeTab, setStep, setActiveTab, sessionId }: TradeStepDisplayHeadingProps) => {
+  const isContinuingTransaction = !!sessionId;
   const description = (): string => {
     if (step === 2) {
       switch (activeTab) {
@@ -62,19 +64,23 @@ const TradeStepDisplayHeading = ({ step, activeTab, setStep,setActiveTab,}: Trad
             </div>
           </div>
         ) : step === 3 ? (
-          <button
-            onClick={handleCancel}
-            className={`text-accent1 hover:text-accent1/80 font-semibold hover:underline cursor-pointer transition-colors`}
-          >
-            New Transaction
-          </button>
+          !isContinuingTransaction && (
+            <button
+              onClick={handleCancel}
+              className={`text-accent1 hover:text-accent1/80 font-semibold hover:underline cursor-pointer transition-colors`}
+            >
+              New Transaction
+            </button>
+          )
         ) : (
-          <button
-            onClick={handleCancel}
-            className={`text-red hover:underline cursor-pointer`}
-          >
-            Cancel order
-          </button>
+          !isContinuingTransaction && (
+            <button
+              onClick={handleCancel}
+              className={`text-red hover:underline cursor-pointer`}
+            >
+              Cancel order
+            </button>
+          )
         )}
       </div>
 
