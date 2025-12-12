@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, useEffect, useState } from "react";
 import Navbar from "../components/global/navbar/Navbar.tsx";
 import HeroSection from "../components/pages/homepage/HeroSection.tsx";
 import InstantTradeSection from "../components/pages/homepage/InstantTradeSection.tsx";
@@ -10,6 +10,8 @@ import CustomButton from "../components/global/Button.tsx";
 import Footer from "../components/global/Footer.tsx";
 import FAQs from "../components/pages/homepage/FAQs.tsx";
 import {useTradeCryptoCurrenciesButton} from "../hooks/components/useTradeCryptoCurrenciesButton.ts";
+import { userServiceApi } from "../api/user.api.ts";
+import { LOCAL_STORAGE_KEYS } from "../util/constants.util.ts";
 
 const HomePage = () => {
   const {
@@ -28,6 +30,29 @@ const HomePage = () => {
     setSelectedAction,
     handleTradeCrypto,
   } = useTradeCryptoCurrenciesButton()
+
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+  // Check authentication status using pingUser
+  useEffect(() => {
+    const checkAuthentication = async () => {
+      const accessToken = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+      
+      if (!accessToken) {
+        setIsAuthenticated(false);
+        return;
+      }
+
+      try {
+        const { success } = await userServiceApi.pingUser();
+        setIsAuthenticated(success);
+      } catch (error) {
+        setIsAuthenticated(false);
+      }
+    };
+
+    checkAuthentication();
+  }, []);
 
   return (
     <Fragment>
@@ -49,7 +74,7 @@ const HomePage = () => {
           />
         )}
 
-        <StepsSection tradeCrypto={handleTradeCrypto} />
+        <StepsSection tradeCrypto={handleTradeCrypto} isAuthenticated={isAuthenticated} />
 
         <WhyCryptoNow />
 
