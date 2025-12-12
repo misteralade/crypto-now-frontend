@@ -1,12 +1,29 @@
 import CustomButton from "../../global/Button.tsx";
 import UserIllustration from "../../../assets/illustrations/image-container.png";
 import Arrow from "../../../assets/icons/banner-arrow.svg";
+import { useNavigate } from "@tanstack/react-router";
+import { ROUTES } from "../../../util/constants.util.ts";
 
 interface HeroSectionProps {
   tradeCrypto: () => void;
+  isAuthenticated: boolean | null;
 }
 
-const HeroSection = ({ tradeCrypto }: HeroSectionProps) => {
+const HeroSection = ({ tradeCrypto, isAuthenticated }: HeroSectionProps) => {
+  const navigate = useNavigate();
+
+  const handleButtonClick = () => {
+    // If user is not authenticated, route to signup, otherwise use tradeCrypto
+    if (isAuthenticated === false) {
+      navigate({ to: ROUTES.SIGNUP });
+    } else {
+      tradeCrypto();
+    }
+  };
+
+  const buttonText = isAuthenticated === false 
+    ? "Setup an account now" 
+    : "Buy & sell crypto now";
   return (
     <section className="bg-white relative overflow-hidden max-md:px-4">
       <div className="max-w-6xl mx-auto text-center mt-16">
@@ -57,7 +74,7 @@ const HeroSection = ({ tradeCrypto }: HeroSectionProps) => {
         </p>
 
         {/* CTA Button */}
-        <CustomButton onClick={tradeCrypto} buttonText="Buy & sell crypto now" />
+        <CustomButton onClick={handleButtonClick} buttonText={buttonText} />
 
         <div className="mt-12 flex items-center justify-center">
           <img
