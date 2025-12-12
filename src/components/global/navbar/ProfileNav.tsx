@@ -1,4 +1,4 @@
-import TestDP from "../../../assets/icons/male_11.svg";
+import Logo from "../../../assets/logo/logo.svg";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
 import { useUserQuery } from "../../../queries/user.query.ts";
@@ -28,14 +28,14 @@ const ProfileNav = () => {
         </h2>
         <div className={`w-9 h-9 rounded-full`}>
           <img 
-            src={userProfileData?.profile?.profileImg || TestDP} 
+            src={userProfileData?.profile?.profileImg || Logo} 
             alt="Profile" 
             className={`w-full h-full object-cover rounded-full`}
             onError={(e) => {
               // Fallback to default image if profile image fails to load
               const target = e.target as HTMLImageElement;
-              if (target.src !== TestDP) {
-                target.src = TestDP;
+              if (target.src !== Logo) {
+                target.src = Logo;
               }
             }}
           />

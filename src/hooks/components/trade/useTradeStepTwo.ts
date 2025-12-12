@@ -16,6 +16,7 @@ import {
 } from "../../../util/tradeProgress.storage.util.ts";
 import {type RootState, store} from "../../../store.ts";
 import {toast} from "react-toastify";
+import { useRateQuery } from "../../../queries/rate.query.ts";
 
 interface UseTradeStepTwoProps {
   tradeType: TradeType;
@@ -43,6 +44,31 @@ export const useTradeStepTwo = ({
   const [walletDetails, setWalletDetails] = useState<
     SupportedPlatformCryptoWalletResponse | null
   >(null);
+
+  // Get crypto and currency IDs from store for exchange rate
+  const rootState = store.getState() as RootState;
+  const cryptoId = rootState.crypto.tradeCrypto.selectedCryptoId;
+  const currencyId = selectedCurrency?.id;
+
+  // Fetch exchange rate to convert USD to NGN
+  const { exchangeRate } = useRateQuery(
+    cryptoId || "",
+    currencyId || "",
+    tradeType === "buy" ? "BUY" : "SELL",
+    !!cryptoId && !!currencyId
+  );
+
+  // Convert amount to NGN if currency is USD
+  const getAmountInNaira = (): number => {
+    if (selectedCurrency?.code === "USD" && exchangeRate) {
+      // If currency is USD, convert using: ngnAmount = usdAmount * (fiatRate / usdRate)
+      if (exchangeRate.currency === "USD" && exchangeRate.fiatRate && exchangeRate.usdRate) {
+        return amountToBuy * (exchangeRate.fiatRate / exchangeRate.usdRate);
+      }
+    }
+    // If already NGN or no exchange rate, return as is
+    return amountToBuy;
+  };
 
   // Fetch payment details based on trade type
   const { isLoading: paymentDetailsLoading, error: paymentDetailsError } =
@@ -115,7 +141,7 @@ export const useTradeStepTwo = ({
         },
         {
           title: "Amount to Pay",
-          value: `${amountToBuy.toLocaleString()} ${selectedCurrency?.code}`,
+          value: `${getAmountInNaira().toLocaleString()} NGN`,
         },
       ];
     }
@@ -164,7 +190,7 @@ export const useTradeStepTwo = ({
         },
         {
           title: "Amount to Pay",
-          value: `${amountToBuy} ${selectedCurrency?.code}`,
+          value: `${getAmountInNaira().toLocaleString()} NGN`,
         },
       ]
     }

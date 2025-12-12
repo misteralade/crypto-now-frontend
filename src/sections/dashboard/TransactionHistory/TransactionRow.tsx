@@ -20,6 +20,36 @@ const TransactionRow = ({transaction, isLast}: TransactionRowProps) => {
     navigate({to: `${ROUTES.TRANSACTION}/${transaction.sessionId}`});
   }
 
+  const handleViewDispute = () => {
+    if (transaction.dispute?.id) {
+      navigate({to: '/dispute/$id', params: { id: transaction.dispute.id }});
+    }
+  }
+
+  const handleContinueTransaction = () => {
+    // Navigate to trade page with sessionId as query parameter
+    const tradeType = transaction.type.toLowerCase() === 'sell' ? 'sell' : 'buy';
+    navigate({
+      to: ROUTES.TRADE_CRYPTO,
+      search: {
+        sessionId: transaction.sessionId,
+        option: tradeType,
+        currency: transaction.currency || '',
+        token: transaction.cryptocurrencyId || '',
+      },
+    });
+  }
+
+  // Check if transaction can be continued (not completed, failed, expired, cancelled, disputed, refunding, refunded)
+  const canContinueTransaction = ![
+    'COMPLETED',
+    'FAILED',
+    'EXPIRED',
+    'CANCELLED',
+    'DISPUTED',
+    'REFUNDING',
+    'REFUNDED',
+  ].includes(transaction.status);
 
   const handleDownloadTransaction = async (sessionId: string) => {
     const { success, data} = await downloadSingleTransactionMutation.mutateAsync(sessionId);
@@ -57,20 +87,43 @@ const TransactionRow = ({transaction, isLast}: TransactionRowProps) => {
         </span>
       </td>
       <td className="p-4">
-        <button className="p-2 rounded-lg transition-colors" disabled={transaction.status === "FAILED"}>
-          <ArrowDownToLine
-            size={18}
-            className={`${transaction.status === "COMPLETED" || transaction.status === "FAILED" ? "text-accent1 cursor-pointer" : "text-grey4 cursor-not-allowed"}`}
-            onClick={() => handleDownloadTransaction(transaction.sessionId)}
-          />
-        </button>
-        
-        <button
-          className="px-2.5 md:px-3 py-1 rounded-full bg-[#E6E6FE] cursor-pointer hover:opacity-80 text-[#03034D] text-xs md:text-xs font-medium"
-          onClick={handleViewTransaction}
-        >
-          View
-        </button>
+        <div className="flex items-center gap-2">
+          <button className="p-2 rounded-lg transition-colors" disabled={transaction.status === "FAILED"}>
+            <ArrowDownToLine
+              size={18}
+              className={`${transaction.status === "COMPLETED" || transaction.status === "FAILED" ? "text-accent1 cursor-pointer" : "text-grey4 cursor-not-allowed"}`}
+              onClick={() => handleDownloadTransaction(transaction.sessionId)}
+            />
+          </button>
+          
+          <button
+            className="px-2.5 md:px-3 py-1 rounded-full bg-[#E6E6FE] cursor-pointer hover:opacity-80 text-[#03034D] text-xs md:text-xs font-medium"
+            onClick={handleViewTransaction}
+          >
+            View
+          </button>
+
+          <button
+            disabled={transaction.status !== "DISPUTED" || !transaction.dispute?.id}
+            className={`px-2.5 md:px-3 py-1 rounded-full text-xs md:text-xs font-medium transition-opacity ${
+              transaction.status === "DISPUTED" && transaction.dispute?.id
+                ? "bg-[#FFE6E6] cursor-pointer hover:opacity-80 text-[#8B0000]"
+                : "bg-gray-200 cursor-not-allowed text-gray-500 opacity-60"
+            }`}
+            onClick={handleViewDispute}
+          >
+            Dispute
+          </button>
+
+          {canContinueTransaction && (
+            <button
+              className="px-2.5 md:px-3 py-1 rounded-full bg-[#E6F7E6] cursor-pointer hover:opacity-80 text-[#0D4D0D] text-xs md:text-xs font-medium"
+              onClick={handleContinueTransaction}
+            >
+              Continue
+            </button>
+          )}
+        </div>
       </td>
     </tr>
   )

@@ -20,26 +20,63 @@ export default function TradeStepDisplay({
   currency,
   token,
   setStep,
+  sessionId,
 }: TradeCryptoPageProps) {
-  // Read ?amount from query to prefill from guest flow
-  const searchParams: { amount?: string } = useSearch({ strict: false });
+  // Read ?amount and ?sessionId from query to prefill from guest flow or restore transaction
+  const searchParams: { amount?: string; sessionId?: string } = useSearch({ strict: false });
   const initialAmount = searchParams?.amount;
+  const sessionIdFromQuery = sessionId || searchParams?.sessionId;
 
-  // Restore step/activeTab on mount
+  // 1) On mount: only keep progress if navigation type is "reload", and not step 3
+  // If sessionId is present, skip clearing to allow restoration and set step to 2
   useEffect(() => {
-    const saved = loadTradeProgress();
-    if (!saved) return;
-    if (typeof saved.step === "number" && saved.step !== step) {
-      setStep(saved.step);
+    // If sessionId is present, set step to 2 immediately and let the restoration logic handle the rest
+    if (sessionIdFromQuery) {
+      setStep(2);
+      saveTradeProgress({ step: 2 });
+      return;
     }
-    if (saved.activeTab && saved.activeTab !== activeTab) {
-      setActiveTab(saved.activeTab);
+
+    const nav = performance?.getEntriesByType?.("navigation")?.[0] as
+      | PerformanceNavigationTiming
+      | undefined;
+
+    const isReload = nav?.type === "reload";
+    const saved = loadTradeProgress();
+    
+    // If step 3 is saved, always clear progress and reset to step 1
+    if (saved?.step === 3) {
+      clearTradeProgress();
+      setStep(1);
+      return;
+    }
+    
+    // If not a reload, clear progress and start fresh
+    if (!isReload) {
+      clearTradeProgress();
+      setStep(1);
+      return;
+    }
+    
+    // Only restore if it's a reload and step is not 3
+    if (saved) {
+      if (typeof saved.step === "number" && saved.step !== step && saved.step !== 3) {
+        setStep(saved.step);
+      }
+      if (saved.activeTab && saved.activeTab !== activeTab) {
+        setActiveTab(saved.activeTab);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [sessionIdFromQuery]);
 
   // Persist whenever step / activeTab change
   useEffect(() => {
+    // Don't save step 3 to progress
+    if (step === 3) {
+      clearTradeProgress();
+      return;
+    }
     saveTradeProgress({ step, activeTab });
   }, [step, activeTab]);
 
@@ -82,7 +119,7 @@ export default function TradeStepDisplay({
     handleFocusAmountToBuy,
     handleBlurNumberOfToken,
     handleBlurAmountToBuy,
-  } = useTradeStepDisplay(token, activeTab, currency, setStep, setActiveTab, initialAmount, step);
+  } = useTradeStepDisplay(token, activeTab, currency, setStep, setActiveTab, initialAmount, step, sessionIdFromQuery);
 
   // prefill amt on first load if provided in the URL and fields are empty
   useEffect(() => {
@@ -103,18 +140,6 @@ export default function TradeStepDisplay({
     }
   }, []);
 
-  // 1) On mount: only keep progress if navigation type is "reload"
-  useEffect(() => {
-    const nav = performance?.getEntriesByType?.("navigation")?.[0] as
-      | PerformanceNavigationTiming
-      | undefined;
-
-    const isReload = nav?.type === "reload";
-    if (!isReload) {
-      // Not a refresh: ensure we start clean
-      clearTradeProgress();
-    }
-  }, []);
 
   // 2) On unmount: clear progress for SPA route changes, but keep it for reloads
   useEffect(() => {

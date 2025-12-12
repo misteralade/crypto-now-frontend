@@ -251,6 +251,7 @@ export type TransactionResponseEntity = {
   createdAt: Date;
   updatedAt: Date;
   cryptocurrency: CryptoCurrencyResponseEntity;
+  dispute: DisputeDetailsResponse;
   user: UserResponseEntity;
   exchangeRate: ExchangeRateResponseEntity;
   userBankAccount: UserBankAccountResponseEntity | null;

@@ -1,6 +1,6 @@
 "use client";
 
-import {useState, useRef, Fragment} from "react";
+import {useState, useRef, Fragment, useEffect} from "react";
 import { Menu, ChevronDown } from "lucide-react";
 import {Link, useNavigate, useLocation} from "@tanstack/react-router";
 import Button from "../Button.tsx";
@@ -10,6 +10,7 @@ import type { DropItem } from "../../../types/navbar.types.ts";
 import ProfileNav from "./ProfileNav.tsx";
 import {LOCAL_STORAGE_KEYS, ROUTES} from "../../../util/constants.util.ts";
 import useClickOutside from "../../../hooks/useClickOutside.ts";
+import { userServiceApi } from "../../../api/user.api.ts";
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -18,7 +19,66 @@ export default function Navbar() {
   
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const isLoggedIn = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN) !== null;
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+  // Ping user to check authentication status
+  useEffect(() => {
+    const checkAuthentication = async () => {
+      // Protected routes that require authentication
+      const protectedRoutes = [
+        ROUTES.DASHBOARD,
+        ROUTES.PROFILE,
+        ROUTES.TRANSACTION,
+      ];
+      
+      const isProtectedRoute = protectedRoutes.some(route => 
+        location.pathname.startsWith(route) || location.pathname === route
+      );
+
+      const accessToken = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+      
+      if (!accessToken) {
+        setIsAuthenticated(false);
+        // If on protected route and no token, redirect to signin
+        if (isProtectedRoute) {
+          navigate({ to: ROUTES.SIGNIN });
+        }
+        return;
+      }
+
+      try {
+        const { success } = await userServiceApi.pingUser();
+        
+        if (!success) {
+          // User is unauthenticated
+          setIsAuthenticated(false);
+          localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+          
+          // If on protected route, redirect to signin
+          if (isProtectedRoute) {
+            navigate({ to: ROUTES.SIGNIN });
+          }
+        } else {
+          // User is authenticated
+          setIsAuthenticated(true);
+        }
+      } catch (error) {
+        // Ping failed, treat as unauthenticated
+        setIsAuthenticated(false);
+        localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+        
+        // If on protected route, redirect to signin
+        if (isProtectedRoute) {
+          navigate({ to: ROUTES.SIGNIN });
+        }
+      }
+    };
+
+    checkAuthentication();
+  }, [location.pathname, navigate]);
+
+  // Use authenticated state, fallback to token check if state is null
+  const isLoggedIn = isAuthenticated ?? (localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN) !== null);
 
   const dropItems: DropItem[] = [
     {
@@ -43,6 +103,7 @@ export default function Navbar() {
   
   const handleLogout = () => {
     localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+    setIsAuthenticated(false);
     navigate({ to: ROUTES.HOMEPAGE })
   }
 

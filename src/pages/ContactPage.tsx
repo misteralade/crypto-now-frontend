@@ -32,7 +32,7 @@ const ContactPage = () => {
           <p className="text-lg">
             We’re here to help! Whether you have a question about our services,
             need assistance with your account, or want to provide feedback, our
-            tram is ready to assist you
+            team is ready to assist you
           </p>
           <div className="mt-4 md:mt-8">
             <p className="text-xl">Email</p>
