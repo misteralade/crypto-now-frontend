@@ -102,7 +102,7 @@ const  InstantTradeSection = ({ cryptoCurrencies, currencies, selectedCryptoId, 
           </div>
 
           {/* Buy Button */}
-          <CustomButton onClick={handleSubmit} buttonText="Buy crypto now" />
+          <CustomButton onClick={handleSubmit} buttonText={`${selectedAction === "BUY" ? "Buy" : "Sell"} crypto now`} />
         </div>
       </div>
     </section>
