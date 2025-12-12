@@ -95,6 +95,17 @@ class MomentClient {
   isInFuture(date: Date): boolean {
     return moment().isBefore(moment(date));
   }
+
+  /**
+   * Checks if the current date and time is within the specified duration from the given date
+   * @param date - The date to compare with the current date and time
+   * @param duration - The duration to compare with the current date and time
+   * @param unit - The unit of time to compare with the current date and time
+   * @returns True if the current date and time is within the specified duration from the given date, false otherwise
+   */
+  isWithin(date: Date, duration: number | string, unit: DurationInputArg2): boolean {
+    return moment().isAfter(moment(date).subtract(duration, unit));
+  }
 }
 
 const momentClient = MomentClient.getInstance();
