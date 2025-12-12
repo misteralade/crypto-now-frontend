@@ -36,7 +36,7 @@ const  InstantTradeSection = ({ cryptoCurrencies, currencies, selectedCryptoId, 
             Instant trade as a Guest
           </h2>
           <p className="text-gray-600 text-base sm:text-lg md:text-xl max-w-xl mx-auto leading-relaxed">
-            You can also buy and sell your crypto coins without having to sign
+            You can also buy and sell your crypto without having to sign
             up. It's fast, easy, and reliable.
           </p>
         </div>
@@ -102,7 +102,7 @@ const  InstantTradeSection = ({ cryptoCurrencies, currencies, selectedCryptoId, 
           </div>
 
           {/* Buy Button */}
-          <CustomButton onClick={handleSubmit} buttonText="Buy crypto now" />
+          <CustomButton onClick={handleSubmit} buttonText={`${selectedAction === "BUY" ? "Buy" : "Sell"} crypto now`} />
         </div>
       </div>
     </section>

@@ -12,6 +12,7 @@ import {
 import {newUserInitialState } from "../../redux/states/user.states.ts";
 import {Form, Formik} from "formik";
 import {toFormikValidate} from "zod-formik-adapter";
+import { CustomInput } from "../../components/global/CustomInput.tsx";
 
 export default function SignUpPage() {
  const {
@@ -49,56 +50,47 @@ export default function SignUpPage() {
             <Form className="space-y-6">
               {/* First Name Field */}
               <div>
-                <input
-                  id="firstName"
-                  name="firstName"
-                  type="text"
+                <CustomInput
+                  label="First Name"
+                  placeholder="Enter your first name"
                   value={values.firstName}
                   onChange={handleChange}
                   onBlur={handleBlur}
-                  className="w-full h-[52px] px-4 py-3 border-[1.5px] border-[#E5E7EB] rounded-[26px] focus:ring-2 focus:ring-[#3B82F6] focus:border-[#3B82F6] outline-none transition-all duration-200 text-[16px] placeholder-[#9CA3AF]"
-                  placeholder="John"
+                  error={touched.firstName && errors.firstName ? errors.firstName : undefined}
+                  type="text"
+                  name="firstName"
+                  id="firstName"  
                 />
-                
-                {touched.firstName && errors.firstName && (
-                  <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>
-                )}
               </div>
               
               {/* Last Name Field */}
               <div>
-                <input
-                  id="lastName"
-                  name="lastName"
-                  type="text"
+                <CustomInput
+                  label="Last Name"
+                  placeholder="Enter your last name"
                   value={values.lastName}
                   onChange={handleChange}
                   onBlur={handleBlur}
-                  className="w-full h-[52px] px-4 py-3 border-[1.5px] border-[#E5E7EB] rounded-[26px] focus:ring-2 focus:ring-[#3B82F6] focus:border-[#3B82F6] outline-none transition-all duration-200 text-[16px] placeholder-[#9CA3AF]"
-                  placeholder="Doe"
+                  error={touched.lastName && errors.lastName ? errors.lastName : undefined}
+                  type="text"
+                  name="lastName"
+                  id="lastName"
                 />
-                
-                {touched.lastName && errors.lastName && (
-                  <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>
-                )}
               </div>
               
               {/* Email Field */}
               <div>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
+                <CustomInput
+                  label="Email"
+                  placeholder="Enter your email"
                   value={values.email}
                   onChange={handleChange}
                   onBlur={handleBlur}
-                  className="w-full h-[52px] px-4 py-3 border-[1.5px] border-[#E5E7EB] rounded-[26px] focus:ring-2 focus:ring-[#3B82F6] focus:border-[#3B82F6] outline-none transition-all duration-200 text-[16px] placeholder-[#9CA3AF]"
-                  placeholder="jonas@gmail.com"
+                  error={touched.email && errors.email ? errors.email : undefined}
+                  type="email"
+                  name="email"
+                  id="email"
                 />
-                
-                {touched.email && errors.email && (
-                  <p className="text-red-500 text-xs mt-1">{errors.email}</p>
-                )}
               </div>
               
               {/* Password Field */}
@@ -114,6 +106,7 @@ export default function SignUpPage() {
                     className="w-full h-[52px] px-4 py-3 pr-12 border-[1.5px] border-[#E5E7EB] rounded-[26px] focus:ring-2 focus:ring-[#3B82F6] focus:border-[#3B82F6] outline-none transition-all duration-200 text-[16px] placeholder-[#9CA3AF]"
                     placeholder="Password"
                   />
+
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
@@ -185,7 +178,7 @@ export default function SignUpPage() {
         
         {/* Sign In Link */}
         <p className="text-center text-[14px] leading-[20px] text-[#6B7280] pt-2">
-          Already have an account?{""}
+          Already have an account?{" "}
           <Link
             to={ROUTES.SIGNIN}
             className="font-semibold text-[#1E1B4B] hover:text-[#2D2A5A] underline transition-colors duration-200"

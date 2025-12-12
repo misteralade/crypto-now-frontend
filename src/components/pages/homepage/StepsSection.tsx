@@ -1,11 +1,30 @@
 import CustomButton from "../../global/Button.tsx";
 import stepsImage from "../../../assets/illustrations/steps-img.png";
 import {ROUTES} from "../../../util/constants.util.ts";
+import { useNavigate } from "@tanstack/react-router";
 interface StepsSectionProps {
   tradeCrypto: () => void;
+  isAuthenticated: boolean | null;
 }
 
-const StepsSection = ({ tradeCrypto }: StepsSectionProps) => {
+const StepsSection = ({ tradeCrypto, isAuthenticated }: StepsSectionProps) => {
+  const navigate = useNavigate();
+
+  const handleButtonClick = () => {
+    // If user is authenticated, route to signup, otherwise use tradeCrypto
+    if (isAuthenticated === false) {
+      navigate({ to: ROUTES.SIGNUP });
+    } else {
+      tradeCrypto();
+    }
+  };
+
+  const buttonText = isAuthenticated === false 
+    ? "Setup an account now" 
+    : "Buy & sell crypto now";
+
+
+
   return (
     <section className="sm:mt-20 mt-14 md:mt-40 max-md:px-4 w-full md:w-[90%] 2xl:max-w-7xl mx-auto" id={ROUTES.IN_PAGE_ROUTES.HOW_IT_WORKS}>
       <div className="max-w-7xl mx-auto">
@@ -74,8 +93,8 @@ const StepsSection = ({ tradeCrypto }: StepsSectionProps) => {
             </div>
 
             <CustomButton
-              onClick={tradeCrypto}
-              buttonText="Buy & sell crypto now"
+              onClick={handleButtonClick}
+              buttonText={buttonText}
             />
           </div>
         </div>

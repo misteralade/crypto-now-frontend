@@ -79,14 +79,20 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   
   // Only disable rate query on Step 2 when receipt is uploaded
   // On Step 1, always allow rate to load
+  // When continuing a transaction, we allow the rate to fetch once, then lock it
   const saved = useMemo(() => loadTradeProgress(), []);
+  const isContinuingTransaction = !!sessionId;
   const shouldDisableRateQuery = currentStep === 2 && isCountdownLocked && saved?.receiptUrl;
   
+  // When continuing a transaction, allow rate to fetch once but prevent refetching
+  const shouldFetchRate = !shouldDisableRateQuery;
+  const shouldDisableRefetch = isContinuingTransaction && currentStep === 2;
   const { exchangeRate, loadingExchangeRate } = useRateQuery(
     selectedToken?.id || "",
     selectedCurrency?.id || "",
     activeTab.toUpperCase() === "BUY" ? "BUY" : "SELL",
-    !shouldDisableRateQuery // Only disable refetching on Step 2 when receipt is uploaded
+    shouldFetchRate, // Allow fetch when not disabled
+    shouldDisableRefetch // Disable refetching when continuing a transaction
   );
 
 
@@ -278,11 +284,20 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     enabled: !!sessionId,
   });
 
-  // Restore transaction state when sessionId is provided
+  // Track if restoration has already happened for current sessionId to prevent re-restoration
+  const hasRestoredRef = useRef<string | null>(null);
+
+  // Restore transaction state when sessionId is provided (only once per sessionId)
   useEffect(() => {
     if (!sessionId || !restoredTransaction) return;
+    
+    // If already restored for this sessionId, skip
+    if (hasRestoredRef.current === sessionId) return;
 
     const transaction = restoredTransaction;
+    
+    // Mark as restored for this sessionId to prevent re-restoration
+    hasRestoredRef.current = sessionId;
     
     // Set session ID
     setTransactionSessionId(sessionId);
@@ -343,6 +358,18 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       saveTradeProgress({ exchangeRateId: transaction.exchangeRateId });
     }
 
+    // When continuing a transaction, always lock the exchange rate
+    // This ensures the rate doesn't change while the user completes the transaction
+    setIsCountdownLocked(true);
+    setCountdown("Rate Locked");
+    saveTradeProgress({ isCountdownLocked: true });
+    
+    // Clear any existing countdown interval
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+      countdownIntervalRef.current = null;
+    }
+
     // Restore receipt URL if exists (check adminPaymentReceiptUrl for receipt)
     if (transaction.adminPaymentReceiptUrl) {
       dispatch(setInitiateTransactionField({
@@ -350,8 +377,6 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
         value: transaction.adminPaymentReceiptUrl,
       }));
       saveTradeProgress({ receiptUrl: transaction.adminPaymentReceiptUrl });
-      setIsCountdownLocked(true);
-      setCountdown("Rate Locked");
     }
 
     // Determine step based on transaction status
@@ -694,13 +719,14 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       sessionStorage.setItem("exchangeRateId", rateId);
       saveTradeProgress({ exchangeRateId: rateId });
     }
-    // Don't unlock countdown if receipt has been uploaded - check if receiptUrl exists
+    // Don't unlock countdown if receipt has been uploaded or if continuing a transaction - check if receiptUrl exists
     const rootState = store.getState() as RootState;
     const hasReceipt = rootState.transaction.initiate.initiateTransaction?.receiptUrl;
-    if (rateId && isCountdownLocked && !hasReceipt) {
+    const isContinuing = !!sessionId;
+    if (rateId && isCountdownLocked && !hasReceipt && !isContinuing) {
       setIsCountdownLocked(false);
     }
-  }, [exchangeRate, dispatch, isCountdownLocked]);
+  }, [exchangeRate, dispatch, isCountdownLocked, sessionId]);
 
   // 🔹 Only clear amounts when the tab ACTUALLY changes (not on mount)
   const prevActiveTabRef = useRef<TradeType>(activeTab);

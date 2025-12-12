@@ -76,7 +76,7 @@ export const useCryptoQuery = () => {
 
       return [];
     },
-    enabled: !!(store.getState() as RootState).crypto.tradeCrypto.selectedCryptoId && !!sessionStorage.getItem(SESSION_STORAGE_KEYS.SESSION_ID), // Only run this query if selectedCryptoId and userId are available
+    enabled: !!(store.getState() as RootState).crypto.tradeCrypto.selectedCryptoId && !!sessionStorage.getItem(SESSION_STORAGE_KEYS.SESSION_ID) && !!matchRoute({ to: ROUTES.TRADE_CRYPTO }), // Only run this query if selectedCryptoId and userId are available
     refetchInterval: 2000, // refetch every 2 seconds to get real-time updates
   });
   
