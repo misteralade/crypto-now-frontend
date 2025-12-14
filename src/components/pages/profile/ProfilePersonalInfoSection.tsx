@@ -201,6 +201,7 @@ export default function ProfilePersonalInfoSection({ firstName, lastName, email,
             handleFieldChange("dob", isoString);
           }}
           max={new Date().toISOString().split('T')[0]}
+          placeholder="dd/mm/yyyy"
         />
       </div>
     </div>
