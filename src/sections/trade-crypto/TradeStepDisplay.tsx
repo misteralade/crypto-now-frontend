@@ -31,10 +31,17 @@ export default function TradeStepDisplay({
   
   // Track if restoration has already happened for current sessionId to prevent re-restoration
   const hasRestoredRef = useRef<string | null>(null);
+  // Track if we reached step 3 from a continuing transaction to prevent reset
+  const reachedStep3FromContinuingRef = useRef<boolean>(false);
 
   // 1) On mount: only keep progress if navigation type is "reload", and not step 3
   // If sessionId is present, skip clearing to allow restoration and set step to 2
   useEffect(() => {
+    // If we're already on step 3 and reached it from continuing a transaction, don't reset
+    if (step === 3 && reachedStep3FromContinuingRef.current) {
+      return;
+    }
+
     // If sessionId is present and hasn't been restored yet for this sessionId, set step to 2 immediately
     if (sessionIdFromQuery && hasRestoredRef.current !== sessionIdFromQuery) {
       setStep(2);
@@ -56,14 +63,16 @@ export default function TradeStepDisplay({
     const saved = loadTradeProgress();
     
     // If step 3 is saved, always clear progress and reset to step 1
-    if (saved?.step === 3) {
+    // BUT: if we just reached step 3 from continuing a transaction, don't reset
+    if (saved?.step === 3 && !reachedStep3FromContinuingRef.current) {
       clearTradeProgress();
       setStep(1);
       return;
     }
     
     // If not a reload, clear progress and start fresh
-    if (!isReload) {
+    // BUT: if we're on step 3 from continuing a transaction, don't reset
+    if (!isReload && step !== 3) {
       clearTradeProgress();
       setStep(1);
       return;
@@ -79,13 +88,18 @@ export default function TradeStepDisplay({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionIdFromQuery]);
+  }, [sessionIdFromQuery, step]);
 
   // Persist whenever step / activeTab change
   useEffect(() => {
     // Don't save step 3 to progress
     if (step === 3) {
       clearTradeProgress();
+      
+      // If we reached step 3 from continuing a transaction, mark it
+      if (sessionIdFromQuery) {
+        reachedStep3FromContinuingRef.current = true;
+      }
       
       // Clear sessionId from query parameters when step 3 is reached
       if (sessionIdFromQuery) {
@@ -98,6 +112,10 @@ export default function TradeStepDisplay({
         });
       }
       return;
+    }
+    // Reset the flag when leaving step 3
+    if (step !== 3) {
+      reachedStep3FromContinuingRef.current = false;
     }
     saveTradeProgress({ step, activeTab });
   }, [step, activeTab, sessionIdFromQuery, searchParams, navigate]);
