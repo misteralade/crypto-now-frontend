@@ -1,7 +1,6 @@
 import { useState, useRef } from "react"
 import Upload from "../../assets/icons/upload.svg"
 import Cancel from "../../assets/icons/hightlight_off.svg"
-import {FileText} from "lucide-react";
 import {transactionServiceApi} from "../../api/transaction.api.ts";
 import {useMutation} from "@tanstack/react-query";
 import {toast} from "react-toastify";
@@ -13,39 +12,34 @@ interface FileUploadProps {
   acceptedTypes?: string[]
 }
 
-export default function TradePaymentUpload({onFileUploaded, maxFiles = 5, setUploadedFileUrl, acceptedTypes = [".jpg", ".png", ".pdf"] }: FileUploadProps) {
+const TradePaymentUpload = ({onFileUploaded, maxFiles = 5, setUploadedFileUrl, acceptedTypes = [".jpg", ".png", ".pdf"] }: FileUploadProps) => {
+  const [signedUrl, setSignedUrl] = useState<string>("");
   const [files, setFiles] = useState<File[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
-  const [filePreviews, setFilePreviews] = useState<{ [key: string]: string }>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [, setIsUploading] = useState(false);
   const [, setUploadError] = useState<string | null>(null);
 
-  const createFilePreview = (file: File) => {
-    const extension = "." + file.name.split(".").pop()?.toLowerCase()
-    if (extension === ".jpg" || extension === ".png") {
-      return URL.createObjectURL(file)
-    }
-    return null
-  };
-
   const uploadTransactionReceiptMutation = useMutation({
     mutationFn: async (formData: FormData) => {
       toast.loading("Uploading file...");
-      const { url } = await transactionServiceApi.uploadTransactionReceipt(formData);
-      return url;
+      const { url, signedUrl } = await transactionServiceApi.uploadTransactionReceipt(formData);
+      return {url, signedUrl};
     },
-    onSettled: async (url: string | undefined) => {
+    onSettled: (data: {url: string, signedUrl: string} | undefined) => {
       toast.dismiss()
-      if (url) {
+      if (data?.url && data?.signedUrl) {
         toast.success(`Receipt uploaded successfully`);
-        onFileUploaded(url as string)
-        setUploadedFileUrl(url)
+        // Use url for the actual transaction
+        onFileUploaded(data.url)
+        // Use signedUrl for preview
+        setSignedUrl(data.signedUrl)
+        setUploadedFileUrl(data.url)
       } else {
         toast.error(`Failed to upload receipt`)
       }
     },
-  })
+  });
 
   const handleFileUpload = async (file: File) => {
     setIsUploading(true)
@@ -65,36 +59,32 @@ export default function TradePaymentUpload({onFileUploaded, maxFiles = 5, setUpl
       return acceptedTypes.includes(extension)
     })
 
-    const updatedFiles = [...files, ...newFiles].slice(0, maxFiles)
+    // If replacing, clear existing files
+    const updatedFiles = files.length > 0 ? newFiles.slice(0, maxFiles) : [...files, ...newFiles].slice(0, maxFiles)
 
-    const newPreviews = { ...filePreviews }
-    newFiles.forEach((file) => {
-      const previewUrl = createFilePreview(file)
-      if (previewUrl) {
-        newPreviews[file.name] = previewUrl
-      }
-    })
+    // Clear old signedUrl if replacing
+    if (files.length > 0) {
+      setSignedUrl("")
+    }
+
+    // Don't create local previews - only show preview after upload completes
     const file = newFiles[0];
 
     setFiles(updatedFiles)
-    setFilePreviews(newPreviews)
     handleFileUpload(file)
   }
 
   const removeFile = (index: number) => {
-    const fileToRemove = files[index]
     const updatedFiles = files.filter((_, i) => i !== index)
 
-    if (filePreviews[fileToRemove.name]) {
-      URL.revokeObjectURL(filePreviews[fileToRemove.name])
-      const updatedPreviews = { ...filePreviews }
-      delete updatedPreviews[fileToRemove.name]
-      setFilePreviews(updatedPreviews)
-    }
-
     setFiles(updatedFiles)
+    setSignedUrl("")
     onFileUploaded("")
     setUploadedFileUrl(undefined)
+  }
+
+  const replaceFile = () => {
+    fileInputRef.current?.click()
   }
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -113,48 +103,102 @@ export default function TradePaymentUpload({onFileUploaded, maxFiles = 5, setUpl
     // handleFileSelect(e.dataTransfer.files)
   }
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return "0 Bytes"
-    const k = 1024
-    const sizes = ["Bytes", "KB", "MB", "GB"]
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i]
-  }
-
   const isImageFile = (fileName: string) => {
     const extension = "." + fileName.split(".").pop()?.toLowerCase()
     return extension === ".jpg" || extension === ".png"
   }
 
+  const currentFile = files[0];
+  // Only show preview once upload is complete and we have signedUrl
+  const previewImage = currentFile && isImageFile(currentFile.name) && signedUrl 
+    ? signedUrl 
+    : null;
+
   return (
     <div className="space-y-4">
       <div
-        className={`border-2 border-dashed rounded-lg py-5 text-center transition-colors cursor-pointer bg-white ${
-          isDragOver ? "border-placeholder " : "border-accent2"
+        className={`relative border-2 border-dashed rounded-lg transition-all cursor-pointer overflow-hidden min-h-[300px] ${
+          previewImage 
+            ? "border-transparent" 
+            : `py-5 text-center bg-white ${isDragOver ? "border-placeholder" : "border-accent2"}`
         }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
       >
-        <div className="flex flex-col items-center space-y-4">
-          <img src={Upload || "/placeholder.svg"} alt={`Upload icon`} className={`w-12 h-12`} />
+        {/* Image Background - only show after upload completes */}
+        {previewImage && (
+          <div 
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{
+              backgroundImage: `url(${previewImage})`,
+            }}
+          >
+            <div className="absolute inset-0 bg-black/20" />
+          </div>
+        )}
 
-          <div className="space-y-2">
-            <p className="text-sm">Drag your file(s) to start uploading</p>
-            <div className={`flex items-center justify-between`}>
-              <div className={`w-20 h-0.5 bg-strokeLightGrey`}></div>
-              <p className="text-sm text-textSec">OR</p>
-              <div className={`w-20 h-0.5 bg-strokeLightGrey`}></div>
+        {/* Content Overlay - always show text */}
+        <div className="relative z-10 flex flex-col items-center justify-center min-h-[300px] p-5">
+          {/* Upload text content - always visible */}
+          <div className="flex flex-col items-center space-y-4">
+            <img src={Upload || "/placeholder.svg"} alt={`Upload icon`} className={`w-12 h-12 ${previewImage ? 'drop-shadow-lg' : ''}`} />
+
+            <div className="space-y-2">
+              <p className={`text-sm ${previewImage ? 'text-white drop-shadow-lg font-medium' : ''}`}>
+                Drag your file(s) to start uploading
+              </p>
+              <div className={`flex items-center justify-between`}>
+                <div className={`w-20 h-0.5 ${previewImage ? 'bg-white/50' : 'bg-strokeLightGrey'}`}></div>
+                <p className={`text-sm ${previewImage ? 'text-white drop-shadow-lg' : 'text-textSec'}`}>OR</p>
+                <div className={`w-20 h-0.5 ${previewImage ? 'bg-white/50' : 'bg-strokeLightGrey'}`}></div>
+              </div>
             </div>
+
+            <button
+              type="button"
+              className={`px-4 py-2 rounded-lg border font-semibold text-sm ${
+                previewImage 
+                  ? 'border-white/80 text-white hover:bg-white/20 bg-white/10 backdrop-blur-sm' 
+                  : 'border-accent2 text-accent2'
+              }`}
+            >
+              Browse files
+            </button>
           </div>
 
-          <button
-            type="button"
-            className="px-4 py-2 rounded-lg border border-accent2 text-accent2 font-semibold text-sm"
-          >
-            Browse files
-          </button>
+          {/* Replace/Remove overlay on hover - only show when image is uploaded */}
+          {previewImage && (
+            <div className="absolute inset-0 bg-black/0 hover:bg-black/40 transition-colors duration-200 flex items-center justify-center group">
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center space-y-3">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    replaceFile();
+                  }}
+                  className="px-6 py-3 bg-white/95 hover:bg-white text-gray-800 rounded-lg font-semibold text-sm shadow-lg"
+                >
+                  Replace Image
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeFile(0);
+                  }}
+                  className="p-2 bg-red-500/90 hover:bg-red-500 text-white rounded-full shadow-lg"
+                >
+                  <img
+                    src={Cancel || "/placeholder.svg"}
+                    alt="Remove"
+                    className="w-5 h-5"
+                  />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         <input
@@ -168,40 +212,8 @@ export default function TradePaymentUpload({onFileUploaded, maxFiles = 5, setUpl
       </div>
 
       <p className="text-sm text-gray-500">Only support {acceptedTypes.join(", ")} files</p>
-
-      {files.length > 0 && (
-        <div className="space-y-2">
-          {files.map((file, index) => (
-            <div
-              key={index}
-              className="flex items-center justify-between py-3 px-5 bg-white rounded-lg border border-strokeLightGrey"
-            >
-              <div className="flex items-center space-x-3">
-                {isImageFile(file.name) && filePreviews[file.name] ? (
-                  <img
-                    src={filePreviews[file.name] || "/placeholder.svg"}
-                    alt="File preview"
-                    className="w-9 h-9 object-cover rounded"
-                  />
-                ) : (
-                  <FileText className="w-5 h-5 text-textSec" />
-                )}
-                <div>
-                  <p className="text-sm font-semibold">{file.name}</p>
-                  <p className="text-xs text-textSec">{formatFileSize(file.size)}</p>
-                </div>
-              </div>
-
-              <img
-                src={Cancel || "/placeholder.svg"}
-                alt={`Cancel Icon`}
-                onClick={() => removeFile(index)}
-                className={`cursor-pointer`}
-              />
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   )
 }
+
+export default TradePaymentUpload;

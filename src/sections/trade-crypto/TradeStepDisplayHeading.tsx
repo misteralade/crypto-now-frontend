@@ -64,14 +64,12 @@ const TradeStepDisplayHeading = ({ step, activeTab, setStep, setActiveTab, sessi
             </div>
           </div>
         ) : step === 3 ? (
-          !isContinuingTransaction && (
-            <button
-              onClick={handleCancel}
-              className={`text-accent1 hover:text-accent1/80 font-semibold hover:underline cursor-pointer transition-colors`}
-            >
-              New Transaction
-            </button>
-          )
+          <button
+            onClick={handleCancel}
+            className={`text-accent1 hover:text-accent1/80 font-semibold hover:underline cursor-pointer transition-colors`}
+          >
+            New Transaction
+          </button>
         ) : (
           !isContinuingTransaction && (
             <button

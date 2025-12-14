@@ -312,8 +312,11 @@ export default function Navbar() {
               </div>
             ) : (
               <div className="absolute bottom-5 space-y-1 w-4/5">
-                <button className="text-gray-700 hover:text-gray-900 font-medium py-2 w-full text-left border border-gray-300 rounded-3xl px-4 hover:bg-gray-50 transition-colors duration-200 my-3">
-                  <Link to={ROUTES.SIGNIN}>Login</Link>
+                <button
+                  onClick={() => navigate({ to: ROUTES.SIGNIN })}
+                  className="text-gray-700 hover:text-gray-900 font-medium py-2 w-full text-center border border-gray-300 rounded-3xl px-4 hover:bg-gray-50 transition-colors duration-200 my-3 hover:cursor-pointer"
+                 >
+                  Login
                 </button>
 
                 <div className="w-full mt-3">

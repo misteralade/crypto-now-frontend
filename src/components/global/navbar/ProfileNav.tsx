@@ -56,16 +56,17 @@ const ProfileNav = () => {
 
           {openLogoutDropdown && (
             <div
-              className={`bg-greyBg rounded-xl text-lg font-medium absolute top-10 
-                            shadow-xl right-0 space-y-3 py-5 px-4 min-w-[200px] z-50`}
+              className={`bg-greyBg rounded-xl text-lg font-medium absolute top-10 shadow-xl right-0 space-y-3 py-5 px-4 min-w-[200px] z-50 gap-3`}
             >
-              <div>
-                <a href={ROUTES.PROFILE}>Profile</a>
+              <div onClick={() => navigate({ to: ROUTES.PROFILE })} className="hover:cursor-pointer hover:bg-gray-100 rounded-lg p-2">
+                <button type={`button`} className={`cursor-pointer text-lg font-medium`}>
+                  Profile
+                </button>
               </div>
 
-              <div className={`flex items-center gap-2`} onClick={handleLogout}>
+              <div className={`flex items-center gap-2 hover:cursor-pointer hover:bg-gray-100 rounded-lg p-2`} onClick={handleLogout}>
                 <img src={LogoutIcon} className={`w-5 h-5`} />
-                <button type={`button`} className={`cursor-pointer text-red`}>
+                <button type={`button`} className={`text-red`}>
                   Logout
                 </button>
               </div>

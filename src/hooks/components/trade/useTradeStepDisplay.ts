@@ -28,9 +28,10 @@ import {
   saveTradeProgress,
 } from "../../../util/tradeProgress.storage.util.ts";
 import {type RootState, store} from "../../../store.ts";
-import {setAnonymousUserEmail, clearAnonymousUserEmail} from "../../../redux/user.slice.ts";
+import {setAnonymousUserEmail, clearAnonymousUserEmail, setIsAnonymousUser} from "../../../redux/user.slice.ts";
 import { convertToMillify, formatNumber } from "../../../util/index.util.ts";
 import { toast } from "react-toastify";
+import { userServiceApi } from "../../../api/user.api.ts";
 
 // Debounce
 const useDebounce = (value: any, delay: number) => {
@@ -56,8 +57,6 @@ const shallowEqual = (a: any, b: any) => {
 };
 
 export const useTradeStepDisplay = ( token: string, activeTab: TradeType, currency: string, setStep: (value: number) => void, _setActiveTab: (value: TradeType) => void, initialAmount?: string, currentStep?: number, sessionId?: string ) => {
-  const rootState = store.getState() as RootState;
-  
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-expect-error
   const countdownIntervalRef = useRef<any>();
@@ -110,7 +109,40 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   // Modals
   const [showPaymentReceivingModal, setShowPaymentReceivingModal] = useState(false);
   const [, setShowConfirmBankDetails] = useState<boolean>(false);
-  const [showUserEnterEmail, setShowUserEnterEmail] = useState<boolean>(false)
+  const [showUserEnterEmail, setShowUserEnterEmail] = useState<boolean>(false);
+
+  // Ping user to check authentication status
+  const { isLoading: isLoadingPingUser } = useQuery({
+    queryKey: [QUERY_KEYS.USER.PING, "trade-step-display"],
+    queryFn: async () => {
+      try {
+        const { success, message } = await userServiceApi.pingUser();
+
+        if (!success) {
+          // User is anonymous - this is expected behavior
+          dispatch(setIsAnonymousUser(true));
+          return { success: false, message, isAnonymous: true };
+        }
+
+        // User is authenticated
+        dispatch(setIsAnonymousUser(false));
+        
+        // If user is authenticated, clear any stored anonymous user email
+        const accessToken = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+        if (accessToken) {
+          dispatch(clearAnonymousUserEmail());
+        }
+
+        return { success, message, isAnonymous: false };
+      } catch {
+        // If ping fails (e.g., network error), treat as anonymous
+        dispatch(setIsAnonymousUser(true));
+        return { success: false, message: "Failed to ping user", isAnonymous: true };
+      }
+    },
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
 
   // Amount to send
   const amountToSend =
@@ -125,11 +157,36 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   }, [debouncedAmountToSend, dispatch]);
   
   // Update the show Enter email modal for anonymous users
+  // Only show after ping is complete and user is confirmed as anonymous
+  // By default, modal is false - only show when we know user is anonymous after ping
   useEffect(() => {
-    if ((rootState.user.trade.anonymous.isAnonymousUser !== undefined && rootState.user.trade.anonymous.isAnonymousUser) || (localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN) === undefined)) {
-      setShowUserEnterEmail(true);
+    // Don't show modal while pinging
+    if (isLoadingPingUser) {
+      setShowUserEnterEmail(false);
+      return;
     }
-  }, [rootState.user.trade.anonymous.isAnonymousUser])
+
+    // Check access token first - if user has access token, they're authenticated
+    const hasAccessToken = !!localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+    
+    // If user has access token, they're authenticated - don't show modal
+    if (hasAccessToken) {
+      setShowUserEnterEmail(false);
+      return;
+    }
+
+    // After ping completes and no access token, check if user is confirmed as anonymous
+    const currentState = store.getState() as RootState;
+    const isAnonymous = currentState.user.trade.anonymous.isAnonymousUser;
+
+    // Only show email modal if user is confirmed as anonymous
+    if (isAnonymous === true) {
+      setShowUserEnterEmail(true);
+    } else {
+      // User status is unclear or not anonymous, don't show email modal
+      setShowUserEnterEmail(false);
+    }
+  }, [isLoadingPingUser])
 
   // 🔹 Hydration guard to avoid saving empty defaults on first paint
   const hydratedRef = useRef(false);
@@ -1251,6 +1308,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     userCryptoWallets,
     isInitiatingTrade: initiateTransactionMutation.isPending,
     showUserEnterEmail,
+    isLoadingPingUser,
     loadingSupportedCryptocurrencies,
     loadingUserCryptoWallets,
     loadingUserBankAccounts,

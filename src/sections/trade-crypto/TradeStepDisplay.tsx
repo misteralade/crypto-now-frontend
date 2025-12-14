@@ -12,6 +12,7 @@ import {
 } from "../../util/tradeProgress.storage.util.ts";
 import EmailModal from "./modals/EmailModal.tsx";
 import { useSearch, useNavigate } from "@tanstack/react-router";
+import { LoadingSpinner } from "../../components/global/LoadingSpinner.tsx";
 
 export default function TradeStepDisplay({
   activeTab,
@@ -30,10 +31,17 @@ export default function TradeStepDisplay({
   
   // Track if restoration has already happened for current sessionId to prevent re-restoration
   const hasRestoredRef = useRef<string | null>(null);
+  // Track if we reached step 3 from a continuing transaction to prevent reset
+  const reachedStep3FromContinuingRef = useRef<boolean>(false);
 
   // 1) On mount: only keep progress if navigation type is "reload", and not step 3
   // If sessionId is present, skip clearing to allow restoration and set step to 2
   useEffect(() => {
+    // If we're already on step 3 and reached it from continuing a transaction, don't reset
+    if (step === 3 && reachedStep3FromContinuingRef.current) {
+      return;
+    }
+
     // If sessionId is present and hasn't been restored yet for this sessionId, set step to 2 immediately
     if (sessionIdFromQuery && hasRestoredRef.current !== sessionIdFromQuery) {
       setStep(2);
@@ -55,14 +63,16 @@ export default function TradeStepDisplay({
     const saved = loadTradeProgress();
     
     // If step 3 is saved, always clear progress and reset to step 1
-    if (saved?.step === 3) {
+    // BUT: if we just reached step 3 from continuing a transaction, don't reset
+    if (saved?.step === 3 && !reachedStep3FromContinuingRef.current) {
       clearTradeProgress();
       setStep(1);
       return;
     }
     
     // If not a reload, clear progress and start fresh
-    if (!isReload) {
+    // BUT: if we're on step 3 from continuing a transaction, don't reset
+    if (!isReload && step !== 3) {
       clearTradeProgress();
       setStep(1);
       return;
@@ -78,13 +88,18 @@ export default function TradeStepDisplay({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionIdFromQuery]);
+  }, [sessionIdFromQuery, step]);
 
   // Persist whenever step / activeTab change
   useEffect(() => {
     // Don't save step 3 to progress
     if (step === 3) {
       clearTradeProgress();
+      
+      // If we reached step 3 from continuing a transaction, mark it
+      if (sessionIdFromQuery) {
+        reachedStep3FromContinuingRef.current = true;
+      }
       
       // Clear sessionId from query parameters when step 3 is reached
       if (sessionIdFromQuery) {
@@ -97,6 +112,10 @@ export default function TradeStepDisplay({
         });
       }
       return;
+    }
+    // Reset the flag when leaving step 3
+    if (step !== 3) {
+      reachedStep3FromContinuingRef.current = false;
     }
     saveTradeProgress({ step, activeTab });
   }, [step, activeTab, sessionIdFromQuery, searchParams, navigate]);
@@ -117,6 +136,7 @@ export default function TradeStepDisplay({
     userBankAccounts,
     userCryptoWallets,
     showUserEnterEmail,
+    isLoadingPingUser,
     loadingSupportedCryptocurrencies,
     loadingUserCryptoWallets,
     loadingUserBankAccounts,
@@ -183,79 +203,85 @@ export default function TradeStepDisplay({
   }, []);
 
   return (
-    <Fragment>
-      <div className={`bg-greyBg rounded-2xl p-5 space-y-5`}>
-        {/*heading*/}
-        <TradeStepDisplayHeading
-          step={step}
-          setStep={setStep}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          sessionId={sessionIdFromQuery}
-        />
+    <>
+      {isLoadingPingUser ? (
+        <LoadingSpinner fullScreen={true} message="Checking authentication status..."/>
+      ) : (
+        <Fragment>
+          <div className={`bg-greyBg rounded-2xl p-5 space-y-5`}>
+            {/*heading*/}
+            <TradeStepDisplayHeading
+              step={step}
+              setStep={setStep}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              sessionId={sessionIdFromQuery}
+            />
 
-        {/* Content*/}
-        {step === 1 && (
-          <TradeStepOne
-            token={token}
-            currency={currency}
-            tradeType={activeTab}
-            handleProceedToPayment={initiateTransaction}
-            orderDetails={AdditionalInfo}
-            numberOfToken={numberOfToken}
-            amountToBuy={amountToBuy}
-            setAmountToBuy={setAmountToBuy}
-            setNumberOfToken={setNumberOfToken}
-            setSelectedCurrency={setSelectedCurrency}
-            setSelectedToken={setSelectedToken}
-            selectedCurrency={selectedCurrency}
-            selectedToken={selectedToken}
-            availableCurrencies={supportedCurrencies || []}
-            availableTokens={!loadingSupportedCryptocurrencies && supportedCryptoCurrencies || []}
-            isInitiatingTrade={isInitiatingTrade}
-            setActiveTab={setActiveTab}
-            handleFocusNumberOfToken={handleFocusNumberOfToken}
-            handleFocusAmountToBuy={handleFocusAmountToBuy}
-            handleBlurNumberOfToken={handleBlurNumberOfToken}
-            handleBlurAmountToBuy={handleBlurAmountToBuy}
+            {/* Content*/}
+            {step === 1 && (
+              <TradeStepOne
+                token={token}
+                currency={currency}
+                tradeType={activeTab}
+                handleProceedToPayment={initiateTransaction}
+                orderDetails={AdditionalInfo}
+                numberOfToken={numberOfToken}
+                amountToBuy={amountToBuy}
+                setAmountToBuy={setAmountToBuy}
+                setNumberOfToken={setNumberOfToken}
+                setSelectedCurrency={setSelectedCurrency}
+                setSelectedToken={setSelectedToken}
+                selectedCurrency={selectedCurrency}
+                selectedToken={selectedToken}
+                availableCurrencies={supportedCurrencies || []}
+                availableTokens={!loadingSupportedCryptocurrencies && supportedCryptoCurrencies || []}
+                isInitiatingTrade={isInitiatingTrade}
+                setActiveTab={setActiveTab}
+                handleFocusNumberOfToken={handleFocusNumberOfToken}
+                handleFocusAmountToBuy={handleFocusAmountToBuy}
+                handleBlurNumberOfToken={handleBlurNumberOfToken}
+                handleBlurAmountToBuy={handleBlurAmountToBuy}
+              />
+            )}
+            {step === 2 && (
+              <TradeStepTwo
+                amountToBuy={typeof amountToBuy === 'string' ? (amountToBuy ? Number(amountToBuy) : 0) : (amountToBuy || 0)}
+                tradeType={activeTab}
+                numberOfToken={typeof numberOfToken === 'string' ? (numberOfToken ? Number(numberOfToken) : 0) : (numberOfToken || 0)}
+                additionalInfo={AdditionalInfo}
+                selectedToken={selectedToken}
+                selectedCurrency={selectedCurrency}
+                exchangeRateId={exchangeRateId}
+                handleReceiptUrl={handleReceiptUrl}
+                transactionRef={transactionSessionId}
+                handleTransactionHash={handleTransactionHash}
+                handleSubmitPaymentProof={makePaymentTransaction}
+                formatReceiveAmount={formatReceiveAmount}
+                formatSendAmount={formatSendAmount}
+              />
+            )}
+          </div>
+
+          {/*<PaymentConfirmationModal isOpen={showPaymentReceivingModal} />*/}
+          {!loadingUserCryptoWallets && !loadingUserBankAccounts &&
+            <ConfirmBankDetailsModal
+              isOpen={showPaymentReceivingModal}
+              bankAccounts={userBankAccounts}
+              cryptoAccounts={userCryptoWallets}
+              tradeType={activeTab}
+              onProceed={handleConfirmBankDetails}
+              setShowConfirmBankDetails={togglePaymentReceivingModal}
+            />
+          }
+
+          <EmailModal
+            open={showUserEnterEmail && !isLoadingPingUser}
+            onClose={toggleShowUserEnterEmail}
+            onConfirm={handleAnonymousUserEmailInput}
           />
-        )}
-        {step === 2 && (
-          <TradeStepTwo
-            amountToBuy={typeof amountToBuy === 'string' ? (amountToBuy ? Number(amountToBuy) : 0) : (amountToBuy || 0)}
-            tradeType={activeTab}
-            numberOfToken={typeof numberOfToken === 'string' ? (numberOfToken ? Number(numberOfToken) : 0) : (numberOfToken || 0)}
-            additionalInfo={AdditionalInfo}
-            selectedToken={selectedToken}
-            selectedCurrency={selectedCurrency}
-            exchangeRateId={exchangeRateId}
-            handleReceiptUrl={handleReceiptUrl}
-            transactionRef={transactionSessionId}
-            handleTransactionHash={handleTransactionHash}
-            handleSubmitPaymentProof={makePaymentTransaction}
-            formatReceiveAmount={formatReceiveAmount}
-            formatSendAmount={formatSendAmount}
-          />
-        )}
-      </div>
-
-      {/*<PaymentConfirmationModal isOpen={showPaymentReceivingModal} />*/}
-      {!loadingUserCryptoWallets && !loadingUserBankAccounts &&
-        <ConfirmBankDetailsModal
-          isOpen={showPaymentReceivingModal}
-          bankAccounts={userBankAccounts}
-          cryptoAccounts={userCryptoWallets}
-          tradeType={activeTab}
-          onProceed={handleConfirmBankDetails}
-          setShowConfirmBankDetails={togglePaymentReceivingModal}
-        />
-      }
-
-      <EmailModal
-        open={showUserEnterEmail}
-        onClose={toggleShowUserEnterEmail}
-        onConfirm={handleAnonymousUserEmailInput}
-      />
-    </Fragment>
+        </Fragment>
+      )}
+    </>
   );
 }

@@ -40,6 +40,7 @@ export const useUserQuery = () => {
       }
 
       dispatch(setIsAnonymousUser(false));
+      return { success, message };
     },
     // refetchInterval: 30_000, // ⏱ 30 seconds (in ms)
     refetchInterval: 100000,
