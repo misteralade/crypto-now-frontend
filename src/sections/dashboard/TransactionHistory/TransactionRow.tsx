@@ -6,6 +6,7 @@ import {getStatusColor, getStatusDot} from "../../../util/transaction.util.ts";
 import {useNavigate} from "@tanstack/react-router";
 import {ROUTES} from "../../../util/constants.util.ts";
 import {useTransactionQuery} from "../../../queries/transaction.query.ts";
+import { convertToMillify } from "../../../util/index.util.ts";
 
 interface TransactionRowProps {
   transaction: TransactionResponseEntity;
@@ -74,6 +75,7 @@ const TransactionRow = ({transaction, isLast}: TransactionRowProps) => {
       <td className="p-4 text-sm text-muted-foreground">{momentClient.formatToTransactionInitiationDate(transaction.createdAt)}</td>
       <td className="p-4 text-sm text-foreground">{transaction.type}</td>
       <td className="p-4 text-sm text-foreground font-medium">{Number(transaction.amountCrypto).toFixed(4)} {transaction.cryptocurrency.symbol}</td>
+      <td className="p-4 text-sm text-foreground font-medium">{convertToMillify(Number(transaction.amountFiatNGN) / Number(transaction.stableToFiatRate), 2)} USD</td>
       <td className="p-4 text-sm text-foreground">{Number(transaction.stableToFiatRate).toFixed(4)}</td>
       <td className="p-4">
         <span
