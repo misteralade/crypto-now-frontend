@@ -12,6 +12,7 @@ import {
 } from "../../util/tradeProgress.storage.util.ts";
 import EmailModal from "./modals/EmailModal.tsx";
 import { useSearch, useNavigate } from "@tanstack/react-router";
+import { LoadingSpinner } from "../../components/global/LoadingSpinner.tsx";
 
 export default function TradeStepDisplay({
   activeTab,
@@ -117,6 +118,7 @@ export default function TradeStepDisplay({
     userBankAccounts,
     userCryptoWallets,
     showUserEnterEmail,
+    isLoadingPingUser,
     loadingSupportedCryptocurrencies,
     loadingUserCryptoWallets,
     loadingUserBankAccounts,
@@ -183,79 +185,85 @@ export default function TradeStepDisplay({
   }, []);
 
   return (
-    <Fragment>
-      <div className={`bg-greyBg rounded-2xl p-5 space-y-5`}>
-        {/*heading*/}
-        <TradeStepDisplayHeading
-          step={step}
-          setStep={setStep}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          sessionId={sessionIdFromQuery}
-        />
+    <>
+      {isLoadingPingUser ? (
+        <LoadingSpinner fullScreen={true} message="Checking authentication status..."/>
+      ) : (
+        <Fragment>
+          <div className={`bg-greyBg rounded-2xl p-5 space-y-5`}>
+            {/*heading*/}
+            <TradeStepDisplayHeading
+              step={step}
+              setStep={setStep}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              sessionId={sessionIdFromQuery}
+            />
 
-        {/* Content*/}
-        {step === 1 && (
-          <TradeStepOne
-            token={token}
-            currency={currency}
-            tradeType={activeTab}
-            handleProceedToPayment={initiateTransaction}
-            orderDetails={AdditionalInfo}
-            numberOfToken={numberOfToken}
-            amountToBuy={amountToBuy}
-            setAmountToBuy={setAmountToBuy}
-            setNumberOfToken={setNumberOfToken}
-            setSelectedCurrency={setSelectedCurrency}
-            setSelectedToken={setSelectedToken}
-            selectedCurrency={selectedCurrency}
-            selectedToken={selectedToken}
-            availableCurrencies={supportedCurrencies || []}
-            availableTokens={!loadingSupportedCryptocurrencies && supportedCryptoCurrencies || []}
-            isInitiatingTrade={isInitiatingTrade}
-            setActiveTab={setActiveTab}
-            handleFocusNumberOfToken={handleFocusNumberOfToken}
-            handleFocusAmountToBuy={handleFocusAmountToBuy}
-            handleBlurNumberOfToken={handleBlurNumberOfToken}
-            handleBlurAmountToBuy={handleBlurAmountToBuy}
+            {/* Content*/}
+            {step === 1 && (
+              <TradeStepOne
+                token={token}
+                currency={currency}
+                tradeType={activeTab}
+                handleProceedToPayment={initiateTransaction}
+                orderDetails={AdditionalInfo}
+                numberOfToken={numberOfToken}
+                amountToBuy={amountToBuy}
+                setAmountToBuy={setAmountToBuy}
+                setNumberOfToken={setNumberOfToken}
+                setSelectedCurrency={setSelectedCurrency}
+                setSelectedToken={setSelectedToken}
+                selectedCurrency={selectedCurrency}
+                selectedToken={selectedToken}
+                availableCurrencies={supportedCurrencies || []}
+                availableTokens={!loadingSupportedCryptocurrencies && supportedCryptoCurrencies || []}
+                isInitiatingTrade={isInitiatingTrade}
+                setActiveTab={setActiveTab}
+                handleFocusNumberOfToken={handleFocusNumberOfToken}
+                handleFocusAmountToBuy={handleFocusAmountToBuy}
+                handleBlurNumberOfToken={handleBlurNumberOfToken}
+                handleBlurAmountToBuy={handleBlurAmountToBuy}
+              />
+            )}
+            {step === 2 && (
+              <TradeStepTwo
+                amountToBuy={typeof amountToBuy === 'string' ? (amountToBuy ? Number(amountToBuy) : 0) : (amountToBuy || 0)}
+                tradeType={activeTab}
+                numberOfToken={typeof numberOfToken === 'string' ? (numberOfToken ? Number(numberOfToken) : 0) : (numberOfToken || 0)}
+                additionalInfo={AdditionalInfo}
+                selectedToken={selectedToken}
+                selectedCurrency={selectedCurrency}
+                exchangeRateId={exchangeRateId}
+                handleReceiptUrl={handleReceiptUrl}
+                transactionRef={transactionSessionId}
+                handleTransactionHash={handleTransactionHash}
+                handleSubmitPaymentProof={makePaymentTransaction}
+                formatReceiveAmount={formatReceiveAmount}
+                formatSendAmount={formatSendAmount}
+              />
+            )}
+          </div>
+
+          {/*<PaymentConfirmationModal isOpen={showPaymentReceivingModal} />*/}
+          {!loadingUserCryptoWallets && !loadingUserBankAccounts &&
+            <ConfirmBankDetailsModal
+              isOpen={showPaymentReceivingModal}
+              bankAccounts={userBankAccounts}
+              cryptoAccounts={userCryptoWallets}
+              tradeType={activeTab}
+              onProceed={handleConfirmBankDetails}
+              setShowConfirmBankDetails={togglePaymentReceivingModal}
+            />
+          }
+
+          <EmailModal
+            open={showUserEnterEmail && !isLoadingPingUser}
+            onClose={toggleShowUserEnterEmail}
+            onConfirm={handleAnonymousUserEmailInput}
           />
-        )}
-        {step === 2 && (
-          <TradeStepTwo
-            amountToBuy={typeof amountToBuy === 'string' ? (amountToBuy ? Number(amountToBuy) : 0) : (amountToBuy || 0)}
-            tradeType={activeTab}
-            numberOfToken={typeof numberOfToken === 'string' ? (numberOfToken ? Number(numberOfToken) : 0) : (numberOfToken || 0)}
-            additionalInfo={AdditionalInfo}
-            selectedToken={selectedToken}
-            selectedCurrency={selectedCurrency}
-            exchangeRateId={exchangeRateId}
-            handleReceiptUrl={handleReceiptUrl}
-            transactionRef={transactionSessionId}
-            handleTransactionHash={handleTransactionHash}
-            handleSubmitPaymentProof={makePaymentTransaction}
-            formatReceiveAmount={formatReceiveAmount}
-            formatSendAmount={formatSendAmount}
-          />
-        )}
-      </div>
-
-      {/*<PaymentConfirmationModal isOpen={showPaymentReceivingModal} />*/}
-      {!loadingUserCryptoWallets && !loadingUserBankAccounts &&
-        <ConfirmBankDetailsModal
-          isOpen={showPaymentReceivingModal}
-          bankAccounts={userBankAccounts}
-          cryptoAccounts={userCryptoWallets}
-          tradeType={activeTab}
-          onProceed={handleConfirmBankDetails}
-          setShowConfirmBankDetails={togglePaymentReceivingModal}
-        />
-      }
-
-      <EmailModal
-        open={showUserEnterEmail}
-        onClose={toggleShowUserEnterEmail}
-        onConfirm={handleAnonymousUserEmailInput}
-      />
-    </Fragment>
+        </Fragment>
+      )}
+    </>
   );
 }
