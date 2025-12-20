@@ -1,4 +1,4 @@
-import Logo from "../../../assets/logo/logo.svg";
+import Logo from "../../../assets/logo/favicon.svg";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
 import { useUserQuery } from "../../../queries/user.query.ts";
@@ -26,7 +26,7 @@ const ProfileNav = () => {
             userProfileData?.profile?.firstName &&
             userProfileData?.profile.firstName}
         </h2>
-        <div className={`w-9 h-9 rounded-full`}>
+        <div className={`w-12 h-12 rounded-full p-1`}>
           <img 
             src={userProfileData?.profile?.profileImg || Logo} 
             alt="Profile" 

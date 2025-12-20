@@ -37,7 +37,7 @@ export const ROUTES = {
     TWITTER: "https://x.com/cryptonownaija?t=wQ23QgGSUyB9YH5fPFXrBw&s=09",
     WHATSAPP: "https://wa.me/message/FASHZ7NI2RSJA1"
   },
-  IN_PAGE_ROUTES: {
+  HOMEPAGE_TAG_IDS: {
     FAQ: "faq",
     HOW_IT_WORKS: "how-it-works",
   }

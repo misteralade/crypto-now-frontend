@@ -30,8 +30,9 @@ export const useBankQuery = () => {
     queryFn: async () => {
       const rootState = store.getState() as RootState;
       const userEmail = rootState.user.trade.anonymous.email;
+      const isAnonymous = rootState.user.trade.anonymous.isAnonymousUser;
       
-      if (userEmail) {
+      if (userEmail && isAnonymous) {
         const { data, success } = await bankServiceApi.getAnonymousUserBankAccounts(userEmail);
 
         if (success) {
@@ -58,6 +59,7 @@ export const useBankQuery = () => {
       toast.loading(`Creating bank account...`, { toastId: QUERY_KEYS.BANK.CREATE_USER_BANK_ACCOUNT });
       const rootState = store.getState() as RootState;
       const userEmail = rootState.user.trade.anonymous.email;
+      const isAnonymous = rootState.user.trade.anonymous.isAnonymousUser;
       const bank = rootState.bank;
 
       if (!bank.createBankAccount.bankId || !bank.createBankAccount.accountName || !bank.createBankAccount.accountNumber) {
@@ -72,7 +74,7 @@ export const useBankQuery = () => {
         isDefault: bank.createBankAccount.isDefault,
       }
       
-      if (userEmail) {
+      if (userEmail && isAnonymous) {
         return bankServiceApi.createAnonymousUserBankAccount({...payload, email: userEmail});
       }
 

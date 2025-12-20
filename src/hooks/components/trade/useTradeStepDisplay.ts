@@ -110,6 +110,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   const [showPaymentReceivingModal, setShowPaymentReceivingModal] = useState(false);
   const [, setShowConfirmBankDetails] = useState<boolean>(false);
   const [showUserEnterEmail, setShowUserEnterEmail] = useState<boolean>(false);
+  const [hasAnonymousUserEmail, setHasAnonymousUserEmail] = useState<boolean>(false);
 
   // Ping user to check authentication status
   const { isLoading: isLoadingPingUser } = useQuery({
@@ -325,7 +326,15 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       field: "action",
       value: activeTab,
     }));
-  }, [currency, token, activeTab, dispatch])
+  }, [currency, token, activeTab, dispatch]);
+
+  // If user has anonymous user email, show enter email modal
+  useEffect(() => {
+    const hasEmail = store.getState().user.trade.anonymous.email;
+    if (hasEmail) {
+      setHasAnonymousUserEmail(true);
+    }
+  }, []);
 
   // Fetch and restore transaction when sessionId is provided
   const { data: restoredTransaction } = useQuery({
@@ -1038,10 +1047,10 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   const toggleShowUserEnterEmail = () => setShowUserEnterEmail((prev) => !prev);
 
   const initiateTransaction = async () => {
-    await initiateTransactionMutation.mutateAsync();
-    const sid = sessionStorage.getItem(SESSION_STORAGE_KEYS.SESSION_ID) || "";
-    setTransactionSessionId(sid);
-    saveTradeProgress({ transactionSessionId: sid, step: 2 });
+    const { data: { sessionId }} = await initiateTransactionMutation.mutateAsync();
+    setTransactionSessionId(sessionId);
+    sessionStorage.setItem(SESSION_STORAGE_KEYS.SESSION_ID, sessionId);
+    saveTradeProgress({ transactionSessionId: sessionId, step: 2 });
     setStep(2);
   };
 
@@ -1312,6 +1321,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     loadingSupportedCryptocurrencies,
     loadingUserCryptoWallets,
     loadingUserBankAccounts,
+    hasAnonymousUserEmail,
 
     // Functions
     setAmountToBuy,

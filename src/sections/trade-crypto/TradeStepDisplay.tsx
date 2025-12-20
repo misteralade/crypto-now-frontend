@@ -14,15 +14,7 @@ import EmailModal from "./modals/EmailModal.tsx";
 import { useSearch, useNavigate } from "@tanstack/react-router";
 import { LoadingSpinner } from "../../components/global/LoadingSpinner.tsx";
 
-export default function TradeStepDisplay({
-  activeTab,
-  setActiveTab,
-  step,
-  currency,
-  token,
-  setStep,
-  sessionId,
-}: TradeCryptoPageProps) {
+const TradeStepDisplay = ({ activeTab,setActiveTab, step, currency, token, setStep, sessionId }: TradeCryptoPageProps) => {
   const navigate = useNavigate();
   // Read ?amount and ?sessionId from query to prefill from guest flow or restore transaction
   const searchParams: { amount?: string; sessionId?: string; option?: string } = useSearch({ strict: false });
@@ -33,6 +25,8 @@ export default function TradeStepDisplay({
   const hasRestoredRef = useRef<string | null>(null);
   // Track if we reached step 3 from a continuing transaction to prevent reset
   const reachedStep3FromContinuingRef = useRef<boolean>(false);
+  // Track if we've initialized on mount to prevent reset logic from running on step changes
+  const hasInitializedRef = useRef<boolean>(false);
 
   // 1) On mount: only keep progress if navigation type is "reload", and not step 3
   // If sessionId is present, skip clearing to allow restoration and set step to 2
@@ -47,11 +41,18 @@ export default function TradeStepDisplay({
       setStep(2);
       saveTradeProgress({ step: 2 });
       hasRestoredRef.current = sessionIdFromQuery;
+      hasInitializedRef.current = true;
       return;
     }
     
     // If sessionId is present but already restored for this sessionId, don't do anything
     if (sessionIdFromQuery && hasRestoredRef.current === sessionIdFromQuery) {
+      hasInitializedRef.current = true;
+      return;
+    }
+
+    // Only run reset/restore logic on initial mount, not on every step change
+    if (hasInitializedRef.current) {
       return;
     }
 
@@ -67,6 +68,7 @@ export default function TradeStepDisplay({
     if (saved?.step === 3 && !reachedStep3FromContinuingRef.current) {
       clearTradeProgress();
       setStep(1);
+      hasInitializedRef.current = true;
       return;
     }
     
@@ -75,6 +77,7 @@ export default function TradeStepDisplay({
     if (!isReload && step !== 3) {
       clearTradeProgress();
       setStep(1);
+      hasInitializedRef.current = true;
       return;
     }
     
@@ -87,6 +90,8 @@ export default function TradeStepDisplay({
         setActiveTab(saved.activeTab);
       }
     }
+    
+    hasInitializedRef.current = true;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionIdFromQuery, step]);
 
@@ -140,6 +145,7 @@ export default function TradeStepDisplay({
     loadingSupportedCryptocurrencies,
     loadingUserCryptoWallets,
     loadingUserBankAccounts,
+    hasAnonymousUserEmail,
 
     // Functions
     setAmountToBuy,
@@ -175,7 +181,7 @@ export default function TradeStepDisplay({
       }
     } else {
       if (numberOfToken === "" || Number(numberOfToken) === 0) {
-        setNumberOfToken(String(amount));
+        setAmountToBuy(String(amount));
         saveTradeProgress({ numberOfToken: String(amount) });
       }
     }
@@ -276,7 +282,7 @@ export default function TradeStepDisplay({
           }
 
           <EmailModal
-            open={showUserEnterEmail && !isLoadingPingUser}
+            open={showUserEnterEmail && !isLoadingPingUser && !hasAnonymousUserEmail}
             onClose={toggleShowUserEnterEmail}
             onConfirm={handleAnonymousUserEmailInput}
           />
@@ -285,3 +291,5 @@ export default function TradeStepDisplay({
     </>
   );
 }
+
+export default TradeStepDisplay;
