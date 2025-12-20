@@ -14,15 +14,7 @@ import EmailModal from "./modals/EmailModal.tsx";
 import { useSearch, useNavigate } from "@tanstack/react-router";
 import { LoadingSpinner } from "../../components/global/LoadingSpinner.tsx";
 
-export default function TradeStepDisplay({
-  activeTab,
-  setActiveTab,
-  step,
-  currency,
-  token,
-  setStep,
-  sessionId,
-}: TradeCryptoPageProps) {
+const TradeStepDisplay = ({ activeTab,setActiveTab, step, currency, token, setStep, sessionId }: TradeCryptoPageProps) => {
   const navigate = useNavigate();
   // Read ?amount and ?sessionId from query to prefill from guest flow or restore transaction
   const searchParams: { amount?: string; sessionId?: string; option?: string } = useSearch({ strict: false });
@@ -188,7 +180,7 @@ export default function TradeStepDisplay({
       }
     } else {
       if (numberOfToken === "" || Number(numberOfToken) === 0) {
-        setNumberOfToken(String(amount));
+        setAmountToBuy(String(amount));
         saveTradeProgress({ numberOfToken: String(amount) });
       }
     }
@@ -298,3 +290,5 @@ export default function TradeStepDisplay({
     </>
   );
 }
+
+export default TradeStepDisplay;
