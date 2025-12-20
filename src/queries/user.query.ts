@@ -95,14 +95,37 @@ export const useUserQuery = () => {
       const message = extractErrorMessage(error) || "Failed to send message. Please try again."
       toast.error(message);
     },
-  })
+  });
+
+  const removeProfilePictureMutation = useMutation({
+    mutationKey: [QUERY_KEYS.USER.REMOVE_PROFILE_PICTURE],
+    mutationFn: async () => {
+      toast.loading(`Removing profile picture...`)
+      return await userServiceApi.removeProfilePicture();
+    },
+    onSuccess: ({ success, message }) => {
+      toast.dismiss();
+      if (success) {
+        toast.success(message);
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.USER.GET_PROFILE] });
+      } else {
+        toast.error(message);
+      }
+    },
+    onError: ( error: AxiosServerError ) => {
+      toast.dismiss();
+      const message = extractErrorMessage(error) || "Failed to remove profile picture. Please try again."
+      toast.error(message);
+    },
+  });
 
   return {
     userProfileData,
     loadingUserProfile,
     
-    // Mutation Function
+    // Mutations
     updateProfileMutation,
     contactUsMutation,
+    removeProfilePictureMutation,
   }
 }

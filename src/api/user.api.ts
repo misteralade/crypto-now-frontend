@@ -52,6 +52,10 @@ class UserServiceApi {
   async contactUsMessage(payload: ContactUsRequestType) {
     return await axiosPostRequestHandler("/contact-us/user/message", payload) as BaseApiResponse<null>;
   }
+
+  async removeProfilePicture() {
+    return await axiosPatchRequestHandler("/user/profile/remove-profile-picture") as BaseApiResponse<null>;
+  }
 }
 
 export const userServiceApi = UserServiceApi.getInstance();
