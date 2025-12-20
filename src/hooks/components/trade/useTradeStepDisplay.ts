@@ -1038,10 +1038,10 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   const toggleShowUserEnterEmail = () => setShowUserEnterEmail((prev) => !prev);
 
   const initiateTransaction = async () => {
-    await initiateTransactionMutation.mutateAsync();
-    const sid = sessionStorage.getItem(SESSION_STORAGE_KEYS.SESSION_ID) || "";
-    setTransactionSessionId(sid);
-    saveTradeProgress({ transactionSessionId: sid, step: 2 });
+    const { data: { sessionId }} = await initiateTransactionMutation.mutateAsync();
+    setTransactionSessionId(sessionId);
+    sessionStorage.setItem(SESSION_STORAGE_KEYS.SESSION_ID, sessionId);
+    saveTradeProgress({ transactionSessionId: sessionId, step: 2 });
     setStep(2);
   };
 
