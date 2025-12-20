@@ -145,6 +145,7 @@ const TradeStepDisplay = ({ activeTab,setActiveTab, step, currency, token, setSt
     loadingSupportedCryptocurrencies,
     loadingUserCryptoWallets,
     loadingUserBankAccounts,
+    hasAnonymousUserEmail,
 
     // Functions
     setAmountToBuy,
@@ -281,7 +282,7 @@ const TradeStepDisplay = ({ activeTab,setActiveTab, step, currency, token, setSt
           }
 
           <EmailModal
-            open={showUserEnterEmail && !isLoadingPingUser}
+            open={showUserEnterEmail && !isLoadingPingUser && !hasAnonymousUserEmail}
             onClose={toggleShowUserEnterEmail}
             onConfirm={handleAnonymousUserEmailInput}
           />
