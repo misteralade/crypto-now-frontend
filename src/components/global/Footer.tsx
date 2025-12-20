@@ -8,9 +8,6 @@ const Footer = () => {
 
   const inHomepage = currentRoute === ROUTES.HOMEPAGE;
 
-  console.log("Current Route: ", currentRoute);
-  console.log("In Homepage: ", inHomepage);
-
   return (
     <footer className="py-12 max-md:px-4">
       <div className="max-w-6xl mx-auto">

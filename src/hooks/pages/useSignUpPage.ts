@@ -28,7 +28,7 @@ export const useSignUpPage = () => {
       toast.info(`Account activation link sent to your email. If you don't see it in your inbox, please check your spam folder.`)
       setTimeout(() => {
         navigate({ to: ROUTES.SIGNIN })
-      })
+      }, 5000);
     }
   }
   

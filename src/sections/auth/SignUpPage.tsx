@@ -172,7 +172,7 @@ export default function SignUpPage() {
         {/* Disclaimer */}
         <div className="mt-4 p-4 bg-[#FFF7ED] border border-[#FED7AA] rounded-[12px]">
           <p className="text-[14px] leading-[20px] text-[#9A3412]">
-            <strong className="font-semibold">Important:</strong> The name you use when opening your bank account must match the name on your bank account. Please ensure your first name and last name match exactly as they appear on your bank account documents.
+            <strong className="font-semibold">Important:</strong> When creating an account, make sure to use the same name that appears on your banking information.
           </p>
         </div>
         
