@@ -46,7 +46,7 @@ export const useUserQuery = () => {
     refetchInterval: 100000,
     refetchIntervalInBackground: true, // ✅ keeps pinging even when tab is inactive
     refetchOnWindowFocus: false,
-    enabled: !!matchRoute({ to: ROUTES.TRADE_CRYPTO }) || !!matchRoute({ to: ROUTES.HOMEPAGE })
+    enabled: !!matchRoute({ to: ROUTES.TRADE_CRYPTO }) || !!matchRoute({ to: ROUTES.HOMEPAGE }) || !!matchRoute({ to: ROUTES.PROFILE })
   });
   
   const updateProfileMutation = useMutation({
