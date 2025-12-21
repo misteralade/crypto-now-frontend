@@ -117,30 +117,30 @@ const TradePaymentUpload = ({onFileUploaded, maxFiles = 5, setUploadedFileUrl, a
   return (
     <div className="space-y-4">
       <div
-        className={`relative border-2 border-dashed rounded-lg transition-all cursor-pointer overflow-hidden min-h-[300px] ${
-          previewImage 
-            ? "border-transparent" 
-            : `py-5 text-center bg-white ${isDragOver ? "border-placeholder" : "border-accent2"}`
+        className={`relative border-2 border-dashed rounded-lg transition-all cursor-pointer overflow-hidden ${
+          previewImage
+            ? "border-transparent min-h-[300px] md:min-h-[400px]"
+            : `py-5 text-center bg-white min-h-[300px] ${isDragOver ? "border-placeholder" : "border-accent2"}`
         }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
       >
-        {/* Image Background - only show after upload completes */}
+        {/* Image Display - only show after upload completes */}
         {previewImage && (
-          <div 
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-            style={{
-              backgroundImage: `url(${previewImage})`,
-            }}
-          >
+          <>
+            <img
+              src={previewImage}
+              alt="Uploaded receipt"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
             <div className="absolute inset-0 bg-black/20" />
-          </div>
+          </>
         )}
 
         {/* Content Overlay - always show text */}
-        <div className="relative z-10 flex flex-col items-center justify-center min-h-[300px] p-5">
+        <div className="relative z-10 flex flex-col items-center justify-center min-h-[300px] md:min-h-[400px] p-5">
           {/* Upload text content - always visible */}
           <div className="flex flex-col items-center space-y-4">
             <img src={Upload || "/placeholder.svg"} alt={`Upload icon`} className={`w-12 h-12 ${previewImage ? 'drop-shadow-lg' : ''}`} />

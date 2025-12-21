@@ -149,7 +149,6 @@ const TradeStepDisplay = ({ activeTab,setActiveTab, step, currency, token, setSt
     loadingSupportedCryptocurrencies,
     loadingUserCryptoWallets,
     loadingUserBankAccounts,
-    hasAnonymousUserEmail,
 
     // Functions
     setAmountToBuy,
