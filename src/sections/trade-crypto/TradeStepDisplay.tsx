@@ -13,6 +13,7 @@ import {
 import EmailModal from "./modals/EmailModal.tsx";
 import { useSearch, useNavigate } from "@tanstack/react-router";
 import { LoadingSpinner } from "../../components/global/LoadingSpinner.tsx";
+import { useAppSelector } from "../../hooks.ts";
 
 const TradeStepDisplay = ({ activeTab,setActiveTab, step, currency, token, setStep, sessionId }: TradeCryptoPageProps) => {
   const navigate = useNavigate();
@@ -20,6 +21,9 @@ const TradeStepDisplay = ({ activeTab,setActiveTab, step, currency, token, setSt
   const searchParams: { amount?: string; sessionId?: string; option?: string } = useSearch({ strict: false });
   const initialAmount = searchParams?.amount;
   const sessionIdFromQuery = sessionId || searchParams?.sessionId;
+  
+  // Get anonymous user email from Redux
+  const anonymousUserEmail = useAppSelector((state) => state.user.trade.anonymous.email);
   
   // Track if restoration has already happened for current sessionId to prevent re-restoration
   const hasRestoredRef = useRef<string | null>(null);
@@ -248,6 +252,8 @@ const TradeStepDisplay = ({ activeTab,setActiveTab, step, currency, token, setSt
                 handleFocusAmountToBuy={handleFocusAmountToBuy}
                 handleBlurNumberOfToken={handleBlurNumberOfToken}
                 handleBlurAmountToBuy={handleBlurAmountToBuy}
+                anonymousUserEmail={anonymousUserEmail}
+                onChangeEmail={toggleShowUserEnterEmail}
               />
             )}
             {step === 2 && (
@@ -282,7 +288,7 @@ const TradeStepDisplay = ({ activeTab,setActiveTab, step, currency, token, setSt
           }
 
           <EmailModal
-            open={showUserEnterEmail && !isLoadingPingUser && !hasAnonymousUserEmail}
+            open={showUserEnterEmail && !isLoadingPingUser}
             onClose={toggleShowUserEnterEmail}
             onConfirm={handleAnonymousUserEmailInput}
           />

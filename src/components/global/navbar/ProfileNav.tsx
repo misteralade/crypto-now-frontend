@@ -26,11 +26,11 @@ const ProfileNav = () => {
             userProfileData?.profile?.firstName &&
             userProfileData?.profile.firstName}
         </h2>
-        <div className={`w-12 h-12 rounded-full p-1`}>
+        <div className={`w-12 h-12 flex items-center justify-center rounded-full p-1`}>
           <img 
             src={userProfileData?.profile?.profileImg || Logo} 
             alt="Profile" 
-            className={`w-full h-full object-cover rounded-full`}
+            className={`w-full h-full rounded-full`}
             onError={(e) => {
               // Fallback to default image if profile image fails to load
               const target = e.target as HTMLImageElement;

@@ -179,12 +179,14 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     // After ping completes and no access token, check if user is confirmed as anonymous
     const currentState = store.getState() as RootState;
     const isAnonymous = currentState.user.trade.anonymous.isAnonymousUser;
+    const hasEmail = currentState.user.trade.anonymous.email;
 
-    // Only show email modal if user is confirmed as anonymous
-    if (isAnonymous === true) {
+    // Only show email modal if user is confirmed as anonymous AND doesn't already have an email
+    // (If they have an email, they can manually open it via the "Change email" button)
+    if (isAnonymous === true && !hasEmail) {
       setShowUserEnterEmail(true);
     } else {
-      // User status is unclear or not anonymous, don't show email modal
+      // User status is unclear or not anonymous, or already has email - don't auto-show email modal
       setShowUserEnterEmail(false);
     }
   }, [isLoadingPingUser])
