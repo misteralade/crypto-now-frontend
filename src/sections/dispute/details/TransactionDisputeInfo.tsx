@@ -24,7 +24,7 @@ const TransactionDisputeInfo = ({sessionId, transactionType, status, cryptoAmoun
         </h2>
         <div className="space-y-3">
           <div>
-            <p className="text-xs text-gray-500 mb-1">Transaction ID</p>
+            <p className="text-xs text-gray-500 mb-1">Session ID</p>
             <CopyAccountDetails accountNumber={sessionId} className="!max-w-[300px]"/>
           </div>
           <div className="grid grid-cols-2 gap-3">
