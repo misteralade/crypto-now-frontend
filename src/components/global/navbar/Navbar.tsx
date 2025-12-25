@@ -25,13 +25,16 @@ export default function Navbar() {
   useEffect(() => {
     const checkAuthentication = async () => {
       // Protected routes that require authentication
+      // Transaction details page should be accessible to all users (authenticated and anonymous)
+      const isTransactionDetailsPage = location.pathname.match(/^\/dashboard\/transactions\/[^/]+$/);
+      
       const protectedRoutes = [
         ROUTES.DASHBOARD,
         ROUTES.PROFILE,
         ROUTES.TRANSACTION,
       ];
       
-      const isProtectedRoute = protectedRoutes.some(route => 
+      const isProtectedRoute = !isTransactionDetailsPage && protectedRoutes.some(route => 
         location.pathname.startsWith(route) || location.pathname === route
       );
 
