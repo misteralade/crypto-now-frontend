@@ -1,0 +1,233 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - region "Notifications Alt+T"
+  - generic [ref=e3]:
+    - navigation [ref=e4]:
+      - generic [ref=e5]:
+        - img "/src/assets/logo/logo.svg" [ref=e7]
+        - generic [ref=e8]:
+          - link "Home" [ref=e9] [cursor=pointer]:
+            - /url: /
+          - link "Rates" [ref=e10] [cursor=pointer]:
+            - /url: /rates
+          - link "Finish setup to start trading" [ref=e12] [cursor=pointer]:
+            - /url: /sign-up
+          - link "About" [ref=e13] [cursor=pointer]:
+            - /url: /about
+          - link "Contact" [ref=e14] [cursor=pointer]:
+            - /url: /contact
+        - generic [ref=e15]:
+          - link "Login" [ref=e16] [cursor=pointer]:
+            - /url: /sign-in
+          - link "Create Account" [ref=e17] [cursor=pointer]:
+            - /url: /sign-up
+            - button "Create Account" [ref=e18]
+    - generic [ref=e20]:
+      - generic [ref=e21]:
+        - heading "Menu" [level=2] [ref=e22]
+        - button [ref=e23]:
+          - img [ref=e24]
+      - generic [ref=e26]:
+        - link "Rates" [ref=e27] [cursor=pointer]:
+          - /url: /rates
+        - link "Contact" [ref=e28] [cursor=pointer]:
+          - /url: /contact
+        - link "Home" [ref=e29] [cursor=pointer]:
+          - /url: /
+        - generic [ref=e30]:
+          - button "Login" [ref=e31]
+          - link "Create Account" [ref=e33] [cursor=pointer]:
+            - /url: /sign-up
+            - button "Create Account" [ref=e34]
+    - generic [ref=e36]:
+      - heading "Buy and Sell Crypto" [level=1] [ref=e37]
+      - generic [ref=e39]:
+        - text: Fast •
+        - generic [ref=e40]:
+          - text: Simple
+          - img [ref=e41]
+        - text: • Secure
+      - paragraph [ref=e43]: With CryptoNow, trading Bitcoin and USDT is as easy as sending a text. No complex charts. No hidden fees. Just safe, straightforward transactions.
+      - button "Setup an account now" [ref=e44] [cursor=pointer]
+    - generic [ref=e48]:
+      - generic [ref=e49]:
+        - heading "Instant trade as a Guest" [level=2] [ref=e50]
+        - paragraph [ref=e51]: You can also buy and sell your crypto without having to sign up. It's fast, easy, and reliable.
+      - generic [ref=e52]:
+        - generic [ref=e53]: I want to
+        - generic [ref=e54]:
+          - combobox [ref=e56] [cursor=pointer]:
+            - option "Buy" [selected]
+            - option "Sell"
+          - generic [ref=e59]:
+            - img [ref=e61]
+            - combobox [ref=e62] [cursor=pointer]
+        - generic [ref=e63]: for
+        - generic [ref=e64]:
+          - textbox "Amount" [ref=e66]
+          - generic [ref=e69]:
+            - img "https://storage.googleapis.com/public-cryptocurrency-logos/country-flags/Flag%20of%20Nigeria%20Wavy.png" [ref=e71]
+            - combobox [ref=e72] [cursor=pointer]:
+              - option "NGN" [selected]
+              - option "USD"
+        - button "Buy crypto now" [ref=e73] [cursor=pointer]
+    - generic [ref=e76]:
+      - img "steps-img" [ref=e79]
+      - generic [ref=e80]:
+        - heading "Make your trade in 3 simple steps" [level=2] [ref=e81]
+        - generic [ref=e82]:
+          - generic [ref=e84]:
+            - generic [ref=e85]: "1"
+            - generic [ref=e86]:
+              - heading "Create Your Account" [level=3] [ref=e87]
+              - paragraph [ref=e88]: Sign up with just your email and password, add 2fa for extra security
+          - generic [ref=e89]:
+            - generic [ref=e90]: "2"
+            - generic [ref=e91]:
+              - heading "Choose Buy or Sell" [level=3] [ref=e92]
+              - paragraph [ref=e93]: Pick your currency, enter your amount, and review the details
+          - generic [ref=e94]:
+            - generic [ref=e95]: "3"
+            - generic [ref=e96]:
+              - heading "Confirm & Complete" [level=3] [ref=e97]
+              - paragraph [ref=e98]: Follow our payment or deposit instructions. We'll verify and process your transaction
+        - button "Setup an account now" [ref=e99] [cursor=pointer]
+    - generic [ref=e101]:
+      - heading "Why CryptoNow?" [level=2] [ref=e102]
+      - generic [ref=e103]:
+        - generic [ref=e104]:
+          - heading "Admin-Verified Transactions" [level=3] [ref=e106]
+          - paragraph [ref=e107]: Every single transaction is checked and verified by our team for accuracy and efficiency.
+        - generic [ref=e108]:
+          - heading "Fixed Exchange Rates" [level=3] [ref=e110]
+          - paragraph [ref=e111]: Your rate is locked and fixed for several minutes, giving you ample time to complete the transaction without any slippage or surprises.
+        - generic [ref=e112]:
+          - heading "Lightning-Fast Processing" [level=3] [ref=e114]
+          - paragraph [ref=e115]: Trades execute at lightning speed , zero delays , fast processing
+    - generic [ref=e118]:
+      - generic [ref=e119]:
+        - heading "Your All-in-One Wallet Dashboard" [level=2] [ref=e120]
+        - generic [ref=e121]:
+          - generic [ref=e122]:
+            - heading "Do more with basic" [level=3] [ref=e123]
+            - paragraph [ref=e124]: See your BTC, USDT, and USD equivalent at a glance. Track your last transactions instantly.
+          - generic [ref=e125]:
+            - heading "Transaction Receipts" [level=3] [ref=e126]
+            - paragraph [ref=e127]: Download PDF statements, complete with digital signatures.
+          - generic [ref=e128]:
+            - heading "Status Tracking" [level=3] [ref=e129]
+            - paragraph [ref=e130]: Know exactly where your trade stands, pending, processing, or completed.
+        - button "Setup an account now" [ref=e131] [cursor=pointer]
+      - img "all-in-one-img" [ref=e134]
+    - generic [ref=e136]:
+      - generic [ref=e137]:
+        - heading "Testimonials" [level=2] [ref=e138]
+        - paragraph [ref=e139]: What our customers are saying about our service
+      - paragraph [ref=e141]: No testimonials available at the moment.
+    - main [ref=e142]:
+      - heading "Frequently Asked Questions" [level=1] [ref=e143]
+      - generic [ref=e144]:
+        - generic [ref=e145]:
+          - button "What is CryptoNow?" [expanded] [ref=e146]:
+            - generic [ref=e147]: What is CryptoNow?
+            - img [ref=e149] [cursor=pointer]
+          - region [ref=e151]:
+            - paragraph [ref=e153]: "CryptoNow is built for Nigerians. Seamlessly buy and sell crypto with Naira 💰 it's fast, simple, and straight to the point! BIG PLUS: We only exchange! Your money and crypto stay with you. We don't hold your assets, ever. Get started now! 🚀"
+          - separator [ref=e154]
+        - generic [ref=e155]:
+          - button "Is CryptoNow available outside Nigeria?" [ref=e156]:
+            - generic [ref=e157]: Is CryptoNow available outside Nigeria?
+            - img [ref=e159] [cursor=pointer]
+          - paragraph [ref=e163]: Yes, we’re global! You can use CryptoNow from anywhere in the world, but we keep it real with 100% Naira transactions only.
+          - separator [ref=e164]
+        - generic [ref=e165]:
+          - button "How do I buy cryptocurrency on CryptoNow?" [ref=e166]:
+            - generic [ref=e167]: How do I buy cryptocurrency on CryptoNow?
+            - img [ref=e169] [cursor=pointer]
+          - paragraph [ref=e173]: To buy on CryptoNow is as easy as ABC , click on the buy now button and select the desired token to buy, provide and confirm your wallet details , make your naira payment into the bank account we have provided and we will process your transaction immediately
+          - separator [ref=e174]
+        - generic [ref=e175]:
+          - button "How do I sell my crypto?" [ref=e176]:
+            - generic [ref=e177]: How do I sell my crypto?
+            - img [ref=e179] [cursor=pointer]
+          - paragraph [ref=e183]: To sell your crypto and receive Naira, simply click the Sell Now button, select the cryptocurrency you wish to trade, and provide your bank details for payment. Next, send the crypto to the wallet address we provide and upload a screenshot of your successful transfer; we will then make your Naira payment immediately.
+          - separator [ref=e184]
+        - generic [ref=e185]:
+          - button "What happens if a transaction doesn't go well?" [ref=e186]:
+            - generic [ref=e187]: What happens if a transaction doesn't go well?
+            - img [ref=e189] [cursor=pointer]
+          - paragraph [ref=e193]: There is no need to worry; all our transactions are well documented. If you encounter an issue, perhaps due to a bank or network delay, you can easily initiate a dispute for that transaction, and we will resolve it.
+    - generic [ref=e194]:
+      - generic [ref=e195]: Your crypto,
+      - generic [ref=e196]: your way
+    - contentinfo [ref=e197]:
+      - generic [ref=e198]:
+        - generic [ref=e199]:
+          - generic [ref=e200]:
+            - heading "Quick links" [level=3] [ref=e201]
+            - list [ref=e202]:
+              - listitem [ref=e203]:
+                - link "How It Works" [ref=e204] [cursor=pointer]:
+                  - /url: "#how-it-works"
+              - listitem [ref=e205]:
+                - link "Rates" [ref=e206] [cursor=pointer]:
+                  - /url: /rates
+              - listitem [ref=e207]:
+                - link "FAQs" [ref=e208] [cursor=pointer]:
+                  - /url: "#faq"
+              - listitem [ref=e209]:
+                - link "Contact" [ref=e210] [cursor=pointer]:
+                  - /url: /contact
+          - generic [ref=e211]:
+            - heading "Legal" [level=3] [ref=e212]
+            - list [ref=e213]:
+              - listitem [ref=e214]:
+                - link "Terms of Service" [ref=e215] [cursor=pointer]:
+                  - /url: /terms-of-service
+              - listitem [ref=e216]:
+                - link "Privacy Policy" [ref=e217] [cursor=pointer]:
+                  - /url: /privacy-policy
+              - listitem [ref=e218]:
+                - link "Security Policy" [ref=e219] [cursor=pointer]:
+                  - /url: /security-policy
+              - listitem [ref=e220]:
+                - link "AML/Compliance" [ref=e221] [cursor=pointer]:
+                  - /url: aml-policy
+          - generic [ref=e222]:
+            - heading "Contact info" [level=3] [ref=e223]
+            - generic [ref=e224]:
+              - link "cryptonownaijahelpdesk@gmail.com" [ref=e225] [cursor=pointer]:
+                - /url: mailto:cryptonownaijahelpdesk@gmail.com
+              - link "Chat us on WhatsApp" [ref=e226] [cursor=pointer]:
+                - /url: https://wa.me/message/FASHZ7NI2RSJA1
+              - paragraph [ref=e227]: Lagos, Nigeria
+          - generic [ref=e228]:
+            - heading "Socials" [level=3] [ref=e229]
+            - generic [ref=e230]:
+              - link [ref=e231] [cursor=pointer]:
+                - /url: https://www.tiktok.com/@cryptonownaija?_r=1&_t=ZS-91QM2DxOqpO
+                - img [ref=e232]
+              - link [ref=e234] [cursor=pointer]:
+                - /url: https://www.instagram.com/cryptonow.ng?igsh=MTZqZWk5enRiMjQ2Zg==
+                - img [ref=e235]
+              - link [ref=e237] [cursor=pointer]:
+                - /url: https://x.com/cryptonownaija?t=wQ23QgGSUyB9YH5fPFXrBw&s=09
+                - img [ref=e238]
+              - link [ref=e240] [cursor=pointer]:
+                - /url: https://www.facebook.com/share/1DhKLD85Ho/
+                - img [ref=e241]
+              - link [ref=e243] [cursor=pointer]:
+                - /url: https://wa.me/message/FASHZ7NI2RSJA1
+                - img [ref=e244]
+        - paragraph [ref=e247]: © 2025 CryptoNow. All rights reserved.
+  - generic:
+    - contentinfo:
+      - button "Open TanStack Router Devtools" [ref=e248] [cursor=pointer]:
+        - generic [ref=e249]:
+          - img [ref=e251]
+          - img [ref=e287]
+        - generic [ref=e322]: "-"
+        - generic [ref=e323]: TanStack Router
+```
