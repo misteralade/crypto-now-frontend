@@ -93,7 +93,7 @@ export const useCryptoQuery = () => {
 
       return [];
     },
-    enabled: !!matchRoute({ to: ROUTES.PROFILE })
+    enabled: !!matchRoute({ to: ROUTES.PROFILE }) && false,
   });
 
   const createUserCryptoWalletMutation = useMutation({

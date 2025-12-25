@@ -3,7 +3,7 @@ import AuthenticatedLayout from "../layouts/AuthenticatedLayout.tsx";
 import {useProfilePage} from "../hooks/pages/useProfilePage.ts";
 import ProfilePersonalInfoSection from "../components/pages/profile/ProfilePersonalInfoSection.tsx";
 import ProfileBankDetailsSection from "../components/pages/profile/ProfileBankDetailsSection.tsx";
-import ProfileAddressDetailsSection from "../components/pages/profile/ProfileAddressDetailsSection.tsx";
+// import ProfileAddressDetailsSection from "../components/pages/profile/ProfileAddressDetailsSection.tsx";
 import CustomButton from "../components/global/Button.tsx";
 import ProfileSecuritySettingsSection from "../components/pages/profile/ProfileSecuritySection.tsx";
 import {LoadingSpinner} from "../components/global/LoadingSpinner.tsx";
@@ -23,8 +23,8 @@ const ProfilePage = () => {
     showCreateNewBankAccount,
     supportedCryptoCurrencies,
     loadingSupportedCryptocurrencies,
-    allUserCryptoWallets,
-    loadingAllUserCryptoWallets,
+    // allUserCryptoWallets,
+    // loadingAllUserCryptoWallets,
     showCreateWallet,
     selectedWallet,
     
@@ -41,8 +41,8 @@ const ProfilePage = () => {
     toggleShowCreateNewWallet,
     handleCreateWallet,
     handleNewWalletField,
-    handleMakeWalletDefault,
-    handleDeleteWallet,
+    // handleMakeWalletDefault,
+    // handleDeleteWallet,
     handleRemoveProfilePicture,
   } = useProfilePage();
   
@@ -111,7 +111,7 @@ const ProfilePage = () => {
                 </div>
                 
                 
-                <div className="space-y-6">
+                {/* <div className="space-y-6">
                   <h3 className="text-lg">Wallet details</h3>
                   
                   {!loadingAllUserCryptoWallets && !allUserCryptoWallets ? (
@@ -129,7 +129,7 @@ const ProfilePage = () => {
                       deleteWallet={handleDeleteWallet}
                     />
                   )}
-                </div>
+                </div> */}
               </div>
               
               <ProfileSecuritySettingsSection
