@@ -2,7 +2,7 @@ import {AlertCircle, CheckCircle, Download, FileText, Paperclip, Send, Shield, U
 import {Fragment, useEffect, useRef, useState, type ChangeEvent} from "react";
 import type {DisputeMessageResponse} from "../../../types/response.payload.types.ts";
 import {LoadingSpinner} from "../../../components/global/LoadingSpinner.tsx";
-import { ATTACHMENT_TYPE } from "../../../util/constants.util.ts";
+import { ATTACHMENT_TYPE, TIME_IN_MILLISECONDS } from "../../../util/constants.util.ts";
 import {formatFileSize, getFileType} from "../../../util/index.util.ts";
 import type {MessageAttachment, AttachmentType} from "../../../types/transaction.types.ts";
 import { toast } from "react-toastify";
@@ -72,10 +72,8 @@ const DisputeMessage = ({ loading, messages, sendMessageMutation }: DisputeMessa
     if (messages.length === 0) return;
 
     const timeSinceLastActivity = Date.now() - lastActivityTimeRef.current;
-    const IDLE_TIME_MS = 120 * 1000; // 120 seconds
-
     // Only auto-scroll if user has been inactive for 120 seconds
-    if (timeSinceLastActivity >= IDLE_TIME_MS) {
+    if (timeSinceLastActivity >= TIME_IN_MILLISECONDS.ONE_HUNDRED_TWENTY_SECONDS) {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
