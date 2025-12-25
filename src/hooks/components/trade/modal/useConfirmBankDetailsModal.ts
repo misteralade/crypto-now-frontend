@@ -51,15 +51,12 @@ export const useConfirmBankDetailsModal = (
         setViewState("select-bank");
       }
     } else if (tradeType === "buy") {
-      if (!cryptoAccounts || cryptoAccounts.length === 0) {
-        setViewState("create-wallet");
-      } else {
-        setViewState("select-wallet");
-      }
+      // For buy transactions, always show create-wallet view (don't retrieve old wallets)
+      setViewState("create-wallet");
     }
     
     setHasInitializedView(true);
-  }, [tradeType, bankAccounts, cryptoAccounts, hasInitializedView]);
+  }, [tradeType, bankAccounts, hasInitializedView]);
   
   // Always select the first bank account when available (for SELL transactions)
   // This ensures Redux state is updated even if accounts load after component mount
@@ -73,17 +70,7 @@ export const useConfirmBankDetailsModal = (
     }
   }, [tradeType, bankAccounts, selectedBankId, dispatch]);
   
-  // Always select the first wallet when available (for BUY transactions)
-  // This ensures Redux state is updated even if accounts load after component mount
-  useEffect(() => {
-    if (tradeType === "buy" && cryptoAccounts && cryptoAccounts.length > 0 && !selectedWalletId) {
-      const firstWallet = cryptoAccounts[0];
-      setSelectedWalletId(firstWallet.id);
-      setSelectedWallet(firstWallet);
-      dispatch(clearSelectedBankAccountId());
-      dispatch(setSelectedWalletAccountId(firstWallet.id));
-    }
-  }, [tradeType, cryptoAccounts, selectedWalletId, dispatch]);
+  // For buy transactions, we no longer auto-select wallets since we always show create-wallet view
   
   /** ---------------- BANK LOGIC ---------------- */
   const handleBankSelection = (bankId: string) => {
@@ -119,9 +106,15 @@ export const useConfirmBankDetailsModal = (
   
   const handleSubmitWalletDetails = async () => {
     if (newCryptoWallet) {
-      const { success } = await createUserCryptoWalletMutation.mutateAsync(newCryptoWallet)
-      if (success) {
-        setViewState("select-wallet")
+      const response = await createUserCryptoWalletMutation.mutateAsync(newCryptoWallet)
+      if (response.success && response.data) {
+        // Capture the wallet ID from the API response
+        const walletId = response.data;
+        // Set the wallet ID in Redux state
+        dispatch(setSelectedWalletAccountId(walletId));
+        dispatch(clearSelectedBankAccountId());
+        // Now proceed to confirm payment with the wallet ID
+        handleProceed();
       }
     }
   }

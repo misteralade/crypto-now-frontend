@@ -4,13 +4,15 @@ import {QUERY_KEYS} from "./query.keys.ts";
 import {type RootState, store} from "../store.ts";
 import {toast} from "react-toastify";
 import {ROUTES, SESSION_STORAGE_KEYS} from "../util/constants.util.ts";
-import {useMatchRoute} from "@tanstack/react-router";
+import {useMatchRoute, useSearch} from "@tanstack/react-router";
 import type {AxiosServerError} from "../types/response.payload.types.ts";
 import {extractErrorMessage} from "../util/index.util.ts";
 
 export const useCryptoQuery = () => {
   const queryClient = useQueryClient();
   const matchRoute = useMatchRoute();
+  const searchParams: { option?: string } = useSearch({ strict: false });
+  const isBuyTransaction = searchParams?.option?.toLowerCase() !== 'sell';
 
   const { data: supportedCryptoCurrencies, isLoading: loadingSupportedCryptocurrencies } = useQuery({
     queryKey: [QUERY_KEYS.CRYPTO.SUPPORTED_CRYPTO],
@@ -76,7 +78,7 @@ export const useCryptoQuery = () => {
 
       return [];
     },
-    enabled: !!(store.getState() as RootState).crypto.tradeCrypto.selectedCryptoId && !!sessionStorage.getItem(SESSION_STORAGE_KEYS.SESSION_ID) && !!matchRoute({ to: ROUTES.TRADE_CRYPTO }), // Only run this query if selectedCryptoId and userId are available
+    enabled: !!(store.getState() as RootState).crypto.tradeCrypto.selectedCryptoId && !!sessionStorage.getItem(SESSION_STORAGE_KEYS.SESSION_ID) && !!matchRoute({ to: ROUTES.TRADE_CRYPTO }) && !isBuyTransaction, // Disable for buy transactions - only run for sell transactions
     refetchInterval: 2000, // refetch every 2 seconds to get real-time updates
   });
   
@@ -97,7 +99,6 @@ export const useCryptoQuery = () => {
   const createUserCryptoWalletMutation = useMutation({
     mutationKey: [QUERY_KEYS.CRYPTO.USER_CREATE_CRYPTO_WALLET],
     mutationFn: async () => {
-      toast.loading("Creating crypto wallet...", { toastId: QUERY_KEYS.CRYPTO.USER_CREATE_CRYPTO_WALLET });
       const rootState = store.getState() as RootState;
       const createCryptoPayload = rootState.crypto.tradeCrypto.userCreateCrypto;
       const userEmail = rootState.user.trade.anonymous.email;
@@ -117,9 +118,8 @@ export const useCryptoQuery = () => {
       return cryptoServiceApi.userCreateCryptoWallet(rootState.crypto.tradeCrypto.selectedCryptoId, createCryptoPayload);
     },
     onSuccess: ( { success, message }) => {
-      toast.dismiss();
       if (success) {
-        toast.success(message);
+        // No success message - silently proceed
         queryClient.invalidateQueries({
           queryKey: [QUERY_KEYS.CRYPTO.GET_USER_ALL_CRYPTO_WALLETS, QUERY_KEYS.CRYPTO.GET_USER_CRYPTO_WALLETS]
         });
@@ -128,7 +128,6 @@ export const useCryptoQuery = () => {
       }
     },
     onError: ( error: AxiosServerError ) => {
-      toast.dismiss();
       const message = extractErrorMessage(error) || 'Failed to create crypto wallet. Please try again."'
       toast.error(message);
     },

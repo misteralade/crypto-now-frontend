@@ -199,6 +199,8 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   useEffect(() => {
     const saved = loadTradeProgress();
     if (!saved) {
+      // If there's no saved progress, reset locked state (new transaction)
+      setIsCountdownLocked(false);
       hydratedRef.current = true;
       return;
     }
@@ -1116,6 +1118,18 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       dispatch(clearAnonymousUserEmail());
     }
   }, [currentStep, dispatch]);
+
+  // Reset countdown locked state when starting a new transaction (step 1 with no saved progress)
+  useEffect(() => {
+    if (currentStep === 1) {
+      const saved = loadTradeProgress();
+      // If we're on step 1 and there's no saved progress (or saved step is 1), reset locked state
+      if (!saved || saved.step === 1) {
+        setIsCountdownLocked(false);
+        setCountdown("");
+      }
+    }
+  }, [currentStep]);
 
   // Restore amounts to transaction form after restoration
   // This should run even when countdown is locked to ensure amounts are set correctly

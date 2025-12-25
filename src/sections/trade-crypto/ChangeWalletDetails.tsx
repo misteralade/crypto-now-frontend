@@ -1,9 +1,8 @@
-import {Fragment, useState} from "react"
+import {useState} from "react"
 import { useDispatch } from "react-redux"
 import { CustomInput } from "../../components/global/CustomInput.tsx"
 import { CustomSelect } from "../../components/global/CustomSelect.tsx"
 import { setUserCreateCrypto } from "../../redux/crypto.slice.ts"
-import {type RootState, store} from "../../store.ts";
 import {cryptoNetworkTypes} from "../../util/constants.util.ts";
 import { walletAddressRegex } from "../../util/regex.util.ts";
 
@@ -25,14 +24,10 @@ interface CryptoWalletDetailsProps {
 
 const ChangeCryptoWalletDetails = ({ onConfirm, onGoBack, canGoBack = true }: CryptoWalletDetailsProps) => {
   const dispatch = useDispatch()
-  const rootState = store.getState() as RootState;
-  const userEmail = rootState.user.trade.anonymous.email;
 
-  const [walletLabel, setWalletLabel] = useState("")
   const [walletAddress, setWalletAddress] = useState("")
   const [walletAddressError, setWalletAddressError] = useState("")
   const [network, setNetwork] = useState("")
-  const [isPrimary, setIsPrimary] = useState(false)
   const [isVerified, setIsVerified] = useState(false)
 
   const validateWalletAddress = (address: string) => {
@@ -68,14 +63,13 @@ const ChangeCryptoWalletDetails = ({ onConfirm, onGoBack, canGoBack = true }: Cr
   }
 
   const handleConfirm = () => {
-    if (walletLabel && walletAddress && network && validateWalletAddress(walletAddress)) {
+    if (walletAddress && network && validateWalletAddress(walletAddress)) {
       dispatch(
         setUserCreateCrypto({
-          walletLabel,
           walletAddress: walletAddress.trim(),
           network,
-          isPrimary,
           isVerified,
+          isPrimary: false,
         })
       )
 
@@ -83,20 +77,13 @@ const ChangeCryptoWalletDetails = ({ onConfirm, onGoBack, canGoBack = true }: Cr
     }
   }
 
-  const isFormValid = walletLabel && walletAddress && network && !walletAddressError
+  const isFormValid = walletAddress && network && !walletAddressError && isVerified
 
   return (
     <div className="space-y-10">
       <h2 className="text-xl font-semibold text-center">Wallet details</h2>
 
       <div className="space-y-7">
-        <CustomInput
-          label="Wallet Nickname"
-          placeholder="e.g My USDT Wallet"
-          value={walletLabel}
-          onChange={(e) => setWalletLabel(e.target.value)}
-        />
-
         <CustomInput
           label="Wallet address"
           placeholder="0x0000000000000000000000000000000000000000"
@@ -115,33 +102,17 @@ const ChangeCryptoWalletDetails = ({ onConfirm, onGoBack, canGoBack = true }: Cr
           onValueChange={setNetwork}
         />
         
-        {!userEmail && (
-          <Fragment>
-            <div className="flex items-center space-x-3">
-              <input
-                type="checkbox"
-                checked={isPrimary}
-                onChange={(e) => setIsPrimary(e.target.checked)}
-                className="h-4 w-4 text-primary border-gray-300 rounded"
-              />
-              <label className="text-sm font-medium text-gray-700">
-                Make this my primary wallet
-              </label>
-            </div>
-            
-            <div className="flex items-center space-x-3">
-              <input
-                type="checkbox"
-                checked={isVerified}
-                onChange={(e) => setIsVerified(e.target.checked)}
-                className="h-4 w-4 text-primary border-gray-300 rounded"
-              />
-              <label className="text-sm font-medium text-gray-700">
-                I confirm I own this wallet
-              </label>
-            </div>
-          </Fragment>
-        )}
+        <div className="flex items-center space-x-3">
+          <input
+            type="checkbox"
+            checked={isVerified}
+            onChange={(e) => setIsVerified(e.target.checked)}
+            className="h-4 w-4 text-primary border-gray-300 rounded"
+          />
+          <label className="text-sm font-medium text-gray-700">
+            I confirm I own this wallet
+          </label>
+        </div>
       </div>
 
       {/* Action Buttons */}
