@@ -26,7 +26,7 @@ const ProfileNav = () => {
             userProfileData?.profile?.firstName &&
             userProfileData?.profile.firstName}
         </h2>
-        <div className={`w-12 h-12 flex items-center justify-center rounded-full p-1`}>
+        <div className={`w-10 h-10 flex items-center justify-center rounded-full p-1 bg-[#15165A]`}>
           <img 
             src={userProfileData?.profile?.profileImg || Logo} 
             alt="Profile" 
