@@ -305,13 +305,20 @@ export const useTransactionQuery = () => {
       const message = rootState.transaction.dispute.details.message.text;
       const attachments = rootState.transaction.dispute.details.message.attachments;
       const disputeId = rootState.transaction.dispute.details.id;
+
+
+      console.log({
+        message,
+        disputeId,
+        attachments,
+      })
       
-      if (!disputeId || !message) {
-        throw new Error("Dispute ID and message are required to send a dispute message.");
+      if (!disputeId) {
+        throw new Error("Dispute ID is required to send a dispute message.");
       }
       
       toast.loading(`Sending message...`, { toastId: QUERY_KEYS.DISPUTE.USER_SEND_DISPUTE_MESSAGE });
-      return await disputeServiceApi.sendDisputeMessage(disputeId, message, attachments as Array<MessageAttachment>);
+      return await disputeServiceApi.sendDisputeMessage(disputeId, message || '', attachments as Array<MessageAttachment>);
     },
     onSuccess: ({ message }) => {
       toast.dismiss(QUERY_KEYS.DISPUTE.USER_SEND_DISPUTE_MESSAGE);
