@@ -1,5 +1,5 @@
 import type { TradeType } from "../../../types/trade.types.ts";
-import WalletDetails from "../WalletDetails.tsx";
+// import WalletDetails from "../WalletDetails.tsx";
 import CustomButton from "../../../components/global/Button.tsx";
 import ChangeBankDetails from "../ChangeBankDetails.tsx";
 import ChangeWalletDetails from "../ChangeWalletDetails.tsx";
@@ -24,18 +24,18 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, cryptoAccou
     // Values
     selectedBankId,
     selectedBank,
-    selectedWalletId,
-    selectedWallet,
+    // selectedWalletId,
+    // selectedWallet,
     viewState,
 
     // Functions
     handleBankSelection,
     setViewState,
-    handleWalletSelection,
+    // handleWalletSelection,
     handleSubmitBankDetails,
     handleSubmitWalletDetails,
     handleViewSelectedBankDetails,
-    handleViewSelectedWalletDetails,
+    // handleViewSelectedWalletDetails,
     handleProceed,
   } = useConfirmBankDetailsModal(cryptoAccounts, bankAccounts, tradeType, onProceed, setShowConfirmBankDetails);
   
@@ -186,94 +186,94 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, cryptoAccou
     </div>
   );
 
-  const renderWalletList = () => (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-center mb-4">Select Wallet</h3>
+  // const renderWalletList = () => (
+  //   <div className="space-y-4">
+  //     <h3 className="text-lg font-semibold text-center mb-4">Select Wallet</h3>
       
-      <div className="space-y-3 max-h-60 overflow-y-auto">
-        {cryptoAccounts && cryptoAccounts.length > 0 && cryptoAccounts.map((wallet) => (
-          <div
-            key={wallet.id}
-            onClick={() => handleWalletSelection(wallet.id)}
-            className={`p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
-              selectedWalletId === wallet.id
-                ? "border-blue-500 bg-blue-50 shadow-md"
-                : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex flex-col">
-                <h4 className="text-sm font-semibold text-gray-900 truncate">
-                  {wallet.network}
-                </h4>
-                <p className="text-xs text-gray-600 font-mono">
-                  {wallet.walletAddress}
-                </p>
-                {wallet.walletLabel && (
-                  <p className="text-xs text-gray-500">
-                    {wallet.walletLabel}
-                  </p>
-                )}
-              </div>
-              {selectedWalletId === wallet.id && (
-                <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                  <svg
-                    className="w-3 h-3 text-white"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
+  //     <div className="space-y-3 max-h-60 overflow-y-auto">
+  //       {cryptoAccounts && cryptoAccounts.length > 0 && cryptoAccounts.map((wallet) => (
+  //         <div
+  //           key={wallet.id}
+  //           onClick={() => handleWalletSelection(wallet.id)}
+  //           className={`p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
+  //             selectedWalletId === wallet.id
+  //               ? "border-blue-500 bg-blue-50 shadow-md"
+  //               : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50"
+  //           }`}
+  //         >
+  //           <div className="flex items-center justify-between">
+  //             <div className="flex flex-col">
+  //               <h4 className="text-sm font-semibold text-gray-900 truncate">
+  //                 {wallet.network}
+  //               </h4>
+  //               <p className="text-xs text-gray-600 font-mono">
+  //                 {wallet.walletAddress}
+  //               </p>
+  //               {wallet.walletLabel && (
+  //                 <p className="text-xs text-gray-500">
+  //                   {wallet.walletLabel}
+  //                 </p>
+  //               )}
+  //             </div>
+  //             {selectedWalletId === wallet.id && (
+  //               <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+  //                 <svg
+  //                   className="w-3 h-3 text-white"
+  //                   fill="currentColor"
+  //                   viewBox="0 0 20 20"
+  //                 >
+  //                   <path
+  //                     fillRule="evenodd"
+  //                     d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+  //                     clipRule="evenodd"
+  //                   />
+  //                 </svg>
+  //               </div>
+  //             )}
+  //           </div>
+  //         </div>
+  //       ))}
+  //     </div>
       
-      {/*Proceed to confirm bank details button*/}
-      {selectedWallet && (
-        <div className="mt-3">
-          <CustomButton
-            buttonText="View Details & Proceed"
-            onClick={handleViewSelectedWalletDetails}
-            className="w-full h-12 text-xs sm:text-sm whitespace-normal break-words px-2"
-          />
-        </div>
-      )}
+  //     {/*Proceed to confirm bank details button*/}
+  //     {selectedWallet && (
+  //       <div className="mt-3">
+  //         <CustomButton
+  //           buttonText="View Details & Proceed"
+  //           onClick={handleViewSelectedWalletDetails}
+  //           className="w-full h-12 text-xs sm:text-sm whitespace-normal break-words px-2"
+  //         />
+  //       </div>
+  //     )}
       
-      <button
-        onClick={() => setViewState("create-wallet")}
-        className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-400 hover:text-blue-600 transition-colors duration-200 flex items-center justify-center space-x-2"
-      >
-        <svg
-          className="w-5 h-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 4v16m8-8H4"
-          />
-        </svg>
-        <span>Add New Wallet</span>
-      </button>
-    </div>
-  );
+  //     <button
+  //       onClick={() => setViewState("create-wallet")}
+  //       className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-400 hover:text-blue-600 transition-colors duration-200 flex items-center justify-center space-x-2"
+  //     >
+  //       <svg
+  //         className="w-5 h-5"
+  //         fill="none"
+  //         stroke="currentColor"
+  //         viewBox="0 0 24 24"
+  //       >
+  //         <path
+  //           strokeLinecap="round"
+  //           strokeLinejoin="round"
+  //           strokeWidth={2}
+  //           d="M12 4v16m8-8H4"
+  //         />
+  //       </svg>
+  //       <span>Add New Wallet</span>
+  //     </button>
+  //   </div>
+  // );
 
-  const renderWalletDetails = () => (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-center mb-4">Wallet Details</h3>
-      {selectedWallet && <WalletDetails walletData={selectedWallet} />}
-    </div>
-  );
+  // const renderWalletDetails = () => (
+  //   <div className="space-y-4">
+  //     <h3 className="text-lg font-semibold text-center mb-4">Wallet Details</h3>
+  //     {selectedWallet && <WalletDetails walletData={selectedWallet} />}
+  //   </div>
+  // );
 
   const renderContent = () => {
     if (tradeType === "sell") {

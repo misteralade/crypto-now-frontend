@@ -16,7 +16,7 @@ export const useTransactionDetailsPage = () => {
   
   const [disputeCountdown, setDisputeCountdown] = useState<string>("");
   const [canDispute, setCanDispute] = useState<boolean>(false);
-  const countdownIntervalRef = useRef<number | null>(null);
+  const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   
   const { id } = useParams({ from: '/dashboard/transactions/$id' })
   
