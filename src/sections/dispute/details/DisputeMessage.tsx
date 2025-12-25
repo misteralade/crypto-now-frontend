@@ -36,11 +36,48 @@ const DisputeMessage = ({ loading, messages, sendMessageMutation }: DisputeMessa
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
   const [uploadedAttachments, setUploadedAttachments] = useState<MessageAttachment[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const lastActivityTimeRef = useRef<number>(Date.now());
   
-  // Scroll to bottom of messages
+  // Track user activity (mouse movement, scroll, and touch events)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const messagesContainer = messagesContainerRef.current;
+    if (!messagesContainer) return;
+
+    const handleActivity = () => {
+      lastActivityTimeRef.current = Date.now();
+    };
+
+    // Listen for mouse movement
+    messagesContainer.addEventListener('mousemove', handleActivity, { passive: true });
+    // Listen for mouse wheel scroll
+    messagesContainer.addEventListener('wheel', handleActivity, { passive: true });
+    // Listen for touch scroll (mobile)
+    messagesContainer.addEventListener('touchmove', handleActivity, { passive: true });
+    // Listen for scroll events (covers all scroll types)
+    messagesContainer.addEventListener('scroll', handleActivity, { passive: true });
+
+    return () => {
+      messagesContainer.removeEventListener('mousemove', handleActivity);
+      messagesContainer.removeEventListener('wheel', handleActivity);
+      messagesContainer.removeEventListener('touchmove', handleActivity);
+      messagesContainer.removeEventListener('scroll', handleActivity);
+    };
+  }, []);
+
+  // Auto-scroll to bottom only if user has been idle for 120 seconds
+  useEffect(() => {
+    // Only check when messages change (new message arrives)
+    if (messages.length === 0) return;
+
+    const timeSinceLastActivity = Date.now() - lastActivityTimeRef.current;
+    const IDLE_TIME_MS = 120 * 1000; // 120 seconds
+
+    // Only auto-scroll if user has been inactive for 120 seconds
+    if (timeSinceLastActivity >= IDLE_TIME_MS) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [messages]);
   
   // Get image dimensions
@@ -240,7 +277,7 @@ const DisputeMessage = ({ loading, messages, sendMessageMutation }: DisputeMessa
           </div>
           
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.length === 0 ? (
               <div className="text-center py-12">
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
