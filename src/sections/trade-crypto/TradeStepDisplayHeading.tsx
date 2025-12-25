@@ -28,7 +28,7 @@ const TradeStepDisplayHeading = ({ step, activeTab, setStep, setActiveTab, sessi
 
   const handleCancel = () => {
     clearTradeProgress();
-    setStep(1); // reset step
+    window.location.reload();
     setActiveTab("buy"); // optional: always reset tab to buy
   };
 
