@@ -75,10 +75,11 @@ const TransactionTable = ({ transactions, isLoading, totalPages, currentPage, pa
           <table className="w-full">
             <thead className="bg-muted/50">
             <tr>
-              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Transaction ID</th>
+              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Session ID</th>
               <th className="text-left p-4 text-sm font-medium text-muted-foreground">Date</th>
               <th className="text-left p-4 text-sm font-medium text-muted-foreground">Type</th>
-              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Amount</th>
+              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Amount (Crypto)</th>
+              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Amount (USD)</th>
               <th className="text-left p-4 text-sm font-medium text-muted-foreground">Rate</th>
               <th className="text-left p-4 text-sm font-medium text-muted-foreground">Status</th>
               <th className="text-left p-4 text-sm font-medium text-muted-foreground">Action</th>

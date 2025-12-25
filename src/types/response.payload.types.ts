@@ -228,6 +228,7 @@ export type TransactionResponseEntity = {
   exchangeRateId: string;
   type: TradeType;
   amountCrypto: string;
+  amountFiatNGN: string;
   amountFiat: string;
   cryptoToStableRate: string;
   stableToFiatRate: string;
@@ -251,6 +252,7 @@ export type TransactionResponseEntity = {
   createdAt: Date;
   updatedAt: Date;
   cryptocurrency: CryptoCurrencyResponseEntity;
+  dispute: DisputeDetailsResponse;
   user: UserResponseEntity;
   exchangeRate: ExchangeRateResponseEntity;
   userBankAccount: UserBankAccountResponseEntity | null;

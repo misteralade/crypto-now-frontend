@@ -8,9 +8,10 @@ interface TradeCryptoLayoutProps {
     option: TradeType;
     currency: string;
     token: string;
+    sessionId?: string;
 }
 
-export default function TradeCryptoLayout({ currency, token, option }: TradeCryptoLayoutProps) {
+export default function TradeCryptoLayout({ currency, token, option, sessionId }: TradeCryptoLayoutProps) {
     const [step, setStep] = useState<number>(1)
     const [activeTab, setActiveTab] = useState<TradeType>(option);
 
@@ -41,6 +42,7 @@ export default function TradeCryptoLayout({ currency, token, option }: TradeCryp
                                 setStep={setStep}
                                 activeTab={activeTab}
                                 setActiveTab={setActiveTab}
+                                sessionId={sessionId}
                             />
                         </div>
                     </>

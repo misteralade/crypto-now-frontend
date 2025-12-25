@@ -6,19 +6,25 @@ interface TradeStepDisplayHeadingProps {
   activeTab: TradeType;
   setActiveTab: (activeTab: TradeType) => void;
   setStep: (step: number) => void;
+  sessionId?: string;
 }
 
-export default function TradeStepDisplayHeading({
-  step,
-  activeTab,
-  setStep,
-  setActiveTab,
-}: TradeStepDisplayHeadingProps) {
-  const desc =
-    step === 2
-      ? `To process your order, make payment to the account details provided below.
-     After making payment, please upload your payment receipt for quicker processing`
-      : `Your order is been processed. You’ll get notified when we make your payment into your account via email.`;
+const TradeStepDisplayHeading = ({ step, activeTab, setStep, setActiveTab, sessionId }: TradeStepDisplayHeadingProps) => {
+  const isContinuingTransaction = !!sessionId;
+  const description = (): string => {
+    if (step === 2) {
+      switch (activeTab) {
+        case "buy":
+          return "To process order make payment to the bank account details provided below, please upload your payment Receipt for quicker processing.\n\nImportant Notice for buy crypto, pls note the network fee will be deducted from the crypto purchases: we do not cover the fee."
+        case "sell":
+          return "To process your order, send crypto to the wallet address provided, after sending crypto, please upload your proof for quicker processing."
+        default:
+          return ""
+      }
+    } else {
+      return `Your order is being processed. You’ll get notified when we make ${activeTab === "buy" ? "crypto deposit" : "payment"} into ${activeTab === "buy" ? "your wallet" : "your account"} via email.`
+    }
+  }
 
   const handleCancel = () => {
     clearTradeProgress();
@@ -57,18 +63,29 @@ export default function TradeStepDisplayHeading({
               </button>
             </div>
           </div>
-        ) : (
+        ) : step === 3 ? (
           <button
             onClick={handleCancel}
-            className={`text-red hover:underline cursor-pointer`}
+            className={`text-accent1 hover:text-accent1/80 font-semibold hover:underline cursor-pointer transition-colors`}
           >
-            Cancel order
+            New Transaction
           </button>
+        ) : (
+          !isContinuingTransaction && (
+            <button
+              onClick={handleCancel}
+              className={`text-red hover:underline cursor-pointer`}
+            >
+              Cancel order
+            </button>
+          )
         )}
       </div>
 
       {/*description*/}
-      {step > 1 && <p className="mt-4 mb-5">{desc}</p>}
+      {step > 1 && <p className="mt-4 mb-5 whitespace-pre-line">{description()}</p>}
     </div>
   );
 }
+
+export default TradeStepDisplayHeading;

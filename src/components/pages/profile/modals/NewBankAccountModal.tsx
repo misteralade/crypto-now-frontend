@@ -1,9 +1,10 @@
-import {Fragment, useEffect, useState} from "react";
+import {Fragment, useEffect} from "react";
 import {AlertCircle, X} from "lucide-react";
 import type {AllBanksResponse} from "../../../../types/response.payload.types.ts";
 import type {CreateBankAccountRequestPayload} from "../../../../types/request.payload.types.ts";
 import BankSelector from "../../../global/BankSelector.tsx";
 import { CustomInput } from "../../../global/CustomInput.tsx";
+import { Form, Formik } from "formik";
 
 interface NewBankAccountModalProps {
   isOpen: boolean;
@@ -15,9 +16,6 @@ interface NewBankAccountModalProps {
 }
 
 const NewBankAccountModal = ({ isOpen, banks, selectedBankId, onClose, onSubmit, handleChangeField }: NewBankAccountModalProps) => {
-  const [accountName, setAccountName] = useState('');
-  const [accountNumber, setAccountNumber] = useState('');
-  
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden"
@@ -30,9 +28,15 @@ const NewBankAccountModal = ({ isOpen, banks, selectedBankId, onClose, onSubmit,
   }, [isOpen])
 
   const handleSubmit = () => {
-    setAccountNumber('');
-    setAccountName('');
+    console.log("Selected Bank: ", selectedBankId);
     onSubmit();
+  }
+
+  const iniitalState = {
+    bankId: null,
+    accountName: null,
+    accountNumber: null,
+    isDefault: true,
   }
   
   if (!isOpen) return null
@@ -67,68 +71,104 @@ const NewBankAccountModal = ({ isOpen, banks, selectedBankId, onClose, onSubmit,
               </div>
             </div>
             
-            <div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                <BankSelector
-                  label="Select Bank"
-                  options={banks}
-                  value={selectedBankId}
-                  onValueChange={(value) => {
-                    handleChangeField("bankId", value)
-                  }}
-                />
-                
-                <CustomInput
-                  label="Account Holder name"
-                  type="text"
-                  value={accountName}
-                  onChange={(e) => {
-                    handleChangeField("accountName", e.target.value)
-                    setAccountName(e.target.value)
-                  }}
-                />
-                
-                <CustomInput
-                  label="Account number"
-                  type="text"
-                  value={accountNumber}
-                  onChange={(e) => {
-                    setAccountNumber(e.target.value)
-                    handleChangeField("accountNumber", e.target.value)
-                  }}
-                />
-                
-                <div className="flex items-center gap-3">
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      id="isActive"
-                      type="checkbox"
-                      className="sr-only peer"
-                      onChange={(e) => handleChangeField("isDefault", e.target.checked)}
-                      defaultChecked={false}
-                    />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-3 peer-focus:ring-gray-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#7c7c97] peer-checked:after:bg-[#03034D]"></div>
-                  </label>
-                  <span className="text-[16px] font-semibold text-[#454745]">Default Bank</span>
-                </div>
-              </div>
-            </div>
-            
-            {/* Action Buttons */}
-            <div className="flex gap-4 pt-4">
-              <button
-                onClick={onClose}
-                className="flex-1 h-12 rounded-full text-gray-700 font-semibold text-base hover:bg-gray-100 transition-colors hover:cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSubmit}
-                className="flex-1 h-12 rounded-full font-semibold text-base bg-[#1a1f5c] transition-colors text-white disabled:bg-gray-300 disabled:text-gray-500 hover:bg-[#151842] hover:cursor-pointer"
-              >
-                Confirm
-              </button>
-            </div>
+            <Formik initialValues={iniitalState} onSubmit={handleSubmit}>
+              {({ values, handleChange, handleBlur, touched, errors, isValid, isSubmitting }) => (
+                <Form>
+                  <div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                      <div className="flex flex-col gap-2">
+                        <BankSelector
+                          label="Select Bank"
+                          options={banks}
+                          value={values.bankId as unknown as string}
+                          onValueChange={(value) => {
+                            handleChange("bankId")(value)
+                            handleChangeField("bankId", value)
+                          }}
+                        />
+                        {touched.bankId && errors.bankId && (
+                          <p className="text-red-500 text-xs mt-1">{errors.bankId}</p>
+                        )}
+                      </div>
+                      
+                      <div className="flex flex-col gap-2">
+                        <CustomInput
+                            label="Account Holder name"
+                            type="text"
+                            value={values.accountName as unknown as string}
+                            onChange={(e) => {
+                              handleChange("accountName")(e.target.value)
+                              handleChangeField("accountName", e.target.value)
+                            }}
+                            onBlur={handleBlur("accountName")}
+                          />
+
+                        {touched.accountName && errors.accountName && (
+                          <p className="text-red-500 text-xs mt-1">{errors.accountName}</p>
+                        )}
+                      </div>
+                      
+                      <div className="flex flex-col gap-2">
+                        <CustomInput
+                          label="Account number"
+                          type="text"
+                          value={values.accountNumber as unknown as string}
+                          onChange={(e) => {
+                            handleChange("accountNumber")(e.target.value)
+                            handleChangeField("accountNumber", e.target.value)
+                          }}
+                          onBlur={handleBlur("accountNumber")}
+                        />
+
+                        {touched.accountNumber && errors.accountNumber && (
+                          <p className="text-red-500 text-xs mt-1">{errors.accountNumber}</p>
+                        )}
+                      </div>
+                      
+                      <div className="flex flex-col items-start justify-center gap-2">
+                        <div className="flex items-center gap-3">
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              id="isActive"
+                              type="checkbox"
+                              className="sr-only peer"
+                              onChange={(e) => {
+                                handleChangeField("isDefault", e.target.checked)
+                                handleChange("isDefault")(e.target.checked as unknown as string)
+                              }}
+                              onBlur={handleBlur("isDefault")}
+                              defaultChecked={values.isDefault as unknown as boolean}
+                            />
+                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-3 peer-focus:ring-gray-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#7c7c97] peer-checked:after:bg-[#03034D]"></div>
+                          </label>
+                          <span className="text-[16px] font-semibold text-[#454745]">Default Bank</span>
+                        </div>
+
+                        {touched.isDefault && errors.isDefault && (
+                          <p className="text-red-500 text-xs mt-1">{errors.isDefault}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Action Buttons */}
+                  <div className="flex gap-4 pt-4">
+                    <button
+                      onClick={onClose}
+                      className="flex-1 h-12 rounded-full text-gray-700 font-semibold text-base hover:bg-gray-100 transition-colors hover:cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      disabled={!isValid || isSubmitting}
+                      className="flex-1 h-12 rounded-full font-semibold text-base bg-[#1a1f5c] transition-colors text-white disabled:bg-gray-300 disabled:text-gray-500 hover:bg-[#151842] hover:cursor-pointer"
+                    >
+                      Confirm
+                    </button>
+                  </div>
+                </Form>
+              )}
+            </Formik>
           </div>
         </div>
       </div>

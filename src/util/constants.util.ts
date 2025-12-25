@@ -28,6 +28,7 @@ export const ROUTES = {
   PRIVACY_POLICY: "/privacy-policy",
   AML_POLICY: "aml-policy",
   RATES: "/rates",
+  SECURITY_POLICY: "/security-policy",
   
   SOCIALS: {
     FACEBOOK: "https://www.facebook.com/share/1DhKLD85Ho/",
@@ -36,7 +37,7 @@ export const ROUTES = {
     TWITTER: "https://x.com/cryptonownaija?t=wQ23QgGSUyB9YH5fPFXrBw&s=09",
     WHATSAPP: "https://wa.me/message/FASHZ7NI2RSJA1"
   },
-  IN_PAGE_ROUTES: {
+  HOMEPAGE_TAG_IDS: {
     FAQ: "faq",
     HOW_IT_WORKS: "how-it-works",
   }
@@ -47,7 +48,9 @@ export const QUERY_KEYS = {
 }
 
 export const SESSION_STORAGE_KEYS = {
-  SESSION_ID: "transactionSessionId"
+  SESSION_ID: "transactionSessionId",
+  YOU_PAY_VALUE: "youPayValue",
+  YOU_RECEIVE_VALUE: "youReceiveValue"
 }
 
 export const LOCAL_STORAGE_KEYS = {

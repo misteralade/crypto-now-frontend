@@ -3,7 +3,7 @@ import { ArrowUpDown } from 'lucide-react';
 import TradeFormInput from '../TradeFormInput.tsx'
 import CustomButton from "../../../components/global/Button.tsx";
 import type {TradeType, TradeAdditionalInfoInterface} from "../../../types/trade.types.ts";
-import {useState, type FormEvent} from "react";
+import {useState, useEffect, type FormEvent} from "react";
 import TradeInputDropdown from "../TradeInputDropdown.tsx";
 import TradeAdditionalInfo from "../TradeAdditionalInfo.tsx";
 import type {SupportedCryptoOrCurrencyResponse} from "../../../types/response.payload.types.ts";
@@ -31,14 +31,21 @@ interface TradeStepOneProps {
   handleFocusAmountToBuy: () => void;
   handleBlurNumberOfToken: () => void;
   handleBlurAmountToBuy: () => void;
+  anonymousUserEmail?: string;
+  onChangeEmail?: () => void;
 }
 
-const TradeStepOne = ({ setAmountToBuy, isInitiatingTrade, numberOfToken, setNumberOfToken, amountToBuy,selectedCurrency, setSelectedCurrency, setSelectedToken,selectedToken, tradeType, handleProceedToPayment, orderDetails, availableCurrencies, availableTokens, handleFocusNumberOfToken, handleFocusAmountToBuy, handleBlurNumberOfToken, handleBlurAmountToBuy }: TradeStepOneProps) => {
+const TradeStepOne = ({ setAmountToBuy, isInitiatingTrade, numberOfToken, setNumberOfToken, amountToBuy,selectedCurrency, setSelectedCurrency, setSelectedToken,selectedToken, tradeType, handleProceedToPayment, orderDetails, availableCurrencies, availableTokens, handleFocusNumberOfToken, handleFocusAmountToBuy, handleBlurNumberOfToken, handleBlurAmountToBuy, anonymousUserEmail, onChangeEmail }: TradeStepOneProps) => {
   const dispatch = useDispatch();
 
-  const [switchAmountInputsSetup, setSwitchAmountInputsSetup] = useState<boolean>(false);
+  const [switchAmountInputsSetup, setSwitchAmountInputsSetup] = useState<boolean>(true);
 
   const toggleAmountInputsSetup = () => setSwitchAmountInputsSetup(!switchAmountInputsSetup);
+  
+  // Reset to show "Enter amount" first whenever trade type changes
+  useEffect(() => {
+    setSwitchAmountInputsSetup(true);
+  }, [tradeType]);
   
   const submitInvalid = numberOfToken === "" || amountToBuy === "";
   const handleSubmit = (e: FormEvent) => {
@@ -125,6 +132,24 @@ const TradeStepOne = ({ setAmountToBuy, isInitiatingTrade, numberOfToken, setNum
         {/*Additional Info*/}
         <TradeAdditionalInfo heading={"Order details"} additionalInfo={orderDetails} />
       </div>
+      
+      {/* Anonymous User Email Notification */}
+      {anonymousUserEmail && onChangeEmail && (
+        <div className="space-y-3 px-5 md:px-0">
+          <div className="text-sm text-[#667085] text-center md:text-left">
+            You will receive transaction notifications at <span className="font-semibold text-[#03034D]">{anonymousUserEmail}</span>
+          </div>
+          <div className="flex justify-center md:justify-start">
+            <button
+              type="button"
+              onClick={onChangeEmail}
+              className="text-sm text-[#03034D] font-semibold hover:text-[#FF8B5A] underline transition-colors px-2 py-1"
+            >
+              Change email
+            </button>
+          </div>
+        </div>
+      )}
       
       <div className={`md:w-1/2 w-full mx-auto px-5 md:px-0`}>
         <CustomButton

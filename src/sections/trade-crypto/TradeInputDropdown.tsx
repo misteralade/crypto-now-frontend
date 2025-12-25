@@ -26,20 +26,20 @@ export default function TradeInputDropdown({ currentValue, setCurrentValue, item
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 type={`button`}
-                className="flex cursor-pointer items-center gap-3 px-2 border-2 border-placeholder rounded-full transition-colors min-w-[120px]"
+                className={`flex cursor-pointer items-center gap-2 md:gap-3 py-2 px-3 md:px-4 border-2 border-placeholder rounded-full transition-colors ${isOpen ? 'min-w-[120px]' : 'min-w-[70px] md:min-w-[120px]'}`}
             >
-                <img src={currentValue?.logoUrl} alt={currentValue?.logoUrl} width={20} height={20}/>
-                <span className="font-medium text-black text-lg">{currentValue?.name}</span>
+                <img src={currentValue?.logoUrl} alt={currentValue?.logoUrl} width={20} height={20} className="flex-shrink-0"/>
+                <span className={`font-medium text-black text-lg ${isOpen ? 'inline' : 'hidden md:inline'}`}>{currentValue?.name}</span>
                 {!isOpen ? (
-                    <ChevronDown className="w-12 h-12 text-gray-600 ml-auto" />
+                    <ChevronDown className="w-5 h-5 md:w-6 md:h-6 text-gray-600 ml-auto flex-shrink-0" />
                 ) : (
-                    <ChevronUp className="w-12 h-12 text-gray-600 ml-auto" />
+                    <ChevronUp className="w-5 h-5 md:w-6 md:h-6 text-gray-600 ml-auto flex-shrink-0" />
                 )}
             </button>
 
             {/* Dropdown Menu */}
             {isOpen && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-greyBg rounded-2xl shadow-lg overflow-y-scroll z-10">
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-greyBg rounded-2xl shadow-lg overflow-y-scroll z-50">
                     {items.map((item, index) => (
                         <button
                             type={`button`}

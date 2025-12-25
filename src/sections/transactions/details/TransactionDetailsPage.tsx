@@ -3,7 +3,7 @@ import Navbar from "../../../components/global/navbar/Navbar.tsx";
 import {useTransactionDetailsPage} from "../../../hooks/pages/useTransactionDetailsPage.ts";
 import {LoadingSpinner} from "../../../components/global/LoadingSpinner.tsx";
 import {TransactionStatus} from "../../../hooks/components/transaction/TransactionStatusIcon.tsx";
-import {transactionStatusMessages, transactionStatusStyles} from "../../../util/constants.util.ts";
+import {ROUTES, transactionStatusMessages, transactionStatusStyles} from "../../../util/constants.util.ts";
 import { formatNumber } from "../../../util/index.util.ts";
 import {AlertTriangle, CheckCircle, Clock, Copy} from "lucide-react";
 import momentClient from "../../../lib/moment.ts";
@@ -23,7 +23,6 @@ const TransactionDetailsPage = () => {
     toggleDisputeTransaction,
     copyToClipboard,
     handleSubmitDispute,
-    openDisputeMailTo,
   } = useTransactionDetailsPage();
 
   const transactionColorScheme = transactionStatusStyles[transaction?.status as keyof typeof transactionStatusStyles];
@@ -358,7 +357,7 @@ const TransactionDetailsPage = () => {
                     </p>
                     <button
                       className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-md transition-colors hover:cursor-pointer"
-                      onClick={openDisputeMailTo}
+                      onClick={() => window.open(ROUTES.CONTACT, '_blank')}
                     >
                       Contact Support
                     </button>

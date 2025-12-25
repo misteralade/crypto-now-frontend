@@ -10,10 +10,12 @@ export const CustomInput = ({ label, error, className = "", id, ...props }: Cust
   const finalId = id || inputId
   const [isFocused, setIsFocused] = useState(false)
 
-  // Check if label should be floating (focused, has value, or has placeholder being shown)
+  // Check if label should be floating (focused, has value, has defaultValue, or has placeholder)
   const hasValue = props.value !== undefined && props.value !== null && String(props.value).length > 0
   const hasDefaultValue = props.defaultValue !== undefined && props.defaultValue !== null && String(props.defaultValue).length > 0
-  const isLabelFloating = isFocused || hasValue || hasDefaultValue
+  const hasPlaceholder = props.placeholder !== undefined && props.placeholder !== null && String(props.placeholder).length > 0
+  // Always float the label if there's a placeholder, value, or when focused to prevent overlap
+  const isLabelFloating = isFocused || hasValue || hasDefaultValue || hasPlaceholder
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
     setIsFocused(true)
@@ -28,12 +30,12 @@ export const CustomInput = ({ label, error, className = "", id, ...props }: Cust
   return (
     <div className="space-y-2">
       <div className="relative">
-        {/* Floating Label */}
+        {/* Floating Label - Always visible at top when placeholder exists or when there's a value/focus */}
         <label
           htmlFor={finalId}
-          className={`absolute left-4 px-2 font-medium transition-all duration-200 pointer-events-none
+          className={`absolute left-4 px-2 font-medium transition-all duration-200 pointer-events-none z-10
                         ${isLabelFloating
-            ? '-top-0.5 text-xs bg-white z-10 text-gray-600'
+            ? '-top-0.5 text-xs bg-white text-gray-600'
             : 'top-1/2 -translate-y-1/2 text-sm text-gray-400'
           }
                         ${error ? 'text-red-500' : ''}

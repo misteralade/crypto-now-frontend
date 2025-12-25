@@ -11,9 +11,10 @@ interface PersonalInfoSectionProps {
   dob?: string;
   profileImg?: string;
   handleFieldChange: (field: 'firstName' | 'lastName' | 'phoneNumber' | 'dob' | 'profileImg', value: string) => void;
+  handleRemoveProfilePicture: () => void;
 }
 
-export default function ProfilePersonalInfoSection({ firstName, lastName, email, phoneNumber, dob, profileImg, handleFieldChange }: PersonalInfoSectionProps) {
+const ProfilePersonalInfoSection = ({ firstName, lastName, email, phoneNumber, dob, profileImg, handleFieldChange, handleRemoveProfilePicture }: PersonalInfoSectionProps) => {
   const { uploadProfilePictureMutation } = useUploadQuery();
   const [imagePreview, setImagePreview] = useState<string | null>(profileImg || null);
   const [imageError, setImageError] = useState<string>("");
@@ -58,6 +59,7 @@ export default function ProfilePersonalInfoSection({ firstName, lastName, email,
   };
   
   const handleRemoveImage = () => {
+    handleRemoveProfilePicture()
     setImagePreview(null);
     setImageError("");
     handleFieldChange("profileImg", "");
@@ -87,7 +89,7 @@ export default function ProfilePersonalInfoSection({ firstName, lastName, email,
               <button
                 type="button"
                 onClick={handleRemoveImage}
-                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition-colors shadow-lg"
+                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition-colors shadow-lg hover:cursor-pointer"
                 aria-label="Remove image"
               >
                 <svg
@@ -201,8 +203,11 @@ export default function ProfilePersonalInfoSection({ firstName, lastName, email,
             handleFieldChange("dob", isoString);
           }}
           max={new Date().toISOString().split('T')[0]}
+          placeholder="dd/mm/yyyy"
         />
       </div>
     </div>
   );
 }
+
+export default ProfilePersonalInfoSection;

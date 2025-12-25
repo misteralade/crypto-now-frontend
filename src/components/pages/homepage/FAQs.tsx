@@ -43,7 +43,7 @@ const FAQs = () => {
     }, [open, question, answer]);
 
     return (
-      <div id={ROUTES.IN_PAGE_ROUTES.FAQ}>
+      <div id={ROUTES.HOMEPAGE_TAG_IDS.FAQ}>
         <button
           type="button"
           aria-expanded={open}

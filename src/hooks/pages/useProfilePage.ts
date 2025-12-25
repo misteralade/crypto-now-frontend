@@ -25,7 +25,7 @@ import {
 export const useProfilePage = () => {
   const dispatch = useDispatch();
   const { userRequestPasswordChangeMutation, userToggleTwoFactorAuthenticationMutation } = useAuthQuery();
-  const { userProfileData, loadingUserProfile, updateProfileMutation } = useUserQuery();
+  const { userProfileData, loadingUserProfile, updateProfileMutation, removeProfilePictureMutation } = useUserQuery();
   const { allBanks, loadingAllBanks } = useBankQuery();
   const { supportedCryptoCurrencies, loadingSupportedCryptocurrencies, allUserCryptoWallets, loadingAllUserCryptoWallets, createUserWalletMutation, makeWalletPrimaryMutation, deleteUserWalletMutation } = useCryptoQuery();
   const { userBankAccounts, loadingUserBankAccounts, createUserBankAccountMutation, updateDefaultBankAccountMutation, deleteBankAccountMutation } = useBankQuery();
@@ -128,6 +128,10 @@ export const useProfilePage = () => {
       dispatch(clearUpdateCryptoWalletField())
     }
   }
+
+  const handleRemoveProfilePicture = () => {
+    removeProfilePictureMutation.mutate();
+  }
   
   const toggleShowCreateNewBankAccount = () => setShowCreateNewBankAccount(!showCreateNewBankAccount);
   
@@ -165,5 +169,6 @@ export const useProfilePage = () => {
     handleNewWalletField,
     handleMakeWalletDefault,
     handleDeleteWallet,
+    handleRemoveProfilePicture,
   }
 }

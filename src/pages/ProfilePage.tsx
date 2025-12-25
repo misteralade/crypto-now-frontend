@@ -43,6 +43,7 @@ const ProfilePage = () => {
     handleNewWalletField,
     handleMakeWalletDefault,
     handleDeleteWallet,
+    handleRemoveProfilePicture,
   } = useProfilePage();
   
   useEffect(() => {
@@ -79,6 +80,7 @@ const ProfilePage = () => {
                   dob={userProfileData?.profile?.dateOfBirth}
                   profileImg={userProfileData?.profile?.profileImg}
                   handleFieldChange={handlePersonalInfoProfileFieldUpdate}
+                  handleRemoveProfilePicture={handleRemoveProfilePicture}
                 />
                 
                 <div className="w-full flex items-center justify-center gap-2">

@@ -1,11 +1,29 @@
 import CustomButton from "../../global/Button.tsx";
 import allInOneImage from "../../../assets/illustrations/all-in-one.png";
+import { useNavigate } from "@tanstack/react-router";
+import { ROUTES } from "../../../util/constants.util.ts";
 
 interface AllInOneProps {
   tradeCrypto: () => void;
+  isAuthenticated: boolean | null;
 }
 
-const AllInOne = ({ tradeCrypto }: AllInOneProps) => {
+const AllInOne = ({ tradeCrypto, isAuthenticated }: AllInOneProps) => {
+  const navigate = useNavigate();
+
+  const handleButtonClick = () => {
+    // If user is not authenticated, route to signup, otherwise use tradeCrypto
+    if (isAuthenticated === false) {
+      navigate({ to: ROUTES.SIGNUP });
+    } else {
+      tradeCrypto();
+    }
+  };
+
+  const buttonText = isAuthenticated === false 
+    ? "Setup an account now" 
+    : "Buy & sell crypto now";
+    
   return (
     <section className="sm:mt-24 mt-16 md:mt-40 max-md:px-4 w-full md:w-[90%] 2xl:max-w-7xl mx-auto">
       <div className="max-w-6xl mx-auto md:px-4">
@@ -48,8 +66,8 @@ const AllInOne = ({ tradeCrypto }: AllInOneProps) => {
             </div>
 
             <CustomButton
-              onClick={tradeCrypto}
-              buttonText="Buy & sell crypto now"
+              onClick={handleButtonClick}
+              buttonText={buttonText}
             />
           </div>
 

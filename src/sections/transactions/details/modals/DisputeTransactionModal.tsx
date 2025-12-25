@@ -326,7 +326,8 @@ const DisputeTransactionModal = ({ transactionId, onClose, onSubmit }: DisputeTr
                     <ul className="list-disc list-inside space-y-1 ml-1">
                       <li>Ensure all transaction details are correct</li>
                       <li>Provide clear evidence of the issue</li>
-                      <li>Our team will review your case within 24-48 hours</li>
+                      <li>Our team will resolve your case as soon as possible</li>
+                      <li>Disputes are on a live que, please be patient</li>
                     </ul>
                   </div>
                 </div>

@@ -40,7 +40,7 @@ const RatePage = () => {
                       : "text-gray-600 hover:text-gray-900 hover:cursor-pointer"
                   }`}
                 >
-                  Unregistered
+                  Guest
                 </button>
                 <button
                   onClick={() => setIsRegistered(true)}

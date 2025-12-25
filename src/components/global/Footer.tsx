@@ -1,7 +1,13 @@
 import {FaFacebookF, FaInstagram, FaTiktok, FaTwitter, FaWhatsapp} from "react-icons/fa6";
 import {ROUTES} from "../../util/constants.util.ts";
+import { useLocation } from "@tanstack/react-router";
 
-export default function Footer() {
+const Footer = () => {
+  const currentYear = new Date().getFullYear();
+  const currentRoute = useLocation().pathname;
+
+  const inHomepage = currentRoute === ROUTES.HOMEPAGE;
+
   return (
     <footer className="py-12 max-md:px-4">
       <div className="max-w-6xl mx-auto">
@@ -12,7 +18,7 @@ export default function Footer() {
             <h3 className="font-semibold text-gray-900 mb-4">Quick links</h3>
             <ul className="space-y-3">
               <li>
-                <a href={`#${ROUTES.IN_PAGE_ROUTES.HOW_IT_WORKS}`} className="text-gray-600 hover:text-gray-900">
+                <a href={inHomepage ? `#${ROUTES.HOMEPAGE_TAG_IDS.HOW_IT_WORKS}` : `${ROUTES.HOMEPAGE}#${ROUTES.HOMEPAGE_TAG_IDS.HOW_IT_WORKS}`} className="text-gray-600 hover:text-gray-900">
                   How It Works
                 </a>
               </li>
@@ -22,7 +28,7 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href={`#${ROUTES.IN_PAGE_ROUTES.FAQ}`} className="text-gray-600 hover:text-gray-900">
+                <a href={inHomepage ? `#${ROUTES.HOMEPAGE_TAG_IDS.FAQ}` : `${ROUTES.HOMEPAGE}#${ROUTES.HOMEPAGE_TAG_IDS.FAQ}`} className="text-gray-600 hover:text-gray-900">
                   FAQs
                 </a>
               </li>
@@ -57,7 +63,7 @@ export default function Footer() {
               </li>
               
               <li>
-                <a href="#" className="text-gray-600 hover:text-gray-900">
+                <a href={ROUTES.SECURITY_POLICY} className="text-gray-600 hover:text-gray-900">
                   Security Policy
                 </a>
               </li>
@@ -132,10 +138,12 @@ export default function Footer() {
         {/* Copyright */}
         <div className="pt-8">
           <p className="text-center text-gray-600">
-            © 2025 CryptoNow. All rights reserved.
+            © {currentYear} CryptoNow. All rights reserved.
           </p>
         </div>
       </div>
     </footer>
   );
 }
+
+export default Footer;

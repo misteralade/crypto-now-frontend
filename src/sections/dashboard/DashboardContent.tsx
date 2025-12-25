@@ -4,6 +4,7 @@ import EmptyPendingTransaction from "./EmptyPendingTransaction.tsx";
 import {TransactionDashboard} from "./TransactionHistory/TransactionDashboard.tsx";
 import {useDashboardContent} from "../../hooks/components/dashboard/useDashboardContent.ts";
 import type {TransactionSummaryResponseEntity} from "../../types/response.payload.types.ts";
+import { convertToMillify } from "../../util/index.util.ts";
 
 export default function DashboardContent(){
   const {
@@ -27,13 +28,13 @@ export default function DashboardContent(){
             key={`${item.cryptoCurrencyId}-${item.cryptoCurrencyImageUrl}-${index}`}
             imgSrc={item.cryptoCurrencyImageUrl}
             Data={[
-              { title: `${item.cryptoCurrencySymbol} Bought`, value: Number(Number(item.cryptoBought).toFixed(2)).toLocaleString() },
-              { title: `${item.cryptoCurrencySymbol} Sold`, value: Number(Number(item.cryptoSold).toFixed(2)).toLocaleString() }
+              { title: `${item.cryptoCurrencySymbol} Bought`, value: `$ ${convertToMillify(Number(item.usdSpentOnBuying))}` },
+              { title: `${item.cryptoCurrencySymbol} Sold`, value: `$ ${convertToMillify(Number(item.usdReceivedFromSelling))}` }
             ]}
           />
         ))}
         <DashboardDataUI imgSrc={OrderIcon} Data={[
-          { title: 'Total Completed Orders', value: `$ ${Number(orderTotal.toFixed(2)).toLocaleString()}` }
+          { title: 'Total Completed Orders', value: `$ ${convertToMillify(Number(orderTotal))}` }
         ]} />
       </div>
       
