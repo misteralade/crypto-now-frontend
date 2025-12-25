@@ -177,13 +177,13 @@ const RatePage = () => {
                       <div>
                         <div className="text-xs text-gray-500 mb-1">Min Trade</div>
                         <div className="text-gray-600">
-                          {convertToMillify(isRegistered ? Number(crypto.minTransactionLimit) : Number(crypto.minTradeAmountForAnonymous))}
+                          {convertToMillify(isRegistered ? Number(crypto.minTransactionLimit) : Number(crypto.minTradeAmountForAnonymous), 10)}
                         </div>
                       </div>
                       <div>
                         <div className="text-xs text-gray-500 mb-1">Max Trade</div>
                         <div className="text-gray-600">
-                          {convertToMillify(isRegistered ? Number(crypto.maxTransactionLimit) : Number(crypto.maxTradeAmountForAnonymous))}
+                          {convertToMillify(isRegistered ? Number(crypto.maxTransactionLimit) : Number(crypto.maxTradeAmountForAnonymous), 10)}
                         </div>
                       </div>
                     </div>
