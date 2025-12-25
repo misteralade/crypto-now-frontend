@@ -295,21 +295,14 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, cryptoAccou
     }
 
     if (tradeType === "buy") {
-      switch (viewState) {
-        case "create-wallet":
-          return (
-            <ChangeWalletDetails
-              onGoBack={() => setViewState("select-wallet")}
-              onConfirm={handleSubmitWalletDetails}
-              canGoBack={(cryptoAccounts && cryptoAccounts.length > 0) as boolean}
-            />
-          );
-        case "wallet-details":
-          return renderWalletDetails();
-        case "select-wallet":
-        default:
-          return renderWalletList();
-      }
+      // For buy transactions, always show create-wallet view
+      return (
+        <ChangeWalletDetails
+          onGoBack={() => {}}
+          onConfirm={handleSubmitWalletDetails}
+          canGoBack={false}
+        />
+      );
     }
 
     return null;
@@ -317,20 +310,16 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, cryptoAccou
 
   /** ---------------- ACTIONS ---------------- */
   const showActionButtons = () => {
+    // For buy transactions, don't show action buttons - use the Confirm button in ChangeWalletDetails instead
+    if (tradeType === "buy") {
+      return false;
+    }
     if (tradeType === "sell") {
       if (viewState === "select-bank") {
         return selectedBankId && bankAccounts && bankAccounts.length > 0;
       }
       if (viewState === "bank-details") {
         return !!selectedBank;
-      }
-    }
-    if (tradeType === "buy") {
-      if (viewState === "select-wallet") {
-        return selectedWalletId && cryptoAccounts && cryptoAccounts.length > 0;
-      }
-      if (viewState === "wallet-details") {
-        return !!selectedWallet;
       }
     }
     return false;
@@ -342,8 +331,7 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, cryptoAccou
       return "Proceed with This Bank";
     }
     if (tradeType === "buy") {
-      if (viewState === "select-wallet") return "View Details & Proceed";
-      return "Proceed with This Wallet";
+      return "Confirm";
     }
     return "Proceed";
   };
@@ -351,34 +339,26 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, cryptoAccou
   const handleMainAction = () => {
     if (tradeType === "sell" && viewState === "select-bank") {
       handleViewSelectedBankDetails();
-    } else if (tradeType === "buy" && viewState === "select-wallet") {
-      handleViewSelectedWalletDetails();
+    } else if (tradeType === "buy" && viewState === "create-wallet") {
+      // For buy transactions, submit wallet details (which creates wallet and then confirms payment)
+      handleSubmitWalletDetails();
     } else {
       handleProceed();
     }
   };
 
   const handleChangeAction = () => {
-    if (tradeType === "buy") {
-      if (viewState === "wallet-details") {
-        setViewState("select-wallet");
-      } else {
-        setViewState("create-wallet");
-      }
-    } else if (tradeType === "sell") {
+    if (tradeType === "sell") {
       if (viewState === "bank-details") {
         setViewState("select-bank");
       } else {
         setViewState("create-bank");
       }
     }
+    // For buy transactions, no change action needed since we always show create-wallet
   };
 
   const getChangeButtonText = () => {
-    if (tradeType === "buy") {
-      if (viewState === "wallet-details") return "Change Wallet";
-      return "Add Wallet";
-    }
     if (tradeType === "sell") {
       if (viewState === "bank-details")
         return bankAccounts && bankAccounts.length > 1 ? "Change Bank" : "Back to Selection";
@@ -388,11 +368,7 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, cryptoAccou
   };
 
   const showChangeButton = () => {
-    if (tradeType === "buy") {
-      if (viewState === "wallet-details" || viewState === "select-wallet") {
-        return true;
-      }
-    }
+    // For buy transactions, no change button needed since we always show create-wallet
     if (tradeType === "sell") {
       if (viewState === "select-bank") {
         return true;
@@ -484,22 +460,6 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, cryptoAccou
                 </div>
               )}
 
-            {tradeType === "buy" &&
-              selectedWallet && selectedWalletId &&
-              viewState === "select-wallet" && (
-                <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="flex items-center space-x-3">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-blue-900">
-                        Selected: {selectedWallet.network}
-                      </p>
-                      <p className="text-xs text-blue-700 truncate font-mono">
-                        {selectedWallet.walletAddress}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
           </div>
         )}
       </div>

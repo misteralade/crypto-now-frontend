@@ -58,11 +58,11 @@ class CryptoServiceApi {
   }
 
   async userCreateCryptoWallet(selectedCryptoId: string, payload: Record<string, any>) {
-    return await axiosPostRequestHandler(`/crypto/user/wallet/${selectedCryptoId}/create`, payload) as BaseApiResponse<null>;
+    return await axiosPostRequestHandler(`/crypto/user/wallet/${selectedCryptoId}/create`, payload) as BaseApiResponse<string>;
   }
   
   async anonymousUserCreateCryptoWallet(selectedCryptoId: string, payload: Record<string, any>) {
-    return await axiosPostRequestHandler(`/crypto/anonymous-user/wallet/${selectedCryptoId}/create`, payload) as BaseApiResponse<null>;
+    return await axiosPostRequestHandler(`/crypto/anonymous-user/wallet/${selectedCryptoId}/create`, payload) as BaseApiResponse<string>;
   }
   
   async userMakeWalletPrimary(walletId: string) {
