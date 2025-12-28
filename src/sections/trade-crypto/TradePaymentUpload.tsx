@@ -141,8 +141,7 @@ const TradePaymentUpload = ({onFileUploaded, maxFiles = 5, setUploadedFileUrl, a
     const extension = "." + fileName.split(".").pop()?.toLowerCase()
     return extension === ".jpg" || extension === ".png"
   }
-
-  const currentFile = files[0];
+  
   // Only show preview once upload is complete and we have the file object
   const previewImage = uploadedFile && isImageFile(uploadedFile.name) && filePreviewUrl 
     ? filePreviewUrl 
