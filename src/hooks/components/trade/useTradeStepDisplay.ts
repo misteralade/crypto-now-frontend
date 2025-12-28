@@ -451,11 +451,19 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
 
     // Determine step based on transaction status
     // If transaction is INITIATED or PENDING, go to step 2 (payment step)
-    // If receipt is uploaded (AWAITING_PAYMENT or later), stay on step 2 but with receipt
+    // If AWAITING_CRYPTO or AWAITING_PAYMENT, go to step 2 and open wallet/bank account selection modal
+    // If receipt is uploaded (other statuses), stay on step 2 but with receipt
     const status = transaction.status;
     if (['INITIATED', 'PENDING', 'AWAITING_PAYMENT', 'PAYMENT_RECEIVED', 'PAYMENT_CONFIRMED', 'PROCESSING', 'AWAITING_CRYPTO', 'CRYPTO_SENT', 'CRYPTO_RECEIVED', 'CRYPTO_CONFIRMED'].includes(status)) {
+      // For all these statuses, go to step 2 (payment step)
       setStep(2);
       saveTradeProgress({ step: 2 });
+      
+      // If AWAITING_CRYPTO or AWAITING_PAYMENT, mark that we should open the modal
+      // The modal will be opened in a separate useEffect when accounts are loaded
+      if (status === 'AWAITING_CRYPTO' || status === 'AWAITING_PAYMENT') {
+        saveTradeProgress({ shouldOpenBankDetailsModal: true });
+      }
     }
 
     // Set active tab based on transaction type
@@ -467,6 +475,34 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId, restoredTransaction, supportedCryptoCurrencies, supportedCurrencies, dispatch]);
+
+  // Open bank details modal automatically for AWAITING_CRYPTO or AWAITING_PAYMENT statuses
+  // when accounts are loaded and we're on step 2
+  useEffect(() => {
+    if (!sessionId || !restoredTransaction) return;
+    
+    const saved = loadTradeProgress();
+    const status = restoredTransaction.status;
+    const shouldOpen = saved?.shouldOpenBankDetailsModal;
+    
+    // Only open if:
+    // 1. Status is AWAITING_CRYPTO or AWAITING_PAYMENT
+    // 2. Flag is set to open modal
+    // 3. Accounts are loaded (not loading)
+    // 4. We're on step 2
+    if (
+      (status === 'AWAITING_CRYPTO' || status === 'AWAITING_PAYMENT') &&
+      shouldOpen &&
+      !loadingUserBankAccounts &&
+      !loadingUserCryptoWallets &&
+      currentStep === 2
+    ) {
+      setShowPaymentReceivingModal(true);
+      // Clear the flag so it doesn't open again
+      saveTradeProgress({ shouldOpenBankDetailsModal: false });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId, restoredTransaction, loadingUserBankAccounts, loadingUserCryptoWallets, currentStep, setShowPaymentReceivingModal]);
 
   // Countdown
   useEffect(() => {
