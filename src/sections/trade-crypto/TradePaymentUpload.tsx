@@ -1,4 +1,4 @@
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import Upload from "../../assets/icons/upload.svg"
 import Cancel from "../../assets/icons/hightlight_off.svg"
 import {transactionServiceApi} from "../../api/transaction.api.ts";
@@ -13,12 +13,23 @@ interface FileUploadProps {
 }
 
 const TradePaymentUpload = ({onFileUploaded, maxFiles = 5, setUploadedFileUrl, acceptedTypes = [".jpg", ".png", ".pdf"] }: FileUploadProps) => {
-  const [signedUrl, setSignedUrl] = useState<string>("");
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [filePreviewUrl, setFilePreviewUrl] = useState<string>("");
   const [files, setFiles] = useState<File[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const currentUploadingFileRef = useRef<File | null>(null);
   const [, setIsUploading] = useState(false);
   const [, setUploadError] = useState<string | null>(null);
+
+  // Clean up blob URL when component unmounts or file changes
+  useEffect(() => {
+    return () => {
+      if (filePreviewUrl) {
+        URL.revokeObjectURL(filePreviewUrl);
+      }
+    };
+  }, [filePreviewUrl]);
 
   const uploadTransactionReceiptMutation = useMutation({
     mutationFn: async (formData: FormData) => {
@@ -28,15 +39,25 @@ const TradePaymentUpload = ({onFileUploaded, maxFiles = 5, setUploadedFileUrl, a
     },
     onSettled: (data: {url: string, signedUrl: string} | undefined) => {
       toast.dismiss()
-      if (data?.url && data?.signedUrl) {
+      if (data?.url) {
         toast.success(`Receipt uploaded successfully`);
         // Use url for the actual transaction
         onFileUploaded(data.url)
-        // Use signedUrl for preview
-        setSignedUrl(data.signedUrl)
         setUploadedFileUrl(data.url)
+        
+        // Get the file from ref and create blob URL for preview
+        const file = currentUploadingFileRef.current;
+        if (file) {
+          setUploadedFile(file);
+          // Create blob URL from the file object for instant display
+          const blobUrl = URL.createObjectURL(file);
+          setFilePreviewUrl(blobUrl);
+          // Clear the ref
+          currentUploadingFileRef.current = null;
+        }
       } else {
         toast.error(`Failed to upload receipt`)
+        currentUploadingFileRef.current = null;
       }
     },
   });
@@ -44,6 +65,9 @@ const TradePaymentUpload = ({onFileUploaded, maxFiles = 5, setUploadedFileUrl, a
   const handleFileUpload = async (file: File) => {
     setIsUploading(true)
     setUploadError(null)
+
+    // Store the file in ref so we can access it after upload completes
+    currentUploadingFileRef.current = file;
 
     const formData = new FormData()
     formData.append('file', file)
@@ -62,9 +86,13 @@ const TradePaymentUpload = ({onFileUploaded, maxFiles = 5, setUploadedFileUrl, a
     // If replacing, clear existing files
     const updatedFiles = files.length > 0 ? newFiles.slice(0, maxFiles) : [...files, ...newFiles].slice(0, maxFiles)
 
-    // Clear old signedUrl if replacing
+    // Clear old file preview if replacing
     if (files.length > 0) {
-      setSignedUrl("")
+      if (filePreviewUrl) {
+        URL.revokeObjectURL(filePreviewUrl);
+      }
+      setFilePreviewUrl("")
+      setUploadedFile(null)
     }
 
     // Don't create local previews - only show preview after upload completes
@@ -77,8 +105,14 @@ const TradePaymentUpload = ({onFileUploaded, maxFiles = 5, setUploadedFileUrl, a
   const removeFile = (index: number) => {
     const updatedFiles = files.filter((_, i) => i !== index)
 
+    // Clean up blob URL
+    if (filePreviewUrl) {
+      URL.revokeObjectURL(filePreviewUrl);
+    }
+
     setFiles(updatedFiles)
-    setSignedUrl("")
+    setFilePreviewUrl("")
+    setUploadedFile(null)
     onFileUploaded("")
     setUploadedFileUrl(undefined)
   }
@@ -107,11 +141,10 @@ const TradePaymentUpload = ({onFileUploaded, maxFiles = 5, setUploadedFileUrl, a
     const extension = "." + fileName.split(".").pop()?.toLowerCase()
     return extension === ".jpg" || extension === ".png"
   }
-
-  const currentFile = files[0];
-  // Only show preview once upload is complete and we have signedUrl
-  const previewImage = currentFile && isImageFile(currentFile.name) && signedUrl 
-    ? signedUrl 
+  
+  // Only show preview once upload is complete and we have the file object
+  const previewImage = uploadedFile && isImageFile(uploadedFile.name) && filePreviewUrl 
+    ? filePreviewUrl 
     : null;
 
   return (
