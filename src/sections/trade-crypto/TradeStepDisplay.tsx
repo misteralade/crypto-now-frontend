@@ -40,12 +40,13 @@ const TradeStepDisplay = ({ activeTab,setActiveTab, step, currency, token, setSt
       return;
     }
 
-    // If sessionId is present and hasn't been restored yet for this sessionId, set step to 2 immediately
+    // If sessionId is present and hasn't been restored yet for this sessionId, 
+    // don't set step here - let the restoration logic in useTradeStepDisplay determine the step
+    // based on transaction status (INITIATED -> step 2, AWAITING_CRYPTO/AWAITING_PAYMENT -> step 1)
     if (sessionIdFromQuery && hasRestoredRef.current !== sessionIdFromQuery) {
-      setStep(2);
-      saveTradeProgress({ step: 2 });
       hasRestoredRef.current = sessionIdFromQuery;
       hasInitializedRef.current = true;
+      // Step will be set by the restoration logic in useTradeStepDisplay based on transaction status
       return;
     }
     
