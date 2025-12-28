@@ -42,7 +42,7 @@ const TransactionRow = ({transaction, isLast}: TransactionRowProps) => {
   }
 
   // Check if transaction can be continued --- Only initiated transactions can be continued and createdAt is less than an hour ago
-  const canContinueTransaction = transaction.status === "INITIATED" && momentClient.isWithinDuration(transaction.createdAt, 1, "hour");
+  const canContinueTransaction = (transaction.status === "INITIATED" || transaction.status === "AWAITING_CRYPTO" || transaction.status === "AWAITING_PAYMENT") && momentClient.isWithinDuration(transaction.createdAt, 1, "hour");
 
   // // If the dispute transaction is more than an hour and less than 24 hours ago, then it can be disputed
   // const canDisputeTransaction = momentClient.isWithinDuration(transaction.createdAt, 1, "hour") && momentClient.isWithinDuration(transaction.createdAt, 24, "hours");
