@@ -234,7 +234,7 @@ const TradeStepTwo = ({ amountToBuy, tradeType, numberOfToken, additionalInfo, h
           </div>
           <TradePaymentUpload
             maxFiles={1}
-            acceptedTypes={[".jpg", ".jpeg", ".png", ".pdf"]}
+            acceptedTypes={[".jpg", ".jpeg", ".png", ".webp", ".gif"]}
             onFileUploaded={handleReceiptUrl}
             setUploadedFileUrl={setUploadedFileUrl}
           />

@@ -9,7 +9,7 @@ import {LoadingSpinner} from "../components/global/LoadingSpinner.tsx";
 const RatePage = () => {
   const { supportedCryptoCurrencies, loadingSupportedCrypto } = useCryptoQuery();
   const [isRegistered, setIsRegistered] = useState(false)
-  
+
   return (
     <Fragment>
       <Navbar />
@@ -133,12 +133,12 @@ const RatePage = () => {
                       </td>
                       <td className="px-6 py-5 text-right">
                         <div className="text-gray-600">
-                          {convertToMillify(isRegistered ? Number(crypto.minTransactionLimit) : Number(crypto.minTradeAmountForAnonymous))}
+                          {convertToMillify(isRegistered ? Number(crypto.minTransactionLimit) : Number(crypto.minTradeAmountForAnonymous), 10)}
                         </div>
                       </td>
                       <td className="px-6 py-5 text-right">
                         <div className="text-gray-600">
-                          {convertToMillify(isRegistered ? Number(crypto.maxTransactionLimit) : Number(crypto.maxTradeAmountForAnonymous))}
+                          {convertToMillify(isRegistered ? Number(crypto.maxTransactionLimit) : Number(crypto.maxTradeAmountForAnonymous), 10)}
                         </div>
                       </td>
                     </tr>
@@ -177,13 +177,13 @@ const RatePage = () => {
                       <div>
                         <div className="text-xs text-gray-500 mb-1">Min Trade</div>
                         <div className="text-gray-600">
-                          {convertToMillify(isRegistered ? Number(crypto.minTransactionLimit) : Number(crypto.minTradeAmountForAnonymous))}
+                          {convertToMillify(isRegistered ? Number(crypto.minTransactionLimit) : Number(crypto.minTradeAmountForAnonymous), 10)}
                         </div>
                       </div>
                       <div>
                         <div className="text-xs text-gray-500 mb-1">Max Trade</div>
                         <div className="text-gray-600">
-                          {convertToMillify(isRegistered ? Number(crypto.maxTransactionLimit) : Number(crypto.maxTradeAmountForAnonymous))}
+                          {convertToMillify(isRegistered ? Number(crypto.maxTransactionLimit) : Number(crypto.maxTradeAmountForAnonymous), 10)}
                         </div>
                       </div>
                     </div>

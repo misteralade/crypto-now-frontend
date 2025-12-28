@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import DashboardPage from "../../sections/dashboard/DashboardPage.tsx";
+import DashboardPage from "../../pages/DashboardPage.tsx";
 import {LOCAL_STORAGE_KEYS, ROUTES} from "../../util/constants.util.ts";
 import { userServiceApi } from "../../api/user.api.ts";
 

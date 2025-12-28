@@ -2,7 +2,7 @@ import {ArrowDownToLine} from "lucide-react"
 import type {TransactionResponseEntity} from "../../../types/response.payload.types.ts";
 import CopyAccountDetails from "../../trade-crypto/CopyAccountDetails.tsx";
 import momentClient from "../../../lib/moment.ts";
-import {getStatusColor, getStatusDot} from "../../../util/transaction.util.ts";
+import {getStatusColor, getStatusDot, getStatusDisplayName} from "../../../util/transaction.util.ts";
 import {useNavigate} from "@tanstack/react-router";
 import {ROUTES} from "../../../util/constants.util.ts";
 import {useTransactionQuery} from "../../../queries/transaction.query.ts";
@@ -42,7 +42,7 @@ const TransactionRow = ({transaction, isLast}: TransactionRowProps) => {
   }
 
   // Check if transaction can be continued --- Only initiated transactions can be continued and createdAt is less than an hour ago
-  const canContinueTransaction = transaction.status === "INITIATED" && momentClient.isWithinDuration(transaction.createdAt, 1, "hour");
+  const canContinueTransaction = (transaction.status === "INITIATED" || transaction.status === "AWAITING_CRYPTO" || transaction.status === "AWAITING_PAYMENT") && momentClient.isWithinDuration(transaction.createdAt, 1, "hour");
 
   // // If the dispute transaction is more than an hour and less than 24 hours ago, then it can be disputed
   // const canDisputeTransaction = momentClient.isWithinDuration(transaction.createdAt, 1, "hour") && momentClient.isWithinDuration(transaction.createdAt, 24, "hours");
@@ -82,7 +82,7 @@ const TransactionRow = ({transaction, isLast}: TransactionRowProps) => {
           className={`flex items-center w-fit gap-2 py-1 px-3 rounded-3xl text-xs ${getStatusColor(transaction.status)}`}
         >
           <span className={`w-2 h-2 rounded-full ${getStatusDot(transaction.status)}`}></span>
-          <span className={`text-sm capitalize`}>{transaction.status.replaceAll("_", " ").toLocaleLowerCase()}</span>
+          <span className={`text-sm`}>{getStatusDisplayName(transaction.status)}</span>
         </span>
       </td>
       <td className="p-4">

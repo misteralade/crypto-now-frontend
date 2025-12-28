@@ -20,6 +20,7 @@ export interface TradeProgress {
 
   // UX flags
   isCountdownLocked?: boolean;
+  shouldOpenBankDetailsModal?: boolean;
 
   // Proofs
   receiptUrl?: string;

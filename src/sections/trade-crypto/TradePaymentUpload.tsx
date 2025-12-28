@@ -1,4 +1,4 @@
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import Upload from "../../assets/icons/upload.svg"
 import Cancel from "../../assets/icons/hightlight_off.svg"
 import {transactionServiceApi} from "../../api/transaction.api.ts";
@@ -12,13 +12,24 @@ interface FileUploadProps {
   acceptedTypes?: string[]
 }
 
-const TradePaymentUpload = ({onFileUploaded, maxFiles = 5, setUploadedFileUrl, acceptedTypes = [".jpg", ".png", ".pdf"] }: FileUploadProps) => {
-  const [signedUrl, setSignedUrl] = useState<string>("");
+const TradePaymentUpload = ({onFileUploaded, maxFiles = 5, setUploadedFileUrl, acceptedTypes = [".jpg", ".jpeg", ".png", ".webp", ".gif"] }: FileUploadProps) => {
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [filePreviewUrl, setFilePreviewUrl] = useState<string>("");
   const [files, setFiles] = useState<File[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const currentUploadingFileRef = useRef<File | null>(null);
   const [, setIsUploading] = useState(false);
   const [, setUploadError] = useState<string | null>(null);
+
+  // Clean up blob URL when component unmounts or file changes
+  useEffect(() => {
+    return () => {
+      if (filePreviewUrl) {
+        URL.revokeObjectURL(filePreviewUrl);
+      }
+    };
+  }, [filePreviewUrl]);
 
   const uploadTransactionReceiptMutation = useMutation({
     mutationFn: async (formData: FormData) => {
@@ -28,15 +39,25 @@ const TradePaymentUpload = ({onFileUploaded, maxFiles = 5, setUploadedFileUrl, a
     },
     onSettled: (data: {url: string, signedUrl: string} | undefined) => {
       toast.dismiss()
-      if (data?.url && data?.signedUrl) {
+      if (data?.url) {
         toast.success(`Receipt uploaded successfully`);
         // Use url for the actual transaction
         onFileUploaded(data.url)
-        // Use signedUrl for preview
-        setSignedUrl(data.signedUrl)
         setUploadedFileUrl(data.url)
+        
+        // Get the file from ref and create blob URL for preview
+        const file = currentUploadingFileRef.current;
+        if (file) {
+          setUploadedFile(file);
+          // Create blob URL from the file object for instant display
+          const blobUrl = URL.createObjectURL(file);
+          setFilePreviewUrl(blobUrl);
+          // Clear the ref
+          currentUploadingFileRef.current = null;
+        }
       } else {
         toast.error(`Failed to upload receipt`)
+        currentUploadingFileRef.current = null;
       }
     },
   });
@@ -44,6 +65,18 @@ const TradePaymentUpload = ({onFileUploaded, maxFiles = 5, setUploadedFileUrl, a
   const handleFileUpload = async (file: File) => {
     setIsUploading(true)
     setUploadError(null)
+
+    // Check file size (2MB = 2 * 1024 * 1024 bytes)
+    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB in bytes
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error(`File size exceeds 2MB. Please upload a smaller image.`);
+      setIsUploading(false)
+      setUploadError("File size exceeds 2MB")
+      return;
+    }
+
+    // Store the file in ref so we can access it after upload completes
+    currentUploadingFileRef.current = file;
 
     const formData = new FormData()
     formData.append('file', file)
@@ -54,17 +87,36 @@ const TradePaymentUpload = ({onFileUploaded, maxFiles = 5, setUploadedFileUrl, a
   const handleFileSelect = (selectedFiles: FileList | null) => {
     if (!selectedFiles) return
 
+    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB in bytes
+
     const newFiles = Array.from(selectedFiles).filter((file) => {
       const extension = "." + file.name.split(".").pop()?.toLowerCase()
-      return acceptedTypes.includes(extension)
+      const isValidType = acceptedTypes.includes(extension)
+      
+      // Check file size
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error(`${file.name} exceeds 2MB. Please upload a smaller image.`);
+        return false;
+      }
+      
+      return isValidType;
     })
+
+    // If no valid files after filtering, return early
+    if (newFiles.length === 0) {
+      return;
+    }
 
     // If replacing, clear existing files
     const updatedFiles = files.length > 0 ? newFiles.slice(0, maxFiles) : [...files, ...newFiles].slice(0, maxFiles)
 
-    // Clear old signedUrl if replacing
+    // Clear old file preview if replacing
     if (files.length > 0) {
-      setSignedUrl("")
+      if (filePreviewUrl) {
+        URL.revokeObjectURL(filePreviewUrl);
+      }
+      setFilePreviewUrl("")
+      setUploadedFile(null)
     }
 
     // Don't create local previews - only show preview after upload completes
@@ -77,8 +129,14 @@ const TradePaymentUpload = ({onFileUploaded, maxFiles = 5, setUploadedFileUrl, a
   const removeFile = (index: number) => {
     const updatedFiles = files.filter((_, i) => i !== index)
 
+    // Clean up blob URL
+    if (filePreviewUrl) {
+      URL.revokeObjectURL(filePreviewUrl);
+    }
+
     setFiles(updatedFiles)
-    setSignedUrl("")
+    setFilePreviewUrl("")
+    setUploadedFile(null)
     onFileUploaded("")
     setUploadedFileUrl(undefined)
   }
@@ -105,42 +163,42 @@ const TradePaymentUpload = ({onFileUploaded, maxFiles = 5, setUploadedFileUrl, a
 
   const isImageFile = (fileName: string) => {
     const extension = "." + fileName.split(".").pop()?.toLowerCase()
-    return extension === ".jpg" || extension === ".png"
+    const imageExtensions = [".jpg", ".jpeg", ".png", ".webp", ".gif"]
+    return imageExtensions.includes(extension)
   }
-
-  const currentFile = files[0];
-  // Only show preview once upload is complete and we have signedUrl
-  const previewImage = currentFile && isImageFile(currentFile.name) && signedUrl 
-    ? signedUrl 
+  
+  // Only show preview once upload is complete and we have the file object
+  const previewImage = uploadedFile && isImageFile(uploadedFile.name) && filePreviewUrl 
+    ? filePreviewUrl 
     : null;
 
   return (
     <div className="space-y-4">
       <div
-        className={`relative border-2 border-dashed rounded-lg transition-all cursor-pointer overflow-hidden min-h-[300px] ${
-          previewImage 
-            ? "border-transparent" 
-            : `py-5 text-center bg-white ${isDragOver ? "border-placeholder" : "border-accent2"}`
+        className={`relative border-2 border-dashed rounded-lg transition-all cursor-pointer overflow-hidden ${
+          previewImage
+            ? "border-transparent min-h-[300px] md:min-h-[400px]"
+            : `py-5 text-center bg-white min-h-[300px] ${isDragOver ? "border-placeholder" : "border-accent2"}`
         }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
       >
-        {/* Image Background - only show after upload completes */}
+        {/* Image Display - only show after upload completes */}
         {previewImage && (
-          <div 
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-            style={{
-              backgroundImage: `url(${previewImage})`,
-            }}
-          >
+          <>
+            <img
+              src={previewImage}
+              alt="Uploaded receipt"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
             <div className="absolute inset-0 bg-black/20" />
-          </div>
+          </>
         )}
 
         {/* Content Overlay - always show text */}
-        <div className="relative z-10 flex flex-col items-center justify-center min-h-[300px] p-5">
+        <div className="relative z-10 flex flex-col items-center justify-center min-h-[300px] md:min-h-[400px] p-5">
           {/* Upload text content - always visible */}
           <div className="flex flex-col items-center space-y-4">
             <img src={Upload || "/placeholder.svg"} alt={`Upload icon`} className={`w-12 h-12 ${previewImage ? 'drop-shadow-lg' : ''}`} />
@@ -205,13 +263,13 @@ const TradePaymentUpload = ({onFileUploaded, maxFiles = 5, setUploadedFileUrl, a
           ref={fileInputRef}
           type="file"
           multiple
-          accept={acceptedTypes.join(",")}
+          accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
           onChange={(e) => handleFileSelect(e.target.files)}
           className="hidden"
         />
       </div>
 
-      <p className="text-sm text-gray-500">Only support {acceptedTypes.join(", ")} files</p>
+      <p className="text-sm text-gray-500">Only support {acceptedTypes.join(", ")} files (max 2MB)</p>
     </div>
   )
 }

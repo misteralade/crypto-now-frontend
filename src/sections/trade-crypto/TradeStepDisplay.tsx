@@ -13,6 +13,7 @@ import {
 import EmailModal from "./modals/EmailModal.tsx";
 import { useSearch, useNavigate } from "@tanstack/react-router";
 import { LoadingSpinner } from "../../components/global/LoadingSpinner.tsx";
+import { useAppSelector } from "../../hooks.ts";
 
 const TradeStepDisplay = ({ activeTab,setActiveTab, step, currency, token, setStep, sessionId }: TradeCryptoPageProps) => {
   const navigate = useNavigate();
@@ -20,6 +21,9 @@ const TradeStepDisplay = ({ activeTab,setActiveTab, step, currency, token, setSt
   const searchParams: { amount?: string; sessionId?: string; option?: string } = useSearch({ strict: false });
   const initialAmount = searchParams?.amount;
   const sessionIdFromQuery = sessionId || searchParams?.sessionId;
+  
+  // Get anonymous user email from Redux
+  const anonymousUserEmail = useAppSelector((state) => state.user.trade.anonymous.email);
   
   // Track if restoration has already happened for current sessionId to prevent re-restoration
   const hasRestoredRef = useRef<string | null>(null);
@@ -36,12 +40,13 @@ const TradeStepDisplay = ({ activeTab,setActiveTab, step, currency, token, setSt
       return;
     }
 
-    // If sessionId is present and hasn't been restored yet for this sessionId, set step to 2 immediately
+    // If sessionId is present and hasn't been restored yet for this sessionId, 
+    // don't set step here - let the restoration logic in useTradeStepDisplay determine the step
+    // based on transaction status (INITIATED -> step 2, AWAITING_CRYPTO/AWAITING_PAYMENT -> step 1)
     if (sessionIdFromQuery && hasRestoredRef.current !== sessionIdFromQuery) {
-      setStep(2);
-      saveTradeProgress({ step: 2 });
       hasRestoredRef.current = sessionIdFromQuery;
       hasInitializedRef.current = true;
+      // Step will be set by the restoration logic in useTradeStepDisplay based on transaction status
       return;
     }
     
@@ -145,7 +150,6 @@ const TradeStepDisplay = ({ activeTab,setActiveTab, step, currency, token, setSt
     loadingSupportedCryptocurrencies,
     loadingUserCryptoWallets,
     loadingUserBankAccounts,
-    hasAnonymousUserEmail,
 
     // Functions
     setAmountToBuy,
@@ -248,6 +252,8 @@ const TradeStepDisplay = ({ activeTab,setActiveTab, step, currency, token, setSt
                 handleFocusAmountToBuy={handleFocusAmountToBuy}
                 handleBlurNumberOfToken={handleBlurNumberOfToken}
                 handleBlurAmountToBuy={handleBlurAmountToBuy}
+                anonymousUserEmail={anonymousUserEmail}
+                onChangeEmail={toggleShowUserEnterEmail}
               />
             )}
             {step === 2 && (
@@ -282,7 +288,7 @@ const TradeStepDisplay = ({ activeTab,setActiveTab, step, currency, token, setSt
           } 
 
           <EmailModal
-            open={showUserEnterEmail && !isLoadingPingUser && !hasAnonymousUserEmail}
+            open={showUserEnterEmail && !isLoadingPingUser}
             onClose={toggleShowUserEnterEmail}
             onConfirm={handleAnonymousUserEmailInput}
           />

@@ -1,5 +1,5 @@
 import type { TradeType } from "../../../types/trade.types.ts";
-import WalletDetails from "../WalletDetails.tsx";
+// import WalletDetails from "../WalletDetails.tsx";
 import CustomButton from "../../../components/global/Button.tsx";
 import ChangeBankDetails from "../ChangeBankDetails.tsx";
 import ChangeWalletDetails from "../ChangeWalletDetails.tsx";
@@ -24,18 +24,18 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, cryptoAccou
     // Values
     selectedBankId,
     selectedBank,
-    selectedWalletId,
-    selectedWallet,
+    // selectedWalletId,
+    // selectedWallet,
     viewState,
 
     // Functions
     handleBankSelection,
     setViewState,
-    handleWalletSelection,
+    // handleWalletSelection,
     handleSubmitBankDetails,
     handleSubmitWalletDetails,
     handleViewSelectedBankDetails,
-    handleViewSelectedWalletDetails,
+    // handleViewSelectedWalletDetails,
     handleProceed,
   } = useConfirmBankDetailsModal(cryptoAccounts, bankAccounts, tradeType, onProceed, setShowConfirmBankDetails);
   
@@ -186,94 +186,94 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, cryptoAccou
     </div>
   );
 
-  const renderWalletList = () => (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-center mb-4">Select Wallet</h3>
+  // const renderWalletList = () => (
+  //   <div className="space-y-4">
+  //     <h3 className="text-lg font-semibold text-center mb-4">Select Wallet</h3>
       
-      <div className="space-y-3 max-h-60 overflow-y-auto">
-        {cryptoAccounts && cryptoAccounts.length > 0 && cryptoAccounts.map((wallet) => (
-          <div
-            key={wallet.id}
-            onClick={() => handleWalletSelection(wallet.id)}
-            className={`p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
-              selectedWalletId === wallet.id
-                ? "border-blue-500 bg-blue-50 shadow-md"
-                : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex flex-col">
-                <h4 className="text-sm font-semibold text-gray-900 truncate">
-                  {wallet.network}
-                </h4>
-                <p className="text-xs text-gray-600 font-mono">
-                  {wallet.walletAddress}
-                </p>
-                {wallet.walletLabel && (
-                  <p className="text-xs text-gray-500">
-                    {wallet.walletLabel}
-                  </p>
-                )}
-              </div>
-              {selectedWalletId === wallet.id && (
-                <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                  <svg
-                    className="w-3 h-3 text-white"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
+  //     <div className="space-y-3 max-h-60 overflow-y-auto">
+  //       {cryptoAccounts && cryptoAccounts.length > 0 && cryptoAccounts.map((wallet) => (
+  //         <div
+  //           key={wallet.id}
+  //           onClick={() => handleWalletSelection(wallet.id)}
+  //           className={`p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
+  //             selectedWalletId === wallet.id
+  //               ? "border-blue-500 bg-blue-50 shadow-md"
+  //               : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50"
+  //           }`}
+  //         >
+  //           <div className="flex items-center justify-between">
+  //             <div className="flex flex-col">
+  //               <h4 className="text-sm font-semibold text-gray-900 truncate">
+  //                 {wallet.network}
+  //               </h4>
+  //               <p className="text-xs text-gray-600 font-mono">
+  //                 {wallet.walletAddress}
+  //               </p>
+  //               {wallet.walletLabel && (
+  //                 <p className="text-xs text-gray-500">
+  //                   {wallet.walletLabel}
+  //                 </p>
+  //               )}
+  //             </div>
+  //             {selectedWalletId === wallet.id && (
+  //               <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+  //                 <svg
+  //                   className="w-3 h-3 text-white"
+  //                   fill="currentColor"
+  //                   viewBox="0 0 20 20"
+  //                 >
+  //                   <path
+  //                     fillRule="evenodd"
+  //                     d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+  //                     clipRule="evenodd"
+  //                   />
+  //                 </svg>
+  //               </div>
+  //             )}
+  //           </div>
+  //         </div>
+  //       ))}
+  //     </div>
       
-      {/*Proceed to confirm bank details button*/}
-      {selectedWallet && (
-        <div className="mt-3">
-          <CustomButton
-            buttonText="View Details & Proceed"
-            onClick={handleViewSelectedWalletDetails}
-            className="w-full h-12 text-xs sm:text-sm whitespace-normal break-words px-2"
-          />
-        </div>
-      )}
+  //     {/*Proceed to confirm bank details button*/}
+  //     {selectedWallet && (
+  //       <div className="mt-3">
+  //         <CustomButton
+  //           buttonText="View Details & Proceed"
+  //           onClick={handleViewSelectedWalletDetails}
+  //           className="w-full h-12 text-xs sm:text-sm whitespace-normal break-words px-2"
+  //         />
+  //       </div>
+  //     )}
       
-      <button
-        onClick={() => setViewState("create-wallet")}
-        className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-400 hover:text-blue-600 transition-colors duration-200 flex items-center justify-center space-x-2"
-      >
-        <svg
-          className="w-5 h-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 4v16m8-8H4"
-          />
-        </svg>
-        <span>Add New Wallet</span>
-      </button>
-    </div>
-  );
+  //     <button
+  //       onClick={() => setViewState("create-wallet")}
+  //       className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-400 hover:text-blue-600 transition-colors duration-200 flex items-center justify-center space-x-2"
+  //     >
+  //       <svg
+  //         className="w-5 h-5"
+  //         fill="none"
+  //         stroke="currentColor"
+  //         viewBox="0 0 24 24"
+  //       >
+  //         <path
+  //           strokeLinecap="round"
+  //           strokeLinejoin="round"
+  //           strokeWidth={2}
+  //           d="M12 4v16m8-8H4"
+  //         />
+  //       </svg>
+  //       <span>Add New Wallet</span>
+  //     </button>
+  //   </div>
+  // );
 
-  const renderWalletDetails = () => (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-center mb-4">Wallet Details</h3>
-      {selectedWallet && <WalletDetails walletData={selectedWallet} />}
-    </div>
-  );
+  // const renderWalletDetails = () => (
+  //   <div className="space-y-4">
+  //     <h3 className="text-lg font-semibold text-center mb-4">Wallet Details</h3>
+  //     {selectedWallet && <WalletDetails walletData={selectedWallet} />}
+  //   </div>
+  // );
 
   const renderContent = () => {
     if (tradeType === "sell") {
@@ -295,21 +295,14 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, cryptoAccou
     }
 
     if (tradeType === "buy") {
-      switch (viewState) {
-        case "create-wallet":
-          return (
-            <ChangeWalletDetails
-              onGoBack={() => setViewState("select-wallet")}
-              onConfirm={handleSubmitWalletDetails}
-              canGoBack={(cryptoAccounts && cryptoAccounts.length > 0) as boolean}
-            />
-          );
-        case "wallet-details":
-          return renderWalletDetails();
-        case "select-wallet":
-        default:
-          return renderWalletList();
-      }
+      // For buy transactions, always show create-wallet view
+      return (
+        <ChangeWalletDetails
+          onGoBack={() => {}}
+          onConfirm={handleSubmitWalletDetails}
+          canGoBack={false}
+        />
+      );
     }
 
     return null;
@@ -317,20 +310,16 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, cryptoAccou
 
   /** ---------------- ACTIONS ---------------- */
   const showActionButtons = () => {
+    // For buy transactions, don't show action buttons - use the Confirm button in ChangeWalletDetails instead
+    if (tradeType === "buy") {
+      return false;
+    }
     if (tradeType === "sell") {
       if (viewState === "select-bank") {
         return selectedBankId && bankAccounts && bankAccounts.length > 0;
       }
       if (viewState === "bank-details") {
         return !!selectedBank;
-      }
-    }
-    if (tradeType === "buy") {
-      if (viewState === "select-wallet") {
-        return selectedWalletId && cryptoAccounts && cryptoAccounts.length > 0;
-      }
-      if (viewState === "wallet-details") {
-        return !!selectedWallet;
       }
     }
     return false;
@@ -342,8 +331,7 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, cryptoAccou
       return "Proceed with This Bank";
     }
     if (tradeType === "buy") {
-      if (viewState === "select-wallet") return "View Details & Proceed";
-      return "Proceed with This Wallet";
+      return "Confirm";
     }
     return "Proceed";
   };
@@ -351,34 +339,26 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, cryptoAccou
   const handleMainAction = () => {
     if (tradeType === "sell" && viewState === "select-bank") {
       handleViewSelectedBankDetails();
-    } else if (tradeType === "buy" && viewState === "select-wallet") {
-      handleViewSelectedWalletDetails();
+    } else if (tradeType === "buy" && viewState === "create-wallet") {
+      // For buy transactions, submit wallet details (which creates wallet and then confirms payment)
+      handleSubmitWalletDetails();
     } else {
       handleProceed();
     }
   };
 
   const handleChangeAction = () => {
-    if (tradeType === "buy") {
-      if (viewState === "wallet-details") {
-        setViewState("select-wallet");
-      } else {
-        setViewState("create-wallet");
-      }
-    } else if (tradeType === "sell") {
+    if (tradeType === "sell") {
       if (viewState === "bank-details") {
         setViewState("select-bank");
       } else {
         setViewState("create-bank");
       }
     }
+    // For buy transactions, no change action needed since we always show create-wallet
   };
 
   const getChangeButtonText = () => {
-    if (tradeType === "buy") {
-      if (viewState === "wallet-details") return "Change Wallet";
-      return "Add Wallet";
-    }
     if (tradeType === "sell") {
       if (viewState === "bank-details")
         return bankAccounts && bankAccounts.length > 1 ? "Change Bank" : "Back to Selection";
@@ -388,11 +368,7 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, cryptoAccou
   };
 
   const showChangeButton = () => {
-    if (tradeType === "buy") {
-      if (viewState === "wallet-details" || viewState === "select-wallet") {
-        return true;
-      }
-    }
+    // For buy transactions, no change button needed since we always show create-wallet
     if (tradeType === "sell") {
       if (viewState === "select-bank") {
         return true;
@@ -484,22 +460,6 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, cryptoAccou
                 </div>
               )}
 
-            {tradeType === "buy" &&
-              selectedWallet && selectedWalletId &&
-              viewState === "select-wallet" && (
-                <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="flex items-center space-x-3">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-blue-900">
-                        Selected: {selectedWallet.network}
-                      </p>
-                      <p className="text-xs text-blue-700 truncate font-mono">
-                        {selectedWallet.walletAddress}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
           </div>
         )}
       </div>
