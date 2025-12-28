@@ -1,8 +1,12 @@
 import type {TransactionResponseEntity} from "../../../types/response.payload.types.ts";
 import CustomLoader from "../../../components/global/Loader.tsx";
 import TransactionRow from "./TransactionRow.tsx";
-import { Link } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import TableFooter from "../../../components/global/table/TableFooter.tsx";
+import { useCryptoQuery } from "../../../queries/crypto.query.ts";
+import { useCurrencyQuery } from "../../../queries/currency.query.ts";
+import { ROUTES } from "../../../util/constants.util.ts";
+import { useEffect, useState } from "react";
 
 export interface FilterState {
   fromDate: string | undefined;
@@ -24,6 +28,35 @@ interface TransactionTableProps {
 
 const TransactionTable = ({ transactions, isLoading, totalPages, currentPage, pageSize, totalItems, onPageChange, onPageSizeChange }: TransactionTableProps) => {
   const COL_COUNT = 7;
+  const navigate = useNavigate();
+  const { supportedCryptoCurrencies, loadingSupportedCrypto } = useCryptoQuery();
+  const { supportedCurrencies, loadingSupportedCurrencies } = useCurrencyQuery();
+  
+  const [selectedCrypto, setSelectedCrypto] = useState<string>("");
+  const [supportedCurrency, setSupportedCurrency] = useState("");
+  const [selectedAction] = useState<"BUY" | "SELL">("BUY");
+
+  // Select first crypto currency when loaded
+  useEffect(() => {
+    if (supportedCryptoCurrencies && supportedCryptoCurrencies.length > 0) {
+      setSelectedCrypto(supportedCryptoCurrencies[0].id);
+    }
+  }, [loadingSupportedCrypto, supportedCryptoCurrencies]);
+
+  // Select first currency when loaded
+  useEffect(() => {
+    if (supportedCurrencies && supportedCurrencies.length > 0) {
+      setSupportedCurrency(supportedCurrencies[0].id);
+    }
+  }, [loadingSupportedCurrencies, supportedCurrencies]);
+
+  const handleTradeCrypto = () => {
+    if (selectedCrypto && supportedCurrency) {
+      navigate({
+        to: `${ROUTES.TRADE_CRYPTO}?option=${selectedAction.toLowerCase()}&currency=${supportedCurrency}&token=${selectedCrypto}`,
+      });
+    }
+  };
   
   const renderTableBody = () => {
     if (isLoading) {
@@ -45,13 +78,13 @@ const TransactionTable = ({ transactions, isLoading, totalPages, currentPage, pa
             <div className={`flex flex-col gap-7 items-center justify-center text-center`}>
               <h2 className={`text-primary text-[40px] font-semibold w-4/5 leading-12`}>No transaction had been performed yet</h2>
 
-              <Link
-                to={`/trade-crypto`}
-                type="button"
+              <button
+                onClick={handleTradeCrypto}
+                disabled={!selectedCrypto || !supportedCurrency || loadingSupportedCrypto || loadingSupportedCurrencies}
                 className={`py-4 md:py-2 rounded-full block md:order-2 w-full md:w-1/2 text-lg text-center font-semibold bg-primary text-white disabled:bg-gray-300 disabled:text-gray-500`}
               >
                 Buy / Sell Crypto
-              </Link>
+              </button>
             </div>
           </td>
         </tr>
