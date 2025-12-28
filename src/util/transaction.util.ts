@@ -95,8 +95,8 @@ const statusConfig: Record<TransactionStatus, {
     bgColor: 'bg-yellow-50',
     textColor: 'text-yellow-700',
     dotColor: 'bg-yellow-500',
-    displayName: 'Awaiting Payment',
-    description: 'Waiting for payment to be received',
+    displayName: 'Awaiting Wallet Details',
+    description: 'Waiting for wallet details to be provided',
     isActionable: true,
   },
   PAYMENT_RECEIVED: {
@@ -113,8 +113,8 @@ const statusConfig: Record<TransactionStatus, {
     bgColor: 'bg-orange-50',
     textColor: 'text-orange-700',
     dotColor: 'bg-orange-500',
-    displayName: 'Awaiting Crypto',
-    description: 'Waiting for cryptocurrency transaction',
+    displayName: 'Awaiting Bank Details',
+    description: 'Waiting for bank details to be provided',
     isActionable: false,
   },
   CRYPTO_RECEIVED: {

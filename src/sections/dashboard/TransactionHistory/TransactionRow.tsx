@@ -2,7 +2,7 @@ import {ArrowDownToLine} from "lucide-react"
 import type {TransactionResponseEntity} from "../../../types/response.payload.types.ts";
 import CopyAccountDetails from "../../trade-crypto/CopyAccountDetails.tsx";
 import momentClient from "../../../lib/moment.ts";
-import {getStatusColor, getStatusDot} from "../../../util/transaction.util.ts";
+import {getStatusColor, getStatusDot, getStatusDisplayName} from "../../../util/transaction.util.ts";
 import {useNavigate} from "@tanstack/react-router";
 import {ROUTES} from "../../../util/constants.util.ts";
 import {useTransactionQuery} from "../../../queries/transaction.query.ts";
@@ -82,7 +82,7 @@ const TransactionRow = ({transaction, isLast}: TransactionRowProps) => {
           className={`flex items-center w-fit gap-2 py-1 px-3 rounded-3xl text-xs ${getStatusColor(transaction.status)}`}
         >
           <span className={`w-2 h-2 rounded-full ${getStatusDot(transaction.status)}`}></span>
-          <span className={`text-sm capitalize`}>{transaction.status.replaceAll("_", " ").toLocaleLowerCase()}</span>
+          <span className={`text-sm`}>{getStatusDisplayName(transaction.status)}</span>
         </span>
       </td>
       <td className="p-4">
