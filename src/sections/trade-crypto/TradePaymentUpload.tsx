@@ -12,7 +12,7 @@ interface FileUploadProps {
   acceptedTypes?: string[]
 }
 
-const TradePaymentUpload = ({onFileUploaded, maxFiles = 5, setUploadedFileUrl, acceptedTypes = [".jpg", ".png", ".pdf"] }: FileUploadProps) => {
+const TradePaymentUpload = ({onFileUploaded, maxFiles = 5, setUploadedFileUrl, acceptedTypes = [".jpg", ".jpeg", ".png", ".webp", ".gif"] }: FileUploadProps) => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [filePreviewUrl, setFilePreviewUrl] = useState<string>("");
   const [files, setFiles] = useState<File[]>([]);
@@ -66,6 +66,15 @@ const TradePaymentUpload = ({onFileUploaded, maxFiles = 5, setUploadedFileUrl, a
     setIsUploading(true)
     setUploadError(null)
 
+    // Check file size (2MB = 2 * 1024 * 1024 bytes)
+    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB in bytes
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error(`File size exceeds 2MB. Please upload a smaller image.`);
+      setIsUploading(false)
+      setUploadError("File size exceeds 2MB")
+      return;
+    }
+
     // Store the file in ref so we can access it after upload completes
     currentUploadingFileRef.current = file;
 
@@ -78,10 +87,25 @@ const TradePaymentUpload = ({onFileUploaded, maxFiles = 5, setUploadedFileUrl, a
   const handleFileSelect = (selectedFiles: FileList | null) => {
     if (!selectedFiles) return
 
+    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB in bytes
+
     const newFiles = Array.from(selectedFiles).filter((file) => {
       const extension = "." + file.name.split(".").pop()?.toLowerCase()
-      return acceptedTypes.includes(extension)
+      const isValidType = acceptedTypes.includes(extension)
+      
+      // Check file size
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error(`${file.name} exceeds 2MB. Please upload a smaller image.`);
+        return false;
+      }
+      
+      return isValidType;
     })
+
+    // If no valid files after filtering, return early
+    if (newFiles.length === 0) {
+      return;
+    }
 
     // If replacing, clear existing files
     const updatedFiles = files.length > 0 ? newFiles.slice(0, maxFiles) : [...files, ...newFiles].slice(0, maxFiles)
@@ -139,7 +163,8 @@ const TradePaymentUpload = ({onFileUploaded, maxFiles = 5, setUploadedFileUrl, a
 
   const isImageFile = (fileName: string) => {
     const extension = "." + fileName.split(".").pop()?.toLowerCase()
-    return extension === ".jpg" || extension === ".png"
+    const imageExtensions = [".jpg", ".jpeg", ".png", ".webp", ".gif"]
+    return imageExtensions.includes(extension)
   }
   
   // Only show preview once upload is complete and we have the file object
@@ -238,13 +263,13 @@ const TradePaymentUpload = ({onFileUploaded, maxFiles = 5, setUploadedFileUrl, a
           ref={fileInputRef}
           type="file"
           multiple
-          accept={acceptedTypes.join(",")}
+          accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
           onChange={(e) => handleFileSelect(e.target.files)}
           className="hidden"
         />
       </div>
 
-      <p className="text-sm text-gray-500">Only support {acceptedTypes.join(", ")} files</p>
+      <p className="text-sm text-gray-500">Only support {acceptedTypes.join(", ")} files (max 2MB)</p>
     </div>
   )
 }
