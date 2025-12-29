@@ -182,7 +182,7 @@ test.describe('Anonymous User Trading', () => {
           waitUntil: 'networkidle',
           timeout: 30000
         });
-      } catch (e) {
+      } catch {
         // If navigation is interrupted, wait a bit and check current URL
         console.log('⚠️ Navigation interrupted, checking current page...');
         await page.waitForTimeout(2000);
@@ -1052,7 +1052,7 @@ test.describe('Anonymous User Trading', () => {
           waitUntil: 'networkidle',
           timeout: 30000
         });
-      } catch (e) {
+      } catch {
         // If navigation is interrupted, wait a bit and check current URL
         console.log('⚠️ [SELL] Navigation interrupted, checking current page...');
         await page.waitForTimeout(2000);
