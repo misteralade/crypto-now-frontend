@@ -40,3 +40,8 @@ dist-ssr
 /tests/test-results/
 /tests/playwright-report/
 /tests/playwright/.cache/
+
+# Debug screenshots
+debug-*.png
+debug-sell-*.png
+DEBUG_INSTRUCTIONS.md
