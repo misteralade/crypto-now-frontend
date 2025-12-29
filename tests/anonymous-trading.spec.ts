@@ -168,17 +168,34 @@ test.describe('Anonymous User Trading', () => {
 
   test.describe('Complete Transaction Flow - Buy', () => {
     test('should complete full buy transaction flow', async ({ page, context }) => {
-      test.setTimeout(120000); // Increase timeout to 120 seconds
-      
+      test.setTimeout(180000); // Increase timeout to 180 seconds to accommodate 20s API wait
+
       // Clear cookies before navigation to avoid interference
       await context.clearCookies();
 
-      // Navigate to trade page with buy option (using full URL to avoid baseURL issues)
+      // Navigate to trade page with buy option (using relative URL with baseURL from config)
       console.log('🔵 Step 1: Navigating to trade page...');
-      await page.goto('http://localhost:5173/trade-crypto?option=buy', {
-        waitUntil: 'domcontentloaded',
-        timeout: 30000
-      });
+
+      // Use a more robust navigation strategy to handle redirects
+      try {
+        await page.goto('/trade-crypto?option=buy', {
+          waitUntil: 'networkidle',
+          timeout: 30000
+        });
+      } catch (e) {
+        // If navigation is interrupted, wait a bit and check current URL
+        console.log('⚠️ Navigation interrupted, checking current page...');
+        await page.waitForTimeout(2000);
+
+        // If we're not on trade page, navigate again
+        if (!page.url().includes('/trade-crypto')) {
+          console.log('🔄 Retrying navigation...');
+          await page.goto('/trade-crypto?option=buy', {
+            waitUntil: 'domcontentloaded',
+            timeout: 30000
+          });
+        }
+      }
 
       // Wait for page to be fully loaded
       await page.waitForLoadState('load', { timeout: 15000 });
@@ -189,14 +206,18 @@ test.describe('Anonymous User Trading', () => {
 
       // Handle email modal if it appears for anonymous users
       console.log('🔵 Step 2: Checking for email modal...');
+
+      // Wait a bit for modal to potentially appear (it might show after page load)
+      await page.waitForTimeout(3000);
+
       try {
-        // Wait for email modal to appear (with longer timeout)
+        // Wait for email modal to appear - check for ANY visible modal
         const emailModal = page.locator('dialog, [role="dialog"]').filter({
-          hasText: /transaction.*updates|enter.*email|email.*address/i
-        });
+          hasText: /transaction|update|email/i
+        }).first();
 
         // Wait for modal to be visible
-        const emailModalVisible = await emailModal.isVisible({ timeout: 10000 }).catch(() => false);
+        const emailModalVisible = await emailModal.isVisible({ timeout: 3000 }).catch(() => false);
 
         if (emailModalVisible) {
           console.log('📧 Email modal detected, handling...');
@@ -539,19 +560,13 @@ test.describe('Anonymous User Trading', () => {
             if (optionCount > 1) {
               // Select first actual option (index 1, skipping placeholder at index 0)
               await cryptoDropdowns.selectOption({ index: 1 }, { timeout: 5000 });
+              await page.waitForTimeout(500);
               console.log('✅ Crypto selected (first option)');
-
-              // Wait for API call to fetch rates
-              console.log('⏳ Waiting for rate API call after crypto selection...');
-              await page.waitForTimeout(2000);
             } else if (optionCount === 1) {
               // Only one option, select it
               await cryptoDropdowns.selectOption({ index: 0 }, { timeout: 5000 });
+              await page.waitForTimeout(500);
               console.log('✅ Crypto selected (only option)');
-
-              // Wait for API call to fetch rates
-              console.log('⏳ Waiting for rate API call after crypto selection...');
-              await page.waitForTimeout(2000);
             }
           } else {
             // It's a button - wait for any overlays to disappear first
@@ -572,21 +587,67 @@ test.describe('Anonymous User Trading', () => {
               console.log('⚠️ Normal click failed, trying force click');
               await cryptoDropdowns.click({ force: true, timeout: 5000 });
             }
-            await page.waitForTimeout(1000);
-            // Try to find and click first option in opened dropdown
-            const firstOption = page.locator('[role="option"], div[class*="option"], li').first();
-            const optionCount = await firstOption.count();
-            if (optionCount > 0) {
-              try {
-                await firstOption.click({ timeout: 5000 });
-              } catch {
-                await firstOption.click({ force: true, timeout: 5000 });
-              }
-              console.log('✅ Crypto selected from button dropdown');
 
-              // Wait for API call to fetch rates
-              console.log('⏳ Waiting for rate API call after crypto selection...');
-              await page.waitForTimeout(2000);
+            // Wait longer for dropdown menu to fully render
+            await page.waitForTimeout(2000);
+            console.log('📋 Dropdown opened, looking for options...');
+
+            // Take screenshot to debug
+            await page.screenshot({ path: 'debug-crypto-dropdown-opened.png', fullPage: true });
+
+            // Try multiple selectors to find dropdown options
+            let selectedOption = false;
+
+            // Strategy 1: Look for visible items with crypto names - be very specific to avoid navbar
+            let options = page.locator('text=/^Bitcoin$|^BTC$|^Ethereum$|^ETH$|^USDT$|^Tether$|^USDC$/i').locator('..').filter({
+              has: page.locator('img, svg') // Must have an icon
+            });
+            let optionCount = await options.count();
+            console.log(`ℹ️ Found ${optionCount} crypto options by name`);
+
+            if (optionCount === 0) {
+              // Strategy 2: Look for buttons/divs with crypto text that are NOT in the navbar
+              options = page.locator('button:has-text("Bitcoin"), button:has-text("USDT"), button:has-text("Ethereum"), div:has-text("Bitcoin"), div:has-text("USDT")').filter({
+                hasNot: page.locator('nav') // Exclude navbar items
+              });
+              optionCount = await options.count();
+              console.log(`ℹ️ Found ${optionCount} crypto buttons/divs (excluding navbar)`);
+            }
+
+            if (optionCount === 0) {
+              // Strategy 3: Look for any recently visible items with crypto icons
+              options = page.locator('div, button').filter({ hasText: /bitcoin|usdt|ethereum/i }).filter({
+                has: page.locator('img[src*="coin"], img[src*="crypto"], svg')
+              });
+              optionCount = await options.count();
+              console.log(`ℹ️ Found ${optionCount} options with crypto icons`);
+            }
+
+            if (optionCount > 0) {
+              // Click the first option (skip if it's a placeholder)
+              for (let i = 0; i < Math.min(optionCount, 3); i++) {
+                const option = options.nth(i);
+                const optionText = await option.textContent().catch(() => '');
+                console.log(`ℹ️ Option ${i}: "${optionText}"`);
+
+                // Skip placeholders
+                if (optionText && !optionText.toLowerCase().includes('select') && optionText.trim().length > 0) {
+                  try {
+                    await option.click({ timeout: 3000, force: true });
+                    await page.waitForTimeout(500);
+                    console.log(`✅ Crypto selected: "${optionText}"`);
+                    selectedOption = true;
+                    break;
+                  } catch (e) {
+                    console.log(`⚠️ Failed to click option ${i}: ${e}`);
+                  }
+                }
+              }
+            }
+
+            if (!selectedOption) {
+              console.log('❌ Could not select any crypto option');
+              await page.screenshot({ path: 'debug-crypto-selection-failed.png', fullPage: true });
             }
           }
         } catch (error) {
@@ -616,19 +677,13 @@ test.describe('Anonymous User Trading', () => {
             if (optionCount > 1) {
               // Select first actual option (index 1, skipping placeholder at index 0)
               await currencyDropdowns.selectOption({ index: 1 }, { timeout: 5000 });
+              await page.waitForTimeout(500);
               console.log('✅ Currency selected (first option)');
-
-              // Wait for API call to fetch final rate
-              console.log('⏳ Waiting for rate API call after currency selection...');
-              await page.waitForTimeout(3000); // Longer wait as this is the final rate calculation
             } else if (optionCount === 1) {
               // Only one option, select it
               await currencyDropdowns.selectOption({ index: 0 }, { timeout: 5000 });
+              await page.waitForTimeout(500);
               console.log('✅ Currency selected (only option)');
-
-              // Wait for API call to fetch final rate
-              console.log('⏳ Waiting for rate API call after currency selection...');
-              await page.waitForTimeout(3000); // Longer wait as this is the final rate calculation
             }
           } else {
             // It's a button - wait for any overlays to disappear first
@@ -649,21 +704,67 @@ test.describe('Anonymous User Trading', () => {
               console.log('⚠️ Normal click failed, trying force click');
               await currencyDropdowns.click({ force: true, timeout: 5000 });
             }
-            await page.waitForTimeout(1000);
-            // Try to find and click first option in opened dropdown
-            const firstOption = page.locator('[role="option"], div[class*="option"], li').first();
-            const optionCount = await firstOption.count();
-            if (optionCount > 0) {
-              try {
-                await firstOption.click({ timeout: 5000 });
-              } catch {
-                await firstOption.click({ force: true, timeout: 5000 });
-              }
-              console.log('✅ Currency selected from button dropdown');
 
-              // Wait for API call to fetch final rate
-              console.log('⏳ Waiting for rate API call after currency selection...');
-              await page.waitForTimeout(3000); // Longer wait as this is the final rate calculation
+            // Wait longer for dropdown menu to fully render
+            await page.waitForTimeout(2000);
+            console.log('📋 Currency dropdown opened, looking for options...');
+
+            // Take screenshot to debug
+            await page.screenshot({ path: 'debug-currency-dropdown-opened.png', fullPage: true });
+
+            // Try multiple selectors to find dropdown options
+            let selectedCurrencyOption = false;
+
+            // Strategy 1: Look for visible items with currency names - be very specific to avoid navbar
+            let currencyOptions = page.locator('text=/^USD$|^USDT$|^NGN$|Nigerian Naira|^GBP$|^EUR$/i').locator('..').filter({
+              has: page.locator('img, svg') // Must have an icon/flag
+            });
+            let currencyOptionCount = await currencyOptions.count();
+            console.log(`ℹ️ Found ${currencyOptionCount} currency options by name`);
+
+            if (currencyOptionCount === 0) {
+              // Strategy 2: Look for buttons/divs with currency text that are NOT in the navbar
+              currencyOptions = page.locator('button:has-text("Nigerian"), button:has-text("USD"), button:has-text("NGN"), div:has-text("Nigerian"), div:has-text("USD")').filter({
+                hasNot: page.locator('nav') // Exclude navbar items
+              });
+              currencyOptionCount = await currencyOptions.count();
+              console.log(`ℹ️ Found ${currencyOptionCount} currency buttons/divs (excluding navbar)`);
+            }
+
+            if (currencyOptionCount === 0) {
+              // Strategy 3: Look for any recently visible items with flags/currency icons
+              currencyOptions = page.locator('div, button').filter({ hasText: /nigerian|usd|ngn/i }).filter({
+                has: page.locator('img[src*="flag"], img[src*="currency"], svg')
+              });
+              currencyOptionCount = await currencyOptions.count();
+              console.log(`ℹ️ Found ${currencyOptionCount} options with currency icons`);
+            }
+
+            if (currencyOptionCount > 0) {
+              // Click the first option (skip if it's a placeholder)
+              for (let i = 0; i < Math.min(currencyOptionCount, 3); i++) {
+                const option = currencyOptions.nth(i);
+                const optionText = await option.textContent().catch(() => '');
+                console.log(`ℹ️ Currency Option ${i}: "${optionText}"`);
+
+                // Skip placeholders
+                if (optionText && !optionText.toLowerCase().includes('select') && optionText.trim().length > 0) {
+                  try {
+                    await option.click({ timeout: 3000, force: true });
+                    await page.waitForTimeout(500);
+                    console.log(`✅ Currency selected: "${optionText}"`);
+                    selectedCurrencyOption = true;
+                    break;
+                  } catch (e) {
+                    console.log(`⚠️ Failed to click currency option ${i}: ${e}`);
+                  }
+                }
+              }
+            }
+
+            if (!selectedCurrencyOption) {
+              console.log('❌ Could not select any currency option');
+              await page.screenshot({ path: 'debug-currency-selection-failed.png', fullPage: true });
             }
           }
         } catch (error) {
@@ -671,17 +772,19 @@ test.describe('Anonymous User Trading', () => {
         }
       }
 
-      // Wait for rate to be displayed/calculated
-      console.log('⏳ Waiting for exchange rate to be calculated and displayed...');
-      await page.waitForTimeout(2000);
+      // Wait 20 seconds for Rate API to be called and exchange rate to be calculated
+      console.log('⏳ Waiting 20 seconds for Rate API to complete and exchange rate to be calculated...');
+      await page.waitForTimeout(20000);
 
       await page.screenshot({ path: 'debug-step4-dropdowns-selected.png', fullPage: true });
       console.log('✅ Step 4: Dropdowns selected and rates loaded');
 
-      // Enter amount 50 in "You will receive" field
+      // Now enter amount 50 in "You will receive" field AFTER rate is loaded
+      console.log('📝 Entering transaction amount...');
       if (targetInput) {
         await targetInput.fill('50');
         await page.waitForTimeout(1000);
+        console.log('✅ Amount entered: 50');
       }
 
       // Click "Proceed to payment" button
@@ -811,9 +914,9 @@ test.describe('Anonymous User Trading', () => {
         const addressInputCount = await walletAddressInput.count();
         console.log(`ℹ️ Wallet address inputs found: ${addressInputCount}`);
         if (addressInputCount > 0) {
-          // Use valid Bitcoin wallet address
+          // Use valid Ethereum wallet address
           console.log('📝 Filling wallet address...');
-          await walletAddressInput.first().fill('bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh');
+          await walletAddressInput.first().fill('0x742d35Cc6634C0532925a3b844Bc454e4438f44e');
           await page.waitForTimeout(500);
           await page.screenshot({ path: 'debug-step9-wallet-filled.png', fullPage: true });
           console.log('✅ Wallet address filled');
@@ -935,17 +1038,34 @@ test.describe('Anonymous User Trading', () => {
 
   test.describe('Complete Transaction Flow - Sell', () => {
     test('should complete full sell transaction flow', async ({ page, context }) => {
-      test.setTimeout(120000); // Increase timeout to 120 seconds
-      
+      test.setTimeout(180000); // Increase timeout to 180 seconds to accommodate 20s API wait
+
       // Clear cookies before navigation to avoid interference
       await context.clearCookies();
 
-      // Navigate to trade page with sell option (using full URL to avoid baseURL issues)
+      // Navigate to trade page with sell option (using relative URL with baseURL from config)
       console.log('🔵 [SELL] Step 1: Navigating to trade page...');
-      await page.goto('http://localhost:5173/trade-crypto?option=sell', {
-        waitUntil: 'domcontentloaded',
-        timeout: 30000
-      });
+
+      // Use a more robust navigation strategy to handle redirects
+      try {
+        await page.goto('/trade-crypto?option=sell', {
+          waitUntil: 'networkidle',
+          timeout: 30000
+        });
+      } catch (e) {
+        // If navigation is interrupted, wait a bit and check current URL
+        console.log('⚠️ [SELL] Navigation interrupted, checking current page...');
+        await page.waitForTimeout(2000);
+
+        // If we're not on trade page, navigate again
+        if (!page.url().includes('/trade-crypto')) {
+          console.log('🔄 [SELL] Retrying navigation...');
+          await page.goto('/trade-crypto?option=sell', {
+            waitUntil: 'domcontentloaded',
+            timeout: 30000
+          });
+        }
+      }
 
       // Wait for page to be fully loaded
       await page.waitForLoadState('load', { timeout: 15000 });
@@ -1308,19 +1428,13 @@ test.describe('Anonymous User Trading', () => {
             if (optionCount > 1) {
               // Select first actual option (index 1, skipping placeholder at index 0)
               await cryptoDropdowns.selectOption({ index: 1 }, { timeout: 5000 });
+              await page.waitForTimeout(500);
               console.log('✅ [SELL] Crypto selected (first option)');
-
-              // Wait for API call to fetch rates
-              console.log('⏳ [SELL] Waiting for rate API call after crypto selection...');
-              await page.waitForTimeout(2000);
             } else if (optionCount === 1) {
               // Only one option, select it
               await cryptoDropdowns.selectOption({ index: 0 }, { timeout: 5000 });
+              await page.waitForTimeout(500);
               console.log('✅ [SELL] Crypto selected (only option)');
-
-              // Wait for API call to fetch rates
-              console.log('⏳ [SELL] Waiting for rate API call after crypto selection...');
-              await page.waitForTimeout(2000);
             }
           } else {
             // It's a button - wait for any overlays to disappear first
@@ -1341,21 +1455,67 @@ test.describe('Anonymous User Trading', () => {
               console.log('⚠️ [SELL] Normal click failed, trying force click');
               await cryptoDropdowns.click({ force: true, timeout: 5000 });
             }
-            await page.waitForTimeout(1000);
-            // Try to find and click first option in opened dropdown
-            const firstOption = page.locator('[role="option"], div[class*="option"], li').first();
-            const optionCount = await firstOption.count();
-            if (optionCount > 0) {
-              try {
-                await firstOption.click({ timeout: 5000 });
-              } catch {
-                await firstOption.click({ force: true, timeout: 5000 });
-              }
-              console.log('✅ [SELL] Crypto selected from button dropdown');
 
-              // Wait for API call to fetch rates
-              console.log('⏳ [SELL] Waiting for rate API call after crypto selection...');
-              await page.waitForTimeout(2000);
+            // Wait longer for dropdown menu to fully render
+            await page.waitForTimeout(2000);
+            console.log('📋 [SELL] Dropdown opened, looking for options...');
+
+            // Take screenshot to debug
+            await page.screenshot({ path: 'debug-sell-crypto-dropdown-opened.png', fullPage: true });
+
+            // Try multiple selectors to find dropdown options
+            let selectedOption = false;
+
+            // Strategy 1: Look for visible items with crypto names - be very specific to avoid navbar
+            let options = page.locator('text=/^Bitcoin$|^BTC$|^Ethereum$|^ETH$|^USDT$|^Tether$|^USDC$/i').locator('..').filter({
+              has: page.locator('img, svg') // Must have an icon
+            });
+            let optionCount = await options.count();
+            console.log(`ℹ️ [SELL] Found ${optionCount} crypto options by name`);
+
+            if (optionCount === 0) {
+              // Strategy 2: Look for buttons/divs with crypto text that are NOT in the navbar
+              options = page.locator('button:has-text("Bitcoin"), button:has-text("USDT"), button:has-text("Ethereum"), div:has-text("Bitcoin"), div:has-text("USDT")').filter({
+                hasNot: page.locator('nav') // Exclude navbar items
+              });
+              optionCount = await options.count();
+              console.log(`ℹ️ [SELL] Found ${optionCount} crypto buttons/divs (excluding navbar)`);
+            }
+
+            if (optionCount === 0) {
+              // Strategy 3: Look for any recently visible items with crypto icons
+              options = page.locator('div, button').filter({ hasText: /bitcoin|usdt|ethereum/i }).filter({
+                has: page.locator('img[src*="coin"], img[src*="crypto"], svg')
+              });
+              optionCount = await options.count();
+              console.log(`ℹ️ [SELL] Found ${optionCount} options with crypto icons`);
+            }
+
+            if (optionCount > 0) {
+              // Click the first option (skip if it's a placeholder)
+              for (let i = 0; i < Math.min(optionCount, 3); i++) {
+                const option = options.nth(i);
+                const optionText = await option.textContent().catch(() => '');
+                console.log(`ℹ️ [SELL] Option ${i}: "${optionText}"`);
+
+                // Skip placeholders
+                if (optionText && !optionText.toLowerCase().includes('select') && optionText.trim().length > 0) {
+                  try {
+                    await option.click({ timeout: 3000, force: true });
+                    await page.waitForTimeout(500);
+                    console.log(`✅ [SELL] Crypto selected: "${optionText}"`);
+                    selectedOption = true;
+                    break;
+                  } catch (e) {
+                    console.log(`⚠️ [SELL] Failed to click option ${i}: ${e}`);
+                  }
+                }
+              }
+            }
+
+            if (!selectedOption) {
+              console.log('❌ [SELL] Could not select any crypto option');
+              await page.screenshot({ path: 'debug-sell-crypto-selection-failed.png', fullPage: true });
             }
           }
         } catch (error) {
@@ -1385,19 +1545,13 @@ test.describe('Anonymous User Trading', () => {
             if (optionCount > 1) {
               // Select first actual option (index 1, skipping placeholder at index 0)
               await currencyDropdowns.selectOption({ index: 1 }, { timeout: 5000 });
+              await page.waitForTimeout(500);
               console.log('✅ [SELL] Currency selected (first option)');
-
-              // Wait for API call to fetch final rate
-              console.log('⏳ [SELL] Waiting for rate API call after currency selection...');
-              await page.waitForTimeout(3000); // Longer wait as this is the final rate calculation
             } else if (optionCount === 1) {
               // Only one option, select it
               await currencyDropdowns.selectOption({ index: 0 }, { timeout: 5000 });
+              await page.waitForTimeout(500);
               console.log('✅ [SELL] Currency selected (only option)');
-
-              // Wait for API call to fetch final rate
-              console.log('⏳ [SELL] Waiting for rate API call after currency selection...');
-              await page.waitForTimeout(3000); // Longer wait as this is the final rate calculation
             }
           } else {
             // It's a button - wait for any overlays to disappear first
@@ -1418,21 +1572,67 @@ test.describe('Anonymous User Trading', () => {
               console.log('⚠️ [SELL] Normal click failed, trying force click');
               await currencyDropdowns.click({ force: true, timeout: 5000 });
             }
-            await page.waitForTimeout(1000);
-            // Try to find and click first option in opened dropdown
-            const firstOption = page.locator('[role="option"], div[class*="option"], li').first();
-            const optionCount = await firstOption.count();
-            if (optionCount > 0) {
-              try {
-                await firstOption.click({ timeout: 5000 });
-              } catch {
-                await firstOption.click({ force: true, timeout: 5000 });
-              }
-              console.log('✅ [SELL] Currency selected from button dropdown');
 
-              // Wait for API call to fetch final rate
-              console.log('⏳ [SELL] Waiting for rate API call after currency selection...');
-              await page.waitForTimeout(3000); // Longer wait as this is the final rate calculation
+            // Wait longer for dropdown menu to fully render
+            await page.waitForTimeout(2000);
+            console.log('📋 [SELL] Currency dropdown opened, looking for options...');
+
+            // Take screenshot to debug
+            await page.screenshot({ path: 'debug-sell-currency-dropdown-opened.png', fullPage: true });
+
+            // Try multiple selectors to find dropdown options
+            let selectedCurrencyOption = false;
+
+            // Strategy 1: Look for visible items with currency names - be very specific to avoid navbar
+            let currencyOptions = page.locator('text=/^USD$|^USDT$|^NGN$|Nigerian Naira|^GBP$|^EUR$/i').locator('..').filter({
+              has: page.locator('img, svg') // Must have an icon/flag
+            });
+            let currencyOptionCount = await currencyOptions.count();
+            console.log(`ℹ️ [SELL] Found ${currencyOptionCount} currency options by name`);
+
+            if (currencyOptionCount === 0) {
+              // Strategy 2: Look for buttons/divs with currency text that are NOT in the navbar
+              currencyOptions = page.locator('button:has-text("Nigerian"), button:has-text("USD"), button:has-text("NGN"), div:has-text("Nigerian"), div:has-text("USD")').filter({
+                hasNot: page.locator('nav') // Exclude navbar items
+              });
+              currencyOptionCount = await currencyOptions.count();
+              console.log(`ℹ️ [SELL] Found ${currencyOptionCount} currency buttons/divs (excluding navbar)`);
+            }
+
+            if (currencyOptionCount === 0) {
+              // Strategy 3: Look for any recently visible items with flags/currency icons
+              currencyOptions = page.locator('div, button').filter({ hasText: /nigerian|usd|ngn/i }).filter({
+                has: page.locator('img[src*="flag"], img[src*="currency"], svg')
+              });
+              currencyOptionCount = await currencyOptions.count();
+              console.log(`ℹ️ [SELL] Found ${currencyOptionCount} options with currency icons`);
+            }
+
+            if (currencyOptionCount > 0) {
+              // Click the first option (skip if it's a placeholder)
+              for (let i = 0; i < Math.min(currencyOptionCount, 3); i++) {
+                const option = currencyOptions.nth(i);
+                const optionText = await option.textContent().catch(() => '');
+                console.log(`ℹ️ [SELL] Currency Option ${i}: "${optionText}"`);
+
+                // Skip placeholders
+                if (optionText && !optionText.toLowerCase().includes('select') && optionText.trim().length > 0) {
+                  try {
+                    await option.click({ timeout: 3000, force: true });
+                    await page.waitForTimeout(500);
+                    console.log(`✅ [SELL] Currency selected: "${optionText}"`);
+                    selectedCurrencyOption = true;
+                    break;
+                  } catch (e) {
+                    console.log(`⚠️ [SELL] Failed to click currency option ${i}: ${e}`);
+                  }
+                }
+              }
+            }
+
+            if (!selectedCurrencyOption) {
+              console.log('❌ [SELL] Could not select any currency option');
+              await page.screenshot({ path: 'debug-sell-currency-selection-failed.png', fullPage: true });
             }
           }
         } catch (error) {
@@ -1440,17 +1640,19 @@ test.describe('Anonymous User Trading', () => {
         }
       }
 
-      // Wait for rate to be displayed/calculated
-      console.log('⏳ [SELL] Waiting for exchange rate to be calculated and displayed...');
-      await page.waitForTimeout(2000);
+      // Wait 20 seconds for Rate API to be called and exchange rate to be calculated
+      console.log('⏳ [SELL] Waiting 20 seconds for Rate API to complete and exchange rate to be calculated...');
+      await page.waitForTimeout(20000);
 
       await page.screenshot({ path: 'debug-sell-step4-dropdowns-selected.png', fullPage: true });
       console.log('✅ [SELL] Step 4: Dropdowns selected and rates loaded');
 
-      // Enter amount 50 in "You will receive" field
+      // Now enter amount 50 in "You will receive" field AFTER rate is loaded
+      console.log('📝 [SELL] Entering transaction amount...');
       if (targetInput) {
         await targetInput.fill('50');
         await page.waitForTimeout(1000);
+        console.log('✅ [SELL] Amount entered: 50');
       }
 
       // Click "Proceed to payment" button
@@ -1475,34 +1677,49 @@ test.describe('Anonymous User Trading', () => {
 
       // STEP 2: Upload receipt, enter transaction hash, and submit
       // Enter transaction hash (required for Sell)
-      const transactionHashInput = page.locator('input[type="text"]').filter({ 
-        has: page.locator('..').locator('label').filter({ hasText: /transaction.*hash|hash/i })
+      console.log('📝 [SELL] Looking for transaction hash input...');
+      const transactionHashInput = page.locator('input[type="text"]').filter({
+        has: page.locator('..').locator('label, span').filter({ hasText: /transaction.*hash|hash|tx.*hash/i })
       }).or(
-        page.locator('input[id*="transactionHash" i], input[placeholder*="hash" i]')
+        page.locator('input[id*="transactionHash" i], input[id*="txHash" i], input[placeholder*="hash" i], input[name*="hash" i]')
+      ).or(
+        page.locator('label, span').filter({ hasText: /transaction.*hash|hash/i }).locator('..').locator('input[type="text"]')
       );
-      
+
       const hashInputCount = await transactionHashInput.count();
+      console.log(`ℹ️ [SELL] Transaction hash inputs found: ${hashInputCount}`);
       if (hashInputCount > 0) {
+        console.log('📝 [SELL] Filling transaction hash...');
         await transactionHashInput.first().fill('0x1234567890123456789012345678901234567890123456789012345678901234');
         await page.waitForTimeout(500);
+        await page.screenshot({ path: 'debug-sell-step6-hash-filled.png', fullPage: true });
+        console.log('✅ [SELL] Transaction hash filled');
+      } else {
+        console.log('ℹ️ [SELL] Transaction hash input not found, may be optional');
       }
 
       // Upload the file
+      console.log('🔵 [SELL] Step 6: Uploading receipt file...');
       const fileInput = page.locator('input[type="file"]');
       const fileInputCount = await fileInput.count();
-      
+      console.log(`ℹ️ [SELL] File inputs found: ${fileInputCount}`);
+
       if (fileInputCount > 0) {
+        console.log('📎 [SELL] Uploading file...');
         await fileInput.first().setInputFiles(UPLOAD_FILE_PATH);
+        console.log('✅ [SELL] File uploaded, waiting for processing...');
         // Wait for upload to complete
         await page.waitForTimeout(3000);
+        await page.screenshot({ path: 'debug-sell-step7-after-upload.png', fullPage: true });
         // Check if upload succeeded by waiting for submit button to be enabled
         try {
           await page.waitForFunction(() => {
             const submitBtn = document.querySelector('button:has-text("Submit")');
             return submitBtn && !submitBtn.hasAttribute('disabled');
           }, { timeout: 5000 });
+          console.log('✅ [SELL] Upload processed successfully');
         } catch {
-          // Continue anyway
+          console.log('⚠️ [SELL] Upload status check timeout, continuing...');
         }
       } else {
         const uploadArea = page.locator('label, div').filter({ 
@@ -1531,27 +1748,41 @@ test.describe('Anonymous User Trading', () => {
       }
 
       // Click "Submit Transaction Proof" button
-      const submitProofButton = page.locator('button').filter({ 
-        hasText: /submit.*transaction.*proof/i 
+      console.log('🔵 [SELL] Step 8: Submitting payment proof...');
+      const submitProofButton = page.locator('button').filter({
+        hasText: /submit.*transaction.*proof|submit.*proof|submit/i
       });
       const submitButtonCount = await submitProofButton.count();
-      
+      console.log(`ℹ️ [SELL] Submit buttons found: ${submitButtonCount}`);
+
       if (submitButtonCount > 0) {
         const isDisabled = await submitProofButton.first().isDisabled();
+        console.log(`ℹ️ [SELL] Submit button disabled: ${isDisabled}`);
+        await page.screenshot({ path: 'debug-sell-step8-before-submit.png', fullPage: true });
+
         if (!isDisabled) {
+          console.log('🖱️ [SELL] Clicking submit button...');
           await submitProofButton.first().click();
-          // Wait for modal to appear (Step 3 - Create bank account)
-          await page.waitForSelector('dialog, [role="dialog"], input[placeholder*="account"], input[placeholder*="bank"]', { 
-            timeout: 10000 
+          console.log('✅ [SELL] Submit button clicked, waiting for modal...');
+          // Wait for modal to appear (Step 3 - Bank account selection/creation)
+          await page.waitForSelector('dialog, [role="dialog"], input[placeholder*="account"], input[placeholder*="bank"]', {
+            timeout: 10000
           }).catch(() => {
-            // Modal might not appear or might be different structure
+            console.log('⚠️ [SELL] Modal selector timeout, continuing...');
           });
           await page.waitForTimeout(1000); // Small buffer
+          await page.screenshot({ path: 'debug-sell-step8-after-submit.png', fullPage: true });
+        } else {
+          console.log('⚠️ [SELL] Submit button is disabled');
+          await page.screenshot({ path: 'debug-sell-step8-button-disabled.png', fullPage: true });
         }
+      } else {
+        console.log('⚠️ [SELL] Submit button not found');
+        await page.screenshot({ path: 'debug-sell-step8-button-not-found.png', fullPage: true });
       }
 
       // STEP 3: Handle bank account (for Sell transactions)
-      console.log('🔵 [SELL] Step 8: Handling bank account modal...');
+      console.log('🔵 [SELL] Step 9: Handling bank account modal...');
       // Check if bank selection list exists (existing banks) or create form (no banks)
       const bankModal = page.locator('div, section, dialog').filter({ 
         hasText: /bank|create.*bank|account.*number|account.*name|select.*bank/i 
@@ -1592,59 +1823,101 @@ test.describe('Anonymous User Trading', () => {
           console.log('📝 [SELL] No banks found, creating new bank account...');
           await page.screenshot({ path: 'debug-sell-step8-creating-bank.png', fullPage: true });
           // Fill bank account details
-          const accountNameInput = page.locator('input').filter({ 
-            has: page.locator('..').locator('label').filter({ hasText: /account.*name|name/i })
+          // Look for account holder name input - try multiple selectors
+          const accountNameInput = page.locator('input[type="text"]').filter({
+            has: page.locator('..').locator('label, span').filter({ hasText: /account.*name|holder.*name|name.*account|account.*holder/i })
           }).or(
-            page.locator('input[placeholder*="name" i], input[name*="name" i], input[placeholder*="john" i]')
+            page.locator('input[placeholder*="account name" i], input[placeholder*="holder" i], input[name*="accountName" i], input[id*="accountName" i]')
+          ).or(
+            page.locator('label, span').filter({ hasText: /account.*name|holder/i }).locator('..').locator('input[type="text"]')
           );
-          
+
           const nameInputCount = await accountNameInput.count();
+          console.log(`ℹ️ [SELL] Account name inputs found: ${nameInputCount}`);
           if (nameInputCount > 0) {
             console.log('📝 [SELL] Filling account name: John Doe');
             await accountNameInput.first().fill('John Doe');
             await page.waitForTimeout(500);
             await page.screenshot({ path: 'debug-sell-step8-account-name-filled.png', fullPage: true });
+            console.log('✅ [SELL] Account name filled');
+          } else {
+            console.log('⚠️ [SELL] Account name input not found, may be optional or already filled');
           }
 
-          const accountNumberInput = page.locator('input').filter({ 
-            has: page.locator('..').locator('label').filter({ hasText: /account.*number|number/i })
+          // Look for account number input - try multiple selectors
+          const accountNumberInput = page.locator('input[type="text"], input[type="number"]').filter({
+            has: page.locator('..').locator('label, span').filter({ hasText: /account.*number|number/i })
           }).or(
-            page.locator('input[placeholder*="number" i], input[name*="number" i], input[type="number"]')
+            page.locator('input[placeholder*="account number" i], input[placeholder*="number" i], input[name*="accountNumber" i], input[id*="accountNumber" i]')
+          ).or(
+            page.locator('label, span').filter({ hasText: /account.*number|number/i }).locator('..').locator('input')
           );
-          
+
           const numberInputCount = await accountNumberInput.count();
+          console.log(`ℹ️ [SELL] Account number inputs found: ${numberInputCount}`);
           if (numberInputCount > 0) {
             console.log('📝 [SELL] Filling account number: 1234567890');
             await accountNumberInput.first().fill('1234567890');
             await page.waitForTimeout(500);
             await page.screenshot({ path: 'debug-sell-step8-account-number-filled.png', fullPage: true });
+            console.log('✅ [SELL] Account number filled');
+          } else {
+            console.log('⚠️ [SELL] Account number input not found');
           }
 
           // Select bank from dropdown
-          const bankSelect = page.locator('select, button').filter({ 
-            hasText: /bank|select.*bank/i 
+          const bankSelect = page.locator('select, button').filter({
+            hasText: /bank|select.*bank/i
           });
           const bankCount = await bankSelect.count();
           if (bankCount > 0) {
             console.log('📝 [SELL] Selecting bank from dropdown...');
-            await bankSelect.first().click({ timeout: 5000 }).catch(() => {
-              console.log('⚠️ [SELL] Bank select click failed');
-            });
-            await page.waitForTimeout(500);
-            
-            try {
-              const tagName = await bankSelect.first().evaluate(el => el.tagName);
-              if (tagName === 'SELECT') {
-                const options = bankSelect.first().locator('option');
-                const optionCount = await options.count();
-                if (optionCount > 1) {
-                  await bankSelect.first().selectOption({ index: 1 }, { timeout: 5000 }).catch(() => {
-                    console.log('⚠️ [SELL] Bank option selection failed');
-                  });
-                }
+            const tagName = await bankSelect.first().evaluate(el => el.tagName);
+            console.log(`ℹ️ [SELL] Bank dropdown type: ${tagName}`);
+
+            if (tagName === 'SELECT') {
+              // Handle native select element
+              const options = bankSelect.first().locator('option');
+              const optionCount = await options.count();
+              console.log(`ℹ️ [SELL] Found ${optionCount} bank options`);
+              if (optionCount > 1) {
+                await bankSelect.first().selectOption({ index: 1 }, { timeout: 5000 });
+                console.log('✅ [SELL] Bank selected from native select');
               }
-            } catch {
-              console.log('⚠️ [SELL] Bank select evaluation failed');
+            } else {
+              // Handle custom dropdown (button)
+              await bankSelect.first().click({ timeout: 5000, force: true });
+              await page.waitForTimeout(2000);
+              console.log('📋 [SELL] Bank dropdown opened, looking for options...');
+              await page.screenshot({ path: 'debug-sell-bank-dropdown-opened.png', fullPage: true });
+
+              // Look for bank options - try multiple strategies
+              let bankOptions = page.locator('div, li, button').filter({
+                hasText: /access|gtbank|first|zenith|uba|fidelity|union|sterling/i
+              }).filter({
+                hasNot: page.locator('nav, header') // Exclude navbar
+              });
+              let bankOptionCount = await bankOptions.count();
+              console.log(`ℹ️ [SELL] Found ${bankOptionCount} bank name options`);
+
+              if (bankOptionCount === 0) {
+                // Fallback: look for any visible options in dropdown
+                bankOptions = page.locator('[role="option"], li[class*="option"], div[class*="option"]');
+                bankOptionCount = await bankOptions.count();
+                console.log(`ℹ️ [SELL] Found ${bankOptionCount} generic options`);
+              }
+
+              if (bankOptionCount > 0) {
+                // Select first bank option
+                const firstOption = bankOptions.first();
+                const optionText = await firstOption.textContent().catch(() => '');
+                console.log(`ℹ️ [SELL] Selecting first bank: "${optionText}"`);
+                await firstOption.click({ timeout: 3000, force: true });
+                await page.waitForTimeout(500);
+                console.log('✅ [SELL] Bank selected from dropdown');
+              } else {
+                console.log('⚠️ [SELL] No bank options found in dropdown');
+              }
             }
             await page.screenshot({ path: 'debug-sell-step8-bank-selected.png', fullPage: true });
           }
@@ -1664,6 +1937,34 @@ test.describe('Anonymous User Trading', () => {
           });
         } catch {
           // Continue if overlay check fails
+        }
+
+        // Check for confirmation checkbox (e.g., "I confirm I own this bank account")
+        console.log('🔵 [SELL] Looking for confirmation checkbox...');
+        const confirmCheckbox = page.locator('input[type="checkbox"]').filter({
+          has: page.locator('..').locator('label, span').filter({
+            hasText: /confirm|own|verify|agree/i
+          })
+        }).or(
+          page.locator('label, span').filter({
+            hasText: /confirm|own|verify|agree/i
+          }).locator('..').locator('input[type="checkbox"]')
+        );
+
+        const checkboxCount = await confirmCheckbox.count();
+        console.log(`ℹ️ [SELL] Confirmation checkboxes found: ${checkboxCount}`);
+
+        if (checkboxCount > 0) {
+          const isChecked = await confirmCheckbox.first().isChecked();
+          console.log(`ℹ️ [SELL] Checkbox checked status: ${isChecked}`);
+
+          if (!isChecked) {
+            console.log('☑️ [SELL] Checking confirmation checkbox...');
+            await confirmCheckbox.first().check({ force: true });
+            await page.waitForTimeout(500);
+            await page.screenshot({ path: 'debug-sell-step8-checkbox-checked.png', fullPage: true });
+            console.log('✅ [SELL] Checkbox checked');
+          }
         }
 
         // Click confirm/proceed button in modal - be more specific to avoid navbar buttons
