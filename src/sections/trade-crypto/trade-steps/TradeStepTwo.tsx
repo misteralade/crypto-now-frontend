@@ -269,7 +269,7 @@ const TradeStepTwo = ({ amountToBuy, tradeType, numberOfToken, additionalInfo, h
             </>
           ) : (
             <>
-              <li>• Verify the wallet address and network before sending</li>
+              <li>• Verify the wallet address and network before sending </li>
               <li>• Send exactly: <strong>{numberOfToken} {selectedToken?.symbol}</strong></li>
               <li>• Use the <strong>{walletDetails?.network}</strong> network only</li>
               <li>• Double-check the transaction hash before submitting</li>

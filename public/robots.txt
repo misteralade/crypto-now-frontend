@@ -1,0 +1,29 @@
+# robots.txt for CryptoNow NG
+
+User-agent: *
+Allow: /
+
+# Disallow private/dashboard routes
+Disallow: /dashboard/
+Disallow: /sign-in/
+Disallow: /sign-up/
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /verify-account
+Disallow: /activation-result
+Disallow: /oauth/
+
+# Allow public pages
+Allow: /
+Allow: /about
+Allow: /contact
+Allow: /rates
+Allow: /trade-crypto
+Allow: /privacy-policy
+Allow: /terms-of-service
+Allow: /security-policy
+Allow: /aml-policy
+
+# Sitemap location
+Sitemap: https://cryptonow.ng/sitemap.xml
+
