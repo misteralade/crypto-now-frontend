@@ -32,3 +32,16 @@ dist-ssr
 
 # Ignore all pdf files
 *.pdf
+
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
+/tests/test-results/
+/tests/playwright-report/
+/tests/playwright/.cache/
+
+# Debug screenshots
+debug-*.png
+debug-sell-*.png
+DEBUG_INSTRUCTIONS.md

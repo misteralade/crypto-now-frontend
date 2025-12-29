@@ -285,7 +285,7 @@ const TradeStepDisplay = ({ activeTab,setActiveTab, step, currency, token, setSt
               onProceed={handleConfirmBankDetails}
               setShowConfirmBankDetails={togglePaymentReceivingModal}
             />
-          }
+          } 
 
           <EmailModal
             open={showUserEnterEmail && !isLoadingPingUser}
