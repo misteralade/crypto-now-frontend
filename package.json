@@ -17,6 +17,7 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "clsx": "^2.1.1",
     "@material-tailwind/react": "^2.1.10",
     "@reduxjs/toolkit": "^2.9.0",
     "@tailwindcss/vite": "^4.1.11",
