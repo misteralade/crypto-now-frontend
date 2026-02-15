@@ -1,18 +1,24 @@
-import { useState, useRef, useEffect } from "react"
-import Upload from "../../assets/icons/upload.svg"
-import Cancel from "../../assets/icons/hightlight_off.svg"
-import {transactionServiceApi} from "../../api/transaction.api.ts";
-import {useMutation} from "@tanstack/react-query";
-import {toast} from "react-toastify";
+import { useState, useRef, useEffect } from "react";
+import Upload from "../../assets/icons/upload.svg";
+import Cancel from "../../assets/icons/hightlight_off.svg";
+import { transactionServiceApi } from "../../api/transaction.api.ts";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "react-toastify";
 
 interface FileUploadProps {
-  onFileUploaded: (value: string) => void
-  maxFiles: number
+  onFileUploaded: (value: string) => void;
+  maxFiles: number;
   setUploadedFileUrl: (value: string | undefined) => void;
-  acceptedTypes?: string[]
+  acceptedTypes?: string[];
 }
 
-const TradePaymentUpload = ({onFileUploaded, maxFiles = 5, setUploadedFileUrl, acceptedTypes = [".jpg", ".jpeg", ".png", ".webp", ".gif"] }: FileUploadProps) => {
+// trigger PR
+const TradePaymentUpload = ({
+  onFileUploaded,
+  maxFiles = 5,
+  setUploadedFileUrl,
+  acceptedTypes = [".jpg", ".jpeg", ".png", ".webp", ".gif"],
+}: FileUploadProps) => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [filePreviewUrl, setFilePreviewUrl] = useState<string>("");
   const [files, setFiles] = useState<File[]>([]);
@@ -34,17 +40,18 @@ const TradePaymentUpload = ({onFileUploaded, maxFiles = 5, setUploadedFileUrl, a
   const uploadTransactionReceiptMutation = useMutation({
     mutationFn: async (formData: FormData) => {
       toast.loading("Uploading file...");
-      const { url, signedUrl } = await transactionServiceApi.uploadTransactionReceipt(formData);
-      return {url, signedUrl};
+      const { url, signedUrl } =
+        await transactionServiceApi.uploadTransactionReceipt(formData);
+      return { url, signedUrl };
     },
-    onSettled: (data: {url: string, signedUrl: string} | undefined) => {
-      toast.dismiss()
+    onSettled: (data: { url: string; signedUrl: string } | undefined) => {
+      toast.dismiss();
       if (data?.url) {
         toast.success(`Receipt uploaded successfully`);
         // Use url for the actual transaction
-        onFileUploaded(data.url)
-        setUploadedFileUrl(data.url)
-        
+        onFileUploaded(data.url);
+        setUploadedFileUrl(data.url);
+
         // Get the file from ref and create blob URL for preview
         const file = currentUploadingFileRef.current;
         if (file) {
@@ -56,51 +63,51 @@ const TradePaymentUpload = ({onFileUploaded, maxFiles = 5, setUploadedFileUrl, a
           currentUploadingFileRef.current = null;
         }
       } else {
-        toast.error(`Failed to upload receipt`)
+        toast.error(`Failed to upload receipt`);
         currentUploadingFileRef.current = null;
       }
     },
   });
 
   const handleFileUpload = async (file: File) => {
-    setIsUploading(true)
-    setUploadError(null)
+    setIsUploading(true);
+    setUploadError(null);
 
     // Check file size (2MB = 2 * 1024 * 1024 bytes)
     const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB in bytes
     if (file.size > MAX_FILE_SIZE) {
       toast.error(`File size exceeds 2MB. Please upload a smaller image.`);
-      setIsUploading(false)
-      setUploadError("File size exceeds 2MB")
+      setIsUploading(false);
+      setUploadError("File size exceeds 2MB");
       return;
     }
 
     // Store the file in ref so we can access it after upload completes
     currentUploadingFileRef.current = file;
 
-    const formData = new FormData()
-    formData.append('file', file)
+    const formData = new FormData();
+    formData.append("file", file);
 
-    uploadTransactionReceiptMutation.mutate(formData)
-  }
+    uploadTransactionReceiptMutation.mutate(formData);
+  };
 
   const handleFileSelect = (selectedFiles: FileList | null) => {
-    if (!selectedFiles) return
+    if (!selectedFiles) return;
 
     const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB in bytes
 
     const newFiles = Array.from(selectedFiles).filter((file) => {
-      const extension = "." + file.name.split(".").pop()?.toLowerCase()
-      const isValidType = acceptedTypes.includes(extension)
-      
+      const extension = "." + file.name.split(".").pop()?.toLowerCase();
+      const isValidType = acceptedTypes.includes(extension);
+
       // Check file size
       if (file.size > MAX_FILE_SIZE) {
         toast.error(`${file.name} exceeds 2MB. Please upload a smaller image.`);
         return false;
       }
-      
+
       return isValidType;
-    })
+    });
 
     // If no valid files after filtering, return early
     if (newFiles.length === 0) {
@@ -108,69 +115,73 @@ const TradePaymentUpload = ({onFileUploaded, maxFiles = 5, setUploadedFileUrl, a
     }
 
     // If replacing, clear existing files
-    const updatedFiles = files.length > 0 ? newFiles.slice(0, maxFiles) : [...files, ...newFiles].slice(0, maxFiles)
+    const updatedFiles =
+      files.length > 0
+        ? newFiles.slice(0, maxFiles)
+        : [...files, ...newFiles].slice(0, maxFiles);
 
     // Clear old file preview if replacing
     if (files.length > 0) {
       if (filePreviewUrl) {
         URL.revokeObjectURL(filePreviewUrl);
       }
-      setFilePreviewUrl("")
-      setUploadedFile(null)
+      setFilePreviewUrl("");
+      setUploadedFile(null);
     }
 
     // Don't create local previews - only show preview after upload completes
     const file = newFiles[0];
 
-    setFiles(updatedFiles)
-    handleFileUpload(file)
-  }
+    setFiles(updatedFiles);
+    handleFileUpload(file);
+  };
 
   const removeFile = (index: number) => {
-    const updatedFiles = files.filter((_, i) => i !== index)
+    const updatedFiles = files.filter((_, i) => i !== index);
 
     // Clean up blob URL
     if (filePreviewUrl) {
       URL.revokeObjectURL(filePreviewUrl);
     }
 
-    setFiles(updatedFiles)
-    setFilePreviewUrl("")
-    setUploadedFile(null)
-    onFileUploaded("")
-    setUploadedFileUrl(undefined)
-  }
+    setFiles(updatedFiles);
+    setFilePreviewUrl("");
+    setUploadedFile(null);
+    onFileUploaded("");
+    setUploadedFileUrl(undefined);
+  };
 
   const replaceFile = () => {
-    fileInputRef.current?.click()
-  }
+    fileInputRef.current?.click();
+  };
 
   const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragOver(true)
-  }
+    e.preventDefault();
+    setIsDragOver(true);
+  };
 
   const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragOver(false)
-  }
+    e.preventDefault();
+    setIsDragOver(false);
+  };
 
   const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragOver(false)
+    e.preventDefault();
+    setIsDragOver(false);
     // handleFileSelect(e.dataTransfer.files)
-  }
+  };
 
   const isImageFile = (fileName: string) => {
-    const extension = "." + fileName.split(".").pop()?.toLowerCase()
-    const imageExtensions = [".jpg", ".jpeg", ".png", ".webp", ".gif"]
-    return imageExtensions.includes(extension)
-  }
-  
+    const extension = "." + fileName.split(".").pop()?.toLowerCase();
+    const imageExtensions = [".jpg", ".jpeg", ".png", ".webp", ".gif"];
+    return imageExtensions.includes(extension);
+  };
+
   // Only show preview once upload is complete and we have the file object
-  const previewImage = uploadedFile && isImageFile(uploadedFile.name) && filePreviewUrl 
-    ? filePreviewUrl 
-    : null;
+  const previewImage =
+    uploadedFile && isImageFile(uploadedFile.name) && filePreviewUrl
+      ? filePreviewUrl
+      : null;
 
   return (
     <div className="space-y-4">
@@ -201,25 +212,39 @@ const TradePaymentUpload = ({onFileUploaded, maxFiles = 5, setUploadedFileUrl, a
         <div className="relative z-10 flex flex-col items-center justify-center min-h-[300px] md:min-h-[400px] p-5">
           {/* Upload text content - always visible */}
           <div className="flex flex-col items-center space-y-4">
-            <img src={Upload || "/placeholder.svg"} alt={`Upload icon`} className={`w-12 h-12 ${previewImage ? 'drop-shadow-lg' : ''}`} />
+            <img
+              src={Upload || "/placeholder.svg"}
+              alt={`Upload icon`}
+              className={`w-12 h-12 ${previewImage ? "drop-shadow-lg" : ""}`}
+            />
 
             <div className="space-y-2">
-              <p className={`text-sm ${previewImage ? 'text-white drop-shadow-lg font-medium' : ''}`}>
+              <p
+                className={`text-sm ${previewImage ? "text-white drop-shadow-lg font-medium" : ""}`}
+              >
                 Drag your file(s) to start uploading
               </p>
               <div className={`flex items-center justify-between`}>
-                <div className={`w-20 h-0.5 ${previewImage ? 'bg-white/50' : 'bg-strokeLightGrey'}`}></div>
-                <p className={`text-sm ${previewImage ? 'text-white drop-shadow-lg' : 'text-textSec'}`}>OR</p>
-                <div className={`w-20 h-0.5 ${previewImage ? 'bg-white/50' : 'bg-strokeLightGrey'}`}></div>
+                <div
+                  className={`w-20 h-0.5 ${previewImage ? "bg-white/50" : "bg-strokeLightGrey"}`}
+                ></div>
+                <p
+                  className={`text-sm ${previewImage ? "text-white drop-shadow-lg" : "text-textSec"}`}
+                >
+                  OR
+                </p>
+                <div
+                  className={`w-20 h-0.5 ${previewImage ? "bg-white/50" : "bg-strokeLightGrey"}`}
+                ></div>
               </div>
             </div>
 
             <button
               type="button"
               className={`px-4 py-2 rounded-lg border font-semibold text-sm ${
-                previewImage 
-                  ? 'border-white/80 text-white hover:bg-white/20 bg-white/10 backdrop-blur-sm' 
-                  : 'border-accent2 text-accent2'
+                previewImage
+                  ? "border-white/80 text-white hover:bg-white/20 bg-white/10 backdrop-blur-sm"
+                  : "border-accent2 text-accent2"
               }`}
             >
               Browse files
@@ -269,9 +294,11 @@ const TradePaymentUpload = ({onFileUploaded, maxFiles = 5, setUploadedFileUrl, a
         />
       </div>
 
-      <p className="text-sm text-gray-500">Only support {acceptedTypes.join(", ")} files (max 2MB)</p>
+      <p className="text-sm text-gray-500">
+        Only support {acceptedTypes.join(", ")} files (max 2MB)
+      </p>
     </div>
-  )
-}
+  );
+};
 
 export default TradePaymentUpload;
