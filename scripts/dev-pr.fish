@@ -21,16 +21,18 @@ end
 # Push current branch (create upstream if needed).
 git push -u origin "$branch"
 
-# Create PR to dev if one does not already exist.
-if not gh pr view --json number -q .number >/dev/null 2>&1
+# Try to find an open PR from this branch into dev.
+set -l pr (gh pr list --head "$branch" --base dev --state open --json number -q '.[0].number' 2>/dev/null)
+
+# If no open PR exists, create one now.
+if test -z "$pr"
     gh pr create --base dev --title "$msg" --body ""
+    # Re-fetch PR number for the newly created PR.
+    set pr (gh pr list --head "$branch" --base dev --state open --json number -q '.[0].number' 2>/dev/null)
 end
 
-# Fetch PR number for current branch.
-set -l pr (gh pr view --json number -q .number 2>/dev/null)
-
 if test -z "$pr"
-    echo "Error: Could not find PR for current branch to merge into dev."
+    echo "Error: Could not find or create an open PR from branch '$branch' into dev."
     exit 1
 end
 
