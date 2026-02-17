@@ -11,4 +11,4 @@ if test -z "$pr"
     exit 1
 end
 
-gh pr merge $pr --merge --delete-branch
+gh pr merge $pr --merge
