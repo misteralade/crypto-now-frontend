@@ -8,7 +8,7 @@ import {
 } from "../../redux/transaction.slice.ts";
 import { useTransactionQuery } from "../../queries/transaction.query.ts";
 import type { MessageAttachment } from "../../types/transaction.types.ts";
-// trigger pr
+// trigger pr 2
 import { convertToMillify } from "../../util/index.util.ts";
 
 export const useTransactionDetailsPage = () => {
