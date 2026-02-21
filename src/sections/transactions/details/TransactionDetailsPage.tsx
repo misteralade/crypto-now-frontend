@@ -8,6 +8,7 @@ import { formatNumber } from "../../../util/index.util.ts";
 import {AlertTriangle, CheckCircle, Clock, Copy} from "lucide-react";
 import momentClient from "../../../lib/moment.ts";
 import DisputeTransactionModal from "./modals/DisputeTransactionModal.tsx";
+import TransactionReceiptsSection from "./TransactionReceiptsSection.tsx";
 
 const TransactionDetailsPage = () => {
   const {
@@ -177,6 +178,12 @@ const TransactionDetailsPage = () => {
                       </div>
                     </div>
                   </div>
+
+                  {/* Payment Receipts (user + admin confirmation receipt) */}
+                  <TransactionReceiptsSection
+                    receiptImageUrl={transaction.receiptImageUrl}
+                    adminPaymentReceiptUrl={transaction.adminPaymentReceiptUrl}
+                  />
                   
                   {/* User Crypto Wallet */}
                   {transaction.userCryptoWallet && (
