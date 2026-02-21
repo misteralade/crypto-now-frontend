@@ -127,7 +127,7 @@ export const useTransactionDetailsPage = () => {
     disputeCountdown,
     canDispute,
 
-    // ⚙️ Functions
+    // ⚙️ Functions 2222
     toggleDisputeTransaction,
     handleDisputeReason,
     copyToClipboard,
