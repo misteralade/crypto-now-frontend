@@ -19,6 +19,9 @@ end
 
 git push -u origin dev
 
+# Ensure remote refs are up to date so gh can resolve base/head.
+git fetch origin
+
 # Find an open PR from dev into master.
 set -l pr (gh pr list --head dev --base master --state open --json number -q '.[0].number' 2>/dev/null)
 
