@@ -242,6 +242,14 @@ const TransactionDetailsPage = () => {
                     </div>
                   )}
                   
+                  {/* Note from support (admin note visible to user) */}
+                  {transaction.adminNotes && (
+                    <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                      <h2 className="text-lg font-semibold text-gray-900 mb-2">Note from support</h2>
+                      <p className="text-sm text-gray-700 whitespace-pre-wrap">{transaction.adminNotes}</p>
+                    </div>
+                  )}
+
                   {/* What Happens Next */}
                   <div className="bg-blue-50 rounded-lg border border-blue-200 p-6">
                     <h3 className="text-base font-semibold text-blue-900 mb-3 flex items-center">
