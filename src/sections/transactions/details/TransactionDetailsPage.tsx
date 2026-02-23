@@ -39,20 +39,40 @@ const TransactionDetailsPage = () => {
       transaction?.status as keyof typeof transactionStatusStyles
     ];
 
-  // Fiat amount: use stored amountFiatNGN from API (same as CRM), not client-side conversion
+  // Derive NGN amount from amountFiat + currency (match CRM: always show Fiat Amount (NGN))
+  const getAmountFiatNGN = () => {
+    const amountFiat = Number(transaction?.amountFiat ?? 0);
+    const currency = transaction?.currency;
+    const stableToFiatRate = Number(transaction?.stableToFiatRate ?? 0);
+    if (currency === "NGN") return amountFiat;
+    if (currency === "USD" && stableToFiatRate > 0) return amountFiat * stableToFiatRate;
+    return amountFiat;
+  };
+
+  // Match CRM TransactionOverview: "Fiat Amount (NGN)" with ₦ display only
   const formatFiatAmount = () => {
     if (!transaction) return "";
-    const amountFiatNGN = Number(transaction.amountFiatNGN ?? 0);
-    const amountFiat = Number(transaction.amountFiat ?? 0);
-    const currency = transaction.currency;
-    // Match CRM: primary display is NGN from backend-stored amountFiatNGN
-    const ngnDisplay = `₦ ${convertToMillify(amountFiatNGN, 3)}`;
-    if (currency === "USD") {
-      return `${ngnDisplay} ($${convertToMillify(amountFiat, 2)})`;
+    const amountFiatNGN = getAmountFiatNGN();
+    return `₦ ${convertToMillify(amountFiatNGN, 3)}`;
+  };
+
+  // Match CRM exchange rate display: "1 BTC = $ X" or "1 BTC = ₦ X"
+  const getExchangeRateDisplay = () => {
+    const amountCrypto = Number(transaction?.amountCrypto ?? 0);
+    const symbol = transaction?.cryptocurrency?.symbol || "CRYPTO";
+    const exchangeRate = transaction?.exchangeRate;
+    const currency = transaction?.currency;
+    const amountFiat = Number(transaction?.amountFiat ?? 0);
+    const amountFiatNGN = getAmountFiatNGN();
+    if (amountCrypto <= 0) return "—";
+    if (exchangeRate?.rate != null) {
+      return currency === "USD"
+        ? `1 ${symbol} = $ ${convertToMillify(Number(exchangeRate.rate), 2)}`
+        : `1 ${symbol} = ₦ ${convertToMillify(Number(exchangeRate.rate) * Number(exchangeRate.platformRate ?? 0), 2)}`;
     }
-    return currency === "NGN"
-      ? ngnDisplay
-      : `${currency} ${formatNumber(amountFiat)}`;
+    return currency === "USD"
+      ? `1 ${symbol} = $ ${convertToMillify(amountFiat / amountCrypto, 2)}`
+      : `1 ${symbol} = ₦ ${convertToMillify(amountFiatNGN / amountCrypto, 2)}`;
   };
 
   const CopyButton = ({ text, field }: { text: string; field: string }) => (
@@ -150,18 +170,18 @@ const TransactionDetailsPage = () => {
                       </div>
                       <div>
                         <p className="text-sm text-gray-500 mb-1">
-                          Fiat Amount
+                          Fiat Amount (NGN)
                         </p>
                         <p className="text-2xl font-bold text-gray-900">
                           {formatFiatAmount()}
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500 mb-1">
+                        <p className="text-sm text-gray-500 mb-1 normal-case">
                           Exchange Rate
                         </p>
                         <p className="text-lg font-semibold text-gray-900">
-                          {transaction.stableToFiatRate}
+                          {getExchangeRateDisplay()}
                         </p>
                       </div>
                       <div>

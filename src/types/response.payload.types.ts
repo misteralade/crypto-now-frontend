@@ -1,7 +1,11 @@
-import type {AxiosError} from "axios";
-import type {TradeType, TransactionPriority, TransactionStatus} from "./request.payload.types.ts";
+import type { AxiosError } from "axios";
+import type {
+  TradeType,
+  TransactionPriority,
+  TransactionStatus,
+} from "./request.payload.types.ts";
 import type { TransactionAction } from "../schemas/enum.schema.ts";
-import type {MessageAttachment} from "./transaction.types.ts";
+import type { MessageAttachment } from "./transaction.types.ts";
 
 export interface StandardizedServerError {
   success: false;
@@ -19,11 +23,13 @@ export type AxiosServerError = AxiosError<StandardizedServerError>;
 export type BaseApiResponse<T> = {
   success: boolean;
   message: string;
-  error: {
-    [key: string]: {
-      _errors?: string[];
-    };
-  } | any;
+  error:
+    | {
+        [key: string]: {
+          _errors?: string[];
+        };
+      }
+    | any;
   data: T;
 };
 
@@ -31,7 +37,7 @@ export type BaseApiResponse<T> = {
 export type AuthResponse = {
   message: string;
   success: boolean;
-}
+};
 
 // End Auth
 
@@ -47,7 +53,7 @@ export type SupportedCryptoOrCurrencyResponse = {
   maxTransactionLimit: string;
   minTradeAmountForAnonymous: string;
   maxTradeAmountForAnonymous: string;
-}
+};
 
 export type SupportedExchangeRateResponse = {
   fiatRate: number;
@@ -57,7 +63,7 @@ export type SupportedExchangeRateResponse = {
   rateId: string;
   usdRate?: number; // Only present when currency is "USD"
   platformRate: string;
-}
+};
 
 export type SupportedPlatformBankAccountResponse = {
   id: string;
@@ -66,22 +72,24 @@ export type SupportedPlatformBankAccountResponse = {
   type: string;
   accountNumber: string;
   accountHolderName: string;
-}
+};
 
 export type SupportedPlatformCryptoWalletResponse = {
   id: string;
   walletAddress: string;
   network: string;
-}
+};
 
 // Banks Start
-export type UserBanksAPIResponse = BaseApiResponse<Array<UserBankAccountResponse>>
+export type UserBanksAPIResponse = BaseApiResponse<
+  Array<UserBankAccountResponse>
+>;
 
 export type AllBanksResponse = {
   id: string;
   name: string;
   logoUrl: string;
-}
+};
 
 export type UserBankAccountResponse = {
   id: string;
@@ -93,11 +101,13 @@ export type UserBankAccountResponse = {
   accountName: string;
   isDeleted: boolean;
   createdAt: Date;
-}
+};
 // Banks End
 
 // Crypto Start
-export type UserCryptoWalletAPIResponse = BaseApiResponse<Array<UserCryptoWalletResponse>>
+export type UserCryptoWalletAPIResponse = BaseApiResponse<
+  Array<UserCryptoWalletResponse>
+>;
 
 export type UserCryptoWalletResponse = {
   id: string;
@@ -108,7 +118,7 @@ export type UserCryptoWalletResponse = {
   isVerified: boolean;
   createdAt: Date;
   cryptocurrency: CryptoCurrencyResponseEntity | undefined;
-}
+};
 
 export type UserProfilePayload = {
   id: string;
@@ -125,7 +135,7 @@ export type UserProfilePayload = {
   country: string;
   createdAt: Date;
   updatedAt: Date;
-}
+};
 
 export type GetUserProfileResponse = {
   id: string;
@@ -133,7 +143,7 @@ export type GetUserProfileResponse = {
   createdAt: Date;
   twoFactorEnabled: boolean;
   profile: UserProfilePayload;
-}
+};
 
 // Start Transactions
 export type CryptoCurrencyResponseEntity = {
@@ -172,7 +182,7 @@ export type ExchangeRateResponseEntity = {
   action: TradeType;
   validUntil: Date;
   createdAt: Date;
-}
+};
 
 export type UserBankAccountResponseEntity = {
   id: string;
@@ -182,7 +192,7 @@ export type UserBankAccountResponseEntity = {
   bankName: string;
   bankLogo: string;
   createdAt: string;
-}
+};
 
 export type AdminBankAccountResponseEntity = {
   id: string;
@@ -193,7 +203,7 @@ export type AdminBankAccountResponseEntity = {
   bankLogo: string;
   instructions: string;
   createdAt: Date;
-}
+};
 
 export type AdminAndUserCryptoWalletResponseEntity = {
   id: string;
@@ -205,7 +215,7 @@ export type AdminAndUserCryptoWalletResponseEntity = {
   isVerified: boolean;
   network: string;
   createdAt: Date;
-}
+};
 
 export type AdminResponseEntity = {
   id: string;
@@ -213,12 +223,12 @@ export type AdminResponseEntity = {
   active: boolean;
   lastActive: Date;
   createdAt: Date;
-}
+};
 
 // Transaction Response
 export type InitiateTransactionAPIResponse = BaseApiResponse<{
   sessionId: string;
-}>
+}>;
 
 export type TransactionResponseEntity = {
   id: string;
@@ -235,9 +245,9 @@ export type TransactionResponseEntity = {
   stableToCryptoRate: string;
   currency: string;
   status: TransactionStatus;
-  priority: TransactionPriority,
+  priority: TransactionPriority;
   userBankAccountId: string | null;
-  adminBankAccountId:string | null;
+  adminBankAccountId: string | null;
   userCryptoWalletId: string | null;
   bankTransferReference: string | null;
   receiptImageUrl: string;
@@ -260,7 +270,7 @@ export type TransactionResponseEntity = {
   userCryptoWallet: AdminAndUserCryptoWalletResponseEntity | null;
   adminCryptoWallet: AdminAndUserCryptoWalletResponseEntity | null;
   admin: AdminResponseEntity | null;
-}
+};
 
 export type UserTransactionsHistoryResponse = {
   count: number;
@@ -268,20 +278,33 @@ export type UserTransactionsHistoryResponse = {
   page: number;
   totalPages: number;
   transactions: TransactionResponseEntity[];
-}
+};
 
 // Stat Transaction
-export type GetTransactionDetailsAPIResponse = BaseApiResponse<SearchTransactionsResponse>
+export type GetTransactionDetailsAPIResponse =
+  BaseApiResponse<SearchTransactionsResponse>;
 
-export type GetDisputeMessagesAPIResponse = BaseApiResponse<Array<DisputeMessageResponse>>
+export type GetDisputeMessagesAPIResponse = BaseApiResponse<
+  Array<DisputeMessageResponse>
+>;
 
-export type GetDisputeDetailsAPIResponse = BaseApiResponse<DisputeDetailsResponse>
+export type GetDisputeDetailsAPIResponse =
+  BaseApiResponse<DisputeDetailsResponse>;
 
 export type DisputeDetailsResponse = {
   id: string;
   disputeReason: string;
-  status: 'OPEN' | 'UNDER_REVIEW' | 'AWAITING_EVIDENCE' | 'AWAITING_USER_RESPONSE' | 'AWAITING_ADMIN_RESPONSE' | 'ESCALATED' | 'RESOLVED' | 'REJECTED' | 'CLOSED';
-  priority: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+  status:
+    | "OPEN"
+    | "UNDER_REVIEW"
+    | "AWAITING_EVIDENCE"
+    | "AWAITING_USER_RESPONSE"
+    | "AWAITING_ADMIN_RESPONSE"
+    | "ESCALATED"
+    | "RESOLVED"
+    | "REJECTED"
+    | "CLOSED";
+  priority: "LOW" | "NORMAL" | "HIGH" | "URGENT";
   lastMessageAt: Date;
   attachments: MessageAttachment[];
   resolutionNotes: string | null;
@@ -290,21 +313,21 @@ export type DisputeDetailsResponse = {
   resolver: AdminResponseEntity | null;
   createdAt: Date;
   updatedAt: Date;
-}
+};
 
 export type DisputeMessageResponse = {
   id: string;
   disputeId: string;
   messageText: string;
   attachments: MessageAttachment[];
-  senderType: 'USER' | 'ADMIN';
+  senderType: "USER" | "ADMIN";
   adminId: string | null;
   userId: string | null;
   email: string;
   admin: AdminResponseEntity;
   user: UserResponseEntity;
   createdAt: Date;
-}
+};
 
 export type SearchTransactionsResponse = {
   adminPaymentReceiptUrl: string | undefined;
@@ -339,7 +362,7 @@ export type SearchTransactionsResponse = {
   usdAmount: number;
   createdAt: Date;
   updatedAt: Date;
-  
+
   // Relations
   user?: GetUserProfileResponse;
   profile?: UserProfilePayload;
@@ -347,7 +370,7 @@ export type SearchTransactionsResponse = {
   exchangeRate?: ExchangeRateResponseEntity;
   userBankAccount?: UserBankAccountResponse;
   userCryptoWallet?: UserCryptoWalletResponse;
-}
+};
 
 export type TransactionSummaryResponseEntity = {
   cryptoCurrencySymbol: string;
@@ -367,7 +390,7 @@ export type TransactionSummaryResponseEntity = {
   buyTransactionCount: string;
   sellTransactionCount: string;
   currency: string;
-}
+};
 
 export type TotalTransactionSummaryEntity = {
   cryptoSymbol: string;
@@ -384,12 +407,12 @@ export type TotalTransactionSummaryEntity = {
   totalUsdAmount: string;
   usdSpentOnBuying: string;
   usdReceivedFromSelling: string;
-}
+};
 
 export type TransactionSummaryResponse = {
-  summary: TransactionSummaryResponseEntity[],
-  total: TotalTransactionSummaryEntity[]
-}
+  summary: TransactionSummaryResponseEntity[];
+  total: TotalTransactionSummaryEntity[];
+};
 // End Transactions
 
 // Testimonials
@@ -400,23 +423,23 @@ export type TestimonialResponse = {
   contentLink: string;
   name: string;
   description: string;
-  contentType: 'VIDEO' | 'IMAGE' | 'TEXT';
+  contentType: "VIDEO" | "IMAGE" | "TEXT";
   createdAt: string;
   updatedAt: string;
-}
+};
 
 export type TestimonialPaginationResponse = {
   page: number;
   limit: number;
   total: number;
   totalPages: number;
-}
+};
 
 export type TestimonialsDataResponse = {
   testimonials: TestimonialResponse[];
   pagination: TestimonialPaginationResponse;
-}
+};
 
-export type GetTestimonialsAPIResponse = BaseApiResponse<TestimonialsDataResponse>
+export type GetTestimonialsAPIResponse =
+  BaseApiResponse<TestimonialsDataResponse>;
 // End Testimonials
-

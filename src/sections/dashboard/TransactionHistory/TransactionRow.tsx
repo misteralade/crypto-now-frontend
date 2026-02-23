@@ -75,7 +75,7 @@ const TransactionRow = ({transaction, isLast}: TransactionRowProps) => {
       <td className="p-4 text-sm text-muted-foreground">{momentClient.formatToTransactionInitiationDate(transaction.createdAt)}</td>
       <td className="p-4 text-sm text-foreground">{transaction.type}</td>
       <td className="p-4 text-sm text-foreground font-medium">{Number(transaction.amountCrypto).toFixed(4)} {transaction.cryptocurrency.symbol}</td>
-      <td className="p-4 text-sm text-foreground font-medium">{convertToMillify(Number(transaction.amountFiatNGN || transaction.amountFiat) / Number(transaction.stableToFiatRate), 2)} USD</td>
+      <td className="p-4 text-sm text-foreground font-medium">{convertToMillify(transaction.currency === "USD" ? Number(transaction.amountFiat) : Number(transaction.amountFiat) / Number(transaction.stableToFiatRate || 1), 2)} USD</td>
       <td className="p-4 text-sm text-foreground">{Number(transaction.stableToFiatRate).toFixed(4)}</td>
       <td className="p-4">
         <span
