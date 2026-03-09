@@ -8,7 +8,7 @@ const HeroSectionNew = () => {
   return (
     <section
       className="relative overflow-hidden isolate"
-      style={{ background: "#f5f0e8", height: "calc(100vh - 72px)" }}
+      style={{ background: "#f5f0e8", height: "calc(100vh - 64px)" }}
     >
       {/* Noise grain */}
       <div
@@ -53,9 +53,9 @@ const HeroSectionNew = () => {
         <div className="absolute rounded-full" style={{ inset: "180px", border: "1.5px solid rgba(148,142,238,0.22)", background: "radial-gradient(ellipse at center, rgba(148,142,238,0.10) 0%, transparent 70%)" }} />
       </div>
 
-      {/* ── Headline ── */}
+      {/* ── Headline — absolutely top-anchored, always above card ── */}
       <motion.div
-        className="relative z-30 flex flex-col items-center pt-14 px-4 text-center"
+        className="absolute top-0 left-0 right-0 z-40 flex flex-col items-center pt-6 sm:pt-8 px-4 text-center pointer-events-none"
         initial={{ opacity: 0, y: -28 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ ...SPRING, delay: 0.1 }}
@@ -70,12 +70,6 @@ const HeroSectionNew = () => {
           </span>{" "}
           SELL
         </h1>
-        <p
-          className="text-xs sm:text-sm font-normal tracking-[0.3em] mt-1"
-          style={{ fontFamily: "'Zen Dots', cursive", color: "#948EEE" }}
-        >
-          CRYPTO
-        </p>
       </motion.div>
 
       {/* ── BTC coin — bottom-left corner, slides in from further left+down ── */}
@@ -116,9 +110,9 @@ const HeroSectionNew = () => {
 
       {/* ── Phone card — centered, slides up through the bottom blur ── */}
       <motion.div
-        className="absolute z-20"
+        className="absolute z-10"
         style={{ bottom: 0, left: "50%", x: "-50%" }}
-        initial={{ opacity: 0, y: 220 }}
+        initial={{ opacity: 0, y: 260 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "tween", ease: [0.16, 1, 0.3, 1], duration: 1.0, delay: 0.15 }}
       >
