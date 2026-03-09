@@ -1,12 +1,16 @@
+import { motion } from "framer-motion";
 import AppSimCard from "./AppSimCard.tsx";
+
+const SPRING = { type: "spring", stiffness: 120, damping: 18, mass: 1 };
+const EASE_OUT = { type: "spring", stiffness: 80, damping: 20 };
 
 const HeroSectionNew = () => {
   return (
     <section
-      className="relative min-h-[calc(100vh-72px)] flex flex-col overflow-hidden"
-      style={{ background: "#f5f0e8" }}
+      className="relative overflow-hidden isolate"
+      style={{ background: "#f5f0e8", height: "calc(100vh - 72px)" }}
     >
-      {/* Noise grain overlay */}
+      {/* Noise grain */}
       <div
         className="pointer-events-none absolute inset-0 z-0"
         style={{
@@ -17,121 +21,133 @@ const HeroSectionNew = () => {
         }}
       />
 
-      {/* Purple glow — left */}
+      {/* Purple glow — bottom-left */}
       <div
-        className="pointer-events-none absolute -left-40 top-1/4 w-[560px] h-[560px] rounded-full z-0"
+        className="pointer-events-none absolute z-0"
         style={{
-          background:
-            "radial-gradient(circle, rgba(148,142,238,0.38) 0%, transparent 70%)",
+          left: "-100px", bottom: "0",
+          width: "520px", height: "520px", borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(148,142,238,0.40) 0%, transparent 70%)",
           filter: "blur(48px)",
         }}
       />
 
-      {/* Gold glow — right */}
+      {/* Gold glow — bottom-right */}
       <div
-        className="pointer-events-none absolute -right-40 top-1/4 w-[560px] h-[560px] rounded-full z-0"
+        className="pointer-events-none absolute z-0"
         style={{
-          background:
-            "radial-gradient(circle, rgba(247,166,0,0.30) 0%, transparent 70%)",
+          right: "-100px", bottom: "0",
+          width: "520px", height: "520px", borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(247,166,0,0.32) 0%, transparent 70%)",
           filter: "blur(48px)",
         }}
       />
 
-      {/* Content */}
-      <div className="relative z-10 flex flex-col items-center justify-center flex-1 px-4 pt-10 pb-16 gap-8">
-        {/* Headline */}
-        <div className="text-center">
-          <h1
-            className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-normal leading-tight tracking-tight"
-            style={{ fontFamily: "'Zen Dots', cursive", color: "#0E0F0C" }}
-          >
-            BUY{" "}
-            <span
-              style={{
-                fontFamily: "'Delius', cursive",
-                fontSize: "0.65em",
-                color: "#948EEE",
-                verticalAlign: "middle",
-              }}
-            >
-              and
-            </span>{" "}
-            SELL
-          </h1>
-          <p
-            className="mt-3 text-lg sm:text-xl text-gray-500"
-            style={{ fontFamily: "'Delius', cursive" }}
-          >
-            Fast &bull; Simple &bull; Secure
-          </p>
-        </div>
-
-        {/* Coins + Card row — coins overlap/hug card */}
-        <div className="flex items-center justify-center w-full max-w-5xl">
-          {/* BTC coin — large, negative margin so it hugs the card */}
-          <div
-            className="hidden sm:block flex-shrink-0 animate-[float_4s_ease-in-out_infinite] relative z-10"
-            style={{ marginRight: "-28px" }}
-          >
-            <img
-              src="/decorations/btc-coin.png"
-              alt="Bitcoin"
-              className="w-36 h-36 sm:w-44 sm:h-44 md:w-52 md:h-52 rounded-full object-cover"
-              style={{
-                boxShadow: "0 8px 40px rgba(247,166,0,0.30)",
-                filter: "drop-shadow(0 4px 16px rgba(247,166,0,0.20))",
-              }}
-            />
-          </div>
-
-          {/* Arrow BTC → card */}
-          <div className="hidden lg:block flex-shrink-0 relative z-20 mx-1">
-            <img
-              src="/decorations/arrow.png"
-              alt=""
-              className="w-12 h-auto opacity-60"
-            />
-          </div>
-
-          {/* App Sim Card */}
-          <div className="flex-shrink-0 relative z-30">
-            <AppSimCard />
-          </div>
-
-          {/* Arrow card → Naira */}
-          <div className="hidden lg:block flex-shrink-0 relative z-20 mx-1">
-            <img
-              src="/decorations/arrow.png"
-              alt=""
-              className="w-12 h-auto opacity-60"
-              style={{ transform: "scaleX(-1)" }}
-            />
-          </div>
-
-          {/* Naira coin — large, negative margin so it hugs the card */}
-          <div
-            className="hidden sm:block flex-shrink-0 animate-[float_4s_ease-in-out_0.9s_infinite] relative z-10"
-            style={{ marginLeft: "-28px" }}
-          >
-            <img
-              src="/decorations/naira-coin.png"
-              alt="Naira"
-              className="w-36 h-36 sm:w-44 sm:h-44 md:w-52 md:h-52 rounded-full object-cover"
-              style={{
-                boxShadow: "0 8px 40px rgba(148,142,238,0.30)",
-                filter: "drop-shadow(0 4px 16px rgba(148,142,238,0.20))",
-              }}
-            />
-          </div>
-        </div>
+      {/* Concentric purple arcs */}
+      <div
+        className="pointer-events-none absolute left-1/2 z-0"
+        style={{ bottom: "-80px", transform: "translateX(-50%)", width: "860px", height: "860px" }}
+      >
+        <div className="absolute inset-0 rounded-full" style={{ border: "1.5px solid rgba(148,142,238,0.11)" }} />
+        <div className="absolute rounded-full" style={{ inset: "80px", border: "1.5px solid rgba(148,142,238,0.16)", background: "radial-gradient(ellipse at center, rgba(148,142,238,0.06) 0%, transparent 70%)" }} />
+        <div className="absolute rounded-full" style={{ inset: "180px", border: "1.5px solid rgba(148,142,238,0.22)", background: "radial-gradient(ellipse at center, rgba(148,142,238,0.10) 0%, transparent 70%)" }} />
       </div>
 
-      <style>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-16px); }
-        }
-      `}</style>
+      {/* ── Headline ── */}
+      <motion.div
+        className="relative z-30 flex flex-col items-center pt-14 px-4 text-center"
+        initial={{ opacity: 0, y: -28 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ ...SPRING, delay: 0.1 }}
+      >
+        <h1
+          className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-normal leading-tight tracking-tight"
+          style={{ fontFamily: "'Zen Dots', cursive", color: "#0E0F0C" }}
+        >
+          BUY{" "}
+          <span style={{ fontFamily: "'Delius', cursive", fontSize: "0.65em", color: "#0E0F0C", verticalAlign: "middle" }}>
+            &amp;
+          </span>{" "}
+          SELL
+        </h1>
+        <p
+          className="text-xs sm:text-sm font-normal tracking-[0.3em] mt-1"
+          style={{ fontFamily: "'Zen Dots', cursive", color: "#948EEE" }}
+        >
+          CRYPTO
+        </p>
+      </motion.div>
+
+      {/* ── BTC coin — bottom-left corner, slides in from further left+down ── */}
+      <motion.div
+        className="absolute z-10 hidden sm:block"
+        style={{ bottom: "-40px", left: "-2vw" }}
+        initial={{ opacity: 0, x: -140, y: 120 }}
+        animate={{ opacity: 1, x: 0, y: 0 }}
+        transition={{ ...SPRING, delay: 0.3 }}
+      >
+        <motion.img
+          src="/decorations/btc-coin.png"
+          alt="Bitcoin"
+          className="w-56 h-56 md:w-72 md:h-72 lg:w-[340px] lg:h-[340px] object-contain"
+          style={{ filter: "drop-shadow(0 12px 40px rgba(247,166,0,0.38))" }}
+          animate={{ y: [0, -18, 0] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", repeatType: "loop" }}
+        />
+      </motion.div>
+
+      {/* ── Naira coin — bottom-right corner, slides in from further right+down ── */}
+      <motion.div
+        className="absolute z-10 hidden sm:block"
+        style={{ bottom: "-40px", right: "-2vw" }}
+        initial={{ opacity: 0, x: 140, y: 120 }}
+        animate={{ opacity: 1, x: 0, y: 0 }}
+        transition={{ ...SPRING, delay: 0.45 }}
+      >
+        <motion.img
+          src="/decorations/naira-coin.png"
+          alt="Naira"
+          className="w-56 h-56 md:w-72 md:h-72 lg:w-[340px] lg:h-[340px] object-contain"
+          style={{ filter: "drop-shadow(0 12px 40px rgba(148,142,238,0.38))" }}
+          animate={{ y: [0, -18, 0] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.9, repeatType: "loop" }}
+        />
+      </motion.div>
+
+      {/* ── Phone card — centered, slides up through the bottom blur ── */}
+      <motion.div
+        className="absolute z-20"
+        style={{ bottom: 0, left: "50%", x: "-50%" }}
+        initial={{ opacity: 0, y: 220 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: "tween", ease: [0.16, 1, 0.3, 1], duration: 1.0, delay: 0.15 }}
+      >
+        <div style={{ transform: "translateY(180px)" }}>
+          <AppSimCard />
+        </div>
+      </motion.div>
+
+      {/* ── Bottom fade overlay ── */}
+      <div
+        className="pointer-events-none absolute bottom-0 left-0 right-0 z-30"
+        style={{
+          height: "180px",
+          background: "linear-gradient(to bottom, transparent 0%, #f5f0e8 85%)",
+        }}
+      />
+
+      {/* Fast • Simple • Secure */}
+      <div
+        className="absolute left-1/2 z-40 text-center"
+        style={{ bottom: "20px", transform: "translateX(-50%)" }}
+      >
+        <p
+          className="text-sm sm:text-base text-gray-500 whitespace-nowrap"
+          style={{ fontFamily: "'Delius', cursive" }}
+        >
+          Fast &bull; Simple &bull; Secure
+        </p>
+      </div>
     </section>
   );
 };
