@@ -8,38 +8,20 @@ const HeroSectionNew = () => {
   return (
     <section
       className="relative overflow-hidden isolate"
-      style={{ background: "#f5f0e8", height: "calc(100vh - 64px)" }}
+      style={{ background: "#FAF9F7", height: "calc(100vh - 64px)" }}
     >
-      {/* Noise grain */}
-      <div
-        className="pointer-events-none absolute inset-0 z-0"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E")`,
-          backgroundRepeat: "repeat",
-          backgroundSize: "128px 128px",
-          opacity: 0.5,
-        }}
-      />
 
-      {/* Purple glow — bottom-left */}
+      {/* Purple glow — tight, bottom-center only */}
       <div
-        className="pointer-events-none absolute z-0"
+        className="pointer-events-none absolute z-0 left-1/2"
         style={{
-          left: "-100px", bottom: "0",
-          width: "520px", height: "520px", borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(148,142,238,0.40) 0%, transparent 70%)",
-          filter: "blur(48px)",
-        }}
-      />
-
-      {/* Gold glow — bottom-right */}
-      <div
-        className="pointer-events-none absolute z-0"
-        style={{
-          right: "-100px", bottom: "0",
-          width: "520px", height: "520px", borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(247,166,0,0.32) 0%, transparent 70%)",
-          filter: "blur(48px)",
+          bottom: "-60px",
+          transform: "translateX(-50%)",
+          width: "600px",
+          height: "300px",
+          borderRadius: "50%",
+          background: "radial-gradient(ellipse, rgba(148,142,238,0.28) 0%, transparent 70%)",
+          filter: "blur(40px)",
         }}
       />
 
@@ -48,9 +30,9 @@ const HeroSectionNew = () => {
         className="pointer-events-none absolute left-1/2 z-0"
         style={{ bottom: "-80px", transform: "translateX(-50%)", width: "860px", height: "860px" }}
       >
-        <div className="absolute inset-0 rounded-full" style={{ border: "1.5px solid rgba(148,142,238,0.11)" }} />
-        <div className="absolute rounded-full" style={{ inset: "80px", border: "1.5px solid rgba(148,142,238,0.16)", background: "radial-gradient(ellipse at center, rgba(148,142,238,0.06) 0%, transparent 70%)" }} />
-        <div className="absolute rounded-full" style={{ inset: "180px", border: "1.5px solid rgba(148,142,238,0.22)", background: "radial-gradient(ellipse at center, rgba(148,142,238,0.10) 0%, transparent 70%)" }} />
+        <div className="absolute inset-0 rounded-full" style={{ border: "1px solid rgba(148,142,238,0.10)" }} />
+        <div className="absolute rounded-full" style={{ inset: "80px", border: "1px solid rgba(148,142,238,0.13)" }} />
+        <div className="absolute rounded-full" style={{ inset: "180px", border: "1px solid rgba(148,142,238,0.18)" }} />
       </div>
 
       {/* ── Headline — absolutely top-anchored, always above card ── */}
@@ -84,7 +66,7 @@ const HeroSectionNew = () => {
           src="/decorations/btc-coin.png"
           alt="Bitcoin"
           className="w-64 h-64 md:w-80 md:h-80 lg:w-[400px] lg:h-[400px] object-contain"
-          style={{ filter: "drop-shadow(0 12px 40px rgba(247,166,0,0.38))" }}
+          style={{ filter: "none" }}
           animate={{ y: [0, -18, 0] }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", repeatType: "loop" }}
         />
@@ -102,7 +84,7 @@ const HeroSectionNew = () => {
           src="/decorations/naira-coin.png"
           alt="Naira"
           className="w-64 h-64 md:w-80 md:h-80 lg:w-[400px] lg:h-[400px] object-contain"
-          style={{ filter: "drop-shadow(0 12px 40px rgba(148,142,238,0.38))", transform: "scaleX(-1)" }}
+          style={{ filter: "none", transform: "scaleX(-1)" }}
           animate={{ y: [0, -18, 0] }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.9, repeatType: "loop" }}
         />
@@ -126,7 +108,7 @@ const HeroSectionNew = () => {
         className="pointer-events-none absolute bottom-0 left-0 right-0 z-30"
         style={{
           height: "180px",
-          background: "linear-gradient(to bottom, transparent 0%, #f5f0e8 85%)",
+          background: "linear-gradient(to bottom, transparent 0%, #FAF9F7 85%)",
         }}
       />
 

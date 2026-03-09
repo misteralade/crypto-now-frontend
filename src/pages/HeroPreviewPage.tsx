@@ -47,7 +47,7 @@ const HeroPreviewPage = () => {
   }, []);
 
   return (
-    <div style={{ background: "#f5f0e8", minHeight: "100vh" }}>
+    <div style={{ background: "#FAF9F7", minHeight: "100vh" }}>
 
       {/* ── Inline navbar — visible at top, fades out on scroll ── */}
       <AnimatePresence>

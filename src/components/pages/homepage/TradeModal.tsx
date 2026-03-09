@@ -4,16 +4,23 @@ import { useTradeCryptoCurrenciesButton } from "../../../hooks/components/useTra
 import { ROUTES } from "../../../util/constants.util.ts";
 import type { SupportedCryptoOrCurrencyResponse } from "../../../types/response.payload.types.ts";
 
-const QUICK_AMOUNTS = [5, 10, 50, 100];
+const QUICK_AMOUNTS_USD = [5, 10, 50, 100];
+const QUICK_AMOUNTS_NGN = [1000, 5000, 20000, 100000];
+
+const formatChipLabel = (amount: number, symbol: string) => {
+  if (amount >= 1000) return `${symbol}${(amount / 1000).toFixed(0)}k`;
+  return `${symbol}${amount}`;
+};
 
 interface PickerProps {
   items: SupportedCryptoOrCurrencyResponse[] | undefined;
   selectedId: string;
   onSelect: (id: string) => void;
   rateKey: "buyRate" | "sellRate";
+  showRate?: boolean;
 }
 
-const CurrencyPicker = ({ items, selectedId, onSelect, rateKey }: PickerProps) => {
+const CurrencyPicker = ({ items, selectedId, onSelect, rateKey, showRate = false }: PickerProps) => {
   const formatRate = (r: string) => {
     const n = parseFloat(r);
     if (isNaN(n)) return r;
@@ -58,7 +65,7 @@ const CurrencyPicker = ({ items, selectedId, onSelect, rateKey }: PickerProps) =
             <span className={`text-[11px] font-bold leading-none ${isSelected ? "text-[#948EEE]" : "text-[#0E0F0C]"}`}>
               {item.code || item.symbol}
             </span>
-            <span className="text-[10px] text-gray-400 leading-none">{formatRate(item[rateKey])}</span>
+            {showRate && <span className="text-[10px] text-gray-400 leading-none">{formatRate(item[rateKey])}</span>}
           </button>
         );
       })}
@@ -82,14 +89,38 @@ const TradeModal = ({ onClose }: TradeModalProps) => {
     setSupportedCurrency,
   } = useTradeCryptoCurrenciesButton();
 
-  const [activeTab, setActiveTab] = useState<"BUY" | "SELL">("BUY");
+  // SELL is first/default
+  const [activeTab, setActiveTab] = useState<"SELL" | "BUY">("SELL");
   const [amount, setAmount] = useState<string>("");
 
-  // Lock body scroll while modal is open
+  const selectedCryptoObj = supportedCryptoCurrencies?.find((c) => c.id === selectedCrypto);
+  const selectedCurrencyObj = supportedCurrencies?.find((c) => c.id === supportedCurrency);
+
+  // For SELL: user sends crypto, receives fiat
+  // For BUY:  user sends fiat ($), receives crypto
+  const isSell = activeTab === "SELL";
+
+  const sendLabel = isSell ? "You Will Send" : "You Will Send";
+  const receiveLabel = isSell ? "You Will Receive" : "You Will Receive";
+
+  const sendPickerLabel = isSell ? "Crypto to send" : "Currency to spend";
+  const receivePickerLabel = isSell ? "Currency to receive" : "Token to receive";
+
+  const inputSymbol = isSell
+    ? (selectedCryptoObj?.symbol || selectedCryptoObj?.code || "")
+    : (selectedCurrencyObj?.symbol || selectedCurrencyObj?.code || "$");
+
+  const inputPlaceholder = isSell ? "0.00000" : "0.00";
+
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = ""; };
   }, []);
+
+  // Reset amount when switching tabs
+  useEffect(() => {
+    setAmount("");
+  }, [activeTab]);
 
   const handleStartTrading = () => {
     navigate({
@@ -121,9 +152,9 @@ const TradeModal = ({ onClose }: TradeModalProps) => {
           ✕
         </button>
 
-        {/* Tabs */}
+        {/* Tabs — SELL first, BUY second */}
         <div className="flex border-b border-gray-100">
-          {(["BUY", "SELL"] as const).map((tab) => (
+          {(["SELL", "BUY"] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -133,65 +164,84 @@ const TradeModal = ({ onClose }: TradeModalProps) => {
                   : "border-transparent text-gray-400 hover:text-gray-600"
               }`}
             >
-              {tab === "BUY" ? "🟰 Buy Crypto" : "✦ Sell Crypto"}
+              {tab === "SELL" ? "✦ Sell Crypto" : "🟰 Buy Crypto"}
             </button>
           ))}
         </div>
 
-        {/* Token picker */}
+        {/* You Will Send picker */}
         <div className="flex flex-col gap-1.5">
-          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Token</span>
+          <span className="text-xs font-semibold text-gray-500 tracking-wide">{sendPickerLabel}</span>
           <CurrencyPicker
-            items={supportedCryptoCurrencies}
-            selectedId={selectedCrypto}
-            onSelect={setSelectedCrypto}
-            rateKey={activeTab === "BUY" ? "buyRate" : "sellRate"}
+            items={isSell ? supportedCryptoCurrencies : supportedCurrencies}
+            selectedId={isSell ? selectedCrypto : supportedCurrency}
+            onSelect={isSell ? setSelectedCrypto : setSupportedCurrency}
+            rateKey="sellRate"
+            showRate={false}
           />
         </div>
 
-        {/* Fiat picker */}
+        {/* You Will Receive picker */}
         <div className="flex flex-col gap-1.5">
-          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Currency</span>
+          <span className="text-xs font-semibold text-gray-500 tracking-wide">{receivePickerLabel}</span>
           <CurrencyPicker
-            items={supportedCurrencies}
-            selectedId={supportedCurrency}
-            onSelect={setSupportedCurrency}
-            rateKey={activeTab === "BUY" ? "buyRate" : "sellRate"}
+            items={isSell ? supportedCurrencies : supportedCryptoCurrencies}
+            selectedId={isSell ? supportedCurrency : selectedCrypto}
+            onSelect={isSell ? setSupportedCurrency : setSelectedCrypto}
+            rateKey={isSell ? "sellRate" : "buyRate"}
+            showRate={isSell}
           />
         </div>
 
-        {/* Amount */}
+        {/* Amount input */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
-            {activeTab === "BUY" ? "You Pay" : "You Send"}
+          <label className="text-xs font-semibold text-gray-500 tracking-wide">
+            {sendLabel}
           </label>
           <div className="flex items-center gap-2 border-2 border-gray-200 rounded-xl px-3 py-2 bg-gray-50 focus-within:border-[#948EEE] transition-colors">
-            <span className="text-gray-400 text-sm font-medium">$</span>
+            <span className="text-gray-500 text-sm font-semibold shrink-0">{inputSymbol}</span>
             <input
               type="number"
               min={0}
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              placeholder="0.00"
+              placeholder={inputPlaceholder}
               className="flex-1 bg-transparent outline-none text-[#0E0F0C] font-semibold text-lg placeholder:text-gray-300"
               autoFocus
             />
           </div>
-          <div className="flex gap-2">
-            {QUICK_AMOUNTS.map((chip) => (
-              <button
-                key={chip}
-                onClick={() => setAmount(String(chip))}
-                className={`flex-1 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
-                  amount === String(chip)
-                    ? "bg-[#948EEE] border-[#948EEE] text-white"
-                    : "bg-white border-gray-200 text-gray-500 hover:border-[#948EEE] hover:text-[#948EEE]"
-                }`}
-              >
-                ${chip}
-              </button>
-            ))}
-          </div>
+
+          {/* Quick chips — only shown for BUY (fiat amounts) */}
+          {!isSell && (
+            <div className="flex gap-2">
+              {(selectedCurrencyObj?.code === "NGN" ? QUICK_AMOUNTS_NGN : QUICK_AMOUNTS_USD).map((chip) => {
+                const sym = selectedCurrencyObj?.symbol || selectedCurrencyObj?.code || "$";
+                return (
+                  <button
+                    key={chip}
+                    onClick={() => setAmount(String(chip))}
+                    className={`flex-1 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+                      amount === String(chip)
+                        ? "bg-[#948EEE] border-[#948EEE] text-white"
+                        : "bg-white border-gray-200 text-gray-500 hover:border-[#948EEE] hover:text-[#948EEE]"
+                    }`}
+                  >
+                    {formatChipLabel(chip, sym)}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Receive preview label */}
+          <p className="text-xs text-gray-400 mt-0.5">
+            {receiveLabel}:{" "}
+            <span className="font-semibold text-[#948EEE]">
+              {isSell
+                ? (selectedCurrencyObj?.code || "NGN")
+                : (selectedCryptoObj?.code || "crypto")}
+            </span>
+          </p>
         </div>
 
         {/* CTA */}
@@ -200,7 +250,7 @@ const TradeModal = ({ onClose }: TradeModalProps) => {
           className="w-full py-3 rounded-2xl font-bold text-base text-white cursor-pointer border-none transition-opacity hover:opacity-90"
           style={{ background: "#948EEE" }}
         >
-          Start Trading
+          {isSell ? "Sell Now" : "Buy Now"}
         </button>
 
         {/* Footer */}
