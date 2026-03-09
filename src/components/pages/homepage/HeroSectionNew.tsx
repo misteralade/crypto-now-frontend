@@ -89,7 +89,7 @@ const HeroSectionNew = () => {
         <motion.img
           src="/decorations/btc-coin.png"
           alt="Bitcoin"
-          className="w-56 h-56 md:w-72 md:h-72 lg:w-[340px] lg:h-[340px] object-contain"
+          className="w-64 h-64 md:w-80 md:h-80 lg:w-[400px] lg:h-[400px] object-contain"
           style={{ filter: "drop-shadow(0 12px 40px rgba(247,166,0,0.38))" }}
           animate={{ y: [0, -18, 0] }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", repeatType: "loop" }}
@@ -107,8 +107,8 @@ const HeroSectionNew = () => {
         <motion.img
           src="/decorations/naira-coin.png"
           alt="Naira"
-          className="w-56 h-56 md:w-72 md:h-72 lg:w-[340px] lg:h-[340px] object-contain"
-          style={{ filter: "drop-shadow(0 12px 40px rgba(148,142,238,0.38))" }}
+          className="w-64 h-64 md:w-80 md:h-80 lg:w-[400px] lg:h-[400px] object-contain"
+          style={{ filter: "drop-shadow(0 12px 40px rgba(148,142,238,0.38))", transform: "scaleX(-1)" }}
           animate={{ y: [0, -18, 0] }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.9, repeatType: "loop" }}
         />
