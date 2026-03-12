@@ -482,7 +482,7 @@ const AppSimCard = () => {
                     min={0}
                     value={amount}
                     onChange={(e) => { setAmount(e.target.value); setReceiveAmount(""); }}
-                    onBlur={fetchRate}
+                    onBlur={() => fetchRate()}
                     placeholder="0"
                     className="flex-1 bg-transparent outline-none text-2xl font-bold text-[#0E0F0C] placeholder:text-gray-200"
                   />
