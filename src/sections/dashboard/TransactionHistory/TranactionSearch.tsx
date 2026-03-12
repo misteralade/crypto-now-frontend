@@ -16,35 +16,46 @@ interface TransactionSearchProps {
 
 export function TransactionSearch({ searchQuery, onSearchChange, showFilters, onToggleFilters, setShowFilters, filters, onFiltersChange, supportedCrypto }: TransactionSearchProps) {
   return (
-    <div className="flex gap-4 w-full md:w-1/3">
-      <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-grey w-6 h-6"/>
+    <div className="relative flex gap-3 w-full sm:w-auto">
+      <div className="relative flex-1 sm:w-72">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "#9A9A9A" }} />
         <input
           type="text"
-          placeholder="Search transaction"
+          placeholder="Search by ref or crypto..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="w-full pl-10 pr-4 py-3 text-sm border border-border rounded-3xl placeholder:text-grey focus:outline-none"
+          className="w-full pl-9 pr-4 py-2.5 text-sm rounded-xl focus:outline-none"
+          style={{
+            background: "#FFFFFF",
+            border: "1px solid #ECECEC",
+            color: "#0E0F0C",
+          }}
         />
       </div>
 
-      <button
-        onClick={onToggleFilters}
-        className={`relative flex items-center cursor-pointer gap-2 px-4 py-2  font-medium border border-border rounded-3xl transition-colors whitespace-nowrap ${
-          showFilters ? "bg-primary text-white" : "bg-background text-desc hover:bg-primary/70 hover:text-white"
-        }`}
-      >
-        <Filter className="w-4 h-4"/>
-        Filter
+      <div className="relative">
+        <button
+          onClick={onToggleFilters}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors whitespace-nowrap"
+          style={{
+            background: showFilters ? "#03034D" : "#FFFFFF",
+            color: showFilters ? "#FFFFFF" : "#6B6E6B",
+            border: showFilters ? "1px solid #03034D" : "1px solid #ECECEC",
+          }}
+        >
+          <Filter className="w-4 h-4" />
+          Filter
+        </button>
+
         {showFilters && (
           <TransactionFilters
             onClose={() => setShowFilters(false)}
             filters={filters}
             onFiltersChange={onFiltersChange}
-            supportedCrypto={supportedCrypto ? supportedCrypto : []}
+            supportedCrypto={supportedCrypto ?? []}
           />
         )}
-      </button>
+      </div>
     </div>
   )
 }
