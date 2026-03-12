@@ -27,7 +27,7 @@ if (!rootElement.innerHTML) {
   root.render(
     <StrictMode>
       <Provider store={store}>
-        <PersistGate persistor={persistor} loading={null}>
+        <PersistGate persistor={persistor} loading={<RouterProvider router={router} />}>
           <QueryClientProviderWrapper>
             <ToastContainer
               position="top-right"
