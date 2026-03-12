@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import AppSimCard from "./AppSimCard.tsx";
 
-const SPRING = { type: "spring", stiffness: 120, damping: 18, mass: 1 };
+const SPRING = { type: "spring" as const, stiffness: 120, damping: 18, mass: 1 };
 
 const HeroSectionNew = () => {
   return (
@@ -48,7 +48,7 @@ const HeroSectionNew = () => {
           className="w-64 h-64 md:w-80 md:h-80 lg:w-[400px] lg:h-[400px] object-contain"
           style={{ filter: "none" }}
           animate={{ y: [0, -18, 0] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", repeatType: "loop" }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", repeatType: "loop" as const }}
         />
       </motion.div>
 
@@ -67,7 +67,7 @@ const HeroSectionNew = () => {
           style={{ filter: "none" }}
           initial={{ scaleX: -1 }}
           animate={{ y: [0, -18, 0], scaleX: -1 }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.9, repeatType: "loop" }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.9, repeatType: "loop" as const }}
         />
       </motion.div>
 

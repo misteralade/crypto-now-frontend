@@ -17,7 +17,6 @@ import { Route as SecurityPolicyRouteImport } from './routes/security-policy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RatesRouteImport } from './routes/rates'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
-import { Route as HomeRouteImport } from './routes/home'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AmlPolicyRouteImport } from './routes/aml-policy'
@@ -72,11 +71,6 @@ const RatesRoute = RatesRouteImport.update({
 const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
   id: '/privacy-policy',
   path: '/privacy-policy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HomeRoute = HomeRouteImport.update({
-  id: '/home',
-  path: '/home',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
@@ -163,7 +157,6 @@ export interface FileRoutesByFullPath {
   '/aml-policy': typeof AmlPolicyRoute
   '/contact': typeof ContactRoute
   '/forgot-password': typeof ForgotPasswordRoute
-  '/home': typeof HomeRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/rates': typeof RatesRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -189,7 +182,6 @@ export interface FileRoutesByTo {
   '/aml-policy': typeof AmlPolicyRoute
   '/contact': typeof ContactRoute
   '/forgot-password': typeof ForgotPasswordRoute
-  '/home': typeof HomeRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/rates': typeof RatesRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -216,7 +208,6 @@ export interface FileRoutesById {
   '/aml-policy': typeof AmlPolicyRoute
   '/contact': typeof ContactRoute
   '/forgot-password': typeof ForgotPasswordRoute
-  '/home': typeof HomeRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/rates': typeof RatesRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -244,7 +235,6 @@ export interface FileRouteTypes {
     | '/aml-policy'
     | '/contact'
     | '/forgot-password'
-    | '/home'
     | '/privacy-policy'
     | '/rates'
     | '/reset-password'
@@ -270,7 +260,6 @@ export interface FileRouteTypes {
     | '/aml-policy'
     | '/contact'
     | '/forgot-password'
-    | '/home'
     | '/privacy-policy'
     | '/rates'
     | '/reset-password'
@@ -296,7 +285,6 @@ export interface FileRouteTypes {
     | '/aml-policy'
     | '/contact'
     | '/forgot-password'
-    | '/home'
     | '/privacy-policy'
     | '/rates'
     | '/reset-password'
@@ -323,7 +311,6 @@ export interface RootRouteChildren {
   AmlPolicyRoute: typeof AmlPolicyRoute
   ContactRoute: typeof ContactRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
-  HomeRoute: typeof HomeRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   RatesRoute: typeof RatesRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -398,13 +385,6 @@ declare module '@tanstack/react-router' {
       path: '/privacy-policy'
       fullPath: '/privacy-policy'
       preLoaderRoute: typeof PrivacyPolicyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/home': {
-      id: '/home'
-      path: '/home'
-      fullPath: '/home'
-      preLoaderRoute: typeof HomeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forgot-password': {
@@ -523,7 +503,6 @@ const rootRouteChildren: RootRouteChildren = {
   AmlPolicyRoute: AmlPolicyRoute,
   ContactRoute: ContactRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
-  HomeRoute: HomeRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   RatesRoute: RatesRoute,
   ResetPasswordRoute: ResetPasswordRoute,

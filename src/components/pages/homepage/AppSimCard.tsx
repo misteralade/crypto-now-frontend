@@ -116,6 +116,11 @@ const AppSimCard = () => {
   const [selectedCurrency, setSelectedCurrency] = useState(saved.selectedCurrency || "");
   const [amount, setAmount] = useState(saved.amount || "");
   const [receiveAmount, setReceiveAmount] = useState(saved.receiveAmount || "");
+
+  // BUY: allow input in USD, but transact in NGN
+  const [buyInputCurrency, setBuyInputCurrency] = useState<"NGN" | "USD">("NGN");
+  const [usdToNgnRate, setUsdToNgnRate] = useState<number | null>(null);
+  const [usdRateLoading, setUsdRateLoading] = useState(false);
   const [rateId, setRateId] = useState(saved.rateId || "");
 
   const [email, setEmail] = useState(saved.email || "");
@@ -184,14 +189,54 @@ const AppSimCard = () => {
   const currSymbol = currencyObj?.symbol || currencyObj?.code || "₦";
   const cryptoSymbol = cryptoObj?.symbol || cryptoObj?.code || "";
 
-  // BUY: fiat chips (NGN or USD). SELL: no quick chips (entering crypto amount)
-  const isNGN = currencyObj?.code === "NGN";
-  const chips = isNGN ? [5000, 20000, 50000, 100000] : [5, 10, 50, 100];
+  // BUY: fiat chips based on active input currency. SELL: crypto amount chips
+  const isUsdInput = isBuy && buyInputCurrency === "USD";
+  const chips = isUsdInput ? [10, 50, 100, 500] : [5000, 20000, 50000, 100000];
   const formatChip = (n: number) =>
-    isNGN ? `₦${n >= 1000 ? n / 1000 + "k" : n}` : `${currSymbol}${n}`;
+    isUsdInput ? `$${n}` : `₦${n >= 1000 ? n / 1000 + "k" : n}`;
 
-  const fetchRate = async () => {
-    if (!selectedCrypto || !selectedCurrency || !amount) return;
+  // Derive NGN amount when user is typing in USD
+  const ngnCurrencyObj = supportedCurrencies?.find((c) => c.code === "NGN");
+  const usdCurrencyObj = supportedCurrencies?.find((c) => c.code === "USD");
+
+  const fetchUsdToNgnRate = async (cryptoId: string) => {
+    if (!ngnCurrencyObj || !usdCurrencyObj) {
+      toast.error("USD input is not supported at this time.");
+      setBuyInputCurrency("NGN");
+      return;
+    }
+    setUsdRateLoading(true);
+    try {
+      const [ngnRes, usdRes] = await Promise.all([
+        exchangeRateServiceApi.getExchangeRate(cryptoId, ngnCurrencyObj.id, "BUY"),
+        exchangeRateServiceApi.getExchangeRate(cryptoId, usdCurrencyObj.id, "BUY"),
+      ]);
+      if (
+        ngnRes.success && usdRes.success &&
+        ngnRes.data && usdRes.data &&
+        usdRes.data.fiatRate > 0
+      ) {
+        setUsdToNgnRate(ngnRes.data.fiatRate / usdRes.data.fiatRate);
+      } else {
+        toast.error("Could not fetch USD rate. Please use NGN.");
+        setBuyInputCurrency("NGN");
+      }
+    } catch {
+      toast.error("Could not fetch USD rate. Please use NGN.");
+      setBuyInputCurrency("NGN");
+    }
+    setUsdRateLoading(false);
+  };
+
+  // The NGN amount actually used for transactions
+  const ngnAmount =
+    isBuy && buyInputCurrency === "USD" && usdToNgnRate && amount
+      ? String(Math.round(parseFloat(amount) * usdToNgnRate))
+      : amount;
+
+  const fetchRate = async (overrideNgnAmount?: string) => {
+    const effectiveAmount = overrideNgnAmount ?? ngnAmount;
+    if (!selectedCrypto || !selectedCurrency || !effectiveAmount) return;
     try {
       const { data, success } = await exchangeRateServiceApi.getExchangeRate(
         selectedCrypto, selectedCurrency, isBuy ? "BUY" : "SELL"
@@ -199,7 +244,7 @@ const AppSimCard = () => {
       if (success && data) {
         setRateId(data.rateId);
         const { data: calc } = await transactionServiceApi.calculateAmountToReceive(
-          data.rateId, parseFloat(amount)
+          data.rateId, parseFloat(effectiveAmount)
         );
         setReceiveAmount(calc ? String(calc) : "");
       }
@@ -208,7 +253,15 @@ const AppSimCard = () => {
 
   const handleStep1Next = async () => {
     if (!selectedCrypto || !selectedCurrency || !amount) return;
-    await fetchRate();
+    // Commit NGN amount so downstream steps always use NGN
+    if (isBuy && buyInputCurrency === "USD" && usdToNgnRate) {
+      const committed = String(Math.round(parseFloat(amount) * usdToNgnRate));
+      setAmount(committed);
+      setBuyInputCurrency("NGN");
+      await fetchRate(committed);
+    } else {
+      await fetchRate();
+    }
     setStep(2);
   };
 
@@ -304,6 +357,7 @@ const AppSimCard = () => {
     setEmail(""); setWalletAddress(""); setBankName(""); setAccountNumber("");
     setAccountName(""); setReceiptFile(null); setPlatformBank(null);
     setDepositWallet(""); setSessionId(""); setRateId("");
+    setBuyInputCurrency("NGN"); setUsdToNgnRate(null);
     localStorage.removeItem(LS_KEY);
   };
 
@@ -332,7 +386,7 @@ const AppSimCard = () => {
           return (
             <button
               key={t}
-              onClick={() => { setTab(t); reset(); }}
+              onClick={() => { setTab(t); reset(); setBuyInputCurrency("NGN"); setUsdToNgnRate(null); }}
               className="flex-1 py-4 text-sm font-semibold transition-all cursor-pointer border-b-2 -mb-px flex items-center justify-center gap-2"
               style={{
                 borderBottomColor: active ? color : "transparent",
@@ -369,7 +423,10 @@ const AppSimCard = () => {
                     <TokenBtn
                       key={item.id} item={item}
                       selected={item.id === selectedCrypto}
-                      onSelect={() => { setSelectedCrypto(item.id); setReceiveAmount(""); }}
+                      onSelect={() => {
+                        setSelectedCrypto(item.id); setReceiveAmount("");
+                        if (buyInputCurrency === "USD") fetchUsdToNgnRate(item.id);
+                      }}
                     />
                   ))}
                 </div>
@@ -380,12 +437,45 @@ const AppSimCard = () => {
                 className="rounded-xl overflow-hidden"
                 style={{ background: "white", border: "1.5px solid #E8E8E8" }}
               >
-                <p className="text-center text-[10px] font-semibold text-gray-400 uppercase tracking-widest pt-3 pb-1">
-                  {isBuy ? `Amount in ${currencyObj?.code || "NGN"}` : `Amount in ${cryptoSymbol || "Crypto"}`}
-                </p>
+                <div className="flex items-center justify-between pt-3 pb-1 px-4">
+                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+                    {isBuy
+                      ? `Amount in ${buyInputCurrency}`
+                      : `Amount in ${cryptoSymbol || "Crypto"}`}
+                  </p>
+                  {/* NGN / USD toggle — BUY only, shown when USD currency is supported */}
+                  {isBuy && usdCurrencyObj && (
+                    <div
+                      className="flex rounded-lg overflow-hidden"
+                      style={{ border: "1px solid #E8E8E8" }}
+                    >
+                      {(["NGN", "USD"] as const).map((cur) => (
+                        <button
+                          key={cur}
+                          onClick={() => {
+                            if (cur === buyInputCurrency) return;
+                            setBuyInputCurrency(cur);
+                            setAmount("");
+                            setReceiveAmount("");
+                            if (cur === "USD" && selectedCrypto) {
+                              fetchUsdToNgnRate(selectedCrypto);
+                            }
+                          }}
+                          className="px-2.5 py-1 text-[10px] font-bold cursor-pointer transition-colors"
+                          style={{
+                            background: buyInputCurrency === cur ? "#948EEE" : "transparent",
+                            color: buyInputCurrency === cur ? "white" : "#9CA3AF",
+                          }}
+                        >
+                          {cur}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <div className="flex items-center px-4 pb-3 gap-2">
                   <span className="text-2xl font-bold text-gray-300">
-                    {isBuy ? currSymbol : cryptoSymbol}
+                    {isBuy ? (buyInputCurrency === "USD" ? "$" : "₦") : cryptoSymbol}
                   </span>
                   <input
                     type="number"
@@ -397,6 +487,20 @@ const AppSimCard = () => {
                     className="flex-1 bg-transparent outline-none text-2xl font-bold text-[#0E0F0C] placeholder:text-gray-200"
                   />
                 </div>
+                {/* NGN equivalent preview when typing in USD */}
+                {isBuy && buyInputCurrency === "USD" && amount && (
+                  <div className="px-4 pb-2 -mt-1">
+                    {usdRateLoading ? (
+                      <span className="text-xs text-gray-400">Fetching rate…</span>
+                    ) : usdToNgnRate ? (
+                      <span className="text-xs text-gray-400">
+                        ≈ <span className="font-semibold text-[#0E0F0C]">
+                          ₦{Math.round(parseFloat(amount) * usdToNgnRate).toLocaleString()}
+                        </span> NGN will be transferred
+                      </span>
+                    ) : null}
+                  </div>
+                )}
                 {/* Quick chips */}
                 <div className="flex border-t border-gray-100">
                   {chips.map((chip) => (
