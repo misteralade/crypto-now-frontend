@@ -1,5 +1,4 @@
 import type { TransactionResponseEntity } from "../../../types/response.payload.types.ts";
-import CustomLoader from "../../../components/global/Loader.tsx";
 import TransactionRow from "./TransactionRow.tsx";
 import { useNavigate } from "@tanstack/react-router";
 import TableFooter from "../../../components/global/table/TableFooter.tsx";
@@ -7,7 +6,6 @@ import { useCryptoQuery } from "../../../queries/crypto.query.ts";
 import { useCurrencyQuery } from "../../../queries/currency.query.ts";
 import { ROUTES } from "../../../util/constants.util.ts";
 import { useEffect, useState } from "react";
-import { TrendingUp } from "lucide-react";
 
 export interface FilterState {
   fromDate: string | undefined;
@@ -27,66 +25,51 @@ interface TransactionTableProps {
   isLoading: boolean;
 }
 
-/* ── Skeleton row ── */
-const SkeletonRow = () => (
-  <div className="flex items-center gap-3 p-4 animate-pulse">
-    <div className="w-9 h-9 rounded-full bg-gray-100 shrink-0" />
-    <div className="flex-1 space-y-1.5">
-      <div className="h-3.5 bg-gray-100 rounded w-32" />
-      <div className="h-2.5 bg-gray-100 rounded w-20" />
+/* skeleton card row */
+const SkeletonCard = () => (
+  <div className="px-4 py-3.5 flex items-center gap-3 animate-pulse">
+    <div className="w-11 h-11 rounded-2xl shrink-0" style={{ background: "#F0F0F0" }} />
+    <div className="flex-1 space-y-2">
+      <div className="h-3.5 rounded-lg w-28" style={{ background: "#F0F0F0" }} />
+      <div className="h-2.5 rounded-lg w-20" style={{ background: "#F0F0F0" }} />
     </div>
-    <div className="text-right space-y-1.5">
-      <div className="h-3.5 bg-gray-100 rounded w-20" />
-      <div className="h-2.5 bg-gray-100 rounded w-14 ml-auto" />
+    <div className="text-right space-y-2">
+      <div className="h-3.5 rounded-lg w-16 ml-auto" style={{ background: "#F0F0F0" }} />
+      <div className="h-2.5 rounded-lg w-10 ml-auto" style={{ background: "#F0F0F0" }} />
     </div>
   </div>
 );
 
 const TransactionTable = ({
-  transactions,
-  isLoading,
-  totalPages,
-  currentPage,
-  pageSize,
-  totalItems,
-  onPageChange,
-  onPageSizeChange,
+  transactions, isLoading, totalPages, currentPage,
+  pageSize, totalItems, onPageChange, onPageSizeChange,
 }: TransactionTableProps) => {
   const navigate = useNavigate();
   const { supportedCryptoCurrencies, loadingSupportedCrypto } = useCryptoQuery();
-  const { supportedCurrencies, loadingSupportedCurrencies } = useCurrencyQuery();
-
-  const [selectedCrypto, setSelectedCrypto] = useState<string>("");
+  const { supportedCurrencies, loadingSupportedCurrencies }   = useCurrencyQuery();
+  const [selectedCrypto, setSelectedCrypto]   = useState("");
   const [supportedCurrency, setSupportedCurrency] = useState("");
-  const [selectedAction] = useState<"BUY" | "SELL">("BUY");
 
   useEffect(() => {
-    if (supportedCryptoCurrencies && supportedCryptoCurrencies.length > 0) {
-      setSelectedCrypto(supportedCryptoCurrencies[0].id);
-    }
+    if (supportedCryptoCurrencies?.length) setSelectedCrypto(supportedCryptoCurrencies[0].id);
   }, [loadingSupportedCrypto, supportedCryptoCurrencies]);
 
   useEffect(() => {
-    if (supportedCurrencies && supportedCurrencies.length > 0) {
-      setSupportedCurrency(supportedCurrencies[0].id);
-    }
+    if (supportedCurrencies?.length) setSupportedCurrency(supportedCurrencies[0].id);
   }, [loadingSupportedCurrencies, supportedCurrencies]);
 
-  const handleTradeCrypto = () => {
-    if (selectedCrypto && supportedCurrency) {
-      navigate({
-        to: `${ROUTES.TRADE_CRYPTO}?option=${selectedAction.toLowerCase()}&currency=${supportedCurrency}&token=${selectedCrypto}`,
-      });
-    }
+  const goTrade = () => {
+    if (selectedCrypto && supportedCurrency)
+      navigate({ to: `${ROUTES.TRADE_CRYPTO}?option=buy&currency=${supportedCurrency}&token=${selectedCrypto}` });
   };
 
   if (isLoading) {
     return (
-      <div className="rounded-2xl overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid #ECECEC" }}>
+      <div className="rounded-3xl overflow-hidden" style={{ border: "1px solid #F0F0F0" }}>
         {[...Array(5)].map((_, i) => (
           <div key={i}>
-            <SkeletonRow />
-            {i < 4 && <div style={{ height: "1px", background: "#F4F5F7" }} />}
+            <SkeletonCard />
+            {i < 4 && <div style={{ height: "1px", background: "#F7F7F9", margin: "0 16px" }} />}
           </div>
         ))}
       </div>
@@ -95,30 +78,23 @@ const TransactionTable = ({
 
   if (transactions.length === 0) {
     return (
-      <div
-        className="rounded-2xl p-10 flex flex-col items-center justify-center text-center gap-5"
-        style={{ background: "#FFFFFF", border: "1px solid #ECECEC" }}
-      >
-        <div
-          className="w-16 h-16 rounded-full flex items-center justify-center"
-          style={{ background: "#F0EFFD" }}
-        >
-          <TrendingUp size={28} style={{ color: "#948EEE" }} />
+      <div className="rounded-3xl py-14 flex flex-col items-center gap-4 text-center"
+        style={{ border: "1px solid #F0F0F0" }}>
+        <div className="w-14 h-14 rounded-2xl flex items-center justify-center"
+          style={{ background: "#F0EFFD" }}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#948EEE" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+          </svg>
         </div>
         <div>
-          <h3 className="text-lg font-semibold mb-1" style={{ color: "#0E0F0C" }}>
-            No transactions yet
-          </h3>
-          <p className="text-sm" style={{ color: "#6B6E6B" }}>
-            Start by buying or selling crypto
-          </p>
+          <p className="text-base font-bold" style={{ color: "#0E0F0C" }}>No transactions yet</p>
+          <p className="text-sm mt-1" style={{ color: "#9A9A9A" }}>Your orders will appear here</p>
         </div>
         <button
-          onClick={handleTradeCrypto}
-          disabled={!selectedCrypto || !supportedCurrency || loadingSupportedCrypto || loadingSupportedCurrencies}
-          className="px-6 py-3 rounded-full text-sm font-semibold text-white transition-opacity disabled:opacity-40"
-          style={{ background: "#948EEE" }}
-        >
+          onClick={goTrade}
+          disabled={!selectedCrypto || !supportedCurrency}
+          className="mt-1 px-6 py-2.5 rounded-full text-sm font-bold text-white disabled:opacity-40"
+          style={{ background: "#948EEE" }}>
           Buy / Sell Crypto
         </button>
       </div>
@@ -127,42 +103,28 @@ const TransactionTable = ({
 
   return (
     <div className="space-y-4">
-      {/* ── Mobile card list ── */}
-      <div className="lg:hidden rounded-2xl overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid #ECECEC" }}>
-        {transactions.map((transaction, index) => (
-          <TransactionRow
-            key={transaction.id}
-            transaction={transaction}
-            isLast={index === transactions.length - 1}
-            isMobileCard
-          />
+      {/* Mobile: card list */}
+      <div className="lg:hidden rounded-3xl overflow-hidden" style={{ border: "1px solid #F0F0F0" }}>
+        {transactions.map((tx, i) => (
+          <TransactionRow key={tx.id} transaction={tx} isLast={i === transactions.length - 1} isMobileCard />
         ))}
       </div>
 
-      {/* ── Desktop table ── */}
-      <div className="hidden lg:block rounded-2xl overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid #ECECEC" }}>
+      {/* Desktop: table */}
+      <div className="hidden lg:block rounded-3xl overflow-hidden" style={{ border: "1px solid #F0F0F0" }}>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr style={{ background: "#F4F5F7", borderBottom: "1px solid #ECECEC" }}>
-                <th className="text-left px-5 py-3.5 text-xs font-semibold uppercase tracking-wider" style={{ color: "#9A9A9A" }}>Ref</th>
-                <th className="text-left px-5 py-3.5 text-xs font-semibold uppercase tracking-wider" style={{ color: "#9A9A9A" }}>Date</th>
-                <th className="text-left px-5 py-3.5 text-xs font-semibold uppercase tracking-wider" style={{ color: "#9A9A9A" }}>Type</th>
-                <th className="text-left px-5 py-3.5 text-xs font-semibold uppercase tracking-wider" style={{ color: "#9A9A9A" }}>Crypto</th>
-                <th className="text-left px-5 py-3.5 text-xs font-semibold uppercase tracking-wider" style={{ color: "#9A9A9A" }}>Amount (NGN)</th>
-                <th className="text-left px-5 py-3.5 text-xs font-semibold uppercase tracking-wider" style={{ color: "#9A9A9A" }}>Rate</th>
-                <th className="text-left px-5 py-3.5 text-xs font-semibold uppercase tracking-wider" style={{ color: "#9A9A9A" }}>Status</th>
-                <th className="text-left px-5 py-3.5 text-xs font-semibold uppercase tracking-wider" style={{ color: "#9A9A9A" }}>Actions</th>
+              <tr style={{ background: "#FAFAFA", borderBottom: "1px solid #F0F0F0" }}>
+                {["Ref", "Date", "Type", "Crypto", "Amount (NGN)", "Rate", "Status", "Actions"].map(h => (
+                  <th key={h} className="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-wider"
+                    style={{ color: "#9A9A9A" }}>{h}</th>
+                ))}
               </tr>
             </thead>
             <tbody>
-              {transactions.map((transaction, index) => (
-                <TransactionRow
-                  key={transaction.id}
-                  transaction={transaction}
-                  isLast={index === transactions.length - 1}
-                  isMobileCard={false}
-                />
+              {transactions.map((tx, i) => (
+                <TransactionRow key={tx.id} transaction={tx} isLast={i === transactions.length - 1} isMobileCard={false} />
               ))}
             </tbody>
           </table>
@@ -171,12 +133,8 @@ const TransactionTable = ({
 
       {!isLoading && (
         <TableFooter
-          currentPage={currentPage}
-          totalPages={totalPages}
-          pageSize={pageSize}
-          totalItems={totalItems}
-          onPageChange={onPageChange}
-          onPageSizeChange={onPageSizeChange}
+          currentPage={currentPage} totalPages={totalPages} pageSize={pageSize}
+          totalItems={totalItems} onPageChange={onPageChange} onPageSizeChange={onPageSizeChange}
         />
       )}
     </div>

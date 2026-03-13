@@ -30,7 +30,9 @@ import { Route as SignInVerifyRouteImport } from './routes/sign-in/verify'
 import { Route as OauthSuccessRouteImport } from './routes/oauth/success'
 import { Route as OauthErrorRouteImport } from './routes/oauth/error'
 import { Route as DisputeIdRouteImport } from './routes/dispute/$id'
+import { Route as DashboardTradeRouteImport } from './routes/dashboard/trade'
 import { Route as DashboardProfileRouteImport } from './routes/dashboard/profile'
+import { Route as DashboardTransactionsIndexRouteImport } from './routes/dashboard/transactions/index'
 import { Route as DashboardTransactionsIdRouteImport } from './routes/dashboard/transactions/$id'
 
 const VerifyAccountRoute = VerifyAccountRouteImport.update({
@@ -138,11 +140,22 @@ const DisputeIdRoute = DisputeIdRouteImport.update({
   path: '/dispute/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardTradeRoute = DashboardTradeRouteImport.update({
+  id: '/dashboard/trade',
+  path: '/dashboard/trade',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardProfileRoute = DashboardProfileRouteImport.update({
   id: '/dashboard/profile',
   path: '/dashboard/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardTransactionsIndexRoute =
+  DashboardTransactionsIndexRouteImport.update({
+    id: '/dashboard/transactions/',
+    path: '/dashboard/transactions/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const DashboardTransactionsIdRoute = DashboardTransactionsIdRouteImport.update({
   id: '/dashboard/transactions/$id',
   path: '/dashboard/transactions/$id',
@@ -166,6 +179,7 @@ export interface FileRoutesByFullPath {
   '/trade-crypto': typeof TradeCryptoRoute
   '/verify-account': typeof VerifyAccountRoute
   '/dashboard/profile': typeof DashboardProfileRoute
+  '/dashboard/trade': typeof DashboardTradeRoute
   '/dispute/$id': typeof DisputeIdRoute
   '/oauth/error': typeof OauthErrorRoute
   '/oauth/success': typeof OauthSuccessRoute
@@ -173,6 +187,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/': typeof DashboardIndexRoute
   '/sign-in/': typeof SignInIndexRoute
   '/dashboard/transactions/$id': typeof DashboardTransactionsIdRoute
+  '/dashboard/transactions/': typeof DashboardTransactionsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -191,6 +206,7 @@ export interface FileRoutesByTo {
   '/trade-crypto': typeof TradeCryptoRoute
   '/verify-account': typeof VerifyAccountRoute
   '/dashboard/profile': typeof DashboardProfileRoute
+  '/dashboard/trade': typeof DashboardTradeRoute
   '/dispute/$id': typeof DisputeIdRoute
   '/oauth/error': typeof OauthErrorRoute
   '/oauth/success': typeof OauthSuccessRoute
@@ -198,6 +214,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardIndexRoute
   '/sign-in': typeof SignInIndexRoute
   '/dashboard/transactions/$id': typeof DashboardTransactionsIdRoute
+  '/dashboard/transactions': typeof DashboardTransactionsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -217,6 +234,7 @@ export interface FileRoutesById {
   '/trade-crypto': typeof TradeCryptoRoute
   '/verify-account': typeof VerifyAccountRoute
   '/dashboard/profile': typeof DashboardProfileRoute
+  '/dashboard/trade': typeof DashboardTradeRoute
   '/dispute/$id': typeof DisputeIdRoute
   '/oauth/error': typeof OauthErrorRoute
   '/oauth/success': typeof OauthSuccessRoute
@@ -224,6 +242,7 @@ export interface FileRoutesById {
   '/dashboard/': typeof DashboardIndexRoute
   '/sign-in/': typeof SignInIndexRoute
   '/dashboard/transactions/$id': typeof DashboardTransactionsIdRoute
+  '/dashboard/transactions/': typeof DashboardTransactionsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -244,6 +263,7 @@ export interface FileRouteTypes {
     | '/trade-crypto'
     | '/verify-account'
     | '/dashboard/profile'
+    | '/dashboard/trade'
     | '/dispute/$id'
     | '/oauth/error'
     | '/oauth/success'
@@ -251,6 +271,7 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/sign-in/'
     | '/dashboard/transactions/$id'
+    | '/dashboard/transactions/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -269,6 +290,7 @@ export interface FileRouteTypes {
     | '/trade-crypto'
     | '/verify-account'
     | '/dashboard/profile'
+    | '/dashboard/trade'
     | '/dispute/$id'
     | '/oauth/error'
     | '/oauth/success'
@@ -276,6 +298,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/sign-in'
     | '/dashboard/transactions/$id'
+    | '/dashboard/transactions'
   id:
     | '__root__'
     | '/'
@@ -294,6 +317,7 @@ export interface FileRouteTypes {
     | '/trade-crypto'
     | '/verify-account'
     | '/dashboard/profile'
+    | '/dashboard/trade'
     | '/dispute/$id'
     | '/oauth/error'
     | '/oauth/success'
@@ -301,6 +325,7 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/sign-in/'
     | '/dashboard/transactions/$id'
+    | '/dashboard/transactions/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -320,6 +345,7 @@ export interface RootRouteChildren {
   TradeCryptoRoute: typeof TradeCryptoRoute
   VerifyAccountRoute: typeof VerifyAccountRoute
   DashboardProfileRoute: typeof DashboardProfileRoute
+  DashboardTradeRoute: typeof DashboardTradeRoute
   DisputeIdRoute: typeof DisputeIdRoute
   OauthErrorRoute: typeof OauthErrorRoute
   OauthSuccessRoute: typeof OauthSuccessRoute
@@ -327,6 +353,7 @@ export interface RootRouteChildren {
   DashboardIndexRoute: typeof DashboardIndexRoute
   SignInIndexRoute: typeof SignInIndexRoute
   DashboardTransactionsIdRoute: typeof DashboardTransactionsIdRoute
+  DashboardTransactionsIndexRoute: typeof DashboardTransactionsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -478,11 +505,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DisputeIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/trade': {
+      id: '/dashboard/trade'
+      path: '/dashboard/trade'
+      fullPath: '/dashboard/trade'
+      preLoaderRoute: typeof DashboardTradeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard/profile': {
       id: '/dashboard/profile'
       path: '/dashboard/profile'
       fullPath: '/dashboard/profile'
       preLoaderRoute: typeof DashboardProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/transactions/': {
+      id: '/dashboard/transactions/'
+      path: '/dashboard/transactions'
+      fullPath: '/dashboard/transactions/'
+      preLoaderRoute: typeof DashboardTransactionsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard/transactions/$id': {
@@ -512,6 +553,7 @@ const rootRouteChildren: RootRouteChildren = {
   TradeCryptoRoute: TradeCryptoRoute,
   VerifyAccountRoute: VerifyAccountRoute,
   DashboardProfileRoute: DashboardProfileRoute,
+  DashboardTradeRoute: DashboardTradeRoute,
   DisputeIdRoute: DisputeIdRoute,
   OauthErrorRoute: OauthErrorRoute,
   OauthSuccessRoute: OauthSuccessRoute,
@@ -519,6 +561,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardIndexRoute: DashboardIndexRoute,
   SignInIndexRoute: SignInIndexRoute,
   DashboardTransactionsIdRoute: DashboardTransactionsIdRoute,
+  DashboardTransactionsIndexRoute: DashboardTransactionsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

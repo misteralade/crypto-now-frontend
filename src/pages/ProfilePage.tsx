@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { ChevronRight, User, Shield, CreditCard, LogOut, CheckCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ChevronRight, ArrowLeft, CheckCircle } from "lucide-react";
 import AuthenticatedLayout from "../layouts/AuthenticatedLayout.tsx";
 import { useProfilePage } from "../hooks/pages/useProfilePage.ts";
 import ProfilePersonalInfoSection from "../components/pages/profile/ProfilePersonalInfoSection.tsx";
@@ -17,40 +17,71 @@ import { convertToMillify, formatCurrency } from "../util/index.util.ts";
 
 type Section = "personal" | "bank" | "security" | null;
 
-const getInitials = (firstName?: string, lastName?: string) => {
-  if (!firstName && !lastName) return "U";
-  return `${(firstName?.[0] || "").toUpperCase()}${(lastName?.[0] || "").toUpperCase()}` || "U";
-};
+const getInitials = (first?: string, last?: string) =>
+  ((first?.[0] ?? "") + (last?.[0] ?? "")).toUpperCase() || "U";
 
+/* ─── 2×2 stat card ─── */
+function StatCard({ label, value, sub, loading }: { label: string; value: string; sub?: string; loading: boolean }) {
+  return (
+    <div className="rounded-3xl p-4" style={{ background: "#FAFAFA", border: "1px solid #F0F0F0" }}>
+      <p className="text-[10px] font-bold tracking-widest uppercase" style={{ color: "#BDBDBD" }}>{label}</p>
+      {loading ? (
+        <div className="mt-1.5 h-5 w-24 rounded-lg animate-pulse" style={{ background: "#EEEEEE" }} />
+      ) : (
+        <p className="text-xl font-extrabold mt-0.5" style={{ color: "#037847", fontFamily: "'DM Sans',sans-serif", letterSpacing: "-0.02em" }}>
+          {value}
+        </p>
+      )}
+      {sub && <p className="text-[10px] mt-0.5" style={{ color: "#9A9A9A" }}>{sub}</p>}
+    </div>
+  );
+}
+
+/* ─── menu row ─── */
+function MenuRow({
+  icon, label, sub, color = "#948EEE", onClick, danger = false,
+}: {
+  icon: React.ReactNode; label: string; sub: string;
+  color?: string; onClick: () => void; danger?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="w-full flex items-center gap-3 px-4 py-4 text-left transition-colors hover:bg-gray-50 active:bg-gray-100"
+    >
+      <div className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
+        style={{ background: color + "18" }}>
+        {icon}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold" style={{ color: danger ? "#EB5757" : "#0E0F0C" }}>{label}</p>
+        <p className="text-[11px] mt-0.5" style={{ color: "#9A9A9A" }}>{sub}</p>
+      </div>
+      <ChevronRight size={16} style={{ color: danger ? "#EB5757" : "#BDBDBD" }} />
+    </button>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════
+   PROFILE PAGE
+══════════════════════════════════════════════════════════ */
 const ProfilePage = () => {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState<Section>(null);
 
   const {
-    userProfileData,
-    loadingUserProfile,
-    allBanks,
-    loadingAllBanks,
-    userBankAccounts,
-    loadingUserBankAccounts,
-    selectedBank,
-    showCreateNewBankAccount,
-    supportedCryptoCurrencies,
-    loadingSupportedCryptocurrencies,
-    showCreateWallet,
-    selectedWallet,
-    handleChangePassword,
-    handlePersonalInfoProfileFieldUpdate,
-    handleSaveChanges,
-    handleEnableTwoFactor,
-    handleNewBankAccountField,
-    handleCreateBankAccount,
-    toggleShowCreateNewBankAccount,
-    handleDefaultBankAccount,
-    handleDeleteBankAccount,
-    toggleShowCreateNewWallet,
-    handleCreateWallet,
-    handleNewWalletField,
+    userProfileData, loadingUserProfile,
+    allBanks, loadingAllBanks,
+    userBankAccounts, loadingUserBankAccounts,
+    selectedBank, showCreateNewBankAccount,
+    supportedCryptoCurrencies, loadingSupportedCryptocurrencies,
+    showCreateWallet, selectedWallet,
+    handleChangePassword, handlePersonalInfoProfileFieldUpdate,
+    handleSaveChanges, handleEnableTwoFactor,
+    handleNewBankAccountField, handleCreateBankAccount,
+    toggleShowCreateNewBankAccount, handleDefaultBankAccount,
+    handleDeleteBankAccount, toggleShowCreateNewWallet,
+    handleCreateWallet, handleNewWalletField,
     handleRemoveProfilePicture,
   } = useProfilePage();
 
@@ -59,349 +90,281 @@ const ProfilePage = () => {
   useEffect(() => {
     if (!loadingUserProfile) {
       handlePersonalInfoProfileFieldUpdate("firstName", userProfileData?.profile?.firstName || "");
-      handlePersonalInfoProfileFieldUpdate("lastName", userProfileData?.profile?.lastName || "");
+      handlePersonalInfoProfileFieldUpdate("lastName",  userProfileData?.profile?.lastName  || "");
       handlePersonalInfoProfileFieldUpdate("phoneNumber", userProfileData?.profile?.phoneNumber || "");
     }
   }, [loadingUserProfile]);
+
+  const initials  = getInitials(userProfileData?.profile?.firstName, userProfileData?.profile?.lastName);
+  const fullName  = userProfileData?.profile?.firstName
+    ? `${userProfileData.profile.firstName} ${userProfileData.profile.lastName ?? ""}`.trim()
+    : "";
+
+  const totalFiat    = transactionSummary?.total?.[0] ? Number(transactionSummary.total[0].totalFiatAmount)    : 0;
+  const thisMonthFiat= transactionSummary?.total?.[0] ? Number(transactionSummary.total[0].totalFiatAmount)    : 0;
+  const totalOrders  = transactionSummary?.total?.[0] ? transactionSummary.total[0].transactionCount           : "0";
+  const buyCount     = transactionSummary?.total?.[0] ? transactionSummary.total[0].buyCount                   : "0";
+  const sellCount    = transactionSummary?.total?.[0] ? transactionSummary.total[0].sellCount                  : "0";
+  const successRate  = transactionSummary?.total?.[0]
+    ? Math.round((Number(transactionSummary.total[0].buyCount) + Number(transactionSummary.total[0].sellCount)) /
+        Math.max(Number(transactionSummary.total[0].transactionCount), 1) * 100)
+    : 0;
 
   const handleLogout = () => {
     localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
     navigate({ to: ROUTES.HOMEPAGE });
   };
 
-  const initials = getInitials(
-    userProfileData?.profile?.firstName,
-    userProfileData?.profile?.lastName
-  );
-
-  const fullName = userProfileData?.profile?.firstName
-    ? `${userProfileData.profile.firstName} ${userProfileData.profile.lastName || ""}`.trim()
-    : "";
-
-  const totalFiat =
-    !loadingTransactionSummary && transactionSummary?.total?.[0]
-      ? Number(transactionSummary.total[0].totalFiatAmount)
-      : 0;
-
-  const totalOrders =
-    !loadingTransactionSummary && transactionSummary?.total?.[0]
-      ? transactionSummary.total[0].transactionCount
-      : "0";
-
-  const buyCount =
-    !loadingTransactionSummary && transactionSummary?.total?.[0]
-      ? transactionSummary.total[0].buyCount
-      : "0";
-
-  const sellCount =
-    !loadingTransactionSummary && transactionSummary?.total?.[0]
-      ? transactionSummary.total[0].sellCount
-      : "0";
-
-  const menuItems = [
-    {
-      id: "personal" as Section,
-      icon: User,
-      label: "Edit Profile",
-      sub: "Name, email, phone number",
-      color: "#948EEE",
-    },
-    {
-      id: "bank" as Section,
-      icon: CreditCard,
-      label: "Bank Details",
-      sub: `${userBankAccounts?.length || 0} account${(userBankAccounts?.length || 0) === 1 ? "" : "s"} saved`,
-      color: "#F7A600",
-    },
-    {
-      id: "security" as Section,
-      icon: Shield,
-      label: "Security",
-      sub: "2FA, password",
-      color: "#037847",
-    },
-  ];
+  const loading = loadingTransactionSummary;
 
   return (
     <AuthenticatedLayout>
-      <div className="max-w-2xl mx-auto">
+      <div style={{ background: "#FFFFFF", minHeight: "100dvh" }}>
 
-        {/* ── Profile header card ── */}
-        <div
-          className="relative overflow-hidden"
-          style={{ background: "linear-gradient(135deg, #03034D 0%, #0a0a6b 60%, #1a0a5c 100%)" }}
-        >
-          {/* Decorative circle */}
-          <div
-            className="pointer-events-none absolute -top-10 -right-10 w-40 h-40 rounded-full"
-            style={{ background: "rgba(148,142,238,0.12)" }}
-          />
+        <AnimatePresence mode="wait">
 
-          <div className="relative px-4 pt-8 pb-6 text-center">
-            {/* Avatar */}
-            {loadingUserProfile ? (
-              <div className="w-20 h-20 rounded-full bg-white/20 animate-pulse mx-auto mb-3" />
-            ) : userProfileData?.profile?.profileImg ? (
-              <img
-                src={userProfileData.profile.profileImg}
-                alt={fullName}
-                className="w-20 h-20 rounded-full object-cover mx-auto mb-3 border-4"
-                style={{ borderColor: "rgba(255,255,255,0.2)" }}
-              />
-            ) : (
-              <div
-                className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl font-bold text-white border-4"
-                style={{ background: "#948EEE", borderColor: "rgba(255,255,255,0.2)" }}
-              >
-                {initials}
-              </div>
-            )}
-
-            <h2 className="text-xl font-bold text-white mb-0.5" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-              {loadingUserProfile ? (
-                <span className="block h-5 w-32 bg-white/20 rounded animate-pulse mx-auto" />
-              ) : (
-                fullName || "Account"
-              )}
-            </h2>
-            <p className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
-              {userProfileData?.email || ""}
-            </p>
-
-            {/* TODO: Connect to KYC API — show real verification status */}
-            <div
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold mt-3"
-              style={{ background: "rgba(3,120,71,0.2)", color: "#4ade80", border: "1px solid rgba(3,120,71,0.3)" }}
+          {/* ════════ MENU HOME ════════ */}
+          {activeSection === null && (
+            <motion.div
+              key="home"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.2 }}
             >
-              <CheckCircle size={11} />
-              KYC Verified
-            </div>
-          </div>
+              {/* ── Avatar + name + badges ── */}
+              <div className="flex flex-col items-center pt-10 pb-6 px-5">
+                {loadingUserProfile ? (
+                  <div className="w-20 h-20 rounded-full animate-pulse" style={{ background: "#EEEEEE" }} />
+                ) : (
+                  <div
+                    className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-black text-white"
+                    style={{
+                      background: "linear-gradient(135deg, #6DD5FA 0%, #2980B9 40%, #948EEE 75%, #575AE5 100%)",
+                      boxShadow: "0 8px 24px rgba(87,90,229,0.28)",
+                    }}
+                  >
+                    {initials}
+                  </div>
+                )}
 
-          {/* Stats row */}
-          <div
-            className="grid grid-cols-4 px-4 pb-5"
-            style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}
-          >
-            {[
-              { label: "Total Volume", value: loadingTransactionSummary ? "..." : `₦${convertToMillify(totalFiat)}` },
-              { label: "Orders", value: loadingTransactionSummary ? "..." : totalOrders },
-              { label: "Buys", value: loadingTransactionSummary ? "..." : buyCount },
-              { label: "Sells", value: loadingTransactionSummary ? "..." : sellCount },
-            ].map((stat) => (
-              <div key={stat.label} className="text-center pt-4">
-                <p className="text-base font-bold text-white">{stat.value}</p>
-                <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.4)" }}>{stat.label}</p>
+                <h2 className="text-xl font-extrabold mt-3" style={{ color: "#0E0F0C", fontFamily: "'DM Sans',sans-serif" }}>
+                  {loadingUserProfile
+                    ? <span className="block h-5 w-36 rounded animate-pulse" style={{ background: "#EEEEEE" }} />
+                    : fullName || "Account"
+                  }
+                </h2>
+                <p className="text-sm mt-0.5" style={{ color: "#9A9A9A" }}>{userProfileData?.email ?? ""}</p>
+
+                {/* Badges */}
+                <div className="flex items-center gap-2 mt-3">
+                  {/* TODO: connect to real KYC status */}
+                  <span className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold"
+                    style={{ background: "#E8F8F0", color: "#037847" }}>
+                    <CheckCircle size={11} /> KYC Verified
+                  </span>
+                  <span className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold"
+                    style={{ background: "#FFFBF0", color: "#A07000" }}>
+                    🤝 Non-Custodial
+                  </span>
+                </div>
               </div>
-            ))}
-          </div>
-        </div>
 
-        {/* ── Body ── */}
-        <div className="px-4 pt-5 pb-8 space-y-4">
+              {/* ── 2×2 Stats grid ── */}
+              <div className="px-5 mb-5">
+                <div className="grid grid-cols-2 gap-3">
+                  <StatCard
+                    label="Total Traded"
+                    value={`₦${convertToMillify(totalFiat, 0)}`}
+                    sub="Lifetime volume"
+                    loading={loading}
+                  />
+                  <StatCard
+                    label="Total Orders"
+                    value={totalOrders}
+                    sub={`${buyCount} buy · ${sellCount} sell`}
+                    loading={loading}
+                  />
+                  <StatCard
+                    label="This Month"
+                    value={`₦${convertToMillify(thisMonthFiat, 0)}`}
+                    sub={new Date().toLocaleString("default", { month: "long", year: "numeric" })}
+                    loading={loading}
+                  />
+                  <StatCard
+                    label="Success Rate"
+                    value={`${successRate}%`}
+                    sub={`${buyCount} of ${totalOrders} done`}
+                    loading={loading}
+                  />
+                </div>
+              </div>
 
-          {loadingUserProfile ? (
-            <div className="flex items-center justify-center py-16">
-              <LoadingSpinner size="xl" message="Loading profile..." />
-            </div>
-          ) : (
-            <Fragment>
+              {/* ── Menu list ── */}
+              <div className="px-5 space-y-3 pb-8">
+                {/* Profile & bank */}
+                <div className="rounded-3xl overflow-hidden" style={{ border: "1px solid #F0F0F0" }}>
+                  <MenuRow
+                    icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#948EEE" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>}
+                    label="Edit Profile"
+                    sub="Name, email, bank details"
+                    color="#948EEE"
+                    onClick={() => setActiveSection("personal")}
+                  />
+                  <div style={{ height: "1px", background: "#F7F7F9", margin: "0 16px" }} />
+                  <MenuRow
+                    icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F7A600" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>}
+                    label="Bank Details"
+                    sub={`${userBankAccounts?.length ?? 0} account(s) saved`}
+                    color="#F7A600"
+                    onClick={() => setActiveSection("bank")}
+                  />
+                </div>
 
-              {/* Menu list */}
-              {activeSection === null && (
-                <motion.div
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="space-y-2"
+                {/* Security */}
+                <div className="rounded-3xl overflow-hidden" style={{ border: "1px solid #F0F0F0" }}>
+                  {/* TODO: Connect KYC verification to real API */}
+                  <MenuRow
+                    icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#575AE5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>}
+                    label="KYC Verification"
+                    sub="Identity fully verified"
+                    color="#575AE5"
+                    onClick={() => {}}
+                  />
+                  <div style={{ height: "1px", background: "#F7F7F9", margin: "0 16px" }} />
+                  <MenuRow
+                    icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#037847" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>}
+                    label="Security"
+                    sub="2FA & password settings"
+                    color="#037847"
+                    onClick={() => setActiveSection("security")}
+                  />
+                </div>
+
+                {/* Support */}
+                <div className="rounded-3xl overflow-hidden" style={{ border: "1px solid #F0F0F0" }}>
+                  <MenuRow
+                    icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0EA5E9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>}
+                    label="Support"
+                    sub="Get help from our team"
+                    color="#0EA5E9"
+                    onClick={() => navigate({ to: ROUTES.CONTACT })}
+                  />
+                </div>
+
+                {/* Log out */}
+                <div className="rounded-3xl overflow-hidden" style={{ border: "1px solid #FEE2E2" }}>
+                  <MenuRow
+                    icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EB5757" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>}
+                    label="Log Out"
+                    sub="Sign out of account"
+                    color="#EB5757"
+                    onClick={handleLogout}
+                    danger
+                  />
+                </div>
+              </div>
+
+              {/* KYC pill floating above bottom nav (mobile only) */}
+              {/* TODO: hide when KYC is not verified */}
+              <div className="lg:hidden flex justify-center pb-6">
+                <div className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold"
+                  style={{ background: "#03034D", color: "#FFFFFF" }}>
+                  <CheckCircle size={12} />
+                  KYC is fully verified ✓
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ════════ SECTION VIEWS ════════ */}
+          {activeSection !== null && (
+            <motion.div
+              key={activeSection}
+              initial={{ opacity: 0, x: 24 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 24 }}
+              transition={{ duration: 0.22 }}
+              className="px-5 pb-10"
+            >
+              {/* Back header */}
+              <div className="flex items-center gap-3 pt-6 pb-5">
+                <button
+                  onClick={() => setActiveSection(null)}
+                  className="w-9 h-9 rounded-full flex items-center justify-center transition-colors hover:bg-gray-100"
+                  style={{ border: "1px solid #F0F0F0" }}
                 >
-                  <div
-                    className="rounded-2xl overflow-hidden"
-                    style={{ background: "#FFFFFF", border: "1px solid #ECECEC" }}
-                  >
-                    {menuItems.map((item, index) => {
-                      const Icon = item.icon;
-                      return (
-                        <div key={item.id}>
-                          <button
-                            className="w-full flex items-center gap-3 px-4 py-4 text-left transition-colors hover:bg-gray-50 active:bg-gray-100"
-                            onClick={() => setActiveSection(item.id)}
-                          >
-                            <div
-                              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                              style={{ background: item.color + "18" }}
-                            >
-                              <Icon size={18} style={{ color: item.color }} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-semibold" style={{ color: "#0E0F0C" }}>{item.label}</p>
-                              <p className="text-xs" style={{ color: "#9A9A9A" }}>{item.sub}</p>
-                            </div>
-                            <ChevronRight size={16} style={{ color: "#9A9A9A" }} />
-                          </button>
-                          {index < menuItems.length - 1 && (
-                            <div style={{ height: "1px", background: "#F4F5F7", marginLeft: "64px" }} />
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
+                  <ArrowLeft size={16} style={{ color: "#0E0F0C" }} />
+                </button>
+                <h2 className="text-lg font-bold" style={{ color: "#0E0F0C" }}>
+                  {activeSection === "personal" ? "Edit Profile"
+                   : activeSection === "bank"     ? "Bank Details"
+                   :                                "Security"}
+                </h2>
+              </div>
 
-                  {/* Support link */}
-                  <div
-                    className="rounded-2xl overflow-hidden"
-                    style={{ background: "#FFFFFF", border: "1px solid #ECECEC" }}
-                  >
-                    <a
-                      href={ROUTES.CONTACT}
-                      className="flex items-center gap-3 px-4 py-4 transition-colors hover:bg-gray-50"
-                    >
-                      <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                        style={{ background: "rgba(3,120,71,0.1)" }}
-                      >
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#037847" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                        </svg>
+              {loadingUserProfile ? (
+                <div className="flex items-center justify-center py-16">
+                  <LoadingSpinner size="xl" message="Loading..." />
+                </div>
+              ) : (
+                <Fragment>
+                  {activeSection === "personal" && (
+                    <div className="space-y-5">
+                      <div className="rounded-3xl p-5" style={{ border: "1px solid #F0F0F0" }}>
+                        <ProfilePersonalInfoSection
+                          firstName={userProfileData?.profile?.firstName || ""}
+                          lastName={userProfileData?.profile?.lastName || ""}
+                          email={userProfileData?.email || ""}
+                          phoneNumber={userProfileData?.profile?.phoneNumber || ""}
+                          dob={userProfileData?.profile?.dateOfBirth}
+                          profileImg={userProfileData?.profile?.profileImg}
+                          handleFieldChange={handlePersonalInfoProfileFieldUpdate}
+                          handleRemoveProfilePicture={handleRemoveProfilePicture}
+                        />
                       </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold" style={{ color: "#0E0F0C" }}>Support</p>
-                        <p className="text-xs" style={{ color: "#9A9A9A" }}>Get help from our team</p>
+                      <div className="flex justify-center">
+                        <CustomButton buttonText="Save Changes" onClick={handleSaveChanges} />
                       </div>
-                      <ChevronRight size={16} style={{ color: "#9A9A9A" }} />
-                    </a>
-                  </div>
-
-                  {/* Log out */}
-                  <div
-                    className="rounded-2xl overflow-hidden"
-                    style={{ background: "#FFFFFF", border: "1px solid #ECECEC" }}
-                  >
-                    <button
-                      onClick={handleLogout}
-                      className="w-full flex items-center gap-3 px-4 py-4 text-left transition-colors hover:bg-red-50 active:bg-red-100"
-                    >
-                      <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                        style={{ background: "rgba(235,87,87,0.1)" }}
-                      >
-                        <LogOut size={18} style={{ color: "#EB5757" }} />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold" style={{ color: "#EB5757" }}>Log Out</p>
-                        <p className="text-xs" style={{ color: "#9A9A9A" }}>Sign out of account</p>
-                      </div>
-                      <ChevronRight size={16} style={{ color: "#EB5757" }} />
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-
-              {/* ── Personal info section ── */}
-              {activeSection === "personal" && (
-                <motion.div
-                  initial={{ opacity: 0, x: 12 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="space-y-6"
-                >
-                  <button
-                    onClick={() => setActiveSection(null)}
-                    className="flex items-center gap-2 text-sm font-medium"
-                    style={{ color: "#948EEE" }}
-                  >
-                    ← Back
-                  </button>
-                  <div
-                    className="rounded-2xl p-5"
-                    style={{ background: "#FFFFFF", border: "1px solid #ECECEC" }}
-                  >
-                    <ProfilePersonalInfoSection
-                      firstName={userProfileData?.profile?.firstName || ""}
-                      lastName={userProfileData?.profile?.lastName || ""}
-                      email={userProfileData?.email || ""}
-                      phoneNumber={userProfileData?.profile?.phoneNumber || ""}
-                      dob={userProfileData?.profile?.dateOfBirth}
-                      profileImg={userProfileData?.profile?.profileImg}
-                      handleFieldChange={handlePersonalInfoProfileFieldUpdate}
-                      handleRemoveProfilePicture={handleRemoveProfilePicture}
-                    />
-                  </div>
-                  <div className="flex justify-center">
-                    <CustomButton buttonText="Save Changes" onClick={handleSaveChanges} />
-                  </div>
-                </motion.div>
-              )}
-
-              {/* ── Bank details section ── */}
-              {activeSection === "bank" && (
-                <motion.div
-                  initial={{ opacity: 0, x: 12 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="space-y-5"
-                >
-                  <button
-                    onClick={() => setActiveSection(null)}
-                    className="flex items-center gap-2 text-sm font-medium"
-                    style={{ color: "#948EEE" }}
-                  >
-                    ← Back
-                  </button>
-
-                  {!loadingUserBankAccounts && !userBankAccounts ? (
-                    <div
-                      className="rounded-2xl p-8 flex flex-col items-center gap-4"
-                      style={{ background: "#FFFFFF", border: "1px solid #ECECEC" }}
-                    >
-                      <p className="text-sm text-center" style={{ color: "#6B6E6B" }}>
-                        No bank accounts saved yet
-                      </p>
-                      <CustomButton buttonText="Add Bank Account" onClick={toggleShowCreateNewBankAccount} />
                     </div>
-                  ) : (
-                    <div
-                      className="rounded-2xl p-5"
-                      style={{ background: "#FFFFFF", border: "1px solid #ECECEC" }}
-                    >
-                      <ProfileBankDetailsSection
-                        banks={userBankAccounts}
-                        createNewBankModal={toggleShowCreateNewBankAccount}
-                        makeBankAccountDefault={handleDefaultBankAccount}
-                        handleDeleteBank={handleDeleteBankAccount}
+                  )}
+
+                  {activeSection === "bank" && (
+                    <div className="space-y-4">
+                      {!loadingUserBankAccounts && !userBankAccounts ? (
+                        <div className="rounded-3xl p-10 flex flex-col items-center gap-4"
+                          style={{ border: "1px solid #F0F0F0" }}>
+                          <p className="text-sm" style={{ color: "#9A9A9A" }}>No bank accounts saved yet</p>
+                          <CustomButton buttonText="Add Bank Account" onClick={toggleShowCreateNewBankAccount} />
+                        </div>
+                      ) : (
+                        <div className="rounded-3xl p-5" style={{ border: "1px solid #F0F0F0" }}>
+                          <ProfileBankDetailsSection
+                            banks={userBankAccounts}
+                            createNewBankModal={toggleShowCreateNewBankAccount}
+                            makeBankAccountDefault={handleDefaultBankAccount}
+                            handleDeleteBank={handleDeleteBankAccount}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {activeSection === "security" && (
+                    <div className="rounded-3xl p-5" style={{ border: "1px solid #F0F0F0" }}>
+                      <ProfileSecuritySettingsSection
+                        isTwoFactorEnabled={userProfileData?.twoFactorEnabled ?? false}
+                        onEnableTwoFactor={handleEnableTwoFactor}
+                        onChangePassword={handleChangePassword}
                       />
                     </div>
                   )}
-                </motion.div>
+                </Fragment>
               )}
-
-              {/* ── Security section ── */}
-              {activeSection === "security" && (
-                <motion.div
-                  initial={{ opacity: 0, x: 12 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="space-y-5"
-                >
-                  <button
-                    onClick={() => setActiveSection(null)}
-                    className="flex items-center gap-2 text-sm font-medium"
-                    style={{ color: "#948EEE" }}
-                  >
-                    ← Back
-                  </button>
-                  <div
-                    className="rounded-2xl p-5"
-                    style={{ background: "#FFFFFF", border: "1px solid #ECECEC" }}
-                  >
-                    <ProfileSecuritySettingsSection
-                      isTwoFactorEnabled={userProfileData?.twoFactorEnabled || false}
-                      onEnableTwoFactor={handleEnableTwoFactor}
-                      onChangePassword={handleChangePassword}
-                    />
-                  </div>
-                </motion.div>
-              )}
-
-            </Fragment>
+            </motion.div>
           )}
-        </div>
+
+        </AnimatePresence>
       </div>
 
       <NewBankAccountModal
@@ -412,14 +375,9 @@ const ProfilePage = () => {
         onClose={toggleShowCreateNewBankAccount}
         onSubmit={handleCreateBankAccount}
       />
-
       <NewCryptoWalletModal
         isOpen={showCreateWallet}
-        supportedCryptoWallet={
-          !loadingSupportedCryptocurrencies && supportedCryptoCurrencies !== undefined
-            ? supportedCryptoCurrencies
-            : []
-        }
+        supportedCryptoWallet={!loadingSupportedCryptocurrencies && supportedCryptoCurrencies ? supportedCryptoCurrencies : []}
         selectedWalletId={selectedWallet}
         onClose={toggleShowCreateNewWallet}
         onSubmit={handleCreateWallet}

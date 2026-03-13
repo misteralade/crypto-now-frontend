@@ -62,7 +62,7 @@ export const userSearchTransactionInitialState: SearchTransactionsRequestPayload
 
   // Pagination
   page: 1,
-  size: 10,
+  size: 5,
 
   // Ordering
   sortModel: {

@@ -3,7 +3,7 @@ import {AlertCircle, X} from "lucide-react";
 import type {AllBanksResponse} from "../../../../types/response.payload.types.ts";
 import type {CreateBankAccountRequestPayload} from "../../../../types/request.payload.types.ts";
 import BankSelector from "../../../global/BankSelector.tsx";
-import { CustomInput } from "../../../global/CustomInput.tsx";
+import { Input } from "@material-tailwind/react";
 import { Form, Formik } from "formik";
 
 interface NewBankAccountModalProps {
@@ -92,34 +92,38 @@ const NewBankAccountModal = ({ isOpen, banks, selectedBankId, onClose, onSubmit,
                       </div>
                       
                       <div className="flex flex-col gap-2">
-                        <CustomInput
-                            label="Account Holder name"
-                            type="text"
-                            value={values.accountName as unknown as string}
-                            onChange={(e) => {
-                              handleChange("accountName")(e.target.value)
-                              handleChangeField("accountName", e.target.value)
-                            }}
-                            onBlur={handleBlur("accountName")}
-                          />
-
+                        <Input
+                          label="Account Holder name"
+                          type="text"
+                          value={values.accountName as unknown as string}
+                          onChange={(e) => {
+                            handleChange("accountName")(e.target.value);
+                            handleChangeField("accountName", e.target.value);
+                          }}
+                          onBlur={handleBlur("accountName")}
+                          crossOrigin={undefined}
+                          onPointerEnterCapture={undefined}
+                          onPointerLeaveCapture={undefined}
+                        />
                         {touched.accountName && errors.accountName && (
                           <p className="text-red-500 text-xs mt-1">{errors.accountName}</p>
                         )}
                       </div>
-                      
+
                       <div className="flex flex-col gap-2">
-                        <CustomInput
+                        <Input
                           label="Account number"
                           type="text"
                           value={values.accountNumber as unknown as string}
                           onChange={(e) => {
-                            handleChange("accountNumber")(e.target.value)
-                            handleChangeField("accountNumber", e.target.value)
+                            handleChange("accountNumber")(e.target.value);
+                            handleChangeField("accountNumber", e.target.value);
                           }}
                           onBlur={handleBlur("accountNumber")}
+                          crossOrigin={undefined}
+                          onPointerEnterCapture={undefined}
+                          onPointerLeaveCapture={undefined}
                         />
-
                         {touched.accountNumber && errors.accountNumber && (
                           <p className="text-red-500 text-xs mt-1">{errors.accountNumber}</p>
                         )}

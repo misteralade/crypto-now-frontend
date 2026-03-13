@@ -1,7 +1,7 @@
 import { type ReactNode } from "react";
-import { Link, useNavigate, useLocation } from "@tanstack/react-router";
-import { LayoutDashboard, History, User, LogOut, TrendingUp, Bell } from "lucide-react";
-import { ROUTES, LOCAL_STORAGE_KEYS } from "../util/constants.util.ts";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
+import { LayoutDashboard, History, User, LogOut, TrendingUp, Bell, Settings } from "lucide-react";
+import { LOCAL_STORAGE_KEYS, ROUTES } from "../util/constants.util.ts";
 import { useUserQuery } from "../queries/user.query.ts";
 import Logo from "../assets/logo/logo.svg";
 
@@ -9,248 +9,172 @@ interface AuthenticatedLayoutProps {
   children: ReactNode;
 }
 
-const navItems = [
-  { to: ROUTES.DASHBOARD, label: "Dashboard", icon: LayoutDashboard },
-  { to: ROUTES.TRANSACTION, label: "History", icon: History },
-  { to: ROUTES.TRADE_CRYPTO, label: "Trade", icon: TrendingUp },
-  { to: ROUTES.PROFILE, label: "Profile", icon: User },
-];
-
+/* ─── bottom tab config ─────────────────────────────────────── */
 const mobileTabs = [
-  { to: ROUTES.DASHBOARD, label: "Home", icon: LayoutDashboard },
-  { to: ROUTES.TRANSACTION, label: "History", icon: History },
-  { to: ROUTES.PROFILE, label: "Profile", icon: User },
+  { to: ROUTES.DASHBOARD,       label: "Home",    icon: LayoutDashboard, exact: true },
+  { to: ROUTES.DASHBOARD_TRADE, label: "Trade",   icon: TrendingUp,      exact: false },
+  { to: ROUTES.TRANSACTION,     label: "History", icon: History,         exact: false },
+  { to: ROUTES.PROFILE,         label: "Profile", icon: User,            exact: false },
 ];
 
-const pageTitles: Record<string, string> = {
-  [ROUTES.DASHBOARD]: "Dashboard",
-  [ROUTES.TRANSACTION]: "Transaction History",
-  [ROUTES.PROFILE]: "Account Settings",
+/* ─── desktop sidebar config ────────────────────────────────── */
+const sidebarNav = [
+  { to: ROUTES.DASHBOARD,       label: "Dashboard",  icon: LayoutDashboard, exact: true },
+  { to: ROUTES.DASHBOARD_TRADE, label: "Trade",      icon: TrendingUp,      exact: false },
+  { to: ROUTES.TRANSACTION,     label: "History",    icon: History,         exact: false },
+  { to: ROUTES.PROFILE,         label: "Settings",   icon: Settings,        exact: false },
+];
+
+const getPageTitle = (pathname: string) => {
+  if (pathname === ROUTES.DASHBOARD) return "Home";
+  if (pathname.startsWith(ROUTES.DASHBOARD_TRADE)) return "Trade";
+  if (pathname.startsWith(ROUTES.TRANSACTION)) return "History";
+  if (pathname.startsWith(ROUTES.PROFILE)) return "Profile";
+  return "Home";
 };
 
-function getPageTitle(pathname: string): string {
-  if (pageTitles[pathname]) return pageTitles[pathname];
-  for (const [route, title] of Object.entries(pageTitles)) {
-    if (pathname.startsWith(route) && route !== ROUTES.DASHBOARD) {
-      return title;
-    }
-  }
-  return "Dashboard";
-}
+const getInitials = (firstName?: string, lastName?: string) => {
+  const f = firstName?.[0]?.toUpperCase() ?? "";
+  const l = lastName?.[0]?.toUpperCase() ?? "";
+  return (f + l) || "U";
+};
 
-function getInitials(firstName?: string, lastName?: string): string {
-  const first = firstName?.charAt(0)?.toUpperCase() ?? "";
-  const last = lastName?.charAt(0)?.toUpperCase() ?? "";
-  return first + last || "U";
-}
-
-const AuthenticatedLayout = ({ children }: AuthenticatedLayoutProps) => {
-  const navigate = useNavigate();
-  const location = useLocation();
+export default function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
+  const location  = useLocation();
+  const navigate  = useNavigate();
   const { userProfileData } = useUserQuery();
+
+  const initials  = getInitials(userProfileData?.profile?.firstName, userProfileData?.profile?.lastName);
+  const fullName  = userProfileData?.profile?.firstName
+    ? `${userProfileData.profile.firstName} ${userProfileData.profile.lastName ?? ""}`.trim()
+    : "Account";
+  const email     = userProfileData?.email ?? "";
+  const pageTitle = getPageTitle(location.pathname);
+
+  const isActive = (to: string, exact: boolean) =>
+    exact ? location.pathname === to : location.pathname.startsWith(to);
 
   const handleLogout = () => {
     localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
     navigate({ to: ROUTES.HOMEPAGE });
   };
 
-  const pageTitle = getPageTitle(location.pathname);
-  const initials = getInitials(
-    userProfileData?.profile?.firstName,
-    userProfileData?.profile?.lastName
-  );
-
-  const isNavActive = (to: string): boolean => {
-    if (to === ROUTES.DASHBOARD) {
-      return location.pathname === ROUTES.DASHBOARD;
-    }
-    return location.pathname === to || location.pathname.startsWith(to);
-  };
-
   return (
-    <div className="min-h-screen" style={{ background: "#F4F5F7" }}>
+    <div style={{ background: "#FFFFFF", minHeight: "100dvh" }}>
 
-      {/* DESKTOP SIDEBAR — hidden on mobile */}
-      <aside
-        className="hidden lg:flex fixed left-0 top-0 h-full w-64 flex-col"
-        style={{ background: "#03034D", zIndex: 40 }}
-      >
-        {/* Logo area */}
-        <div
-          className="p-6 border-b"
-          style={{ borderColor: "rgba(255,255,255,0.08)" }}
-        >
+      {/* ══════════════════════════════════════
+          DESKTOP — fixed sidebar
+      ══════════════════════════════════════ */}
+      <aside className="hidden lg:flex fixed inset-y-0 left-0 w-60 flex-col"
+        style={{ background: "#03034D", zIndex: 50 }}>
+
+        {/* logo */}
+        <div className="px-6 py-5" style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
           <Link to={ROUTES.HOMEPAGE}>
             <img src={Logo} alt="CryptoNow" className="h-7 w-auto brightness-0 invert" />
           </Link>
         </div>
 
-        {/* Nav items */}
-        <nav className="flex-1 p-4 space-y-1">
-          {navItems.map((item) => {
-            const active = isNavActive(item.to);
+        {/* nav */}
+        <nav className="flex-1 py-4 px-3 flex flex-col gap-0.5">
+          {sidebarNav.map(({ to, label, icon: Icon, exact }) => {
+            const active = isActive(to, exact);
             return (
-              <Link
-                key={item.to}
-                to={item.to}
-                className="flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-150 font-medium text-sm"
+              <Link key={to} to={to}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all"
                 style={{
-                  background: active ? "rgba(255,255,255,0.1)" : "transparent",
-                  color: active ? "#FFFFFF" : "rgba(255,255,255,0.55)",
-                }}
-                onMouseEnter={(e) => {
-                  if (!active) {
-                    (e.currentTarget as HTMLAnchorElement).style.background =
-                      "rgba(255,255,255,0.1)";
-                    (e.currentTarget as HTMLAnchorElement).style.color =
-                      "#FFFFFF";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!active) {
-                    (e.currentTarget as HTMLAnchorElement).style.background =
-                      "transparent";
-                    (e.currentTarget as HTMLAnchorElement).style.color =
-                      "rgba(255,255,255,0.55)";
-                  }
+                  background: active ? "rgba(148,142,238,0.18)" : "transparent",
+                  color: active ? "#C8C5F8" : "rgba(255,255,255,0.5)",
                 }}
               >
-                <item.icon size={18} />
-                <span>{item.label}</span>
+                <Icon size={17} />
+                {label}
+                {active && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#948EEE]" />}
               </Link>
             );
           })}
         </nav>
 
-        {/* Bottom: user info + logout */}
-        <div
-          className="p-4 border-t space-y-3"
-          style={{ borderColor: "rgba(255,255,255,0.08)" }}
-        >
-          {/* User info */}
-          <div className="flex items-center gap-3">
-            <div
-              className="flex items-center justify-center w-9 h-9 rounded-full flex-shrink-0 text-sm font-semibold text-white"
-              style={{ background: "#575AE5" }}
-            >
+        {/* user + logout */}
+        <div className="px-3 py-4" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+          <div className="flex items-center gap-2.5 px-2 py-2 mb-1">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
+              style={{ background: "linear-gradient(135deg,#948EEE,#575AE5)" }}>
               {initials}
             </div>
             <div className="min-w-0">
-              <p className="text-white text-sm font-medium truncate">
-                {userProfileData?.profile?.firstName
-                  ? `${userProfileData.profile.firstName} ${userProfileData.profile.lastName || ""}`.trim()
-                  : "Account"}
-              </p>
-              <p
-                className="text-xs truncate"
-                style={{ color: "rgba(255,255,255,0.45)" }}
-              >
-                {userProfileData?.email ?? ""}
-              </p>
+              <p className="text-xs font-semibold text-white truncate">{fullName}</p>
+              <p className="text-[10px] truncate" style={{ color: "rgba(255,255,255,0.38)" }}>{email}</p>
             </div>
           </div>
-
-          {/* Logout button */}
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-3 w-full rounded-xl px-4 py-3 text-sm font-medium transition-all duration-150"
-            style={{ color: "rgba(255,255,255,0.55)" }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background =
-                "rgba(255,255,255,0.1)";
-              (e.currentTarget as HTMLButtonElement).style.color = "#FFFFFF";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background =
-                "transparent";
-              (e.currentTarget as HTMLButtonElement).style.color =
-                "rgba(255,255,255,0.55)";
-            }}
+          <button onClick={handleLogout}
+            className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-sm transition-all"
+            style={{ color: "rgba(255,255,255,0.45)" }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = "#EB5757"; (e.currentTarget as HTMLButtonElement).style.background = "rgba(235,87,87,0.08)"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.45)"; (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
           >
-            <LogOut size={18} />
-            <span>Sign Out</span>
+            <LogOut size={15} />
+            Sign Out
           </button>
         </div>
       </aside>
 
-      {/* MAIN CONTENT AREA */}
-      <div className="lg:pl-64">
-
-        {/* DESKTOP TOP HEADER */}
-        <header className="hidden lg:flex h-16 items-center justify-between px-8 bg-white border-b border-[#ECECEC] sticky top-0 z-30">
-          {/* Page title */}
-          <h1 className="text-base font-semibold" style={{ color: "#0E0F0C" }}>
-            {pageTitle}
-          </h1>
-
-          {/* Right: bell + avatar */}
-          <div className="flex items-center gap-4">
-            {/* Notification bell — TODO: connect to real notification count */}
-            <button
-              className="relative p-2 rounded-full transition-colors hover:bg-gray-100"
-              aria-label="Notifications"
-            >
-              <Bell size={20} style={{ color: "#6B6E6B" }} />
-              {/* Static red dot badge */}
-              <span
-                className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full"
-                style={{ background: "#EB5757" }}
-              />
+      {/* ══════════════════════════════════════
+          DESKTOP — main area
+      ══════════════════════════════════════ */}
+      <div className="hidden lg:block lg:pl-60">
+        {/* sticky top bar */}
+        <header className="sticky top-0 z-40 h-14 flex items-center justify-between px-8"
+          style={{ background: "#FFFFFF", borderBottom: "1px solid #F0F0F0" }}>
+          <h1 className="text-sm font-semibold" style={{ color: "#0E0F0C" }}>{pageTitle}</h1>
+          <div className="flex items-center gap-3">
+            {/* TODO: wire to real notification count */}
+            <button className="relative p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+              <Bell size={18} style={{ color: "#6B6E6B" }} />
+              <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-[#EB5757]" />
             </button>
-
-            {/* Profile avatar button */}
             <Link to={ROUTES.PROFILE}>
-              <div
-                className="flex items-center justify-center w-9 h-9 rounded-full text-sm font-semibold text-white cursor-pointer transition-opacity hover:opacity-80"
-                style={{ background: "#575AE5" }}
-              >
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                style={{ background: "linear-gradient(135deg,#948EEE,#575AE5)" }}>
                 {initials}
               </div>
             </Link>
           </div>
         </header>
 
-        {/* PAGE CONTENT */}
-        <main className="pb-24 lg:pb-8">
-          {children}
-        </main>
+        <main className="p-6 lg:p-8">{children}</main>
       </div>
 
-      {/* MOBILE BOTTOM TAB BAR */}
-      <nav
-        className="lg:hidden fixed bottom-0 inset-x-0 z-50 flex items-center"
-        style={{
-          background: "#FFFFFF",
-          borderTop: "1px solid #ECECEC",
-          height: "64px",
-          boxShadow: "0 -4px 20px rgba(0,0,0,0.06)",
-        }}
-      >
-        {mobileTabs.map((tab) => {
-          const active = isNavActive(tab.to);
-          return (
-            <Link
-              key={tab.to}
-              to={tab.to}
-              className="flex-1 flex flex-col items-center justify-center gap-0.5 relative"
-              style={{ color: active ? "#948EEE" : "#9A9A9A" }}
-            >
-              <tab.icon size={22} />
-              <span className="text-[10px] font-medium leading-tight">
-                {tab.label}
-              </span>
-              {active && (
-                <span
-                  className="absolute bottom-1 w-1 h-1 rounded-full"
-                  style={{ background: "#948EEE" }}
-                />
-              )}
-            </Link>
-          );
-        })}
-      </nav>
+      {/* ══════════════════════════════════════
+          MOBILE — full-screen content + bottom nav
+      ══════════════════════════════════════ */}
+      <div className="lg:hidden">
+        <main style={{ paddingBottom: "72px" }}>{children}</main>
+
+        {/* Bottom tab bar */}
+        <nav className="fixed bottom-0 inset-x-0 z-50 flex"
+          style={{
+            background: "#FFFFFF",
+            borderTop: "1px solid #F0F0F0",
+            height: "64px",
+            boxShadow: "0 -2px 16px rgba(0,0,0,0.06)",
+          }}>
+          {mobileTabs.map(({ to, label, icon: Icon, exact }) => {
+            const active = isActive(to, exact);
+            return (
+              <Link key={to} to={to}
+                className="flex-1 flex flex-col items-center justify-center gap-0.5"
+                style={{ color: active ? "#948EEE" : "#BDBDBD" }}>
+                <Icon size={21} strokeWidth={active ? 2.2 : 1.7} />
+                <span className="text-[10px] font-semibold tracking-wide">{label}</span>
+                {active && (
+                  <span className="absolute bottom-2.5 w-1 h-1 rounded-full bg-[#948EEE]" />
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
     </div>
   );
-};
-
-export default AuthenticatedLayout;
+}

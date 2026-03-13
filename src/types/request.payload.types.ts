@@ -77,6 +77,7 @@ export type SearchTransactionsRequestPayload = {
   includeUserBankAccount: boolean | undefined;
   includeUserCryptoWallet: boolean | undefined;
   includeProcessedBy: boolean | undefined;
+  includeDispute: boolean | undefined;
 
   // Pagination
   page: number | undefined;

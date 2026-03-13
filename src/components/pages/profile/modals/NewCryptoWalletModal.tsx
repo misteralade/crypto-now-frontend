@@ -3,7 +3,7 @@ import type { SupportedCryptoOrCurrencyResponse } from "../../../../types/respon
 import type {UserCreateCryptoWalletRequestPayload} from "../../../../types/request.payload.types.ts";
 import {X} from "lucide-react";
 import BankSelector from "../../../global/BankSelector.tsx";
-import {CustomInput} from "../../../global/CustomInput.tsx";
+import { Input } from "@material-tailwind/react";
 import {CustomSelect} from "../../../global/CustomSelect.tsx";
 import {cryptoNetworkTypes} from "../../../../util/constants.util.ts";
 import { walletAddressRegex } from "../../../../util/regex.util.ts";
@@ -114,25 +114,36 @@ const NewCryptoWalletModal = ({ isOpen, supportedCryptoWallet, selectedWalletId,
                 />
                 
                 {/*Wallet Nickname*/}
-                <CustomInput
+                <Input
                   label="Wallet Nickname"
                   type="text"
                   value={walletLabel}
                   onChange={(e) => {
-                    setWalletLabel(e.target.value)
-                    handleChangeField("walletLabel", e.target.value)
+                    setWalletLabel(e.target.value);
+                    handleChangeField("walletLabel", e.target.value);
                   }}
+                  crossOrigin={undefined}
+                  onPointerEnterCapture={undefined}
+                  onPointerLeaveCapture={undefined}
                 />
-                
+
                 {/*Wallet Address*/}
-                <CustomInput
-                  label="Wallet Address"
-                  type="text"
-                  value={walletAddress}
-                  onChange={handleWalletAddressChange}
-                  onBlur={handleWalletAddressBlur}
-                  error={walletAddressError}
-                />
+                <div>
+                  <Input
+                    label="Wallet Address"
+                    type="text"
+                    value={walletAddress}
+                    onChange={handleWalletAddressChange}
+                    onBlur={handleWalletAddressBlur}
+                    error={!!walletAddressError}
+                    crossOrigin={undefined}
+                    onPointerEnterCapture={undefined}
+                    onPointerLeaveCapture={undefined}
+                  />
+                  {walletAddressError && (
+                    <p className="text-red-500 text-xs mt-1 ml-1">{walletAddressError}</p>
+                  )}
+                </div>
                 
                 
                 {/*Make Primary Wallet*/}

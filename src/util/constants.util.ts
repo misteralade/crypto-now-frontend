@@ -18,6 +18,7 @@ export const ROUTES = {
   ORGANIZATIONS: "/dashboard/organizations",
   PROFILE: '/dashboard/profile',
   TRADE_CRYPTO: "/trade-crypto",
+  DASHBOARD_TRADE: "/dashboard/trade",
   TRANSACTION: '/dashboard/transactions',
   TRANSACTION_DETAILS: '/dashboard/transactions/$id',
   DISPUTE_DETAILS: '/dispute/$id',

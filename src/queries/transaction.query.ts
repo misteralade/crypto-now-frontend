@@ -55,6 +55,8 @@ export const useTransactionQuery = () => {
       return null;
     },
     enabled: !!(store.getState() as RootState)?.transaction?.dashboard?.searchUserTransactions && !!matchRoute({ to: ROUTES.DASHBOARD }),
+    staleTime: TIME_IN_MILLISECONDS.ONE_HUNDRED_TWENTY_SECONDS,
+    retry: 1,
   });
   
   // Return Transaction Summary
