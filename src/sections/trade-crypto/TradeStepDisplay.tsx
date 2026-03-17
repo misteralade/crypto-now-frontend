@@ -150,6 +150,7 @@ const TradeStepDisplay = ({ activeTab,setActiveTab, step, currency, token, setSt
     loadingSupportedCryptocurrencies,
     loadingUserCryptoWallets,
     loadingUserBankAccounts,
+    sellDepositWallet,
 
     // Functions
     setAmountToBuy,
@@ -271,6 +272,7 @@ const TradeStepDisplay = ({ activeTab,setActiveTab, step, currency, token, setSt
                 handleSubmitPaymentProof={makePaymentTransaction}
                 formatReceiveAmount={formatReceiveAmount}
                 formatSendAmount={formatSendAmount}
+                sellDepositWallet={sellDepositWallet}
               />
             )}
           </div>

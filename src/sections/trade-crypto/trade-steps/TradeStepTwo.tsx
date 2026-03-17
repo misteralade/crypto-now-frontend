@@ -2,7 +2,7 @@ import type {TradeAdditionalInfoInterface, TradeType} from "../../../types/trade
 import TradeAdditionalInfo from "../TradeAdditionalInfo.tsx";
 import CustomButton from "../../../components/global/Button.tsx";
 import {useTradeStepTwo} from "../../../hooks/components/trade/useTradeStepTwo.ts";
-import type {SupportedCryptoOrCurrencyResponse} from "../../../types/response.payload.types.ts";
+import type {CustodialWalletResponse, SupportedCryptoOrCurrencyResponse} from "../../../types/response.payload.types.ts";
 import TradePaymentUpload from "../TradePaymentUpload.tsx";
 import CopyAccountDetails from "../CopyAccountDetails.tsx";
 import {SESSION_STORAGE_KEYS} from "../../../util/constants.util.ts";
@@ -23,9 +23,10 @@ interface TradeStepTwoProps {
   handleSubmitPaymentProof: () => void;
   formatReceiveAmount: (amount: number | string, currencyCode: string | undefined) => string | React.ReactNode;
   formatSendAmount: (amount: number | string, currencyCode: string | undefined) => string | React.ReactNode;
+  sellDepositWallet?: CustodialWalletResponse | null;
 }
 
-const TradeStepTwo = ({ amountToBuy, tradeType, numberOfToken, additionalInfo, handleReceiptUrl, selectedToken, selectedCurrency, exchangeRateId, transactionRef, handleTransactionHash, handleSubmitPaymentProof, formatReceiveAmount, formatSendAmount }: TradeStepTwoProps) => {
+const TradeStepTwo = ({ amountToBuy, tradeType, numberOfToken, additionalInfo, handleReceiptUrl, selectedToken, selectedCurrency, exchangeRateId, transactionRef, handleTransactionHash, handleSubmitPaymentProof, formatReceiveAmount, formatSendAmount, sellDepositWallet }: TradeStepTwoProps) => {
   const {
     // Values
     // files,
@@ -39,7 +40,7 @@ const TradeStepTwo = ({ amountToBuy, tradeType, numberOfToken, additionalInfo, h
     // Functions
     setTransactionHash,
     setUploadedFileUrl,
-  } = useTradeStepTwo({tradeType, exchangeRateId, amountToBuy, numberOfToken, selectedToken, selectedCurrency });
+  } = useTradeStepTwo({tradeType, exchangeRateId, amountToBuy, numberOfToken, selectedToken, selectedCurrency, sellDepositWallet });
   
   // Retrieve stored values from session storage (if receipt was uploaded)
   // Only use stored values if they exist and are not empty

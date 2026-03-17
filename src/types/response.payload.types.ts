@@ -53,6 +53,7 @@ export type SupportedCryptoOrCurrencyResponse = {
   maxTransactionLimit: string;
   minTradeAmountForAnonymous: string;
   maxTradeAmountForAnonymous: string;
+  networks?: string[]; // Blockchain networks this crypto supports (e.g. ['TRC20', 'BTC'])
 };
 
 export type SupportedExchangeRateResponse = {
@@ -108,6 +109,17 @@ export type UserBankAccountResponse = {
 export type UserCryptoWalletAPIResponse = BaseApiResponse<
   Array<UserCryptoWalletResponse>
 >;
+
+export type CustodialWalletResponse = {
+  id: string;
+  userId: string;
+  cryptocurrencyId: string;
+  network: string;
+  walletAddress: string;
+  derivationIndex: number;
+  isActive: boolean;
+  createdAt: Date;
+};
 
 export type UserCryptoWalletResponse = {
   id: string;

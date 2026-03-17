@@ -6,6 +6,7 @@ import {
 } from "./index.ts";
 import type {
   BaseApiResponse,
+  CustodialWalletResponse,
   SupportedCryptoOrCurrencyResponse,
   SupportedPlatformCryptoWalletResponse, UserCryptoWalletResponse
 } from "../types/response.payload.types.ts";
@@ -71,6 +72,18 @@ class CryptoServiceApi {
   
   async userDeleteCryptoWallet(walletId: string) {
     return await axiosDeleteRequestHandler(`/crypto/user/${walletId}/delete`) as BaseApiResponse<null>;
+  }
+
+  async getMyCustodialWallets() {
+    return await axiosGetRequestHandler(`/custodial-wallet/my`) as BaseApiResponse<CustodialWalletResponse[]>;
+  }
+
+  async generateCustodialWallet(cryptoId: string, network: string) {
+    return await axiosPostRequestHandler(`/custodial-wallet/generate/${cryptoId}/${network}`, {}) as BaseApiResponse<CustodialWalletResponse>;
+  }
+
+  async generateAllCustodialWallets() {
+    return await axiosPostRequestHandler(`/custodial-wallet/generate/all`, {}) as BaseApiResponse<CustodialWalletResponse[]>;
   }
 }
 

@@ -4,6 +4,7 @@ import { QUERY_KEYS } from "../../../queries/query.keys.ts";
 import type { TradeType } from "../../../types/trade.types.ts";
 import { bankServiceApi } from "../../../api/bank.api.ts";
 import type {
+  CustodialWalletResponse,
   SupportedCryptoOrCurrencyResponse,
   SupportedPlatformBankAccountResponse,
   SupportedPlatformCryptoWalletResponse,
@@ -25,6 +26,7 @@ interface UseTradeStepTwoProps {
   numberOfToken: number;
   selectedToken?: SupportedCryptoOrCurrencyResponse;
   selectedCurrency?: SupportedCryptoOrCurrencyResponse;
+  sellDepositWallet?: CustodialWalletResponse | null;
 }
 
 export const useTradeStepTwo = ({
@@ -34,6 +36,7 @@ export const useTradeStepTwo = ({
   numberOfToken,
   selectedToken,
   selectedCurrency,
+  sellDepositWallet,
 }: UseTradeStepTwoProps) => {
   const [files, setFiles] = useState<File[]>([]);
   const [uploadedFileUrl, setUploadedFileUrl] = useState<string | undefined>();
@@ -70,6 +73,17 @@ export const useTradeStepTwo = ({
     return amountToBuy;
   };
 
+  // For authenticated sell: use custodial wallet passed from parent; skip the platform wallet fetch
+  useEffect(() => {
+    if (tradeType === "sell" && sellDepositWallet) {
+      setWalletDetails({
+        id: sellDepositWallet.id,
+        walletAddress: sellDepositWallet.walletAddress,
+        network: sellDepositWallet.network,
+      });
+    }
+  }, [tradeType, sellDepositWallet]);
+
   // Fetch payment details based on trade type
   const { isLoading: paymentDetailsLoading, error: paymentDetailsError } =
     useQuery({
@@ -85,20 +99,23 @@ export const useTradeStepTwo = ({
           setBankDetails(data);
           return data;
         } else {
+          // Authenticated users have a custodial wallet injected via sellDepositWallet
+          // Fall back to platform wallet for anonymous users
           const rootState = store.getState() as RootState;
-          const cryptoId = rootState.crypto.tradeCrypto.selectedCryptoId
-          
+          const cryptoId = rootState.crypto.tradeCrypto.selectedCryptoId;
+
           if (!cryptoId) {
             toast.error("Please select a crypto");
             throw new Error("No crypto selected");
           }
-          
+
           const { data } = await cryptoServiceApi.getPlatformWallet(cryptoId);
           setWalletDetails(data);
           return data;
         }
       },
-      enabled: !!exchangeRateId,
+      // For sell: only fetch platform wallet if no custodial wallet is available
+      enabled: tradeType === "buy" ? !!exchangeRateId : !!exchangeRateId && !sellDepositWallet,
     });
 
   // Validation based on trade type - only require uploaded file

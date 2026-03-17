@@ -7,7 +7,7 @@ import type {
   TradeType,
 } from "../../../types/trade.types.ts";
 import { useCurrencyQuery } from "../../../queries/currency.query.ts";
-import type { SupportedCryptoOrCurrencyResponse } from "../../../types/response.payload.types.ts";
+import type { CustodialWalletResponse, SupportedCryptoOrCurrencyResponse } from "../../../types/response.payload.types.ts";
 import { useCryptoQuery } from "../../../queries/crypto.query.ts";
 import { useRateQuery } from "../../../queries/rate.query.ts";
 import { useTransactionQuery } from "../../../queries/transaction.query.ts";
@@ -64,7 +64,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   const dispatch = useDispatch();
   const { userBankAccounts, loadingUserBankAccounts } = useBankQuery();
   const { supportedCurrencies } = useCurrencyQuery();
-  const { supportedCryptoCurrencies, loadingSupportedCryptocurrencies, userCryptoWallets, loadingUserCryptoWallets } = useCryptoQuery();
+  const { supportedCryptoCurrencies, loadingSupportedCryptocurrencies, userCryptoWallets, loadingUserCryptoWallets, custodialWallets, generateCustodialWalletMutation } = useCryptoQuery();
   const { calculatedAmount, loadingCalculation, initiateTransactionMutation, makePaymentTransactionMutation, receivingPaymentAccountConfirmationMutation } = useTransactionQuery();
   
   const [transactionSessionId, setTransactionSessionId] = useState<string>();
@@ -111,6 +111,9 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   const [, setShowConfirmBankDetails] = useState<boolean>(false);
   const [showUserEnterEmail, setShowUserEnterEmail] = useState<boolean>(false);
   const [hasAnonymousUserEmail, setHasAnonymousUserEmail] = useState<boolean>(false);
+
+  // Custodial wallet for sell flow (deposit address the user sends crypto to)
+  const [sellDepositWallet, setSellDepositWallet] = useState<CustodialWalletResponse | null>(null);
 
   // Ping user to check authentication status
   const { isLoading: isLoadingPingUser } = useQuery({
@@ -190,6 +193,42 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       setShowUserEnterEmail(false);
     }
   }, [isLoadingPingUser])
+
+  // Resolve custodial deposit wallet for sell flow
+  useEffect(() => {
+    if (activeTab !== "sell" || !selectedToken) {
+      setSellDepositWallet(null);
+      return;
+    }
+
+    const isAuthenticated = !!localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+    if (!isAuthenticated) return;
+
+    // Pick the first network this crypto supports (fallback: use symbol)
+    const network = selectedToken.networks?.[0] ?? selectedToken.symbol;
+
+    // Try to find an existing custodial wallet for this crypto + network
+    const existing = custodialWallets?.find(
+      (w) => w.cryptocurrencyId === selectedToken.id && w.network === network && w.isActive
+    );
+
+    if (existing) {
+      setSellDepositWallet(existing);
+    } else {
+      // Not found — generate it on demand
+      generateCustodialWalletMutation.mutate(
+        { cryptoId: selectedToken.id, network },
+        {
+          onSuccess: ({ success, data }) => {
+            if (success && data) {
+              setSellDepositWallet(data);
+            }
+          },
+        }
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, selectedToken?.id, custodialWallets]);
 
   // 🔹 Hydration guard to avoid saving empty defaults on first paint
   const hydratedRef = useRef(false);
@@ -1374,6 +1413,8 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     loadingUserCryptoWallets,
     loadingUserBankAccounts,
     hasAnonymousUserEmail,
+    sellDepositWallet,
+    isGeneratingDepositWallet: generateCustodialWalletMutation.isPending,
 
     // Functions
     setAmountToBuy,
