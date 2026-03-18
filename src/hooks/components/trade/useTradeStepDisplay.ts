@@ -1126,11 +1126,15 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   const toggleShowUserEnterEmail = () => setShowUserEnterEmail((prev) => !prev);
 
   const initiateTransaction = async () => {
-    const { data: { sessionId }} = await initiateTransactionMutation.mutateAsync();
-    setTransactionSessionId(sessionId);
-    sessionStorage.setItem(SESSION_STORAGE_KEYS.SESSION_ID, sessionId);
-    saveTradeProgress({ transactionSessionId: sessionId, step: 2 });
-    setStep(2);
+    try {
+      const { data: { sessionId }} = await initiateTransactionMutation.mutateAsync();
+      setTransactionSessionId(sessionId);
+      sessionStorage.setItem(SESSION_STORAGE_KEYS.SESSION_ID, sessionId);
+      saveTradeProgress({ transactionSessionId: sessionId, step: 2 });
+      setStep(2);
+    } catch {
+      // Error already handled by mutation's onError (toast shown); just let button re-enable
+    }
   };
 
   const makePaymentTransaction = async () => {

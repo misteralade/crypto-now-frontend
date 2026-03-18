@@ -1,5 +1,4 @@
 import { Fragment } from "react";
-import Navbar from "../../../components/global/navbar/Navbar.tsx";
 import { useTransactionDetailsPage } from "../../../hooks/pages/useTransactionDetailsPage.ts";
 import { LoadingSpinner } from "../../../components/global/LoadingSpinner.tsx";
 import { TransactionStatus } from "../../../hooks/components/transaction/TransactionStatusIcon.tsx";
@@ -9,12 +8,15 @@ import {
   transactionStatusStyles,
 } from "../../../util/constants.util.ts";
 import { convertToMillify, formatNumber } from "../../../util/index.util.ts";
-import { AlertTriangle, CheckCircle, Clock, Copy } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import { AlertTriangle, CheckCircle, ChevronLeft, Clock, Copy } from "lucide-react";
 import momentClient from "../../../lib/moment.ts";
 import DisputeTransactionModal from "./modals/DisputeTransactionModal.tsx";
 import TransactionReceiptsSection from "./TransactionReceiptsSection.tsx";
 
+// Transaction details "inner" view rendered inside the dashboard layout.
 const TransactionDetailsPage = () => {
+  const navigate = useNavigate();
   const {
     // 🧩 Values
     transactionDetails: transaction,
@@ -39,7 +41,7 @@ const TransactionDetailsPage = () => {
       transaction?.status as keyof typeof transactionStatusStyles
     ];
 
-  // Derive NGN amount from amountFiat + currency (match CRM: always show Fiat Amount (NGN))
+  // Derive NGN amount from amountFiat + currency (match CRM: always show Fiat Amount (NGN)).
   const getAmountFiatNGN = () => {
     const amountFiat = Number(transaction?.amountFiat ?? 0);
     const currency = transaction?.currency;
@@ -49,14 +51,14 @@ const TransactionDetailsPage = () => {
     return amountFiat;
   };
 
-  // Match CRM TransactionOverview: "Fiat Amount (NGN)" with ₦ display only
+  // Format fiat amount as "₦ X" (always displayed as NGN).
   const formatFiatAmount = () => {
     if (!transaction) return "";
     const amountFiatNGN = getAmountFiatNGN();
     return `₦ ${convertToMillify(amountFiatNGN, 3)}`;
   };
 
-  // Match CRM exchange rate display: "1 BTC = $ X" or "1 BTC = ₦ X"
+  // Build the exchange-rate label shown in the overview card.
   const getExchangeRateDisplay = () => {
     const amountCrypto = Number(transaction?.amountCrypto ?? 0);
     const symbol = transaction?.cryptocurrency?.symbol || "CRYPTO";
@@ -75,6 +77,7 @@ const TransactionDetailsPage = () => {
       : `1 ${symbol} = ₦ ${convertToMillify(amountFiatNGN / amountCrypto, 2)}`;
   };
 
+  // Small inline copy-to-clipboard control used across the page.
   const CopyButton = ({ text, field }: { text: string; field: string }) => (
     <button
       onClick={() => copyToClipboard(text, field)}
@@ -95,19 +98,27 @@ const TransactionDetailsPage = () => {
         <LoadingSpinner fullScreen={true} />
       ) : transaction ? (
         <Fragment>
-          <div className={`space-y-10 md:space-y-20 min-h-screen bg-gray-50`}>
-            <Navbar />
-
-            <div className="max-w-7xl mx-auto">
+          <div className="max-w-7xl mx-auto space-y-8">
               {/* Header */}
-              <div className="mb-8 flex items-center justify-between">
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900">
-                    Transaction Details
-                  </h1>
-                  <p className="mt-2 text-sm text-gray-600">
-                    View your transaction information and status
-                  </p>
+              <div className="mb-2 flex items-center justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <button
+                    type="button"
+                    onClick={() => navigate({ to: ROUTES.TRANSACTION })}
+                    className="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 shadow-sm hover:bg-gray-50 transition-colors"
+                    aria-label="Back to transaction history"
+                    title="Back"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  <div>
+                    <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+                      Transaction Details
+                    </h1>
+                    <p className="mt-1 text-sm text-gray-600">
+                      View your transaction information and status
+                    </p>
+                  </div>
                 </div>
 
                 <button
@@ -514,7 +525,6 @@ const TransactionDetailsPage = () => {
                   We appreciate your patience as we process your transaction.
                 </p>
               </div>
-            </div>
           </div>
 
           {showDisputeTransaction && (

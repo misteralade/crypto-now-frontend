@@ -1,10 +1,6 @@
-import AuthenticatedLayout from "../layouts/AuthenticatedLayout.tsx";
 import { TransactionDashboard } from "../sections/dashboard/TransactionHistory/TransactionDashboard.tsx";
 
+// Transaction history rendered inside the dashboard layout route.
 export default function TransactionHistoryPage() {
-  return (
-    <AuthenticatedLayout>
-      <TransactionDashboard />
-    </AuthenticatedLayout>
-  );
+  return <TransactionDashboard />;
 }

@@ -1,6 +1,6 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
-import DashboardPage from "../../pages/DashboardPage.tsx";
-import {LOCAL_STORAGE_KEYS, ROUTES} from "../../util/constants.util.ts";
+import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
+import AuthenticatedLayout from "../../layouts/AuthenticatedLayout.tsx";
+import { LOCAL_STORAGE_KEYS, ROUTES } from "../../util/constants.util.ts";
 import { userServiceApi } from "../../api/user.api.ts";
 
 export const Route = createFileRoute("/dashboard/")({
@@ -30,5 +30,14 @@ export const Route = createFileRoute("/dashboard/")({
       });
     }
   },
-  component: DashboardPage,
+  component: DashboardLayoutRoute,
 });
+
+// Dashboard layout route that wraps all /dashboard/* pages with sidebar + header.
+function DashboardLayoutRoute() {
+  return (
+    <AuthenticatedLayout>
+      <Outlet />
+    </AuthenticatedLayout>
+  );
+}
