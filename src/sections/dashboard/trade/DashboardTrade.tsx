@@ -38,6 +38,7 @@ export default function DashboardTrade() {
   const [activeTab, setActiveTab] = useState<TradeType>(
     routeOption?.toLowerCase() === "sell" ? "sell" : "buy"
   );
+  const [hasChosenMode, setHasChosenMode] = useState<boolean>(!!routeOption);
   // Local pending token for sell flow (the hook's useEffect resets selectedToken so we track locally)
   const [pendingSellToken, setPendingSellToken] = useState<import("../../../types/response.payload.types.ts").SupportedCryptoOrCurrencyResponse | undefined>();
   // Ref to hold the last token selected for buy (persists across hook-triggered re-renders)
@@ -89,7 +90,7 @@ export default function DashboardTrade() {
   const {
     selectedToken, numberOfToken, AdditionalInfo, amountToBuy,
     selectedCurrency, supportedCurrencies, supportedCryptoCurrencies,
-    exchangeRateId, isInitiatingTrade, transactionSessionId,
+    exchangeRateId, isInitiatingTrade, loadingExchangeRate, transactionSessionId,
     showPaymentReceivingModal, userBankAccounts, userCryptoWallets,
     showUserEnterEmail, isLoadingPingUser,
     loadingSupportedCryptocurrencies, loadingUserCryptoWallets, loadingUserBankAccounts,
@@ -111,6 +112,17 @@ export default function DashboardTrade() {
     setStep(1);
     setSubStep(0);
     navigate({ to: "/dashboard/trade", search: {}, replace: true });
+  };
+
+  // Handle initial selection between BUY and SELL entry modes.
+  const handleChooseMode = (mode: TradeType) => {
+    setActiveTab(mode);
+    setHasChosenMode(true);
+    navigate({
+      to: "/dashboard/trade",
+      search: { ...searchParams, option: mode },
+      replace: true,
+    });
   };
 
   // When navigating to step 1 with a pre-selected token (from URL), pre-select it
@@ -137,6 +149,64 @@ export default function DashboardTrade() {
 
   const isBuy = activeTab === "buy";
 
+  if (!hasChosenMode) {
+    return (
+      <div style={{ background: "#FFFFFF", minHeight: "100dvh" }}>
+        <div className="px-5 pt-6 pb-32 max-w-4xl mx-auto">
+          <div className="mb-6">
+            <p className="text-xs font-semibold tracking-[0.16em] uppercase text-gray-400">
+              Start a new trade
+            </p>
+            <h1 className="mt-1 text-2xl md:text-3xl font-bold text-gray-900">
+              What would you like to do?
+            </h1>
+            <p className="mt-2 text-sm text-gray-600 max-w-xl">
+              Choose whether you want to buy or sell crypto. You can always switch
+              later in the flow.
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => handleChooseMode("buy")}
+              className="group flex flex-col items-start gap-3 rounded-2xl border border-purple-100 bg-purple-50/70 px-4 py-4 text-left shadow-sm hover:border-purple-300 hover:bg-purple-50 transition-colors"
+            >
+              <span className="inline-flex items-center rounded-full bg-white/80 px-2.5 py-1 text-[11px] font-semibold text-purple-700">
+                Buy Crypto
+              </span>
+              <div>
+                <p className="text-sm font-semibold text-gray-900">
+                  Pay local currency, receive crypto
+                </p>
+                <p className="mt-1 text-xs text-gray-600">
+                  Best when you want to load your wallet or take a position.
+                </p>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleChooseMode("sell")}
+              className="group flex flex-col items-start gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-4 text-left shadow-sm hover:border-emerald-300 hover:bg-emerald-50/40 transition-colors"
+            >
+              <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
+                Sell Crypto
+              </span>
+              <div>
+                <p className="text-sm font-semibold text-gray-900">
+                  Send crypto, receive cash
+                </p>
+                <p className="mt-1 text-xs text-gray-600">
+                  Ideal when you need NGN quickly from your crypto balance.
+                </p>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ background: "#FFFFFF", minHeight: "100dvh" }}>
@@ -164,6 +234,7 @@ export default function DashboardTrade() {
                   }
                 }}
                 isInitiatingTrade={isInitiatingTrade}
+                isRateLoading={activeTab === "sell" && loadingExchangeRate}
                 onProceed={() => {
                   if (activeTab === "sell") {
                     if (!pendingSellToken) return;
@@ -245,6 +316,7 @@ export default function DashboardTrade() {
                 tradeType={activeTab}
                 bankAccounts={userBankAccounts}
                 cryptoAccounts={userCryptoWallets}
+                selectedTokenNetworks={selectedToken?.networks}
                 onProceed={handleConfirmBankDetails}
                 onBack={() => { togglePaymentReceivingModal(false); setStep(2); }}
               />

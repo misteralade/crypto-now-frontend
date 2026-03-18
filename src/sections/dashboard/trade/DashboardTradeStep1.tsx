@@ -9,6 +9,7 @@ interface DashboardTradeStep1Props {
   selectedToken: SupportedCryptoOrCurrencyResponse | undefined;
   setSelectedToken: (t: SupportedCryptoOrCurrencyResponse) => void;
   isInitiatingTrade: boolean;
+  isRateLoading?: boolean;
   onProceed: () => void;
 }
 
@@ -30,14 +31,19 @@ function CryptoIcon({ symbol, icon }: { symbol: string; icon?: string }) {
 }
 
 export default function DashboardTradeStep1({
-  tradeType, availableTokens, selectedToken, setSelectedToken, isInitiatingTrade, onProceed,
+  tradeType, availableTokens, selectedToken, setSelectedToken, isInitiatingTrade, isRateLoading, onProceed,
 }: DashboardTradeStep1Props) {
   const isBuy = tradeType === "buy";
   const accentColor = isBuy ? "#948EEE" : "#F7A600";
 
-  const ctaLabel = selectedToken
-    ? `${isBuy ? "Buy" : "Sell"} ${selectedToken.symbol} — Continue`
-    : "Select a Crypto to Continue";
+  const isCtaBusy = isInitiatingTrade || (!!selectedToken && isRateLoading);
+  const ctaLabel = isInitiatingTrade
+    ? "Processing…"
+    : (isRateLoading && selectedToken)
+      ? "Loading rate…"
+      : selectedToken
+        ? `${isBuy ? "Buy" : "Sell"} ${selectedToken.symbol} — Continue`
+        : "Select a Crypto to Continue";
 
   return (
     <div className="flex flex-col gap-4">
@@ -110,18 +116,18 @@ export default function DashboardTradeStep1({
       {/* CTA */}
       <button
         type="button"
-        disabled={!selectedToken || isInitiatingTrade}
-        onClick={() => selectedToken && onProceed()}
+        disabled={!selectedToken || isCtaBusy}
+        onClick={() => selectedToken && !isCtaBusy && onProceed()}
         className="w-full py-4 rounded-2xl text-sm font-bold transition-all mt-1"
         style={{
-          background: selectedToken
+          background: selectedToken && !isRateLoading
             ? `linear-gradient(135deg, ${accentColor}, ${isBuy ? "#6B45D0" : "#E09000"})`
             : "#F0F0F0",
-          color: selectedToken ? "#FFFFFF" : "#9A9A9A",
-          boxShadow: selectedToken ? `0 6px 20px ${accentColor}44` : "none",
+          color: selectedToken && !isRateLoading ? "#FFFFFF" : "#9A9A9A",
+          boxShadow: selectedToken && !isRateLoading ? `0 6px 20px ${accentColor}44` : "none",
         }}
       >
-        {isInitiatingTrade ? "Processing…" : ctaLabel}
+        {ctaLabel}
       </button>
     </div>
   );

@@ -13,12 +13,13 @@ interface DashboardTradeStep3Props {
   tradeType: TradeType;
   bankAccounts: UserBankAccountResponse[] | undefined;
   cryptoAccounts: UserCryptoWalletResponse[] | undefined | null;
+  selectedTokenNetworks?: string[];
   onProceed: (value: number) => void;
   onBack: () => void;
 }
 
 export default function DashboardTradeStep3({
-  tradeType, bankAccounts, cryptoAccounts, onProceed, onBack,
+  tradeType, bankAccounts, cryptoAccounts, selectedTokenNetworks, onProceed, onBack,
 }: DashboardTradeStep3Props) {
   const {
     selectedBankId, selectedBank, viewState,
@@ -45,7 +46,7 @@ export default function DashboardTradeStep3({
             <p className="text-[11px]" style={{ color: "#9A9A9A" }}>Where should we send your crypto?</p>
           </div>
         </div>
-        <ChangeWalletDetails onGoBack={onBack} onConfirm={handleSubmitWalletDetails} canGoBack={true} />
+        <ChangeWalletDetails onGoBack={onBack} onConfirm={handleSubmitWalletDetails} canGoBack={true} availableNetworks={selectedTokenNetworks} />
       </div>
     );
   }

@@ -10,6 +10,7 @@ interface CryptoWalletDetailsProps {
   onConfirm: () => void
   onGoBack: () => void
   canGoBack: boolean
+  availableNetworks?: string[]
 }
 
 
@@ -22,12 +23,13 @@ interface CryptoWalletDetailsProps {
 //   "Binance Smart Chain", "Huobi ECO Chain", "OKEx Chain"
 // ]
 
-const ChangeCryptoWalletDetails = ({ onConfirm, onGoBack, canGoBack = true }: CryptoWalletDetailsProps) => {
+const ChangeCryptoWalletDetails = ({ onConfirm, onGoBack, canGoBack = true, availableNetworks }: CryptoWalletDetailsProps) => {
   const dispatch = useDispatch()
 
+  const networkOptions = availableNetworks && availableNetworks.length > 0 ? availableNetworks : cryptoNetworkTypes;
   const [walletAddress, setWalletAddress] = useState("")
   const [walletAddressError, setWalletAddressError] = useState("")
-  const [network, setNetwork] = useState("")
+  const [network, setNetwork] = useState(networkOptions.length === 1 ? networkOptions[0] : "")
   const [isVerified, setIsVerified] = useState(false)
 
   const validateWalletAddress = (address: string) => {
@@ -94,13 +96,23 @@ const ChangeCryptoWalletDetails = ({ onConfirm, onGoBack, canGoBack = true }: Cr
           className="font-mono text-sm"
         />
 
-        <CustomSelect
-          label="Network type"
-          placeholder="Select network"
-          options={cryptoNetworkTypes}
-          value={network}
-          onValueChange={setNetwork}
-        />
+        {networkOptions.length === 1 ? (
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-gray-700">Network type</p>
+            <div className="h-12 px-4 flex items-center rounded-2xl text-sm font-semibold"
+              style={{ background: "#F7F7F9", border: "1px solid #EEEEEE", color: "#0E0F0C" }}>
+              {networkOptions[0]}
+            </div>
+          </div>
+        ) : (
+          <CustomSelect
+            label="Network type"
+            placeholder="Select network"
+            options={networkOptions}
+            value={network}
+            onValueChange={setNetwork}
+          />
+        )}
         
         <div className="flex items-center space-x-3">
           <input

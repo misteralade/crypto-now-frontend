@@ -1136,21 +1136,22 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
 
   // Validate required fields before initiating a transaction.
   const canInitiateTransaction = () => {
-    const rootState = store.getState() as RootState;
-    const tx = rootState.transaction.initiate.initiateTransaction;
-
-    const exchangeRateIdVal = String(tx?.exchangeRateId || "").trim();
-    const amountToSendVal = Number(tx?.amountToSend || 0);
-    const amountToReceiveVal = Number(tx?.amountToReceive || 0);
-
+    const exchangeRateIdVal = String(exchangeRateId || "").trim();
     if (!exchangeRateIdVal) {
-      toast.error("Please wait for the exchange rate to load before continuing.");
+      // Sell flow: rate might still be loading — surface a friendlier message
+      toast.error("Exchange rate is still loading. Please wait a moment and try again.");
       return false;
     }
 
-    if (!amountToSendVal || amountToSendVal <= 0 || !amountToReceiveVal || amountToReceiveVal <= 0) {
-      toast.error("Please enter a valid amount before continuing.");
-      return false;
+    // Sell flow: amounts are unknown upfront (user sends crypto to custodial wallet).
+    // Only buy flow requires amounts to be entered before proceeding.
+    if (activeTab === "buy") {
+      const tokenAmount = Number(numberOfToken || 0);
+      const receiveAmount = Number(amountToBuy || 0);
+      if (!receiveAmount || receiveAmount <= 0 || !tokenAmount || tokenAmount <= 0) {
+        toast.error(`Please enter a valid ${selectedCurrency?.code || "fiat"} amount before continuing.`);
+        return false;
+      }
     }
 
     return true;
@@ -1159,6 +1160,18 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   const initiateTransaction = async () => {
     try {
       if (!canInitiateTransaction()) return;
+
+      // Sync exchange rate into Redux right before initiating.
+      dispatch(setInitiateTransactionField({ field: "exchangeRateId", value: exchangeRateId }));
+
+      // For BUY: sync the entered amounts. For SELL: amounts are 0 (unknown until crypto arrives).
+      if (activeTab === "buy") {
+        const tokenAmount = Number(numberOfToken || 0);
+        const receiveAmount = Number(amountToBuy || 0);
+        dispatch(setInitiateTransactionField({ field: "amountToSend", value: receiveAmount }));
+        dispatch(setInitiateTransactionField({ field: "amountToReceive", value: tokenAmount }));
+      }
+
       const { data: { sessionId }} = await initiateTransactionMutation.mutateAsync();
       setTransactionSessionId(sessionId);
       sessionStorage.setItem(SESSION_STORAGE_KEYS.SESSION_ID, sessionId);
@@ -1184,10 +1197,8 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       const { success } = await receivingPaymentAccountConfirmationMutation.mutateAsync();
       if (success) {
         clearTradeProgress();
-        // Clear guest user email when reaching Step 3
         dispatch(clearAnonymousUserEmail());
-        setStep(3);
-        // setActiveTab("buy");
+        setStep(4);
         setShowPaymentReceivingModal(false);
         setShowConfirmBankDetails(false);
       }
@@ -1434,6 +1445,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     countdown,
     exchangeRateId,
     exchangeRate,
+    loadingExchangeRate,
     loadingCalculation,
     isDebouncing,
     transactionForm,
