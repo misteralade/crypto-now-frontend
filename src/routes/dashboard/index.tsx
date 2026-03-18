@@ -1,43 +1,11 @@
-import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
-import AuthenticatedLayout from "../../layouts/AuthenticatedLayout.tsx";
-import { LOCAL_STORAGE_KEYS, ROUTES } from "../../util/constants.util.ts";
-import { userServiceApi } from "../../api/user.api.ts";
+import { createFileRoute } from "@tanstack/react-router";
+import DashboardContent from "../../sections/dashboard/DashboardContent.tsx";
 
 export const Route = createFileRoute("/dashboard/")({
-  beforeLoad: async () => {
-    const accessToken = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
-    if (!accessToken) {
-      throw redirect({
-        to: ROUTES.SIGNIN,
-      });
-    }
-
-    // Ping user to verify access token is valid
-    try {
-      const { success } = await userServiceApi.pingUser();
-      if (!success) {
-        // Token is invalid, remove it and redirect to sign in
-        localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
-        throw redirect({
-          to: ROUTES.SIGNIN,
-        });
-      }
-    } catch (error) {
-      // If ping fails (network error, invalid token, etc.), remove token and redirect
-      localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
-      throw redirect({
-        to: ROUTES.SIGNIN,
-      });
-    }
-  },
-  component: DashboardLayoutRoute,
+  component: DashboardIndexRoute,
 });
 
-// Dashboard layout route that wraps all /dashboard/* pages with sidebar + header.
-function DashboardLayoutRoute() {
-  return (
-    <AuthenticatedLayout>
-      <Outlet />
-    </AuthenticatedLayout>
-  );
+// Dashboard index page rendered inside the dashboard layout route.
+function DashboardIndexRoute() {
+  return <DashboardContent />;
 }

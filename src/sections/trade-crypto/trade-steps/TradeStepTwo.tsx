@@ -133,11 +133,13 @@ const TradeStepTwo = ({ amountToBuy, tradeType, numberOfToken, additionalInfo, h
         ) : (
           <div>
             <h3 className="font-semibold text-orange-800 mb-2">
-              🔗 Crypto Transfer Instructions (Sell Order)
+              Crypto Transfer Instructions (Sell Order)
             </h3>
             <p className="text-orange-700 text-sm">
-              Please send <strong>{numberOfToken} {selectedToken?.symbol}</strong> to the wallet address below
-              on the <strong>{walletDetails?.network}</strong> network, then upload proof and provide the transaction hash.
+              Please send <strong>{numberOfToken} {selectedToken?.symbol}</strong> to{" "}
+              <strong>your unique deposit address</strong> shown below, on the{" "}
+              <strong>{walletDetails?.network}</strong> network. After sending, upload proof and provide
+              the transaction hash.
             </p>
           </div>
         )}

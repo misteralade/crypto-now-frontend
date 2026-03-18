@@ -204,8 +204,17 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     const isAuthenticated = !!localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
     if (!isAuthenticated) return;
 
-    // Pick the first network this crypto supports (fallback: use symbol)
-    const network = selectedToken.networks?.[0] ?? selectedToken.symbol;
+    // Ensure a valid network is configured; never fall back to symbol
+    if (!selectedToken.networks || selectedToken.networks.length === 0) {
+      toast.error(
+        `No network is configured for ${selectedToken.symbol}. Please contact support or choose another asset.`
+      );
+      setSellDepositWallet(null);
+      return;
+    }
+
+    // Pick the first explicitly configured network for this crypto
+    const network = selectedToken.networks[0];
 
     // Try to find an existing custodial wallet for this crypto + network
     const existing = custodialWallets?.find(
@@ -1125,8 +1134,31 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   
   const toggleShowUserEnterEmail = () => setShowUserEnterEmail((prev) => !prev);
 
+  // Validate required fields before initiating a transaction.
+  const canInitiateTransaction = () => {
+    const rootState = store.getState() as RootState;
+    const tx = rootState.transaction.initiate.initiateTransaction;
+
+    const exchangeRateIdVal = String(tx?.exchangeRateId || "").trim();
+    const amountToSendVal = Number(tx?.amountToSend || 0);
+    const amountToReceiveVal = Number(tx?.amountToReceive || 0);
+
+    if (!exchangeRateIdVal) {
+      toast.error("Please wait for the exchange rate to load before continuing.");
+      return false;
+    }
+
+    if (!amountToSendVal || amountToSendVal <= 0 || !amountToReceiveVal || amountToReceiveVal <= 0) {
+      toast.error("Please enter a valid amount before continuing.");
+      return false;
+    }
+
+    return true;
+  };
+
   const initiateTransaction = async () => {
     try {
+      if (!canInitiateTransaction()) return;
       const { data: { sessionId }} = await initiateTransactionMutation.mutateAsync();
       setTransactionSessionId(sessionId);
       sessionStorage.setItem(SESSION_STORAGE_KEYS.SESSION_ID, sessionId);

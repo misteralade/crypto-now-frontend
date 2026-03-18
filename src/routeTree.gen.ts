@@ -18,6 +18,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RatesRouteImport } from './routes/rates'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AmlPolicyRouteImport } from './routes/aml-policy'
 import { Route as ActivationResultRouteImport } from './routes/activation-result'
@@ -32,7 +33,6 @@ import { Route as OauthErrorRouteImport } from './routes/oauth/error'
 import { Route as DisputeIdRouteImport } from './routes/dispute/$id'
 import { Route as DashboardTradeRouteImport } from './routes/dashboard/trade'
 import { Route as DashboardProfileRouteImport } from './routes/dashboard/profile'
-import { Route as DashboardIndexRouteImport } from './routes/dashboard/_index'
 import { Route as DashboardTransactionsIndexRouteImport } from './routes/dashboard/transactions/index'
 import { Route as DashboardTransactionsIdRouteImport } from './routes/dashboard/transactions/$id'
 
@@ -81,6 +81,11 @@ const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
@@ -117,9 +122,9 @@ const SignInIndexRoute = SignInIndexRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardIndexRoute = DashboardIndexRouteImport.update({
-  id: '/dashboard/',
-  path: '/dashboard/',
-  getParentRoute: () => rootRouteImport,
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const SignInVerifyRoute = SignInVerifyRouteImport.update({
   id: '/sign-in/verify',
@@ -142,30 +147,25 @@ const DisputeIdRoute = DisputeIdRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardTradeRoute = DashboardTradeRouteImport.update({
-  id: '/dashboard/trade',
-  path: '/dashboard/trade',
-  getParentRoute: () => rootRouteImport,
+  id: '/trade',
+  path: '/trade',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardProfileRoute = DashboardProfileRouteImport.update({
-  id: '/dashboard/profile',
-  path: '/dashboard/profile',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardIndexRoute = DashboardIndexRouteImport.update({
-  id: '/dashboard/_index',
-  path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardTransactionsIndexRoute =
   DashboardTransactionsIndexRouteImport.update({
-    id: '/dashboard/transactions/',
-    path: '/dashboard/transactions/',
-    getParentRoute: () => rootRouteImport,
+    id: '/transactions/',
+    path: '/transactions/',
+    getParentRoute: () => DashboardRoute,
   } as any)
 const DashboardTransactionsIdRoute = DashboardTransactionsIdRouteImport.update({
-  id: '/dashboard/transactions/$id',
-  path: '/dashboard/transactions/$id',
-  getParentRoute: () => rootRouteImport,
+  id: '/transactions/$id',
+  path: '/transactions/$id',
+  getParentRoute: () => DashboardRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -175,6 +175,7 @@ export interface FileRoutesByFullPath {
   '/activation-result': typeof ActivationResultRoute
   '/aml-policy': typeof AmlPolicyRoute
   '/contact': typeof ContactRoute
+  '/dashboard': typeof DashboardRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/rates': typeof RatesRoute
@@ -184,7 +185,6 @@ export interface FileRoutesByFullPath {
   '/terms-of-service': typeof TermsOfServiceRoute
   '/trade-crypto': typeof TradeCryptoRoute
   '/verify-account': typeof VerifyAccountRoute
-  '/dashboard': typeof DashboardIndexRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/trade': typeof DashboardTradeRoute
   '/dispute/$id': typeof DisputeIdRoute
@@ -212,13 +212,13 @@ export interface FileRoutesByTo {
   '/terms-of-service': typeof TermsOfServiceRoute
   '/trade-crypto': typeof TradeCryptoRoute
   '/verify-account': typeof VerifyAccountRoute
-  '/dashboard': typeof DashboardIndexRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/trade': typeof DashboardTradeRoute
   '/dispute/$id': typeof DisputeIdRoute
   '/oauth/error': typeof OauthErrorRoute
   '/oauth/success': typeof OauthSuccessRoute
   '/sign-in/verify': typeof SignInVerifyRoute
+  '/dashboard': typeof DashboardIndexRoute
   '/sign-in': typeof SignInIndexRoute
   '/dashboard/transactions/$id': typeof DashboardTransactionsIdRoute
   '/dashboard/transactions': typeof DashboardTransactionsIndexRoute
@@ -231,6 +231,7 @@ export interface FileRoutesById {
   '/activation-result': typeof ActivationResultRoute
   '/aml-policy': typeof AmlPolicyRoute
   '/contact': typeof ContactRoute
+  '/dashboard': typeof DashboardRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/rates': typeof RatesRoute
@@ -240,7 +241,6 @@ export interface FileRoutesById {
   '/terms-of-service': typeof TermsOfServiceRoute
   '/trade-crypto': typeof TradeCryptoRoute
   '/verify-account': typeof VerifyAccountRoute
-  '/dashboard/_index': typeof DashboardIndexRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/trade': typeof DashboardTradeRoute
   '/dispute/$id': typeof DisputeIdRoute
@@ -261,6 +261,7 @@ export interface FileRouteTypes {
     | '/activation-result'
     | '/aml-policy'
     | '/contact'
+    | '/dashboard'
     | '/forgot-password'
     | '/privacy-policy'
     | '/rates'
@@ -270,7 +271,6 @@ export interface FileRouteTypes {
     | '/terms-of-service'
     | '/trade-crypto'
     | '/verify-account'
-    | '/dashboard'
     | '/dashboard/profile'
     | '/dashboard/trade'
     | '/dispute/$id'
@@ -298,13 +298,13 @@ export interface FileRouteTypes {
     | '/terms-of-service'
     | '/trade-crypto'
     | '/verify-account'
-    | '/dashboard'
     | '/dashboard/profile'
     | '/dashboard/trade'
     | '/dispute/$id'
     | '/oauth/error'
     | '/oauth/success'
     | '/sign-in/verify'
+    | '/dashboard'
     | '/sign-in'
     | '/dashboard/transactions/$id'
     | '/dashboard/transactions'
@@ -316,6 +316,7 @@ export interface FileRouteTypes {
     | '/activation-result'
     | '/aml-policy'
     | '/contact'
+    | '/dashboard'
     | '/forgot-password'
     | '/privacy-policy'
     | '/rates'
@@ -325,7 +326,6 @@ export interface FileRouteTypes {
     | '/terms-of-service'
     | '/trade-crypto'
     | '/verify-account'
-    | '/dashboard/_index'
     | '/dashboard/profile'
     | '/dashboard/trade'
     | '/dispute/$id'
@@ -345,6 +345,7 @@ export interface RootRouteChildren {
   ActivationResultRoute: typeof ActivationResultRoute
   AmlPolicyRoute: typeof AmlPolicyRoute
   ContactRoute: typeof ContactRoute
+  DashboardRoute: typeof DashboardRouteWithChildren
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   RatesRoute: typeof RatesRoute
@@ -354,17 +355,11 @@ export interface RootRouteChildren {
   TermsOfServiceRoute: typeof TermsOfServiceRoute
   TradeCryptoRoute: typeof TradeCryptoRoute
   VerifyAccountRoute: typeof VerifyAccountRoute
-  DashboardIndexRoute: typeof DashboardIndexRoute
-  DashboardProfileRoute: typeof DashboardProfileRoute
-  DashboardTradeRoute: typeof DashboardTradeRoute
   DisputeIdRoute: typeof DisputeIdRoute
   OauthErrorRoute: typeof OauthErrorRoute
   OauthSuccessRoute: typeof OauthSuccessRoute
   SignInVerifyRoute: typeof SignInVerifyRoute
-  DashboardIndexRoute: typeof DashboardIndexRoute
   SignInIndexRoute: typeof SignInIndexRoute
-  DashboardTransactionsIdRoute: typeof DashboardTransactionsIdRoute
-  DashboardTransactionsIndexRoute: typeof DashboardTransactionsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -432,6 +427,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/contact': {
       id: '/contact'
       path: '/contact'
@@ -483,10 +485,10 @@ declare module '@tanstack/react-router' {
     }
     '/dashboard/': {
       id: '/dashboard/'
-      path: '/dashboard'
+      path: '/'
       fullPath: '/dashboard/'
       preLoaderRoute: typeof DashboardIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof DashboardRoute
     }
     '/sign-in/verify': {
       id: '/sign-in/verify'
@@ -518,41 +520,54 @@ declare module '@tanstack/react-router' {
     }
     '/dashboard/trade': {
       id: '/dashboard/trade'
-      path: '/dashboard/trade'
+      path: '/trade'
       fullPath: '/dashboard/trade'
       preLoaderRoute: typeof DashboardTradeRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof DashboardRoute
     }
     '/dashboard/profile': {
       id: '/dashboard/profile'
-      path: '/dashboard/profile'
+      path: '/profile'
       fullPath: '/dashboard/profile'
       preLoaderRoute: typeof DashboardProfileRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard/_index': {
-      id: '/dashboard/_index'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof DashboardRoute
     }
     '/dashboard/transactions/': {
       id: '/dashboard/transactions/'
-      path: '/dashboard/transactions'
+      path: '/transactions'
       fullPath: '/dashboard/transactions/'
       preLoaderRoute: typeof DashboardTransactionsIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof DashboardRoute
     }
     '/dashboard/transactions/$id': {
       id: '/dashboard/transactions/$id'
-      path: '/dashboard/transactions/$id'
+      path: '/transactions/$id'
       fullPath: '/dashboard/transactions/$id'
       preLoaderRoute: typeof DashboardTransactionsIdRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof DashboardRoute
     }
   }
 }
+
+interface DashboardRouteChildren {
+  DashboardProfileRoute: typeof DashboardProfileRoute
+  DashboardTradeRoute: typeof DashboardTradeRoute
+  DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardTransactionsIdRoute: typeof DashboardTransactionsIdRoute
+  DashboardTransactionsIndexRoute: typeof DashboardTransactionsIndexRoute
+}
+
+const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardProfileRoute: DashboardProfileRoute,
+  DashboardTradeRoute: DashboardTradeRoute,
+  DashboardIndexRoute: DashboardIndexRoute,
+  DashboardTransactionsIdRoute: DashboardTransactionsIdRoute,
+  DashboardTransactionsIndexRoute: DashboardTransactionsIndexRoute,
+}
+
+const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
+  DashboardRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -561,6 +576,7 @@ const rootRouteChildren: RootRouteChildren = {
   ActivationResultRoute: ActivationResultRoute,
   AmlPolicyRoute: AmlPolicyRoute,
   ContactRoute: ContactRoute,
+  DashboardRoute: DashboardRouteWithChildren,
   ForgotPasswordRoute: ForgotPasswordRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   RatesRoute: RatesRoute,
@@ -570,17 +586,11 @@ const rootRouteChildren: RootRouteChildren = {
   TermsOfServiceRoute: TermsOfServiceRoute,
   TradeCryptoRoute: TradeCryptoRoute,
   VerifyAccountRoute: VerifyAccountRoute,
-  DashboardIndexRoute: DashboardIndexRoute,
-  DashboardProfileRoute: DashboardProfileRoute,
-  DashboardTradeRoute: DashboardTradeRoute,
   DisputeIdRoute: DisputeIdRoute,
   OauthErrorRoute: OauthErrorRoute,
   OauthSuccessRoute: OauthSuccessRoute,
   SignInVerifyRoute: SignInVerifyRoute,
-  DashboardIndexRoute: DashboardIndexRoute,
   SignInIndexRoute: SignInIndexRoute,
-  DashboardTransactionsIdRoute: DashboardTransactionsIdRoute,
-  DashboardTransactionsIndexRoute: DashboardTransactionsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
