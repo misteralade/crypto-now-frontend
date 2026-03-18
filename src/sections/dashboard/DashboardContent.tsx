@@ -1,7 +1,7 @@
-import { useRef } from "react";
+import { useState, useRef } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { Bell, ArrowUpRight, ChevronRight } from "lucide-react";
+import { Bell, ArrowUpRight, ChevronRight, Copy, Check } from "lucide-react";
 import { useDashboardContent } from "../../hooks/components/dashboard/useDashboardContent.ts";
 import { useCryptoQuery } from "../../queries/crypto.query.ts";
 import { useUserQuery } from "../../queries/user.query.ts";
@@ -11,6 +11,7 @@ import { TransactionDashboard } from "./TransactionHistory/TransactionDashboard.
 import type {
   TransactionResponseEntity,
   SupportedCryptoOrCurrencyResponse,
+  CustodialWalletResponse,
 } from "../../types/response.payload.types.ts";
 import { formatCurrency, convertToMillify } from "../../util/index.util.ts";
 import { getStatusDisplayName } from "../../util/transaction.util.ts";
@@ -96,11 +97,69 @@ function RecentOrderRow({ tx }: { tx: TransactionResponseEntity }) {
   );
 }
 
+/* ──────────────────── Wallet Mini Card ──────────────────────── */
+function WalletMiniCard({
+  wallet,
+  crypto,
+}: {
+  wallet: CustodialWalletResponse;
+  crypto?: SupportedCryptoOrCurrencyResponse;
+}) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(wallet.walletAddress);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // ignore
+    }
+  };
+
+  const addr = wallet.walletAddress;
+  const short = addr.length > 16 ? `${addr.slice(0, 8)}…${addr.slice(-6)}` : addr;
+
+  return (
+    <div
+      className="flex items-center gap-3 px-4 py-3"
+    >
+      <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 overflow-hidden"
+        style={{ background: "#F0EFFD" }}>
+        {crypto?.logoUrl
+          ? <img src={crypto.logoUrl} alt={crypto.symbol} className="w-6 h-6 object-contain" />
+          : <span className="text-[10px] font-black" style={{ color: "#948EEE" }}>{crypto?.symbol?.slice(0, 2) ?? "?"}</span>
+        }
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold leading-snug truncate" style={{ color: "#0E0F0C" }}>
+          {crypto?.symbol ?? "?"} · {wallet.network}
+        </p>
+        <p className="text-[11px] font-mono leading-snug mt-0.5 truncate" style={{ color: "#9A9A9A" }}>
+          {short}
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={handleCopy}
+        className="shrink-0 w-8 h-8 rounded-xl flex items-center justify-center transition-all"
+        style={{
+          background: copied ? "#E8F8F0" : "#F7F7F9",
+          border: `1px solid ${copied ? "#B6E8D0" : "#EEEEEE"}`,
+          color: copied ? "#037847" : "#6B6E6B",
+        }}
+      >
+        {copied ? <Check size={13} /> : <Copy size={13} />}
+      </button>
+    </div>
+  );
+}
+
 /* ═══════════════════════ MAIN DASHBOARD ═════════════════════════ */
 export default function DashboardContent() {
   const navigate = useNavigate();
   const { transactionSummary, loadingTransactionSummary } = useDashboardContent();
-  const { supportedCryptoCurrencies, loadingSupportedCryptocurrencies } = useCryptoQuery();
+  const { supportedCryptoCurrencies, loadingSupportedCryptocurrencies, custodialWallets, loadingCustodialWallets } = useCryptoQuery();
   const { userProfileData, loadingUserProfile } = useUserQuery();
   const { supportedCurrencies, loadingSupportedCurrencies } = useCurrencyQuery();
   const { userTransactionHistory, loadingUserTransactionHistory } = useTransactionQuery();
@@ -119,6 +178,9 @@ export default function DashboardContent() {
     ? transactionSummary.total[0].transactionCount : "0";
 
   const recentOrders = userTransactionHistory?.transactions?.slice(0, 5) ?? [];
+
+  const cryptoMap = new Map((supportedCryptoCurrencies ?? []).map((c) => [c.id, c]));
+  const recentWallets = (custodialWallets ?? []).slice(0, 3);
 
   const goTrade = (option: "buy" | "sell") => {
     const cryptoId   = supportedCryptoCurrencies?.[0]?.id ?? "";
@@ -334,6 +396,68 @@ export default function DashboardContent() {
             </div>
           </section>
         )}
+
+        {/* DEPOSIT WALLETS */}
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-[11px] font-extrabold tracking-[0.12em] uppercase"
+              style={{ color: "#9A9A9A" }}>Deposit Wallets</p>
+            <Link to={ROUTES.DASHBOARD_WALLETS}
+              className="flex items-center gap-1 text-xs font-semibold"
+              style={{ color: "#948EEE" }}>
+              View all <ArrowUpRight size={12} />
+            </Link>
+          </div>
+
+          {loadingCustodialWallets ? (
+            <div className="rounded-3xl overflow-hidden" style={{ border: "1px solid #F0F0F0" }}>
+              {[...Array(2)].map((_, i) => (
+                <div key={i} className="px-4 py-3 flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl shrink-0 animate-pulse" style={{ background: "#F0F0F0" }} />
+                  <div className="flex-1 space-y-2">
+                    <SkelDark w="100px" h={3} />
+                    <SkelDark w="140px" h={3} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : recentWallets.length === 0 ? (
+            <Link to={ROUTES.DASHBOARD_WALLETS}>
+              <div className="rounded-3xl px-6 py-6 flex items-center gap-3"
+                style={{ border: "1px dashed #EEEEEE" }}>
+                <div className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
+                  style={{ background: "#F0EFFD" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#948EEE" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 12V22H4V12" /><path d="M22 7H2v5h20V7z" /><path d="M12 22V7" /><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" /><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold" style={{ color: "#0E0F0C" }}>Set up deposit wallets</p>
+                  <p className="text-xs" style={{ color: "#9A9A9A" }}>Receive crypto and get NGN automatically</p>
+                </div>
+                <ChevronRight size={16} style={{ color: "#9A9A9A", marginLeft: "auto" }} />
+              </div>
+            </Link>
+          ) : (
+            <div className="rounded-3xl overflow-hidden" style={{ border: "1px solid #F0F0F0" }}>
+              {recentWallets.map((w, i) => (
+                <div key={w.id}>
+                  <WalletMiniCard wallet={w} crypto={cryptoMap.get(w.cryptocurrencyId)} />
+                  {i < recentWallets.length - 1 && (
+                    <div style={{ height: "1px", background: "#F7F7F9", margin: "0 16px" }} />
+                  )}
+                </div>
+              ))}
+              <div style={{ borderTop: "1px solid #F7F7F9" }}>
+                <Link to={ROUTES.DASHBOARD_WALLETS}
+                  className="flex items-center justify-center gap-1.5 py-3.5 text-sm font-semibold w-full"
+                  style={{ color: "#948EEE" }}>
+                  View all wallets <ChevronRight size={14} />
+                </Link>
+              </div>
+            </div>
+          )}
+        </section>
 
         {/* RECENT ORDERS */}
         <section>

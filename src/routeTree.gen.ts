@@ -31,6 +31,7 @@ import { Route as SignInVerifyRouteImport } from './routes/sign-in/verify'
 import { Route as OauthSuccessRouteImport } from './routes/oauth/success'
 import { Route as OauthErrorRouteImport } from './routes/oauth/error'
 import { Route as DisputeIdRouteImport } from './routes/dispute/$id'
+import { Route as DashboardWalletsRouteImport } from './routes/dashboard/wallets'
 import { Route as DashboardTradeRouteImport } from './routes/dashboard/trade'
 import { Route as DashboardProfileRouteImport } from './routes/dashboard/profile'
 import { Route as DashboardTransactionsIndexRouteImport } from './routes/dashboard/transactions/index'
@@ -146,6 +147,11 @@ const DisputeIdRoute = DisputeIdRouteImport.update({
   path: '/dispute/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardWalletsRoute = DashboardWalletsRouteImport.update({
+  id: '/wallets',
+  path: '/wallets',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardTradeRoute = DashboardTradeRouteImport.update({
   id: '/trade',
   path: '/trade',
@@ -187,6 +193,7 @@ export interface FileRoutesByFullPath {
   '/verify-account': typeof VerifyAccountRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/trade': typeof DashboardTradeRoute
+  '/dashboard/wallets': typeof DashboardWalletsRoute
   '/dispute/$id': typeof DisputeIdRoute
   '/oauth/error': typeof OauthErrorRoute
   '/oauth/success': typeof OauthSuccessRoute
@@ -214,6 +221,7 @@ export interface FileRoutesByTo {
   '/verify-account': typeof VerifyAccountRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/trade': typeof DashboardTradeRoute
+  '/dashboard/wallets': typeof DashboardWalletsRoute
   '/dispute/$id': typeof DisputeIdRoute
   '/oauth/error': typeof OauthErrorRoute
   '/oauth/success': typeof OauthSuccessRoute
@@ -243,6 +251,7 @@ export interface FileRoutesById {
   '/verify-account': typeof VerifyAccountRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/trade': typeof DashboardTradeRoute
+  '/dashboard/wallets': typeof DashboardWalletsRoute
   '/dispute/$id': typeof DisputeIdRoute
   '/oauth/error': typeof OauthErrorRoute
   '/oauth/success': typeof OauthSuccessRoute
@@ -273,6 +282,7 @@ export interface FileRouteTypes {
     | '/verify-account'
     | '/dashboard/profile'
     | '/dashboard/trade'
+    | '/dashboard/wallets'
     | '/dispute/$id'
     | '/oauth/error'
     | '/oauth/success'
@@ -300,6 +310,7 @@ export interface FileRouteTypes {
     | '/verify-account'
     | '/dashboard/profile'
     | '/dashboard/trade'
+    | '/dashboard/wallets'
     | '/dispute/$id'
     | '/oauth/error'
     | '/oauth/success'
@@ -328,6 +339,7 @@ export interface FileRouteTypes {
     | '/verify-account'
     | '/dashboard/profile'
     | '/dashboard/trade'
+    | '/dashboard/wallets'
     | '/dispute/$id'
     | '/oauth/error'
     | '/oauth/success'
@@ -518,6 +530,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DisputeIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/wallets': {
+      id: '/dashboard/wallets'
+      path: '/wallets'
+      fullPath: '/dashboard/wallets'
+      preLoaderRoute: typeof DashboardWalletsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/trade': {
       id: '/dashboard/trade'
       path: '/trade'
@@ -552,6 +571,7 @@ declare module '@tanstack/react-router' {
 interface DashboardRouteChildren {
   DashboardProfileRoute: typeof DashboardProfileRoute
   DashboardTradeRoute: typeof DashboardTradeRoute
+  DashboardWalletsRoute: typeof DashboardWalletsRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardTransactionsIdRoute: typeof DashboardTransactionsIdRoute
   DashboardTransactionsIndexRoute: typeof DashboardTransactionsIndexRoute
@@ -560,6 +580,7 @@ interface DashboardRouteChildren {
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardProfileRoute: DashboardProfileRoute,
   DashboardTradeRoute: DashboardTradeRoute,
+  DashboardWalletsRoute: DashboardWalletsRoute,
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardTransactionsIdRoute: DashboardTransactionsIdRoute,
   DashboardTransactionsIndexRoute: DashboardTransactionsIndexRoute,

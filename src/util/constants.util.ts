@@ -21,6 +21,7 @@ export const ROUTES = {
   DASHBOARD_TRADE: "/dashboard/trade",
   TRANSACTION: '/dashboard/transactions',
   TRANSACTION_DETAILS: '/dashboard/transactions/$id',
+  DASHBOARD_WALLETS: '/dashboard/wallets',
   DISPUTE_DETAILS: '/dispute/$id',
 
 

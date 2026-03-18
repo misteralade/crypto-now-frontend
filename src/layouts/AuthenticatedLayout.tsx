@@ -1,6 +1,6 @@
 import { type ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, History, User, LogOut, TrendingUp, Bell, Settings } from "lucide-react";
+import { LayoutDashboard, History, User, LogOut, TrendingUp, Bell, Settings, Wallet } from "lucide-react";
 import { LOCAL_STORAGE_KEYS, ROUTES } from "../util/constants.util.ts";
 import { useUserQuery } from "../queries/user.query.ts";
 import Logo from "../assets/logo/logo.svg";
@@ -11,23 +11,26 @@ interface AuthenticatedLayoutProps {
 
 /* ─── bottom tab config ─────────────────────────────────────── */
 const mobileTabs = [
-  { to: ROUTES.DASHBOARD,       label: "Home",    icon: LayoutDashboard, exact: true },
-  { to: ROUTES.DASHBOARD_TRADE, label: "Trade",   icon: TrendingUp,      exact: false },
-  { to: ROUTES.TRANSACTION,     label: "History", icon: History,         exact: false },
-  { to: ROUTES.PROFILE,         label: "Profile", icon: User,            exact: false },
+  { to: ROUTES.DASHBOARD,         label: "Home",    icon: LayoutDashboard, exact: true },
+  { to: ROUTES.DASHBOARD_TRADE,   label: "Trade",   icon: TrendingUp,      exact: false },
+  { to: ROUTES.DASHBOARD_WALLETS, label: "Wallets", icon: Wallet,          exact: false },
+  { to: ROUTES.TRANSACTION,       label: "History", icon: History,         exact: false },
+  { to: ROUTES.PROFILE,           label: "Profile", icon: User,            exact: false },
 ];
 
 /* ─── desktop sidebar config ────────────────────────────────── */
 const sidebarNav = [
-  { to: ROUTES.DASHBOARD,       label: "Dashboard",  icon: LayoutDashboard, exact: true },
-  { to: ROUTES.DASHBOARD_TRADE, label: "Trade",      icon: TrendingUp,      exact: false },
-  { to: ROUTES.TRANSACTION,     label: "History",    icon: History,         exact: false },
-  { to: ROUTES.PROFILE,         label: "Settings",   icon: Settings,        exact: false },
+  { to: ROUTES.DASHBOARD,         label: "Dashboard",  icon: LayoutDashboard, exact: true },
+  { to: ROUTES.DASHBOARD_TRADE,   label: "Trade",      icon: TrendingUp,      exact: false },
+  { to: ROUTES.DASHBOARD_WALLETS, label: "Wallets",    icon: Wallet,          exact: false },
+  { to: ROUTES.TRANSACTION,       label: "History",    icon: History,         exact: false },
+  { to: ROUTES.PROFILE,           label: "Settings",   icon: Settings,        exact: false },
 ];
 
 const getPageTitle = (pathname: string) => {
   if (pathname === ROUTES.DASHBOARD) return "Home";
   if (pathname.startsWith(ROUTES.DASHBOARD_TRADE)) return "Trade";
+  if (pathname.startsWith(ROUTES.DASHBOARD_WALLETS)) return "Wallets";
   if (pathname.startsWith(ROUTES.TRANSACTION)) return "History";
   if (pathname.startsWith(ROUTES.PROFILE)) return "Profile";
   return "Home";
