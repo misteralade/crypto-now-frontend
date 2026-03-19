@@ -3,7 +3,16 @@ import {LOCAL_STORAGE_KEYS, ROUTES} from "../../util/constants.util.ts";
 import ProfilePage from "../../pages/ProfilePage.tsx";
 import { userServiceApi } from "../../api/user.api.ts";
 
+export type ProfileSection = "personal" | "bank" | "wallets" | "security";
+
 export const Route = createFileRoute('/dashboard/profile')({
+  validateSearch: (search: Record<string, unknown>) => {
+    const valid: ProfileSection[] = ["personal", "bank", "wallets", "security"];
+    const section = search.section as string | undefined;
+    return {
+      section: (section && valid.includes(section as ProfileSection) ? section : undefined) as ProfileSection | undefined,
+    };
+  },
   beforeLoad: async () => {
     const accessToken = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
     if (!accessToken) {

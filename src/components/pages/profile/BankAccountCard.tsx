@@ -14,7 +14,7 @@ const BankAccountCard = ({
   onDelete,
 }: BankAccountCardProps) => {
   return (
-    <section className="relative p-5 rounded-2xl border border-[#ECECEC] bg-white shadow-sm overflow-hidden">
+    <section className="relative p-6 rounded-2xl border border-[#ECECEC] bg-white shadow-sm overflow-hidden flex flex-col h-full">
       {/* Translucent Bank Logo Background */}
       {account.bankLogo && (
         <div
@@ -27,48 +27,56 @@ const BankAccountCard = ({
       )}
 
       {/* Content - positioned above the background */}
-      <div className="relative z-10">
-        <div className="text-[20px] md:text-2xl font-medium text-[#0E0F0C]">
-          {account.label || `Account ${index + 1}`}{' '}
-          {account.isDefault ? '– Default' : ''}
+      <div className="relative z-10 flex flex-col flex-1">
+        <div className="mb-6">
+          <h3 className="text-lg font-bold text-[#0E0F0C]">
+            {account.label || `Account ${index + 1}`}
+          </h3>
+          {account.isDefault && (
+            <span className="inline-block mt-1 text-xs font-semibold text-[#03034D]">
+              Default
+            </span>
+          )}
         </div>
-        <div className="mt-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="text-[#828282]">Account Name</div>
-            <div className="text-[#101828] font-medium">
+        
+        <div className="space-y-4 flex-1">
+          <div>
+            <div className="text-xs text-[#828282] mb-1">Account Name</div>
+            <div className="text-sm text-[#101828] font-semibold">
               {account.accountName || '--'}
             </div>
           </div>
-          <div className="flex items-center justify-between">
-            <div className="text-[#828282]">Account Number</div>
-            <div className="text-[#101828] font-medium">
+          
+          <div>
+            <div className="text-xs text-[#828282] mb-1">Account Number</div>
+            <div className="text-sm text-[#101828] font-medium font-mono">
               {account.accountNumber || '--'}
             </div>
           </div>
-          <div className="flex items-center justify-between">
-            <div className="text-[#828282]">Bank Name</div>
-            <div className="text-[#101828] font-medium">
+          
+          <div>
+            <div className="text-xs text-[#828282] mb-1">Bank Name</div>
+            <div className="text-sm text-[#101828] font-semibold">
               {account.bankName || '--'}
             </div>
           </div>
         </div>
-        <div className="mt-[68px] flex items-center justify-end gap-x-4">
-          <div className="flex items-center gap-4">
-            {!account.isDefault && (
-              <button
-                className="text-[#03034D] text-sm font-semibold hover:opacity-80"
-                onClick={() => onMakeDefault(account.id || '')}
-              >
-                Make as default
-              </button>
-            )}
+        
+        <div className="mt-6 pt-4 border-t border-[#F0F0F0] flex items-center justify-between gap-3">
+          {!account.isDefault && (
             <button
-              className="text-[#EB5757] text-sm font-semibold hover:opacity-80 hover:cursor-pointer"
-              onClick={() => onDelete(account.id)}
+              className="text-[#03034D] text-sm font-semibold hover:opacity-80 transition-opacity"
+              onClick={() => onMakeDefault(account.id || '')}
             >
-              Delete
+              Make as default
             </button>
-          </div>
+          )}
+          <button
+            className="text-[#EB5757] text-sm font-semibold hover:opacity-80 transition-opacity ml-auto"
+            onClick={() => onDelete(account.id)}
+          >
+            Delete
+          </button>
         </div>
       </div>
     </section>

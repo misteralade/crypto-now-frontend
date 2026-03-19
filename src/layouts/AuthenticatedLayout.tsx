@@ -62,6 +62,9 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
     navigate({ to: ROUTES.HOMEPAGE });
   };
 
+  // Profile subpages already include their own section headers on desktop.
+  const shouldHideDesktopPageHeader = location.pathname.startsWith(ROUTES.PROFILE);
+
   return (
     <div style={{ background: "#FFFFFF", minHeight: "100dvh" }}>
 
@@ -126,24 +129,26 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
           DESKTOP — main area
       ══════════════════════════════════════ */}
       <div className="hidden lg:block lg:pl-60">
-        {/* sticky top bar */}
-        <header className="sticky top-0 z-40 h-14 flex items-center justify-between px-8"
-          style={{ background: "#FFFFFF", borderBottom: "1px solid #F0F0F0" }}>
-          <h1 className="text-sm font-semibold" style={{ color: "#0E0F0C" }}>{pageTitle}</h1>
-          <div className="flex items-center gap-3">
-            {/* TODO: wire to real notification count */}
-            <button className="relative p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
-              <Bell size={18} style={{ color: "#6B6E6B" }} />
-              <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-[#EB5757]" />
-            </button>
-            <Link to={ROUTES.PROFILE}>
-              <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
-                style={{ background: "linear-gradient(135deg,#948EEE,#575AE5)" }}>
-                {initials}
-              </div>
-            </Link>
-          </div>
-        </header>
+        {!shouldHideDesktopPageHeader && (
+          /* sticky top bar */
+          <header className="sticky top-0 z-40 h-14 flex items-center justify-between px-8"
+            style={{ background: "#FFFFFF", borderBottom: "1px solid #F0F0F0" }}>
+            <h1 className="text-sm font-semibold" style={{ color: "#0E0F0C" }}>{pageTitle}</h1>
+            <div className="flex items-center gap-3">
+              {/* TODO: wire to real notification count */}
+              <button className="relative p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+                <Bell size={18} style={{ color: "#6B6E6B" }} />
+                <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-[#EB5757]" />
+              </button>
+              <Link to={ROUTES.PROFILE}>
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                  style={{ background: "linear-gradient(135deg,#948EEE,#575AE5)" }}>
+                  {initials}
+                </div>
+              </Link>
+            </div>
+          </header>
+        )}
 
         <main className="p-6 lg:p-8">{children}</main>
       </div>

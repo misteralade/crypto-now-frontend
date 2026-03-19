@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight, ArrowLeft, CheckCircle } from "lucide-react";
 import AuthenticatedLayout from "../layouts/AuthenticatedLayout.tsx";
@@ -12,11 +12,12 @@ import { LoadingSpinner } from "../components/global/LoadingSpinner.tsx";
 import NewBankAccountModal from "../components/pages/profile/modals/NewBankAccountModal.tsx";
 import NewCryptoWalletModal from "../components/pages/profile/modals/NewCryptoWalletModal.tsx";
 import { LOCAL_STORAGE_KEYS, ROUTES } from "../util/constants.util.ts";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useTransactionQuery } from "../queries/transaction.query.ts";
-import { convertToMillify, formatCurrency } from "../util/index.util.ts";
+import { convertToMillify } from "../util/index.util.ts";
+import type { ProfileSection } from "../routes/dashboard/profile.tsx";
 
-type Section = "personal" | "bank" | "wallets" | "security" | null;
+type Section = ProfileSection | null;
 
 const getInitials = (first?: string, last?: string) =>
   ((first?.[0] ?? "") + (last?.[0] ?? "")).toUpperCase() || "U";
@@ -68,7 +69,16 @@ function MenuRow({
 ══════════════════════════════════════════════════════════ */
 const ProfilePage = () => {
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState<Section>(null);
+  const { section } = useSearch({ strict: false }) as { section?: ProfileSection };
+  const activeSection: Section = section ?? null;
+
+  const setActiveSection = (s: Section) => {
+    navigate({
+      to: ROUTES.PROFILE,
+      search: s ? { section: s } : {},
+      replace: false,
+    });
+  };
 
   const {
     userProfileData, loadingUserProfile,
@@ -136,7 +146,7 @@ const ProfilePage = () => {
               transition={{ duration: 0.2 }}
             >
               {/* ── Avatar + name + badges ── */}
-              <div className="flex flex-col items-center pt-10 pb-6 px-5">
+              <div className="flex flex-col items-center pt-10 pb-6 px-5 w-full lg:max-w-3xl lg:mx-auto">
                 {loadingUserProfile ? (
                   <div className="w-20 h-20 rounded-full animate-pulse" style={{ background: "#EEEEEE" }} />
                 ) : (
@@ -174,7 +184,7 @@ const ProfilePage = () => {
               </div>
 
               {/* ── 2×2 Stats grid ── */}
-              <div className="px-5 mb-5">
+              <div className="px-5 mb-5 w-full lg:max-w-3xl lg:mx-auto">
                 <div className="grid grid-cols-2 gap-3">
                   <StatCard
                     label="Total Traded"
@@ -204,7 +214,7 @@ const ProfilePage = () => {
               </div>
 
               {/* ── Menu list ── */}
-              <div className="px-5 space-y-3 pb-8">
+              <div className="px-5 space-y-3 pb-8 w-full lg:max-w-3xl lg:mx-auto">
                 {/* Profile & bank */}
                 <div className="rounded-3xl overflow-hidden" style={{ border: "1px solid #F0F0F0" }}>
                   <MenuRow
@@ -296,7 +306,7 @@ const ProfilePage = () => {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 24 }}
               transition={{ duration: 0.22 }}
-              className="px-5 pb-10"
+              className="px-5 pb-10 w-full lg:max-w-3xl lg:mx-auto"
             >
               {/* Back header */}
               <div className="flex items-center gap-3 pt-6 pb-5">

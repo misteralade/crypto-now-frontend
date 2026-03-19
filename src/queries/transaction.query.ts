@@ -168,6 +168,7 @@ export const useTransactionQuery = () => {
       const payload = {
         ...transactionForm,
         coinId: transactionForm?.tokenId,
+        ...(transactionForm?.accountId ? { accountId: transactionForm.accountId } : {}),
       }
       
       if (userEmail) {

@@ -1,9 +1,8 @@
 /**
  * DashboardTrade — full buy/sell flow inside the dashboard AuthenticatedLayout.
  *
- * BUY:  Step 1 (crypto grid) → Step 1b (amount + wallet + network) → Step 2 (bank payment) → Step 3 (confirm account) → Step 4 (success)
- * SELL: Step 1 (crypto grid) → Step 2 (unique wallet + monitoring) → Step 3 (confirm account) → Step 4 (success)
- *       Note: Sell skips Step 1b entirely — goes straight to wallet screen after crypto selection.
+ * BUY:  Step 1 (crypto grid + amount + wallet) → Step 2 (bank payment) → Step 3 (confirm wallet) → Step 4
+ * SELL: Step 1 (crypto grid + payout bank) → Step 2 (unique wallet + monitoring) → Step 4
  */
 import { useState, useEffect, useRef } from "react";
 import { useSearch, useNavigate } from "@tanstack/react-router";
@@ -17,13 +16,15 @@ import {
 import { LoadingSpinner } from "../../../components/global/LoadingSpinner.tsx";
 import EmailModal from "../../trade-crypto/modals/EmailModal.tsx";
 import DashboardTradeStep1 from "./DashboardTradeStep1.tsx";
-import DashboardTradeStep1b from "./DashboardTradeStep1b.tsx";
 import DashboardTradeStep2 from "./DashboardTradeStep2.tsx";
 import DashboardTradeStep3 from "./DashboardTradeStep3.tsx";
 import DashboardTradeSuccess from "./DashboardTradeSuccess.tsx";
+import { setInitiateTransactionField } from "../../../redux/transaction.slice.ts";
+import { useDispatch } from "react-redux";
 
 export default function DashboardTrade() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const searchParams: { option?: string; currency?: string; token?: string; sessionId?: string } =
     useSearch({ strict: false });
 
@@ -33,20 +34,21 @@ export default function DashboardTrade() {
   const sessionId = searchParams.sessionId;
 
   const [step, setStep] = useState<number>(1);
-  // sub-step within step 1: 0 = crypto selection, 1 = amount entry (buy only)
-  const [subStep, setSubStep] = useState<0 | 1>(0);
   const [activeTab, setActiveTab] = useState<TradeType>(
     routeOption?.toLowerCase() === "sell" ? "sell" : "buy"
   );
   const [hasChosenMode, setHasChosenMode] = useState<boolean>(!!routeOption);
-  // Local pending token for sell flow (the hook's useEffect resets selectedToken so we track locally)
+
+  // Local pending token for sell flow (hook's useEffect resets selectedToken so we track locally)
   const [pendingSellToken, setPendingSellToken] = useState<import("../../../types/response.payload.types.ts").SupportedCryptoOrCurrencyResponse | undefined>();
-  // State + ref to hold the token selected for buy (state drives UI, ref survives hook re-render resets)
+  // State + ref to hold the token selected for buy
   const [pendingBuyToken, setPendingBuyToken] = useState<import("../../../types/response.payload.types.ts").SupportedCryptoOrCurrencyResponse | undefined>();
   const pendingBuyTokenRef = useRef<import("../../../types/response.payload.types.ts").SupportedCryptoOrCurrencyResponse | undefined>();
-  // Lifted wallet+network state from Step 1b so Step 3 shows a summary instead of re-asking
+  // Lifted wallet+network state so Step 3 can show a read-only summary
   const [buyWalletAddress, setBuyWalletAddress] = useState("");
   const [buyNetwork, setBuyNetwork] = useState("");
+  // Sell payout account selection
+  const [sellPayoutAccountId, setSellPayoutAccountId] = useState<string | undefined>();
 
   const anonymousUserEmail = useAppSelector((state) => state.user.trade.anonymous.email);
   const hasRestoredRef = useRef<string | null>(null);
@@ -107,18 +109,26 @@ export default function DashboardTrade() {
     handleBlurNumberOfToken, handleBlurAmountToBuy,
   } = useTradeStepDisplay(token, activeTab, currency, setStep, setActiveTab, undefined, step, sessionId);
 
+  // For BUY: only trigger step 3 (wallet confirmation) on showPaymentReceivingModal
+  // For SELL: skip step 3 entirely (bank was attached at initiate time)
   useEffect(() => {
-    if (showPaymentReceivingModal) setStep(3);
-  }, [showPaymentReceivingModal]);
+    if (showPaymentReceivingModal && activeTab === "buy") setStep(3);
+  }, [showPaymentReceivingModal, activeTab]);
+
+  // Auto-initialize sellPayoutAccountId from default bank
+  useEffect(() => {
+    if (activeTab === "sell" && userBankAccounts?.length) {
+      const def = userBankAccounts.find(b => b.isDefault) ?? userBankAccounts[0];
+      if (def && !sellPayoutAccountId) setSellPayoutAccountId(def.id);
+    }
+  }, [userBankAccounts, activeTab]);
 
   const handleReset = () => {
     clearTradeProgress();
     setStep(1);
-    setSubStep(0);
     navigate({ to: "/dashboard/trade", search: {}, replace: true });
   };
 
-  // Handle initial selection between BUY and SELL entry modes.
   const handleChooseMode = (mode: TradeType) => {
     setActiveTab(mode);
     setHasChosenMode(true);
@@ -131,7 +141,7 @@ export default function DashboardTrade() {
 
   // When navigating to step 1 with a pre-selected token (from URL), pre-select it
   useEffect(() => {
-    if (token && supportedCryptoCurrencies && step === 1 && subStep === 0) {
+    if (token && supportedCryptoCurrencies && step === 1) {
       const found = supportedCryptoCurrencies.find((t) => t.id === token);
       if (found) {
         setSelectedToken(found);
@@ -140,7 +150,6 @@ export default function DashboardTrade() {
           pendingBuyTokenRef.current = found;
           const firstNetwork = found.networks?.[0] ?? "";
           if (firstNetwork) setBuyNetwork(firstNetwork);
-          // Stay on step 1 — user must press CTA (same UX as sell)
         } else {
           setPendingSellToken(found);
         }
@@ -221,9 +230,9 @@ export default function DashboardTrade() {
     <div style={{ background: "#FFFFFF", minHeight: "100dvh" }}>
       <div className="px-5 pt-5 pb-32">
         <AnimatePresence mode="wait">
-          {/* STEP 1 — crypto grid */}
-          {step === 1 && subStep === 0 && (
-            <motion.div key="s1-crypto"
+          {/* STEP 1 — combined crypto grid + buy fields or sell payout bank */}
+          {step === 1 && (
+            <motion.div key="s1"
               initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.2 }}>
               <DashboardTradeStep1
@@ -232,16 +241,12 @@ export default function DashboardTrade() {
                 selectedToken={activeTab === "sell" ? pendingSellToken : pendingBuyToken}
                 setSelectedToken={(t) => {
                   if (activeTab === "buy") {
-                    // Store in both state (drives UI) and ref (survives hook re-render resets)
                     setPendingBuyToken(t);
                     pendingBuyTokenRef.current = t;
                     setSelectedToken(t);
-                    // Pre-set the network from the token's first supported network
                     const firstNetwork = t.networks?.[0] ?? "";
                     if (firstNetwork) setBuyNetwork(firstNetwork);
-                    // Don't auto-advance — user must press CTA (same UX as sell)
                   } else {
-                    // Sell: store locally so hook's effect can't clobber it
                     setPendingSellToken(t);
                     setSelectedToken(t);
                   }
@@ -252,47 +257,36 @@ export default function DashboardTrade() {
                   if (activeTab === "sell") {
                     if (!pendingSellToken) return;
                     setSelectedToken(pendingSellToken);
+                    // Attach the selected payout accountId before initiating
+                    if (sellPayoutAccountId) {
+                      dispatch(setInitiateTransactionField({ field: "accountId", value: sellPayoutAccountId }));
+                    }
                     initiateTransaction();
                   } else {
                     if (!pendingBuyToken) return;
                     setSelectedToken(pendingBuyToken);
-                    setSubStep(1);
+                    initiateTransaction();
                   }
                 }}
-              />
-            </motion.div>
-          )}
-
-          {/* STEP 1b — BUY ONLY: amount + wallet + network */}
-          {step === 1 && subStep === 1 && isBuy && (
-            <motion.div key="s1-amount"
-              initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 16 }} transition={{ duration: 0.2 }}>
-              {(selectedToken ?? pendingBuyTokenRef.current) ? (
-              <DashboardTradeStep1b
-                tradeType={activeTab}
-                selectedToken={(selectedToken ?? pendingBuyTokenRef.current)!}
+                // BUY-specific props
                 availableCurrencies={supportedCurrencies || []}
                 selectedCurrency={selectedCurrency}
                 setSelectedCurrency={setSelectedCurrency}
                 amountToBuy={amountToBuy}
                 setAmountToBuy={setAmountToBuy}
-                numberOfToken={numberOfToken}
-                setNumberOfToken={setNumberOfToken}
                 handleFocusAmountToBuy={handleFocusAmountToBuy}
                 handleBlurAmountToBuy={handleBlurAmountToBuy}
-                handleFocusNumberOfToken={handleFocusNumberOfToken}
-                handleBlurNumberOfToken={handleBlurNumberOfToken}
-                orderDetails={AdditionalInfo}
-                isInitiatingTrade={isInitiatingTrade}
-                onProceed={initiateTransaction}
-                onBack={() => setSubStep(0)}
                 walletAddress={buyWalletAddress}
                 onWalletAddressChange={setBuyWalletAddress}
                 selectedNetwork={buyNetwork}
                 onNetworkChange={setBuyNetwork}
+                orderDetails={AdditionalInfo}
                 savedWallets={userCryptoWallets}
-              />) : null}
+                // SELL-specific props
+                userBankAccounts={userBankAccounts}
+                selectedPayoutAccountId={sellPayoutAccountId}
+                onPayoutAccountChange={setSellPayoutAccountId}
+              />
             </motion.div>
           )}
 
@@ -317,19 +311,20 @@ export default function DashboardTrade() {
                 formatSendAmount={formatSendAmount}
                 buyWalletAddress={buyWalletAddress}
                 buyNetwork={buyNetwork}
+                payoutBank={!isBuy ? (userBankAccounts?.find(b => b.id === sellPayoutAccountId) ?? userBankAccounts?.[0]) : undefined}
                 onBack={() => {
                   if (isBuy) {
-                    setStep(1); setSubStep(1);
+                    setStep(1);
                   } else {
-                    setStep(1); setSubStep(0);
+                    setStep(1);
                   }
                 }}
               />
             </motion.div>
           )}
 
-          {/* STEP 3 — confirm receiving account */}
-          {step === 3 && (isBuy || !loadingUserCryptoWallets) && !loadingUserBankAccounts && (
+          {/* STEP 3 — confirm receiving wallet (BUY only) */}
+          {step === 3 && isBuy && !loadingUserCryptoWallets && !loadingUserBankAccounts && (
             <motion.div key="s3"
               initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 16 }} transition={{ duration: 0.2 }}>
@@ -345,7 +340,7 @@ export default function DashboardTrade() {
                 buyWalletAddress={buyWalletAddress}
                 buyNetwork={buyNetwork}
                 onProceed={handleConfirmBankDetails}
-                onBack={() => { togglePaymentReceivingModal(false); setStep(2); }}
+                onBack={() => { togglePaymentReceivingModal(); setStep(2); }}
               />
             </motion.div>
           )}

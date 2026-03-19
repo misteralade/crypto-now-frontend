@@ -10,6 +10,7 @@ export type InitiateTransactionRequestPayload = {
   amountToSend?: number;
   receiptUrl?: string;
   transactionHash?: string;
+  accountId?: string;
 }
 
 export type CreateBankAccountRequestPayload = {

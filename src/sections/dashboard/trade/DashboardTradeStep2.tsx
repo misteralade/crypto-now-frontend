@@ -12,7 +12,7 @@
 import { useState, useEffect } from "react";
 import { Copy, Check, ArrowLeft, ArrowRight, Upload } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import type { SupportedCryptoOrCurrencyResponse } from "../../../types/response.payload.types.ts";
+import type { SupportedCryptoOrCurrencyResponse, UserBankAccountResponse } from "../../../types/response.payload.types.ts";
 import type { TradeAdditionalInfoInterface, TradeType } from "../../../types/trade.types.ts";
 import { useTradeStepTwo } from "../../../hooks/components/trade/useTradeStepTwo.ts";
 import TradePaymentUpload from "../../trade-crypto/TradePaymentUpload.tsx";
@@ -33,10 +33,12 @@ interface DashboardTradeStep2Props {
   formatReceiveAmount: (amount: number | string, code: string | undefined) => React.ReactNode | string;
   formatSendAmount: (amount: number | string, code: string | undefined) => React.ReactNode | string;
   onBack: () => void;
-  /** Wallet address entered in Step 1b (buy flow) */
+  /** Wallet address entered in Step 1 (buy flow) */
   buyWalletAddress?: string;
-  /** Network selected in Step 1b (buy flow) */
+  /** Network selected in Step 1 (buy flow) */
   buyNetwork?: string;
+  /** Payout bank account for sell flow */
+  payoutBank?: UserBankAccountResponse;
 }
 
 /* ── helpers ── */
@@ -74,15 +76,42 @@ function BackHeader({ onBack, title, sub }: { onBack: () => void; title: string;
   );
 }
 
+/* ── Paying To bank row (SELL) ── */
+function PayingToRow({ payoutBank }: { payoutBank?: UserBankAccountResponse }) {
+  if (!payoutBank) return null;
+  return (
+    <div className="flex items-center gap-3 rounded-2xl px-4 py-3"
+      style={{ background: "#F7F7F9", border: "1px solid #EEEEEE" }}>
+      {payoutBank.bankLogo ? (
+        <img src={payoutBank.bankLogo} alt={payoutBank.bankName} className="w-7 h-7 rounded-lg object-cover shrink-0" />
+      ) : (
+        <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "#E0E0E0" }}>
+          <span className="text-[9px] font-black" style={{ color: "#6B6E6B" }}>
+            {payoutBank.bankName.slice(0, 2).toUpperCase()}
+          </span>
+        </div>
+      )}
+      <div className="flex-1 min-w-0">
+        <p className="text-[10px] font-bold tracking-widest uppercase" style={{ color: "#9A9A9A" }}>Paying to</p>
+        <p className="text-xs font-semibold truncate" style={{ color: "#0E0F0C" }}>
+          {payoutBank.bankName} ****{payoutBank.accountNumber.slice(-4)}
+        </p>
+        <p className="text-[10px]" style={{ color: "#6B6E6B" }}>{payoutBank.accountName}</p>
+      </div>
+    </div>
+  );
+}
+
 /* ── SELL: Wallet screen ── */
 function SellWalletView({
-  selectedToken, walletAddress, network, paymentDetailsLoading, onStartMonitoring,
+  selectedToken, walletAddress, network, paymentDetailsLoading, onStartMonitoring, payoutBank,
 }: {
   selectedToken?: SupportedCryptoOrCurrencyResponse;
   walletAddress: string;
   network: string;
   paymentDetailsLoading: boolean;
   onStartMonitoring: () => void;
+  payoutBank?: UserBankAccountResponse;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -142,6 +171,9 @@ function SellWalletView({
             </button>
           </div>
 
+          {/* Paying to bank row */}
+          <PayingToRow payoutBank={payoutBank} />
+
           {/* Send & forget banner */}
           <div className="flex items-start gap-3 rounded-2xl px-4 py-3"
             style={{ background: "#FFFBF0", border: "1px solid #FFE4A0" }}>
@@ -182,7 +214,7 @@ const MONITORING_STEPS: MonitoringStep[] = [
   { label: "Bank Transfer", status: "pending" },
 ];
 
-function SellMonitoringView({ selectedToken }: { selectedToken?: SupportedCryptoOrCurrencyResponse }) {
+function SellMonitoringView({ selectedToken, payoutBank }: { selectedToken?: SupportedCryptoOrCurrencyResponse; payoutBank?: UserBankAccountResponse }) {
   const statusColors = {
     done: { bg: "#E8F8F0", border: "#03784733", dot: "#037847", text: "#037847" },
     active: { bg: "#FFFBF0", border: "#FFE4A033", dot: "#F7A600", text: "#A07000" },
@@ -207,6 +239,9 @@ function SellMonitoringView({ selectedToken }: { selectedToken?: SupportedCrypto
           Send any amount of {selectedToken?.symbol ?? "crypto"} to your wallet. NGN will hit your bank automatically.
         </p>
       </div>
+
+      {/* Paying to bank */}
+      <PayingToRow payoutBank={payoutBank} />
 
       {/* 4-step progress */}
       <div className="flex flex-col gap-2.5">
@@ -336,7 +371,7 @@ export default function DashboardTradeStep2({
   tradeType, amountToBuy, numberOfToken, selectedToken, selectedCurrency,
   exchangeRateId, transactionRef, additionalInfo,
   handleReceiptUrl, handleTransactionHash, handleSubmitPaymentProof,
-  formatSendAmount, onBack, buyWalletAddress, buyNetwork,
+  formatSendAmount, onBack, buyWalletAddress, buyNetwork, payoutBank,
 }: DashboardTradeStep2Props) {
   const isBuy = tradeType === "buy";
 
@@ -410,13 +445,14 @@ export default function DashboardTradeStep2({
                 network={network}
                 paymentDetailsLoading={paymentDetailsLoading}
                 onStartMonitoring={() => setSellView("monitoring")}
+                payoutBank={payoutBank}
               />
             </motion.div>
           ) : (
             <motion.div key="sell-monitoring"
               initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.2 }}>
-              <SellMonitoringView selectedToken={selectedToken} />
+              <SellMonitoringView selectedToken={selectedToken} payoutBank={payoutBank} />
             </motion.div>
           )}
         </AnimatePresence>

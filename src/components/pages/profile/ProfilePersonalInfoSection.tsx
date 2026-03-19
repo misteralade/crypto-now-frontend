@@ -1,5 +1,4 @@
 import { useState, useRef, type ChangeEvent } from "react";
-import { Input } from "@material-tailwind/react";
 import { useUploadQuery } from "../../../queries/upload.query.ts";
 import momentClient from "../../../lib/moment.ts";
 
@@ -17,8 +16,71 @@ interface PersonalInfoSectionProps {
   handleRemoveProfilePicture: () => void;
 }
 
-const inputStyle = {
-  borderRadius: "14px",
+// Custom input component matching theme
+const CustomInput = ({
+  label,
+  value,
+  onChange,
+  type = "text",
+  disabled = false,
+  max,
+}: {
+  label: string;
+  value: string;
+  onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
+  type?: string;
+  disabled?: boolean;
+  max?: string;
+}) => {
+  const [isFocused, setIsFocused] = useState(false);
+  const hasValue = value && value.length > 0;
+
+  return (
+    <div className="relative">
+      <input
+        type={type}
+        value={value}
+        onChange={onChange}
+        disabled={disabled}
+        max={max}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+        className={`
+          w-full h-14 px-4 pt-4 pb-2
+          rounded-2xl
+          border transition-all
+          bg-white
+          text-sm text-[#0E0F0C]
+          placeholder-transparent
+          focus:outline-none
+          ${disabled 
+            ? 'border-[#EEEEEE] bg-[#FAFAFA] text-[#9A9A9A] cursor-not-allowed' 
+            : isFocused 
+              ? 'border-[#03034D] ring-2 ring-[#03034D]/10' 
+              : 'border-[#EEEEEE] hover:border-[#BDBDBD]'
+          }
+        `}
+        placeholder={label}
+      />
+      <label
+        className={`
+          absolute left-4 transition-all pointer-events-none
+          ${hasValue || isFocused
+            ? 'top-2 text-[10px] font-semibold'
+            : 'top-1/2 -translate-y-1/2 text-sm'
+          }
+          ${disabled
+            ? 'text-[#BDBDBD]'
+            : isFocused
+              ? 'text-[#03034D]'
+              : 'text-[#9A9A9A]'
+          }
+        `}
+      >
+        {label}
+      </label>
+    </div>
+  );
 };
 
 const ProfilePersonalInfoSection = ({
@@ -74,8 +136,8 @@ const ProfilePersonalInfoSection = ({
   };
 
   return (
-    <div className="space-y-5">
-      <h3 className="text-base font-bold" style={{ color: "#0E0F0C" }}>
+    <div className="space-y-6">
+      <h3 className="text-base font-bold text-[#0E0F0C]">
         Personal Info
       </h3>
 
@@ -87,14 +149,13 @@ const ProfilePersonalInfoSection = ({
               <img
                 src={imagePreview}
                 alt="Profile"
-                className="w-16 h-16 rounded-full object-cover"
-                style={{ border: "3px solid #F0F0F0" }}
+                className="w-16 h-16 rounded-full object-cover border-3 border-[#F0F0F0]"
               />
               <button
                 type="button"
                 onClick={handleRemoveImage}
-                className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center"
-                style={{ background: "#EB5757" }}
+                className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center bg-[#EB5757] hover:bg-[#d84545] transition-colors"
+                aria-label="Remove profile picture"
               >
                 <svg
                   width="10"
@@ -141,16 +202,15 @@ const ProfilePersonalInfoSection = ({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="text-sm font-semibold"
-            style={{ color: "#948EEE" }}
+            className="text-sm font-semibold text-[#948EEE] hover:text-[#7c7ed9] transition-colors"
           >
             {imagePreview ? "Change Photo" : "Upload Photo"}
           </button>
-          <p className="text-[11px] mt-0.5" style={{ color: "#9A9A9A" }}>
+          <p className="text-[11px] mt-0.5 text-[#9A9A9A]">
             JPG, PNG or WebP · max 5 MB
           </p>
           {imageError && (
-            <p className="text-xs mt-1" style={{ color: "#EB5757" }}>
+            <p className="text-xs mt-1 text-[#EB5757]">
               {imageError}
             </p>
           )}
@@ -158,47 +218,29 @@ const ProfilePersonalInfoSection = ({
       </div>
 
       {/* Name row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <Input
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <CustomInput
           label="First name"
           value={firstName}
           disabled
-          style={inputStyle}
-          crossOrigin={undefined}
-          onPointerEnterCapture={undefined}
-          onPointerLeaveCapture={undefined}
-          onResize={undefined}
-          onResizeCapture={undefined}
         />
-        <Input
+        <CustomInput
           label="Last name"
           value={lastName}
           disabled
-          style={inputStyle}
-          crossOrigin={undefined}
-          onPointerEnterCapture={undefined}
-          onPointerLeaveCapture={undefined}
-          onResize={undefined}
-          onResizeCapture={undefined}
         />
       </div>
 
       {/* Email */}
-      <Input
+      <CustomInput
         label="Email address"
         type="email"
         value={email}
         disabled
-        style={inputStyle}
-        crossOrigin={undefined}
-        onPointerEnterCapture={undefined}
-        onPointerLeaveCapture={undefined}
-        onResize={undefined}
-        onResizeCapture={undefined}
       />
 
       {/* Phone */}
-      <Input
+      <CustomInput
         label="Phone number"
         type="tel"
         value={phone}
@@ -206,16 +248,10 @@ const ProfilePersonalInfoSection = ({
           setPhone(e.target.value);
           handleFieldChange("phoneNumber", e.target.value);
         }}
-        style={inputStyle}
-        crossOrigin={undefined}
-        onPointerEnterCapture={undefined}
-        onPointerLeaveCapture={undefined}
-        onResize={undefined}
-        onResizeCapture={undefined}
       />
 
       {/* Date of birth */}
-      <Input
+      <CustomInput
         label="Date of Birth"
         type="date"
         value={dateOfBirth}
@@ -227,12 +263,6 @@ const ProfilePersonalInfoSection = ({
           handleFieldChange("dob", iso);
         }}
         max={new Date().toISOString().split("T")[0]}
-        style={inputStyle}
-        crossOrigin={undefined}
-        onPointerEnterCapture={undefined}
-        onPointerLeaveCapture={undefined}
-        onResize={undefined}
-        onResizeCapture={undefined}
       />
     </div>
   );

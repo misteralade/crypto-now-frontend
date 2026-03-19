@@ -12,6 +12,7 @@ export const initiateTransactionInitialState: InitiateTransactionRequestPayload 
   amountToSend: undefined,
   receiptUrl: undefined,
   transactionHash: undefined,
+  accountId: undefined,
 }
 
 export const userSearchTransactionInitialState: SearchTransactionsRequestPayload | null = {
