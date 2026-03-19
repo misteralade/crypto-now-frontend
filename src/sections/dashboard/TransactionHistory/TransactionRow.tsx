@@ -21,7 +21,6 @@ const TransactionRow = ({ transaction: tx, isLast, isMobileCard = false }: Trans
   const isBuy = tx.type.toUpperCase() === "BUY";
   const isCompleted = tx.status === "COMPLETED";
   const isFailed = ["FAILED", "EXPIRED", "CANCELLED"].includes(tx.status);
-  const isPending = !isCompleted && !isFailed;
 
   const badgeStyle = isCompleted
     ? { background: "#E8F8F0", color: "#037847" }
@@ -51,7 +50,7 @@ const TransactionRow = ({ transaction: tx, isLast, isMobileCard = false }: Trans
         option: isBuy ? "buy" : "sell",
         currency: tx.currency || "",
         token: tx.cryptocurrencyId || "",
-      },
+      } as any,
     });
   const handleDownload = async () => {
     const { success, data } = await downloadSingleTransactionMutation.mutateAsync(tx.sessionId);

@@ -59,6 +59,7 @@ export const SESSION_STORAGE_KEYS = {
 export const LOCAL_STORAGE_KEYS = {
   ACCESS_TOKEN: "accessToken",
   TRADE_PROGRESS: "TRADE_PROGRESS_V1",
+  LAST_TRADE_TOKEN: "LAST_TRADE_TOKEN_V1",
 }
 
 export const transactionStatusMessages: Record<string, { title: string, message: string }> = {

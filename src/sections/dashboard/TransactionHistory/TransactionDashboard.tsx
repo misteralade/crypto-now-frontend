@@ -1,12 +1,10 @@
 import { useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
 import { useTransactionBoard } from "../../../hooks/components/dashboard/useTransactionBoard.ts";
 import type { SupportedCryptoOrCurrencyResponse } from "../../../types/response.payload.types.ts";
 import { TransactionSearch } from "./TranactionSearch.tsx";
 import ExportTransaction from "./ExportTransaction.tsx";
 import TransactionTable from "./TranactionTable.tsx";
 import { convertToMillify } from "../../../util/index.util.ts";
-import { ROUTES } from "../../../util/constants.util.ts";
 
 type TabValue = { status?: string; type?: string };
 
@@ -20,7 +18,6 @@ const STATUS_TABS: { label: string; value: TabValue }[] = [
 ];
 
 export function TransactionDashboard() {
-  const navigate = useNavigate();
   const [activeTabIdx, setActiveTabIdx] = useState(0);
 
   const {

@@ -125,6 +125,8 @@ const NewCryptoWalletModal = ({ isOpen, supportedCryptoWallet, selectedWalletId,
                   crossOrigin={undefined}
                   onPointerEnterCapture={undefined}
                   onPointerLeaveCapture={undefined}
+                  onResize={undefined}
+                  onResizeCapture={undefined}
                 />
 
                 {/*Wallet Address*/}
@@ -139,6 +141,8 @@ const NewCryptoWalletModal = ({ isOpen, supportedCryptoWallet, selectedWalletId,
                     crossOrigin={undefined}
                     onPointerEnterCapture={undefined}
                     onPointerLeaveCapture={undefined}
+                    onResize={undefined}
+                    onResizeCapture={undefined}
                   />
                   {walletAddressError && (
                     <p className="text-red-500 text-xs mt-1 ml-1">{walletAddressError}</p>

@@ -42,19 +42,6 @@ function CryptoIcon({ symbol, icon }: { symbol: string; icon?: string }) {
   );
 }
 
-function CryptoIconSmall({ symbol, icon }: { symbol: string; icon?: string }) {
-  if (icon) return <img src={icon} alt={symbol} className="w-6 h-6 rounded-full object-cover" />;
-  const colors: Record<string, string> = {
-    BTC: "#F7931A", ETH: "#627EEA", SOL: "#9945FF", USDT: "#26A17B",
-  };
-  return (
-    <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[9px] font-black"
-      style={{ background: colors[symbol] ?? "#948EEE" }}>
-      {symbol.slice(0, 2)}
-    </div>
-  );
-}
-
 // ── Props ─────────────────────────────────────────────────────────────────────
 interface DashboardTradeStep1Props {
   tradeType: TradeType;

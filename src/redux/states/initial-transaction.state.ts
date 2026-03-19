@@ -60,6 +60,7 @@ export const userSearchTransactionInitialState: SearchTransactionsRequestPayload
   includeUserBankAccount: false,
   includeUserCryptoWallet: false,
   includeProcessedBy: false,
+  includeDispute: false,
 
   // Pagination
   page: 1,

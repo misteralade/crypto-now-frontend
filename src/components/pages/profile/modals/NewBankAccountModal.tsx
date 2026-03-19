@@ -190,7 +190,7 @@ const NewBankAccountModal = ({ isOpen, banks, selectedBankId, onClose, onSubmit,
                           handleChange("accountName")(e.target.value);
                           handleChangeField("accountName", e.target.value);
                         }}
-                        onBlur={handleBlur("accountName")}
+                        onBlur={() => { handleBlur("accountName")(undefined as any); }}
                         error={!!(touched.accountName && errors.accountName)}
                       />
                       {touched.accountName && errors.accountName && (
@@ -209,7 +209,7 @@ const NewBankAccountModal = ({ isOpen, banks, selectedBankId, onClose, onSubmit,
                           handleChange("accountNumber")(e.target.value);
                           handleChangeField("accountNumber", e.target.value);
                         }}
-                        onBlur={handleBlur("accountNumber")}
+                        onBlur={() => { handleBlur("accountNumber")(undefined as any); }}
                         error={!!(touched.accountNumber && errors.accountNumber)}
                       />
                       {touched.accountNumber && errors.accountNumber && (

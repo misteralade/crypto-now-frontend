@@ -9,7 +9,6 @@ import { useSearch, useNavigate } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
 import type { TradeType } from "../../../types/trade.types.ts";
 import { useTradeStepDisplay } from "../../../hooks/components/trade/useTradeStepDisplay.ts";
-import { useAppSelector } from "../../../hooks.ts";
 import {
   clearTradeProgress, loadTradeProgress, saveTradeProgress,
 } from "../../../util/tradeProgress.storage.util.ts";
@@ -21,16 +20,15 @@ import DashboardTradeStep3 from "./DashboardTradeStep3.tsx";
 import DashboardTradeSuccess from "./DashboardTradeSuccess.tsx";
 import { setInitiateTransactionField } from "../../../redux/transaction.slice.ts";
 import { useDispatch } from "react-redux";
+import { LOCAL_STORAGE_KEYS } from "../../../util/constants.util.ts";
 
 export default function DashboardTrade() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const searchParams: { option?: string; currency?: string; token?: string; sessionId?: string } =
+  const searchParams: { option?: string; sessionId?: string } =
     useSearch({ strict: false });
 
   const routeOption = searchParams.option;
-  const currency = searchParams.currency ?? "";
-  const token = searchParams.token ?? "";
   const sessionId = searchParams.sessionId;
 
   const [step, setStep] = useState<number>(1);
@@ -43,7 +41,7 @@ export default function DashboardTrade() {
   const [pendingSellToken, setPendingSellToken] = useState<import("../../../types/response.payload.types.ts").SupportedCryptoOrCurrencyResponse | undefined>();
   // State + ref to hold the token selected for buy
   const [pendingBuyToken, setPendingBuyToken] = useState<import("../../../types/response.payload.types.ts").SupportedCryptoOrCurrencyResponse | undefined>();
-  const pendingBuyTokenRef = useRef<import("../../../types/response.payload.types.ts").SupportedCryptoOrCurrencyResponse | undefined>();
+  const pendingBuyTokenRef = useRef<import("../../../types/response.payload.types.ts").SupportedCryptoOrCurrencyResponse | undefined>(undefined);
   // Lifted wallet+network state so Step 3 can show a read-only summary
   const [buyWalletAddress, setBuyWalletAddress] = useState("");
   const [buyNetwork, setBuyNetwork] = useState("");
@@ -52,7 +50,6 @@ export default function DashboardTrade() {
   // Sell network selection (for multi-network tokens like USDT)
   const [sellNetwork, setSellNetwork] = useState<string | undefined>();
 
-  const anonymousUserEmail = useAppSelector((state) => state.user.trade.anonymous.email);
   const hasRestoredRef = useRef<string | null>(null);
   const hasInitializedRef = useRef<boolean>(false);
 
@@ -102,15 +99,14 @@ export default function DashboardTrade() {
     showPaymentReceivingModal, userBankAccounts, userCryptoWallets,
     showUserEnterEmail, isLoadingPingUser,
     loadingSupportedCryptocurrencies, loadingUserCryptoWallets, loadingUserBankAccounts,
-    setAmountToBuy, setNumberOfToken, setSelectedCurrency, setSelectedToken,
+    setAmountToBuy, setSelectedCurrency, setSelectedToken,
     handleReceiptUrl, handleTransactionHash, initiateTransaction,
     makePaymentTransaction, handleConfirmBankDetails,
     handleAnonymousUserEmailInput, toggleShowUserEnterEmail,
     togglePaymentReceivingModal, formatReceiveAmount, formatSendAmount,
-    handleFocusNumberOfToken, handleFocusAmountToBuy,
-    handleBlurNumberOfToken, handleBlurAmountToBuy,
+    handleFocusAmountToBuy, handleBlurAmountToBuy,
     sellDepositWallet, isGeneratingDepositWallet,
-  } = useTradeStepDisplay(token, activeTab, currency, setStep, setActiveTab, undefined, step, sessionId, sellNetwork);
+  } = useTradeStepDisplay("", activeTab, "", setStep, setActiveTab, undefined, step, sessionId, sellNetwork);
 
   // For BUY: only trigger step 3 (wallet confirmation) on showPaymentReceivingModal
   // For SELL: skip step 3 entirely (bank was attached at initiate time)
@@ -141,31 +137,27 @@ export default function DashboardTrade() {
   const handleChooseMode = (mode: TradeType) => {
     setActiveTab(mode);
     setHasChosenMode(true);
-    navigate({
-      to: "/dashboard/trade",
-      search: { ...searchParams, option: mode },
-      replace: true,
-    });
+    navigate({ to: "/dashboard/trade", search: { option: mode }, replace: true });
   };
 
-  // When navigating to step 1 with a pre-selected token (from URL), pre-select it
+  // Restore the last-used token from localStorage when the supported list loads
   useEffect(() => {
-    if (token && supportedCryptoCurrencies && step === 1) {
-      const found = supportedCryptoCurrencies.find((t) => t.id === token);
-      if (found) {
-        setSelectedToken(found);
-        if (activeTab === "buy") {
-          setPendingBuyToken(found);
-          pendingBuyTokenRef.current = found;
-          const firstNetwork = found.networks?.[0] ?? "";
-          if (firstNetwork) setBuyNetwork(firstNetwork);
-        } else {
-          setPendingSellToken(found);
-          setSellNetwork(found.networks?.[0] ?? undefined);
-        }
-      }
+    if (!supportedCryptoCurrencies || step !== 1) return;
+    const savedId = localStorage.getItem(LOCAL_STORAGE_KEYS.LAST_TRADE_TOKEN);
+    if (!savedId) return;
+    const found = supportedCryptoCurrencies.find((t) => t.id === savedId);
+    if (!found) return;
+    setSelectedToken(found);
+    if (activeTab === "buy") {
+      setPendingBuyToken(found);
+      pendingBuyTokenRef.current = found;
+      const firstNetwork = found.networks?.[0] ?? "";
+      if (firstNetwork) setBuyNetwork(firstNetwork);
+    } else {
+      setPendingSellToken(found);
+      setSellNetwork(found.networks?.[0] ?? undefined);
     }
-  }, [token, supportedCryptoCurrencies]);
+  }, [supportedCryptoCurrencies]);
 
   if (isLoadingPingUser) {
     return (
@@ -250,6 +242,8 @@ export default function DashboardTrade() {
                 availableTokens={(!loadingSupportedCryptocurrencies && supportedCryptoCurrencies) || []}
                 selectedToken={activeTab === "sell" ? pendingSellToken : pendingBuyToken}
                 setSelectedToken={(t) => {
+                  // Persist so the next visit pre-selects this token
+                  localStorage.setItem(LOCAL_STORAGE_KEYS.LAST_TRADE_TOKEN, t.id);
                   if (activeTab === "buy") {
                     setPendingBuyToken(t);
                     pendingBuyTokenRef.current = t;
@@ -259,7 +253,6 @@ export default function DashboardTrade() {
                   } else {
                     setPendingSellToken(t);
                     setSelectedToken(t);
-                    // Reset sell network to first available when token changes
                     setSellNetwork(t.networks?.[0] ?? undefined);
                   }
                 }}

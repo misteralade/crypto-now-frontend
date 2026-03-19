@@ -3,7 +3,7 @@ import {cryptoServiceApi} from "../api/crypto.api.ts";
 import {QUERY_KEYS} from "./query.keys.ts";
 import {type RootState, store} from "../store.ts";
 import {toast} from "react-toastify";
-import {LOCAL_STORAGE_KEYS, ROUTES, SESSION_STORAGE_KEYS} from "../util/constants.util.ts";
+import {LOCAL_STORAGE_KEYS, ROUTES} from "../util/constants.util.ts";
 import {useMatchRoute, useSearch} from "@tanstack/react-router";
 import type {AxiosServerError} from "../types/response.payload.types.ts";
 import {extractErrorMessage} from "../util/index.util.ts";
@@ -78,9 +78,9 @@ export const useCryptoQuery = () => {
 
       return [];
     },
-    // Enable for both BUY and SELL on dashboard trade route when crypto is selected
-    enabled: !!(store.getState() as RootState).crypto.tradeCrypto.selectedCryptoId && (!!matchRoute({ to: ROUTES.DASHBOARD_TRADE }) || !!matchRoute({ to: ROUTES.TRADE_CRYPTO })),
-    refetchInterval: isBuyTransaction ? false : 2000, // Only refetch for sell transactions
+    // Only needed for BUY (wallet address autosuggest) — disable on sell to avoid unnecessary polling
+    enabled: isBuyTransaction && !!(store.getState() as RootState).crypto.tradeCrypto.selectedCryptoId && (!!matchRoute({ to: ROUTES.DASHBOARD_TRADE }) || !!matchRoute({ to: ROUTES.TRADE_CRYPTO })),
+    refetchInterval: false,
   });
   
   const { data: allUserCryptoWallets, isLoading: loadingAllUserCryptoWallets } = useQuery({

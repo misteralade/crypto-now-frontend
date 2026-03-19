@@ -369,14 +369,14 @@ type SellView = "wallet" | "monitoring";
 
 export default function DashboardTradeStep2({
   tradeType, amountToBuy, numberOfToken, selectedToken, selectedCurrency,
-  exchangeRateId, transactionRef, additionalInfo,
-  handleReceiptUrl, handleTransactionHash, handleSubmitPaymentProof,
+  exchangeRateId,
+  handleReceiptUrl, handleSubmitPaymentProof,
   formatSendAmount, onBack, buyWalletAddress, buyNetwork, payoutBank,
 }: DashboardTradeStep2Props) {
   const isBuy = tradeType === "buy";
 
   const {
-    setTransactionHash, setUploadedFileUrl,
+    setUploadedFileUrl,
     paymentDetailsLoading, submitInvalid, bankDetails, walletDetails,
   } = useTradeStepTwo({ tradeType, exchangeRateId, amountToBuy, numberOfToken, selectedToken, selectedCurrency });
 

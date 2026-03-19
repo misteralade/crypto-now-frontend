@@ -228,7 +228,7 @@ export default function DashboardTradeStep3({
           </div>
         </div>
 
-        <button type="button" onClick={handleProceed}
+        <button type="button" onClick={() => onProceed(0)}
           className="w-full py-4 rounded-2xl text-sm font-bold"
           style={{ background: `linear-gradient(135deg,${accentColor},#04A860)`, color: "#FFFFFF", boxShadow: `0 6px 20px ${accentColor}44` }}>
           <span className="inline-flex items-center gap-2">

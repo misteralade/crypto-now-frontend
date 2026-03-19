@@ -1,11 +1,10 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { Bell, ArrowUpRight, ChevronRight, Copy, Check } from "lucide-react";
 import { useDashboardContent } from "../../hooks/components/dashboard/useDashboardContent.ts";
 import { useCryptoQuery } from "../../queries/crypto.query.ts";
 import { useUserQuery } from "../../queries/user.query.ts";
-import { useCurrencyQuery } from "../../queries/currency.query.ts";
 import { useTransactionQuery } from "../../queries/transaction.query.ts";
 import { TransactionDashboard } from "./TransactionHistory/TransactionDashboard.tsx";
 import type {
@@ -161,12 +160,11 @@ export default function DashboardContent() {
   const { transactionSummary, loadingTransactionSummary } = useDashboardContent();
   const { supportedCryptoCurrencies, loadingSupportedCryptocurrencies, custodialWallets, loadingCustodialWallets } = useCryptoQuery();
   const { userProfileData, loadingUserProfile } = useUserQuery();
-  const { supportedCurrencies, loadingSupportedCurrencies } = useCurrencyQuery();
   const { userTransactionHistory, loadingUserTransactionHistory } = useTransactionQuery();
 
   const firstName = userProfileData?.profile?.firstName ?? "";
   const lastName  = userProfileData?.profile?.lastName  ?? "";
-  const initials  = getInitials(firstName, lastName);
+  void getInitials(firstName, lastName);
 
   const totalFiat = transactionSummary?.total?.[0]
     ? Number(transactionSummary.total[0].totalFiatAmount) : 0;
@@ -183,9 +181,7 @@ export default function DashboardContent() {
   const recentWallets = (custodialWallets ?? []).slice(0, 3);
 
   const goTrade = (option: "buy" | "sell") => {
-    const cryptoId   = supportedCryptoCurrencies?.[0]?.id ?? "";
-    const currencyId = supportedCurrencies?.[0]?.id ?? "";
-    navigate({ to: ROUTES.DASHBOARD_TRADE, search: { option, currency: currencyId, token: cryptoId } });
+    navigate({ to: ROUTES.DASHBOARD_TRADE, search: { option } as any });
   };
 
   /* ─── Skeleton loaders ─── */
@@ -347,8 +343,7 @@ export default function DashboardContent() {
             {/* Buy Crypto */}
             <button
               onClick={() => goTrade("buy")}
-              disabled={loadingSupportedCurrencies || loadingSupportedCryptocurrencies}
-              className="flex items-center gap-3 px-4 py-4 rounded-3xl text-left transition-all active:scale-[0.97] disabled:opacity-50 cursor-pointer"
+              className="flex items-center gap-3 px-4 py-4 rounded-3xl text-left transition-all active:scale-[0.97] cursor-pointer"
               style={{ background: "#F0EFFD", border: "1px solid rgba(148,142,238,0.2)" }}
             >
               <div className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
@@ -367,8 +362,7 @@ export default function DashboardContent() {
             {/* Sell Crypto */}
             <button
               onClick={() => goTrade("sell")}
-              disabled={loadingSupportedCurrencies || loadingSupportedCryptocurrencies}
-              className="flex items-center gap-3 px-4 py-4 rounded-3xl text-left transition-all active:scale-[0.97] disabled:opacity-50 cursor-pointer"
+              className="flex items-center gap-3 px-4 py-4 rounded-3xl text-left transition-all active:scale-[0.97] cursor-pointer"
               style={{ background: "#FFF4F0", border: "1px solid rgba(247,166,0,0.2)" }}
             >
               <div className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"

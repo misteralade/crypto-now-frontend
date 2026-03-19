@@ -226,7 +226,8 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     if (existing) {
       setSellDepositWallet(existing);
     } else {
-      // Not found — generate it on demand
+      // Clear stale address and generate for the selected network via the HD wallet service
+      setSellDepositWallet(null);
       generateCustodialWalletMutation.mutate(
         { cryptoId: selectedToken.id, network },
         {
@@ -764,10 +765,13 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     isCountdownLocked,
   ]);
 
-  // Initial selection from route params
+  // Initial selection from route params (or auto-select NGN when no currency param)
   useEffect(() => {
     const foundToken = supportedCryptoCurrencies?.find((c) => c.id === token);
-    const foundCurrency = supportedCurrencies?.find((c) => c.id === currency);
+    // If no currency param, default to NGN so the exchange rate query can fire immediately
+    const foundCurrency = currency
+      ? supportedCurrencies?.find((c) => c.id === currency)
+      : supportedCurrencies?.find((c) => c.code === "NGN" || c.symbol === "NGN") ?? supportedCurrencies?.[0];
     setSelectedToken(foundToken);
     setSelectedCurrency(foundCurrency);
 
