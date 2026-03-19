@@ -78,8 +78,9 @@ export const useCryptoQuery = () => {
 
       return [];
     },
-    enabled: !!(store.getState() as RootState).crypto.tradeCrypto.selectedCryptoId && !!sessionStorage.getItem(SESSION_STORAGE_KEYS.SESSION_ID) && !!matchRoute({ to: ROUTES.TRADE_CRYPTO }) && !isBuyTransaction, // Disable for buy transactions - only run for sell transactions
-    refetchInterval: 2000, // refetch every 2 seconds to get real-time updates
+    // Enable for both BUY and SELL on dashboard trade route when crypto is selected
+    enabled: !!(store.getState() as RootState).crypto.tradeCrypto.selectedCryptoId && (!!matchRoute({ to: ROUTES.DASHBOARD_TRADE }) || !!matchRoute({ to: ROUTES.TRADE_CRYPTO })),
+    refetchInterval: isBuyTransaction ? false : 2000, // Only refetch for sell transactions
   });
   
   const { data: allUserCryptoWallets, isLoading: loadingAllUserCryptoWallets } = useQuery({
@@ -93,7 +94,7 @@ export const useCryptoQuery = () => {
 
       return [];
     },
-    enabled: !!matchRoute({ to: ROUTES.PROFILE }) && false,
+    enabled: !!matchRoute({ to: ROUTES.PROFILE }),
   });
 
   const createUserCryptoWalletMutation = useMutation({

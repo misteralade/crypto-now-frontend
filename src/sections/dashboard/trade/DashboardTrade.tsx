@@ -291,6 +291,7 @@ export default function DashboardTrade() {
                 onWalletAddressChange={setBuyWalletAddress}
                 selectedNetwork={buyNetwork}
                 onNetworkChange={setBuyNetwork}
+                savedWallets={userCryptoWallets}
               />) : null}
             </motion.div>
           )}
@@ -328,7 +329,7 @@ export default function DashboardTrade() {
           )}
 
           {/* STEP 3 — confirm receiving account */}
-          {step === 3 && !loadingUserCryptoWallets && !loadingUserBankAccounts && (
+          {step === 3 && (isBuy || !loadingUserCryptoWallets) && !loadingUserBankAccounts && (
             <motion.div key="s3"
               initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 16 }} transition={{ duration: 0.2 }}>

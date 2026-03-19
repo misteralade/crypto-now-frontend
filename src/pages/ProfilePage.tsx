@@ -6,6 +6,7 @@ import { useProfilePage } from "../hooks/pages/useProfilePage.ts";
 import ProfilePersonalInfoSection from "../components/pages/profile/ProfilePersonalInfoSection.tsx";
 import ProfileBankDetailsSection from "../components/pages/profile/ProfileBankDetailsSection.tsx";
 import ProfileSecuritySettingsSection from "../components/pages/profile/ProfileSecuritySection.tsx";
+import ProfileAddressDetailsSection from "../components/pages/profile/ProfileAddressDetailsSection.tsx";
 import CustomButton from "../components/global/Button.tsx";
 import { LoadingSpinner } from "../components/global/LoadingSpinner.tsx";
 import NewBankAccountModal from "../components/pages/profile/modals/NewBankAccountModal.tsx";
@@ -15,7 +16,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useTransactionQuery } from "../queries/transaction.query.ts";
 import { convertToMillify, formatCurrency } from "../util/index.util.ts";
 
-type Section = "personal" | "bank" | "security" | null;
+type Section = "personal" | "bank" | "wallets" | "security" | null;
 
 const getInitials = (first?: string, last?: string) =>
   ((first?.[0] ?? "") + (last?.[0] ?? "")).toUpperCase() || "U";
@@ -75,6 +76,7 @@ const ProfilePage = () => {
     userBankAccounts, loadingUserBankAccounts,
     selectedBank, showCreateNewBankAccount,
     supportedCryptoCurrencies, loadingSupportedCryptocurrencies,
+    allUserCryptoWallets, loadingAllUserCryptoWallets,
     showCreateWallet, selectedWallet,
     handleChangePassword, handlePersonalInfoProfileFieldUpdate,
     handleSaveChanges, handleEnableTwoFactor,
@@ -82,6 +84,7 @@ const ProfilePage = () => {
     toggleShowCreateNewBankAccount, handleDefaultBankAccount,
     handleDeleteBankAccount, toggleShowCreateNewWallet,
     handleCreateWallet, handleNewWalletField,
+    handleMakeWalletDefault, handleDeleteWallet,
     handleRemoveProfilePicture,
   } = useProfilePage();
 
@@ -219,6 +222,14 @@ const ProfilePage = () => {
                     color="#F7A600"
                     onClick={() => setActiveSection("bank")}
                   />
+                  <div style={{ height: "1px", background: "#F7F7F9", margin: "0 16px" }} />
+                  <MenuRow
+                    icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9945FF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>}
+                    label="External Wallets"
+                    sub={`${allUserCryptoWallets?.length ?? 0} wallet(s) saved`}
+                    color="#9945FF"
+                    onClick={() => setActiveSection("wallets")}
+                  />
                 </div>
 
                 {/* Security */}
@@ -299,6 +310,7 @@ const ProfilePage = () => {
                 <h2 className="text-lg font-bold" style={{ color: "#0E0F0C" }}>
                   {activeSection === "personal" ? "Edit Profile"
                    : activeSection === "bank"     ? "Bank Details"
+                   : activeSection === "wallets"  ? "External Wallets"
                    :                                "Security"}
                 </h2>
               </div>
@@ -344,6 +356,31 @@ const ProfilePage = () => {
                             createNewBankModal={toggleShowCreateNewBankAccount}
                             makeBankAccountDefault={handleDefaultBankAccount}
                             handleDeleteBank={handleDeleteBankAccount}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {activeSection === "wallets" && (
+                    <div className="space-y-4">
+                      {loadingAllUserCryptoWallets ? (
+                        <div className="flex items-center justify-center py-16">
+                          <LoadingSpinner size="xl" message="Loading wallets..." />
+                        </div>
+                      ) : !allUserCryptoWallets || allUserCryptoWallets.length === 0 ? (
+                        <div className="rounded-3xl p-10 flex flex-col items-center gap-4"
+                          style={{ border: "1px solid #F0F0F0" }}>
+                          <p className="text-sm" style={{ color: "#9A9A9A" }}>No external wallets saved yet</p>
+                          <CustomButton buttonText="Add Wallet" onClick={toggleShowCreateNewWallet} />
+                        </div>
+                      ) : (
+                        <div className="rounded-3xl p-5" style={{ border: "1px solid #F0F0F0" }}>
+                          <ProfileAddressDetailsSection
+                            wallets={allUserCryptoWallets}
+                            createNewWalletModal={toggleShowCreateNewWallet}
+                            makePrimaryWallet={handleMakeWalletDefault}
+                            deleteWallet={handleDeleteWallet}
                           />
                         </div>
                       )}
