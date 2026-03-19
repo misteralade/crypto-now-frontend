@@ -49,6 +49,8 @@ export default function DashboardTrade() {
   const [buyNetwork, setBuyNetwork] = useState("");
   // Sell payout account selection
   const [sellPayoutAccountId, setSellPayoutAccountId] = useState<string | undefined>();
+  // Sell network selection (for multi-network tokens like USDT)
+  const [sellNetwork, setSellNetwork] = useState<string | undefined>();
 
   const anonymousUserEmail = useAppSelector((state) => state.user.trade.anonymous.email);
   const hasRestoredRef = useRef<string | null>(null);
@@ -107,13 +109,20 @@ export default function DashboardTrade() {
     togglePaymentReceivingModal, formatReceiveAmount, formatSendAmount,
     handleFocusNumberOfToken, handleFocusAmountToBuy,
     handleBlurNumberOfToken, handleBlurAmountToBuy,
-  } = useTradeStepDisplay(token, activeTab, currency, setStep, setActiveTab, undefined, step, sessionId);
+    sellDepositWallet, isGeneratingDepositWallet,
+  } = useTradeStepDisplay(token, activeTab, currency, setStep, setActiveTab, undefined, step, sessionId, sellNetwork);
 
   // For BUY: only trigger step 3 (wallet confirmation) on showPaymentReceivingModal
   // For SELL: skip step 3 entirely (bank was attached at initiate time)
   useEffect(() => {
     if (showPaymentReceivingModal && activeTab === "buy") setStep(3);
   }, [showPaymentReceivingModal, activeTab]);
+
+  // For SELL: after initiateTransaction sets step to 2, immediately advance to step 4
+  // (deposit wallet is shown inline on Step 1; monitoring/confirmation is not needed as a separate step)
+  useEffect(() => {
+    if (step === 2 && activeTab === "sell") setStep(4);
+  }, [step, activeTab]);
 
   // Auto-initialize sellPayoutAccountId from default bank
   useEffect(() => {
@@ -152,6 +161,7 @@ export default function DashboardTrade() {
           if (firstNetwork) setBuyNetwork(firstNetwork);
         } else {
           setPendingSellToken(found);
+          setSellNetwork(found.networks?.[0] ?? undefined);
         }
       }
     }
@@ -249,6 +259,8 @@ export default function DashboardTrade() {
                   } else {
                     setPendingSellToken(t);
                     setSelectedToken(t);
+                    // Reset sell network to first available when token changes
+                    setSellNetwork(t.networks?.[0] ?? undefined);
                   }
                 }}
                 isInitiatingTrade={isInitiatingTrade}
@@ -286,6 +298,10 @@ export default function DashboardTrade() {
                 userBankAccounts={userBankAccounts}
                 selectedPayoutAccountId={sellPayoutAccountId}
                 onPayoutAccountChange={setSellPayoutAccountId}
+                sellDepositWallet={sellDepositWallet}
+                isGeneratingDepositWallet={isGeneratingDepositWallet}
+                sellNetwork={sellNetwork}
+                onSellNetworkChange={setSellNetwork}
               />
             </motion.div>
           )}

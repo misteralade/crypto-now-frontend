@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { CheckCircle, ChevronDown, X, Wallet } from "lucide-react";
+import { CheckCircle, ChevronDown, X, Wallet, Copy, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "@tanstack/react-router";
 import type {
   SupportedCryptoOrCurrencyResponse,
   UserBankAccountResponse,
   UserCryptoWalletResponse,
+  CustodialWalletResponse,
 } from "../../../types/response.payload.types.ts";
 import type { TradeType, TradeAdditionalInfoInterface } from "../../../types/trade.types.ts";
 import { useDispatch } from "react-redux";
@@ -83,6 +84,12 @@ interface DashboardTradeStep1Props {
   userBankAccounts?: UserBankAccountResponse[] | null;
   selectedPayoutAccountId?: string;
   onPayoutAccountChange?: (id: string) => void;
+
+  // SELL-specific (deposit wallet shown inline)
+  sellDepositWallet?: CustodialWalletResponse | null;
+  isGeneratingDepositWallet?: boolean;
+  sellNetwork?: string;
+  onSellNetworkChange?: (network: string) => void;
 }
 
 // ── BUY extra fields ──────────────────────────────────────────────────────────
@@ -327,6 +334,136 @@ function BuyFields({
   );
 }
 
+// ── SELL deposit wallet (inline) ──────────────────────────────────────────────
+function SellDepositWalletSection({
+  depositWallet,
+  isGenerating,
+  selectedToken,
+  sellNetwork,
+  onSellNetworkChange,
+}: {
+  depositWallet?: CustodialWalletResponse | null;
+  isGenerating?: boolean;
+  selectedToken?: SupportedCryptoOrCurrencyResponse;
+  sellNetwork?: string;
+  onSellNetworkChange?: (network: string) => void;
+}) {
+  const [copied, setCopied] = useState(false);
+  const [networkDropdownOpen, setNetworkDropdownOpen] = useState(false);
+  const accentColor = "#F7A600";
+  const tokenNetworks = selectedToken?.networks ?? [];
+  const hasMultipleNetworks = tokenNetworks.length > 1;
+  const activeNetwork = sellNetwork ?? tokenNetworks[0];
+
+  const handleCopy = () => {
+    if (!depositWallet?.walletAddress) return;
+    navigator.clipboard.writeText(depositWallet.walletAddress).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  const handleNetworkSelect = (net: string) => {
+    setNetworkDropdownOpen(false);
+    onSellNetworkChange?.(net);
+  };
+
+  if (!selectedToken) return null;
+
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="text-[10px] font-bold tracking-widest uppercase" style={{ color: "#9A9A9A" }}>
+        Send {selectedToken.symbol} To
+      </p>
+
+      {/* Network selector (only for multi-network tokens) */}
+      {hasMultipleNetworks && (
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setNetworkDropdownOpen(v => !v)}
+            className="w-full flex items-center justify-between px-4 py-3 rounded-2xl"
+            style={{ background: "#F7F7F9", border: "1px solid #EEEEEE" }}>
+            <div>
+              <p className="text-[10px] font-bold tracking-widest uppercase text-left" style={{ color: "#9A9A9A" }}>Network</p>
+              <p className="text-sm font-semibold mt-0.5" style={{ color: "#0E0F0C" }}>
+                {NETWORK_LABELS[activeNetwork] ?? activeNetwork}
+              </p>
+            </div>
+            <ChevronDown size={16} style={{
+              color: "#9A9A9A",
+              transform: networkDropdownOpen ? "rotate(180deg)" : "rotate(0)",
+              transition: "transform 0.2s",
+            }} />
+          </button>
+
+          <AnimatePresence>
+            {networkDropdownOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.15 }}
+                className="absolute left-0 right-0 z-20 mt-1 rounded-2xl overflow-hidden"
+                style={{ background: "#FFFFFF", border: "1px solid #EEEEEE", boxShadow: "0 8px 24px rgba(0,0,0,0.10)" }}>
+                {tokenNetworks.map((net) => (
+                  <button key={net} type="button" onClick={() => handleNetworkSelect(net)}
+                    className="w-full flex items-center justify-between px-4 py-3 text-left text-sm font-semibold transition-colors hover:bg-gray-50"
+                    style={{ color: activeNetwork === net ? accentColor : "#0E0F0C", borderBottom: "1px solid #F7F7F9" }}>
+                    {NETWORK_LABELS[net] ?? net}
+                    {activeNetwork === net && <span className="w-2 h-2 rounded-full" style={{ background: accentColor }} />}
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
+
+      <div className="rounded-2xl px-4 py-3" style={{ background: "#FFFBF0", border: `1.5px solid ${accentColor}44` }}>
+        {isGenerating ? (
+          <div className="flex items-center gap-2 py-1">
+            <div className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: `${accentColor} transparent transparent transparent` }} />
+            <p className="text-xs" style={{ color: "#A07000" }}>Generating deposit address…</p>
+          </div>
+        ) : depositWallet ? (
+          <>
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                {!hasMultipleNetworks && (
+                  <p className="text-[10px] font-bold mb-1" style={{ color: "#A07000" }}>
+                    {NETWORK_LABELS[depositWallet.network] ?? depositWallet.network}
+                  </p>
+                )}
+                <p className="text-xs font-mono break-all leading-relaxed" style={{ color: "#0E0F0C" }}>
+                  {depositWallet.walletAddress}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleCopy}
+                className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[10px] font-bold transition-all"
+                style={{
+                  background: copied ? "#E8F8F0" : "#FFF3D0",
+                  color: copied ? "#037847" : "#A07000",
+                  border: `1px solid ${copied ? "#A8E6C8" : "#FFD980"}`,
+                }}>
+                {copied ? <Check size={11} /> : <Copy size={11} />}
+                {copied ? "Copied" : "Copy"}
+              </button>
+            </div>
+            <p className="text-[10px] mt-2" style={{ color: "#A07000" }}>
+              Only send {selectedToken.symbol} on {NETWORK_LABELS[depositWallet.network] ?? depositWallet.network}. Wrong network = lost funds.
+            </p>
+          </>
+        ) : (
+          <p className="text-xs py-1" style={{ color: "#A07000" }}>
+            Select a crypto above to see your deposit address.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── SELL payout bank section ──────────────────────────────────────────────────
 function BankAccountRow({
   account,
@@ -465,6 +602,7 @@ export default function DashboardTradeStep1({
   orderDetails: _orderDetails,
   savedWallets,
   userBankAccounts, selectedPayoutAccountId, onPayoutAccountChange,
+  sellDepositWallet, isGeneratingDepositWallet, sellNetwork, onSellNetworkChange,
 }: DashboardTradeStep1Props) {
   const isBuy = tradeType === "buy";
   const accentColor = isBuy ? "#948EEE" : "#F7A600";
@@ -473,17 +611,27 @@ export default function DashboardTradeStep1({
   const noBankAccounts = !isBuy && !hasBankAccounts;
 
   const buySubmitDisabled = isBuy && (!amountToBuy || Number(amountToBuy) <= 0 || !walletAddress?.trim());
+  const activeNetwork = (!isBuy && selectedToken)
+    ? (sellNetwork ?? selectedToken.networks?.[0])
+    : undefined;
+  const sellWalletLoading = !isBuy && !!selectedToken && (
+    isGeneratingDepositWallet ||
+    !sellDepositWallet ||
+    (activeNetwork && sellDepositWallet?.network !== activeNetwork)
+  );
 
-  const isCtaBusy = isInitiatingTrade || (!!selectedToken && isRateLoading);
+  const isCtaBusy = isInitiatingTrade || (!!selectedToken && isRateLoading) || sellWalletLoading;
   const ctaLabel = isInitiatingTrade
     ? "Processing…"
     : (isRateLoading && selectedToken)
       ? "Loading rate…"
-      : noBankAccounts
-        ? "Add a bank account first"
-        : selectedToken
-          ? `${isBuy ? "Buy" : "Sell"} ${selectedToken.symbol} — Continue`
-          : "Select a Crypto to Continue";
+      : sellWalletLoading
+        ? "Getting deposit address…"
+        : noBankAccounts
+          ? "Add a bank account first"
+          : selectedToken
+            ? `${isBuy ? "Buy" : "Sell"} ${selectedToken.symbol} — Continue`
+            : "Select a Crypto to Continue";
 
   const ctaDisabled = !selectedToken || isCtaBusy || noBankAccounts || buySubmitDisabled;
 
@@ -568,6 +716,17 @@ export default function DashboardTradeStep1({
           userBankAccounts={userBankAccounts}
           selectedPayoutAccountId={selectedPayoutAccountId}
           onPayoutAccountChange={onPayoutAccountChange}
+        />
+      )}
+
+      {/* SELL: deposit wallet address (shown when token selected) */}
+      {!isBuy && selectedToken && (
+        <SellDepositWalletSection
+          depositWallet={sellDepositWallet}
+          isGenerating={isGeneratingDepositWallet}
+          selectedToken={selectedToken}
+          sellNetwork={sellNetwork}
+          onSellNetworkChange={onSellNetworkChange}
         />
       )}
 

@@ -56,7 +56,7 @@ const shallowEqual = (a: any, b: any) => {
   return true;
 };
 
-export const useTradeStepDisplay = ( token: string, activeTab: TradeType, currency: string, setStep: (value: number) => void, _setActiveTab: (value: TradeType) => void, initialAmount?: string, currentStep?: number, sessionId?: string ) => {
+export const useTradeStepDisplay = ( token: string, activeTab: TradeType, currency: string, setStep: (value: number) => void, _setActiveTab: (value: TradeType) => void, initialAmount?: string, currentStep?: number, sessionId?: string, sellNetwork?: string ) => {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-expect-error
   const countdownIntervalRef = useRef<any>();
@@ -213,8 +213,10 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       return;
     }
 
-    // Pick the first explicitly configured network for this crypto
-    const network = selectedToken.networks[0];
+    // Use the caller-selected network if provided, else fall back to first configured network
+    const network = (sellNetwork && selectedToken.networks.includes(sellNetwork))
+      ? sellNetwork
+      : selectedToken.networks[0];
 
     // Try to find an existing custodial wallet for this crypto + network
     const existing = custodialWallets?.find(
@@ -237,7 +239,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, selectedToken?.id, custodialWallets]);
+  }, [activeTab, selectedToken?.id, custodialWallets, sellNetwork]);
 
   // 🔹 Hydration guard to avoid saving empty defaults on first paint
   const hydratedRef = useRef(false);

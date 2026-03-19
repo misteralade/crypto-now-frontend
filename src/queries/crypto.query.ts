@@ -152,8 +152,10 @@ export const useCryptoQuery = () => {
       toast.dismiss();
       if (success) {
         toast.success(message);
+        const rootState = store.getState() as RootState;
+        const selectedCryptoId = rootState.crypto.tradeCrypto.selectedCryptoId;
         queryClient.invalidateQueries({
-          queryKey: [QUERY_KEYS.CRYPTO.GET_USER_ALL_CRYPTO_WALLETS]
+          queryKey: [QUERY_KEYS.CRYPTO.GET_USER_ALL_CRYPTO_WALLETS, selectedCryptoId],
         });
       } else {
         toast.error(message);
@@ -179,8 +181,10 @@ export const useCryptoQuery = () => {
       toast.dismiss();
       if (success) {
         toast.success(message);
+        const rootState = store.getState() as RootState;
+        const selectedCryptoId = rootState.crypto.tradeCrypto.selectedCryptoId;
         queryClient.invalidateQueries({
-          queryKey: [QUERY_KEYS.CRYPTO.GET_USER_ALL_CRYPTO_WALLETS]
+          queryKey: [QUERY_KEYS.CRYPTO.GET_USER_ALL_CRYPTO_WALLETS, selectedCryptoId],
         });
       } else {
         toast.error(message);
@@ -196,7 +200,8 @@ export const useCryptoQuery = () => {
   const deleteUserWalletMutation = useMutation({
     mutationKey: [QUERY_KEYS.CRYPTO.DELETE_WALLET],
     mutationFn: async () => {
-      toast.loading("Making wallet primary...")
+      // Loading message should match the delete action to avoid confusion.
+      toast.loading("Deleting wallet...")
       const rootState = store.getState() as RootState;
       const id = rootState.crypto.profile.update.walletId;
       
