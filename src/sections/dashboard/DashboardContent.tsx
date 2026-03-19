@@ -348,7 +348,7 @@ export default function DashboardContent() {
             <button
               onClick={() => goTrade("buy")}
               disabled={loadingSupportedCurrencies || loadingSupportedCryptocurrencies}
-              className="flex items-center gap-3 px-4 py-4 rounded-3xl text-left transition-all active:scale-[0.97] disabled:opacity-50"
+              className="flex items-center gap-3 px-4 py-4 rounded-3xl text-left transition-all active:scale-[0.97] disabled:opacity-50 cursor-pointer"
               style={{ background: "#F0EFFD", border: "1px solid rgba(148,142,238,0.2)" }}
             >
               <div className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
@@ -368,7 +368,7 @@ export default function DashboardContent() {
             <button
               onClick={() => goTrade("sell")}
               disabled={loadingSupportedCurrencies || loadingSupportedCryptocurrencies}
-              className="flex items-center gap-3 px-4 py-4 rounded-3xl text-left transition-all active:scale-[0.97] disabled:opacity-50"
+              className="flex items-center gap-3 px-4 py-4 rounded-3xl text-left transition-all active:scale-[0.97] disabled:opacity-50 cursor-pointer"
               style={{ background: "#FFF4F0", border: "1px solid rgba(247,166,0,0.2)" }}
             >
               <div className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"

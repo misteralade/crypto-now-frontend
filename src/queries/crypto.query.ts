@@ -98,16 +98,20 @@ export const useCryptoQuery = () => {
 
   const createUserCryptoWalletMutation = useMutation({
     mutationKey: [QUERY_KEYS.CRYPTO.USER_CREATE_CRYPTO_WALLET],
-    mutationFn: async () => {
+    mutationFn: async (overridePayload?: Record<string, any>) => {
       const rootState = store.getState() as RootState;
-      const createCryptoPayload = rootState.crypto.tradeCrypto.userCreateCrypto;
+      const rawPayload = overridePayload ?? rootState.crypto.tradeCrypto.userCreateCrypto;
       const userEmail = rootState.user.trade.anonymous.email;
 
       if (!rootState.crypto.tradeCrypto.selectedCryptoId) {
         toast.error("Please select a crypto", { toastId: QUERY_KEYS.CRYPTO.USER_CREATE_CRYPTO_WALLET });
         throw new Error("No crypto selected");
       }
-      
+
+      // Strip null walletLabel — backend schema expects string | undefined, not null
+      const { walletLabel, ...rest } = rawPayload as Record<string, any>;
+      const createCryptoPayload = walletLabel != null ? { ...rest, walletLabel } : rest;
+
       if (userEmail) {
         return cryptoServiceApi.anonymousUserCreateCryptoWallet(rootState.crypto.tradeCrypto.selectedCryptoId, {
           ...createCryptoPayload,

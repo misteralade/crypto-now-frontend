@@ -2,15 +2,14 @@
  * Step 1b — BUY ONLY: Enter amount, wallet address, and select network
  * Matches frames 105 / 113 / 117
  */
-import { useState, useEffect } from "react";
-import { ArrowLeft, ChevronDown, X } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { ArrowLeft, ArrowRight, ChevronDown, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { SupportedCryptoOrCurrencyResponse } from "../../../types/response.payload.types.ts";
 import type { TradeType, TradeAdditionalInfoInterface } from "../../../types/trade.types.ts";
 import { useDispatch } from "react-redux";
 import { setInitiateTransactionField } from "../../../redux/transaction.slice.ts";
 import { setSelectedCryptoId } from "../../../redux/crypto.slice.ts";
-import { cryptoNetworkTypes } from "../../../util/constants.util.ts";
 
 interface DashboardTradeStep1bProps {
   tradeType: TradeType;
@@ -30,6 +29,11 @@ interface DashboardTradeStep1bProps {
   isInitiatingTrade: boolean;
   onProceed: () => void;
   onBack: () => void;
+  /** Lifted state so Step 3 can display a read-only summary */
+  walletAddress?: string;
+  onWalletAddressChange?: (v: string) => void;
+  selectedNetwork?: string;
+  onNetworkChange?: (v: string) => void;
 }
 
 // NGN amounts matching realistic minimums (min ~2 USDT ≈ ₦2,800+)
@@ -44,8 +48,8 @@ const NETWORK_LABELS: Record<string, string> = {
   SOLANA: "Solana (SOL)",
 };
 
-function CryptoIcon({ symbol, icon }: { symbol: string; icon?: string }) {
-  if (icon) return <img src={icon} alt={symbol} className="w-6 h-6 rounded-full object-cover" />;
+function CryptoIcon({ symbol, logoUrl }: { symbol: string; logoUrl?: string }) {
+  if (logoUrl) return <img src={logoUrl} alt={symbol} className="w-6 h-6 rounded-full object-cover" />;
   const colors: Record<string, string> = {
     BTC: "#F7931A", ETH: "#627EEA", SOL: "#9945FF", USDT: "#26A17B",
   };
@@ -63,19 +67,55 @@ export default function DashboardTradeStep1b({
   amountToBuy, setAmountToBuy,
   handleFocusAmountToBuy, handleBlurAmountToBuy,
   isInitiatingTrade, onProceed, onBack,
+  walletAddress: walletAddressProp,
+  onWalletAddressChange,
+  selectedNetwork: selectedNetworkProp,
+  onNetworkChange,
 }: DashboardTradeStep1bProps) {
   const dispatch = useDispatch();
   const accentColor = "#948EEE";
 
-  const [walletAddress, setWalletAddress] = useState("");
-  const [selectedNetwork, setSelectedNetwork] = useState<string>(cryptoNetworkTypes[0] ?? "TRC20");
+  // Use only the networks this specific crypto supports
+  const tokenNetworks: string[] = selectedToken.networks && selectedToken.networks.length > 0
+    ? selectedToken.networks
+    : [];
+
+  const [walletAddress, setWalletAddressLocal] = useState(walletAddressProp ?? "");
+  const defaultNetwork = tokenNetworks[0] ?? "";
+  const [selectedNetwork, setSelectedNetworkLocal] = useState<string>(selectedNetworkProp || defaultNetwork);
   const [networkDropdownOpen, setNetworkDropdownOpen] = useState(false);
+
+  // Use refs so callbacks are always fresh inside effects
+  const onWalletAddressChangeRef = useRef(onWalletAddressChange);
+  const onNetworkChangeRef = useRef(onNetworkChange);
+  useEffect(() => { onWalletAddressChangeRef.current = onWalletAddressChange; }, [onWalletAddressChange]);
+  useEffect(() => { onNetworkChangeRef.current = onNetworkChange; }, [onNetworkChange]);
+
+  const handleWalletChange = (val: string) => {
+    setWalletAddressLocal(val);
+    onWalletAddressChangeRef.current?.(val);
+    dispatch(setInitiateTransactionField({ field: "walletAddress", value: val }));
+  };
+
+  const handleNetworkSelect = (net: string) => {
+    setSelectedNetworkLocal(net);
+    setNetworkDropdownOpen(false);
+    onNetworkChangeRef.current?.(net);
+    dispatch(setInitiateTransactionField({ field: "network", value: net }));
+  };
 
   // Sync token + network into redux so initiateTransaction has all required fields
   useEffect(() => {
     dispatch(setSelectedCryptoId(selectedToken.id));
     dispatch(setInitiateTransactionField({ field: "tokenId", value: selectedToken.id }));
-    dispatch(setInitiateTransactionField({ field: "network", value: selectedNetwork }));
+
+    // Auto-select the first (or only) supported network
+    const network = tokenNetworks[0] ?? "";
+    if (network) {
+      setSelectedNetworkLocal(network);
+      onNetworkChangeRef.current?.(network);
+      dispatch(setInitiateTransactionField({ field: "network", value: network }));
+    }
 
     // Default to NGN currency if available
     const ngnCurrency = availableCurrencies.find(c => c.code === "NGN" || c.symbol === "NGN");
@@ -91,23 +131,6 @@ export default function DashboardTradeStep1b({
       dispatch(setInitiateTransactionField({ field: "currencyId", value: selectedCurrency.id }));
     }
   }, [selectedCurrency?.id]);
-
-  const handleCurrencySelect = (c: SupportedCryptoOrCurrencyResponse) => {
-    setSelectedCurrency(c);
-    dispatch(setInitiateTransactionField({ field: "currencyId", value: c.id }));
-  };
-
-  // Store wallet address + network in redux so the hook can pick them up
-  const handleWalletChange = (val: string) => {
-    setWalletAddress(val);
-    dispatch(setInitiateTransactionField({ field: "walletAddress", value: val }));
-  };
-
-  const handleNetworkSelect = (net: string) => {
-    setSelectedNetwork(net);
-    setNetworkDropdownOpen(false);
-    dispatch(setInitiateTransactionField({ field: "network", value: net }));
-  };
 
   const amountNum = Number(amountToBuy);
   const submitDisabled = !amountToBuy || amountNum <= 0 || !walletAddress.trim() || isInitiatingTrade;
@@ -127,7 +150,7 @@ export default function DashboardTradeStep1b({
           </p>
           <p className="text-[11px]" style={{ color: "#9A9A9A" }}>Enter amount &amp; wallet</p>
         </div>
-        <CryptoIcon symbol={selectedToken.symbol} icon={selectedToken.icon} />
+        <CryptoIcon symbol={selectedToken.symbol} logoUrl={selectedToken.logoUrl} />
       </div>
 
       {/* Amount input */}
@@ -206,48 +229,58 @@ export default function DashboardTradeStep1b({
           <p className="text-[10px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "#9A9A9A" }}>
             Network
           </p>
-          <button type="button"
-            onClick={() => setNetworkDropdownOpen((v) => !v)}
-            className="flex items-center justify-between w-full">
-            <span className="text-sm font-semibold" style={{ color: "#0E0F0C" }}>
-              {NETWORK_LABELS[selectedNetwork] ?? selectedNetwork}
-            </span>
-            <ChevronDown size={16} style={{
-              color: "#9A9A9A",
-              transform: networkDropdownOpen ? "rotate(180deg)" : "rotate(0)",
-              transition: "transform 0.2s",
-            }} />
-          </button>
+          {tokenNetworks.length <= 1 ? (
+            /* Single network — read-only display */
+            <p className="text-sm font-semibold" style={{ color: "#0E0F0C" }}>
+              {(NETWORK_LABELS[selectedNetwork] ?? selectedNetwork) || "—"}
+            </p>
+          ) : (
+            /* Multiple networks — dropdown */
+            <button type="button"
+              onClick={() => setNetworkDropdownOpen((v) => !v)}
+              className="flex items-center justify-between w-full">
+              <span className="text-sm font-semibold" style={{ color: "#0E0F0C" }}>
+                {NETWORK_LABELS[selectedNetwork] ?? selectedNetwork}
+              </span>
+              <ChevronDown size={16} style={{
+                color: "#9A9A9A",
+                transform: networkDropdownOpen ? "rotate(180deg)" : "rotate(0)",
+                transition: "transform 0.2s",
+              }} />
+            </button>
+          )}
         </div>
 
-        {/* Dropdown */}
-        <AnimatePresence>
-          {networkDropdownOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.15 }}
-              className="absolute left-0 right-0 z-20 mt-1 rounded-2xl overflow-hidden"
-              style={{ background: "#FFFFFF", border: "1px solid #EEEEEE", boxShadow: "0 8px 24px rgba(0,0,0,0.10)" }}
-            >
-              {cryptoNetworkTypes.map((net) => (
-                <button key={net} type="button"
-                  onClick={() => handleNetworkSelect(net)}
-                  className="w-full flex items-center justify-between px-4 py-3 text-left text-sm font-semibold transition-colors hover:bg-gray-50"
-                  style={{
-                    color: selectedNetwork === net ? accentColor : "#0E0F0C",
-                    borderBottom: "1px solid #F7F7F9",
-                  }}>
-                  {NETWORK_LABELS[net] ?? net}
-                  {selectedNetwork === net && (
-                    <span className="w-2 h-2 rounded-full" style={{ background: accentColor }} />
-                  )}
-                </button>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Dropdown — only when multiple networks */}
+        {tokenNetworks.length > 1 && (
+          <AnimatePresence>
+            {networkDropdownOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.15 }}
+                className="absolute left-0 right-0 z-20 mt-1 rounded-2xl overflow-hidden"
+                style={{ background: "#FFFFFF", border: "1px solid #EEEEEE", boxShadow: "0 8px 24px rgba(0,0,0,0.10)" }}
+              >
+                {tokenNetworks.map((net) => (
+                  <button key={net} type="button"
+                    onClick={() => handleNetworkSelect(net)}
+                    className="w-full flex items-center justify-between px-4 py-3 text-left text-sm font-semibold transition-colors hover:bg-gray-50"
+                    style={{
+                      color: selectedNetwork === net ? accentColor : "#0E0F0C",
+                      borderBottom: "1px solid #F7F7F9",
+                    }}>
+                    {NETWORK_LABELS[net] ?? net}
+                    {selectedNetwork === net && (
+                      <span className="w-2 h-2 rounded-full" style={{ background: accentColor }} />
+                    )}
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        )}
       </div>
 
       {/* CTA */}
@@ -264,7 +297,14 @@ export default function DashboardTradeStep1b({
           boxShadow: !submitDisabled ? `0 6px 20px ${accentColor}44` : "none",
         }}
       >
-        {isInitiatingTrade ? "Processing…" : "See Payment Details →"}
+        {isInitiatingTrade ? (
+          "Processing…"
+        ) : (
+          <span className="inline-flex items-center gap-2">
+            <span>See Payment Details</span>
+            <ArrowRight size={16} />
+          </span>
+        )}
       </button>
     </div>
   );

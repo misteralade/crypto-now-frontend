@@ -10,7 +10,7 @@
  *   "monitoring" — 4-step animated tracker (frames 172 / 203)
  */
 import { useState, useEffect } from "react";
-import { Copy, Check, ArrowLeft, Upload } from "lucide-react";
+import { Copy, Check, ArrowLeft, ArrowRight, Upload } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { SupportedCryptoOrCurrencyResponse } from "../../../types/response.payload.types.ts";
 import type { TradeAdditionalInfoInterface, TradeType } from "../../../types/trade.types.ts";
@@ -33,6 +33,10 @@ interface DashboardTradeStep2Props {
   formatReceiveAmount: (amount: number | string, code: string | undefined) => React.ReactNode | string;
   formatSendAmount: (amount: number | string, code: string | undefined) => React.ReactNode | string;
   onBack: () => void;
+  /** Wallet address entered in Step 1b (buy flow) */
+  buyWalletAddress?: string;
+  /** Network selected in Step 1b (buy flow) */
+  buyNetwork?: string;
 }
 
 /* ── helpers ── */
@@ -156,7 +160,8 @@ function SellWalletView({
               boxShadow: "0 6px 20px #03784744",
             }}>
             <span className="w-2 h-2 rounded-full bg-green-200" />
-            Wallet Active — Start Monitoring →
+            <span>Wallet Active — Start Monitoring</span>
+            <ArrowRight size={16} />
           </button>
         </>
       )}
@@ -307,7 +312,10 @@ function BuyUploadView({
           color: !submitInvalid ? "#FFFFFF" : "#9A9A9A",
           boxShadow: !submitInvalid ? "0 6px 20px #948EEE44" : "none",
         }}>
-        Submit Receipt →
+        <span className="inline-flex items-center gap-2">
+          <span>Submit Receipt</span>
+          <ArrowRight size={16} />
+        </span>
       </button>
 
       {/* Skip */}
@@ -328,7 +336,7 @@ export default function DashboardTradeStep2({
   tradeType, amountToBuy, numberOfToken, selectedToken, selectedCurrency,
   exchangeRateId, transactionRef, additionalInfo,
   handleReceiptUrl, handleTransactionHash, handleSubmitPaymentProof,
-  formatSendAmount, onBack,
+  formatSendAmount, onBack, buyWalletAddress, buyNetwork,
 }: DashboardTradeStep2Props) {
   const isBuy = tradeType === "buy";
 
@@ -425,8 +433,8 @@ export default function DashboardTradeStep2({
           selectedToken={selectedToken}
           numberOfToken={numberOfToken}
           amountToBuy={amountToBuy}
-          walletAddress={""}
-          network={""}
+          walletAddress={buyWalletAddress ?? ""}
+          network={buyNetwork ?? ""}
           submitInvalid={submitInvalid}
           handleReceiptUrl={handleReceiptUrl}
           setUploadedFileUrl={setUploadedFileUrl}
@@ -518,7 +526,8 @@ export default function DashboardTradeStep2({
             boxShadow: "0 6px 20px #948EEE44",
           }}>
           <Upload size={16} />
-          I've Paid — Upload Receipt →
+          <span>I've Paid — Upload Receipt</span>
+          <ArrowRight size={16} />
         </button>
 
         {/* Copy toast */}

@@ -43,6 +43,9 @@ export default function DashboardTrade() {
   const [pendingSellToken, setPendingSellToken] = useState<import("../../../types/response.payload.types.ts").SupportedCryptoOrCurrencyResponse | undefined>();
   // Ref to hold the last token selected for buy (persists across hook-triggered re-renders)
   const pendingBuyTokenRef = useRef<import("../../../types/response.payload.types.ts").SupportedCryptoOrCurrencyResponse | undefined>();
+  // Lifted wallet+network state from Step 1b so Step 3 shows a summary instead of re-asking
+  const [buyWalletAddress, setBuyWalletAddress] = useState("");
+  const [buyNetwork, setBuyNetwork] = useState("");
 
   const anonymousUserEmail = useAppSelector((state) => state.user.trade.anonymous.email);
   const hasRestoredRef = useRef<string | null>(null);
@@ -226,6 +229,9 @@ export default function DashboardTrade() {
                     // Store in ref immediately (survives hook re-render resets)
                     pendingBuyTokenRef.current = t;
                     setSelectedToken(t);
+                    // Pre-set the network from the token's first supported network
+                    const firstNetwork = t.networks?.[0] ?? "";
+                    if (firstNetwork) setBuyNetwork(firstNetwork);
                     setSubStep(1);
                   } else {
                     // Sell: store locally so hook's effect can't clobber it
@@ -273,6 +279,10 @@ export default function DashboardTrade() {
                 isInitiatingTrade={isInitiatingTrade}
                 onProceed={initiateTransaction}
                 onBack={() => setSubStep(0)}
+                walletAddress={buyWalletAddress}
+                onWalletAddressChange={setBuyWalletAddress}
+                selectedNetwork={buyNetwork}
+                onNetworkChange={setBuyNetwork}
               />) : null}
             </motion.div>
           )}
@@ -296,6 +306,8 @@ export default function DashboardTrade() {
                 handleSubmitPaymentProof={makePaymentTransaction}
                 formatReceiveAmount={formatReceiveAmount}
                 formatSendAmount={formatSendAmount}
+                buyWalletAddress={buyWalletAddress}
+                buyNetwork={buyNetwork}
                 onBack={() => {
                   if (isBuy) {
                     setStep(1); setSubStep(1);
@@ -317,6 +329,12 @@ export default function DashboardTrade() {
                 bankAccounts={userBankAccounts}
                 cryptoAccounts={userCryptoWallets}
                 selectedTokenNetworks={selectedToken?.networks}
+                selectedToken={selectedToken ?? pendingBuyTokenRef.current}
+                selectedCurrency={selectedCurrency}
+                amountToBuy={amountToBuy}
+                numberOfToken={numberOfToken}
+                buyWalletAddress={buyWalletAddress}
+                buyNetwork={buyNetwork}
                 onProceed={handleConfirmBankDetails}
                 onBack={() => { togglePaymentReceivingModal(false); setStep(2); }}
               />

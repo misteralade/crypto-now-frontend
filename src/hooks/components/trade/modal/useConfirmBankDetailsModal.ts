@@ -104,9 +104,10 @@ export const useConfirmBankDetailsModal = (
     dispatch(setSelectedWalletAccountId(walletId))
   };
   
-  const handleSubmitWalletDetails = async () => {
-    if (newCryptoWallet) {
-      const response = await createUserCryptoWalletMutation.mutateAsync(newCryptoWallet)
+  const handleSubmitWalletDetails = async (overrideWallet?: { walletAddress: string; network: string; isVerified?: boolean; isPrimary?: boolean }) => {
+    const walletPayload = overrideWallet ?? newCryptoWallet;
+    if (walletPayload) {
+      const response = await createUserCryptoWalletMutation.mutateAsync(overrideWallet ?? undefined)
       if (response.success && response.data) {
         // Capture the wallet ID from the API response
         const walletId = response.data;
