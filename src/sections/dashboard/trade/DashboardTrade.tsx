@@ -41,7 +41,8 @@ export default function DashboardTrade() {
   const [hasChosenMode, setHasChosenMode] = useState<boolean>(!!routeOption);
   // Local pending token for sell flow (the hook's useEffect resets selectedToken so we track locally)
   const [pendingSellToken, setPendingSellToken] = useState<import("../../../types/response.payload.types.ts").SupportedCryptoOrCurrencyResponse | undefined>();
-  // Ref to hold the last token selected for buy (persists across hook-triggered re-renders)
+  // State + ref to hold the token selected for buy (state drives UI, ref survives hook re-render resets)
+  const [pendingBuyToken, setPendingBuyToken] = useState<import("../../../types/response.payload.types.ts").SupportedCryptoOrCurrencyResponse | undefined>();
   const pendingBuyTokenRef = useRef<import("../../../types/response.payload.types.ts").SupportedCryptoOrCurrencyResponse | undefined>();
   // Lifted wallet+network state from Step 1b so Step 3 shows a summary instead of re-asking
   const [buyWalletAddress, setBuyWalletAddress] = useState("");
@@ -134,9 +135,14 @@ export default function DashboardTrade() {
       const found = supportedCryptoCurrencies.find((t) => t.id === token);
       if (found) {
         setSelectedToken(found);
-        // Buy: go to step 1b; Sell: stay on step 1 with token selected (user must press CTA)
         if (activeTab === "buy") {
-          setSubStep(1);
+          setPendingBuyToken(found);
+          pendingBuyTokenRef.current = found;
+          const firstNetwork = found.networks?.[0] ?? "";
+          if (firstNetwork) setBuyNetwork(firstNetwork);
+          // Stay on step 1 — user must press CTA (same UX as sell)
+        } else {
+          setPendingSellToken(found);
         }
       }
     }
@@ -223,16 +229,17 @@ export default function DashboardTrade() {
               <DashboardTradeStep1
                 tradeType={activeTab}
                 availableTokens={(!loadingSupportedCryptocurrencies && supportedCryptoCurrencies) || []}
-                selectedToken={activeTab === "sell" ? pendingSellToken : selectedToken}
+                selectedToken={activeTab === "sell" ? pendingSellToken : pendingBuyToken}
                 setSelectedToken={(t) => {
                   if (activeTab === "buy") {
-                    // Store in ref immediately (survives hook re-render resets)
+                    // Store in both state (drives UI) and ref (survives hook re-render resets)
+                    setPendingBuyToken(t);
                     pendingBuyTokenRef.current = t;
                     setSelectedToken(t);
                     // Pre-set the network from the token's first supported network
                     const firstNetwork = t.networks?.[0] ?? "";
                     if (firstNetwork) setBuyNetwork(firstNetwork);
-                    setSubStep(1);
+                    // Don't auto-advance — user must press CTA (same UX as sell)
                   } else {
                     // Sell: store locally so hook's effect can't clobber it
                     setPendingSellToken(t);
@@ -247,7 +254,8 @@ export default function DashboardTrade() {
                     setSelectedToken(pendingSellToken);
                     initiateTransaction();
                   } else {
-                    if (!selectedToken) return;
+                    if (!pendingBuyToken) return;
+                    setSelectedToken(pendingBuyToken);
                     setSubStep(1);
                   }
                 }}
