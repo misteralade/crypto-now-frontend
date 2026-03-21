@@ -144,11 +144,9 @@ const TradeStepDisplay = ({ activeTab,setActiveTab, step, currency, token, setSt
     transactionSessionId,
     showPaymentReceivingModal,
     userBankAccounts,
-    userCryptoWallets,
     showUserEnterEmail,
     isLoadingPingUser,
     loadingSupportedCryptocurrencies,
-    loadingUserCryptoWallets,
     loadingUserBankAccounts,
     sellDepositWallet,
 
@@ -278,16 +276,15 @@ const TradeStepDisplay = ({ activeTab,setActiveTab, step, currency, token, setSt
           </div>
 
           {/*<PaymentConfirmationModal isOpen={showPaymentReceivingModal} />*/}
-          {!loadingUserCryptoWallets && !loadingUserBankAccounts &&
+          {!loadingUserBankAccounts &&
             <ConfirmBankDetailsModal
               isOpen={showPaymentReceivingModal}
               bankAccounts={userBankAccounts}
-              cryptoAccounts={userCryptoWallets}
               tradeType={activeTab}
               onProceed={handleConfirmBankDetails}
               setShowConfirmBankDetails={togglePaymentReceivingModal}
             />
-          } 
+          }
 
           <EmailModal
             open={showUserEnterEmail && !isLoadingPingUser}

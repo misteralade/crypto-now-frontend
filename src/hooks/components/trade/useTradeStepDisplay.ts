@@ -64,7 +64,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   const dispatch = useDispatch();
   const { userBankAccounts, loadingUserBankAccounts } = useBankQuery();
   const { supportedCurrencies } = useCurrencyQuery();
-  const { supportedCryptoCurrencies, loadingSupportedCryptocurrencies, userCryptoWallets, loadingUserCryptoWallets, custodialWallets, generateCustodialWalletMutation } = useCryptoQuery();
+  const { supportedCryptoCurrencies, loadingSupportedCryptocurrencies, custodialWallets, generateCustodialWalletMutation } = useCryptoQuery();
   const { calculatedAmount, loadingCalculation, initiateTransactionMutation, makePaymentTransactionMutation, receivingPaymentAccountConfirmationMutation } = useTransactionQuery();
   
   const [transactionSessionId, setTransactionSessionId] = useState<string>();
@@ -545,7 +545,6 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       (status === 'AWAITING_CRYPTO' || status === 'AWAITING_PAYMENT') &&
       shouldOpen &&
       !loadingUserBankAccounts &&
-      !loadingUserCryptoWallets &&
       currentStep === 2
     ) {
       setShowPaymentReceivingModal(true);
@@ -553,7 +552,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       saveTradeProgress({ shouldOpenBankDetailsModal: false });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionId, restoredTransaction, loadingUserBankAccounts, loadingUserCryptoWallets, currentStep, setShowPaymentReceivingModal]);
+  }, [sessionId, restoredTransaction, loadingUserBankAccounts, currentStep, setShowPaymentReceivingModal]);
 
   // Countdown
   useEffect(() => {
@@ -1459,12 +1458,10 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     isCountdownLocked,
     showPaymentReceivingModal,
     userBankAccounts,
-    userCryptoWallets,
     isInitiatingTrade: initiateTransactionMutation.isPending,
     showUserEnterEmail,
     isLoadingPingUser,
     loadingSupportedCryptocurrencies,
-    loadingUserCryptoWallets,
     loadingUserBankAccounts,
     hasAnonymousUserEmail,
     sellDepositWallet,

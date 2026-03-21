@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { CheckCircle, ChevronDown, X, Wallet, Copy, Check } from "lucide-react";
+import { CheckCircle, ChevronDown, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "@tanstack/react-router";
 import type {
   SupportedCryptoOrCurrencyResponse,
   UserBankAccountResponse,
-  UserCryptoWalletResponse,
   CustodialWalletResponse,
 } from "../../../types/response.payload.types.ts";
 import type { TradeType, TradeAdditionalInfoInterface } from "../../../types/trade.types.ts";
@@ -65,7 +64,6 @@ interface DashboardTradeStep1Props {
   selectedNetwork?: string;
   onNetworkChange?: (v: string) => void;
   orderDetails?: TradeAdditionalInfoInterface[];
-  savedWallets?: UserCryptoWalletResponse[] | null;
 
   // SELL-specific (payout bank)
   userBankAccounts?: UserBankAccountResponse[] | null;
@@ -107,35 +105,21 @@ function BuyFields({
   onWalletAddressChange?: (v: string) => void;
   selectedNetwork?: string;
   onNetworkChange?: (v: string) => void;
-  savedWallets?: UserCryptoWalletResponse[] | null;
 }) {
   const dispatch = useDispatch();
   const accentColor = "#948EEE";
   const tokenNetworks: string[] = selectedToken.networks ?? [];
   const [networkDropdownOpen, setNetworkDropdownOpen] = useState(false);
-  const [showSavedWallets, setShowSavedWallets] = useState(false);
-
-  const matchingSavedWallets = (savedWallets ?? []).filter(w => tokenNetworks.includes(w.network));
-  const filteredWallets = walletAddress?.trim()
-    ? matchingSavedWallets.filter(w => w.walletAddress.toLowerCase().includes((walletAddress ?? "").toLowerCase()))
-    : matchingSavedWallets;
 
   const handleWalletChange = (val: string) => {
     onWalletAddressChange?.(val);
     dispatch(setInitiateTransactionField({ field: "walletAddress" as any, value: val }));
-    if (val.trim()) setShowSavedWallets(true);
   };
 
   const handleNetworkSelect = (net: string) => {
     setNetworkDropdownOpen(false);
     onNetworkChange?.(net);
     dispatch(setInitiateTransactionField({ field: "network" as any, value: net }));
-  };
-
-  const handleSelectSavedWallet = (wallet: UserCryptoWalletResponse) => {
-    handleWalletChange(wallet.walletAddress);
-    handleNetworkSelect(wallet.network);
-    setShowSavedWallets(false);
   };
 
   // Auto-set currency to NGN
@@ -196,79 +180,27 @@ function BuyFields({
       </div>
 
       {/* Wallet address */}
-      <div className="relative">
-        <div className="rounded-2xl px-4 py-3" style={{ background: "#F7F7F9", border: "1px solid #EEEEEE" }}>
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-[10px] font-bold tracking-widest uppercase" style={{ color: "#9A9A9A" }}>
-              Your Wallet Address
-            </p>
-            {matchingSavedWallets.length > 0 && !walletAddress && (
-              <button type="button" onClick={() => setShowSavedWallets(!showSavedWallets)}
-                className="text-[10px] font-bold" style={{ color: accentColor }}>
-                {showSavedWallets ? "Hide" : `${matchingSavedWallets.length} saved`}
-              </button>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              value={walletAddress ?? ""}
-              onChange={(e) => handleWalletChange(e.target.value)}
-              onFocus={() => matchingSavedWallets.length > 0 && setShowSavedWallets(true)}
-              placeholder="Paste your wallet address here"
-              className="flex-1 bg-transparent text-sm outline-none"
-              style={{ color: "#0E0F0C", minWidth: 0 }}
-            />
-            {walletAddress && (
-              <button type="button" onClick={() => { handleWalletChange(""); setShowSavedWallets(false); }}
-                className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center"
-                style={{ background: "#E0E0E0" }}>
-                <X size={10} style={{ color: "#6B6E6B" }} />
-              </button>
-            )}
-          </div>
-        </div>
-
-        <AnimatePresence>
-          {showSavedWallets && filteredWallets.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.15 }}
-              className="absolute left-0 right-0 z-20 mt-1 rounded-2xl overflow-hidden max-h-64 overflow-y-auto"
-              style={{ background: "#FFFFFF", border: "1px solid #EEEEEE", boxShadow: "0 8px 24px rgba(0,0,0,0.10)" }}
-            >
-              {filteredWallets.map((wallet, idx) => {
-                const shortAddr = wallet.walletAddress.length > 30
-                  ? `${wallet.walletAddress.slice(0, 16)}…${wallet.walletAddress.slice(-12)}`
-                  : wallet.walletAddress;
-                return (
-                  <button key={wallet.id} type="button"
-                    onClick={() => handleSelectSavedWallet(wallet)}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50"
-                    style={{ borderBottom: idx < filteredWallets.length - 1 ? "1px solid #F7F7F9" : "none" }}>
-                    <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: "#F0EFFD" }}>
-                      <Wallet size={14} style={{ color: accentColor }} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold truncate" style={{ color: "#0E0F0C" }}>
-                        {wallet.walletLabel || shortAddr}
-                      </p>
-                      <p className="text-[10px] font-mono truncate mt-0.5" style={{ color: "#9A9A9A" }}>
-                        {shortAddr} · {wallet.network}
-                      </p>
-                    </div>
-                    {wallet.isPrimary && (
-                      <span className="shrink-0 text-[9px] font-bold px-2 py-0.5 rounded-full"
-                        style={{ background: "#E8F8F0", color: "#037847" }}>
-                        PRIMARY
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </motion.div>
+      <div className="rounded-2xl px-4 py-3" style={{ background: "#F7F7F9", border: "1px solid #EEEEEE" }}>
+        <p className="text-[10px] font-bold tracking-widest uppercase mb-2" style={{ color: "#9A9A9A" }}>
+          Your Wallet Address
+        </p>
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            value={walletAddress ?? ""}
+            onChange={(e) => handleWalletChange(e.target.value)}
+            placeholder="Paste your wallet address here"
+            className="flex-1 bg-transparent text-sm outline-none"
+            style={{ color: "#0E0F0C", minWidth: 0 }}
+          />
+          {walletAddress && (
+            <button type="button" onClick={() => handleWalletChange("")}
+              className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center"
+              style={{ background: "#E0E0E0" }}>
+              <X size={10} style={{ color: "#6B6E6B" }} />
+            </button>
           )}
-        </AnimatePresence>
+        </div>
       </div>
 
       {/* Network selector */}

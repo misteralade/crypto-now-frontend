@@ -1,6 +1,6 @@
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {toast} from "react-toastify";
-import {useMatchRoute} from "@tanstack/react-router";
+import {useMatchRoute, useLocation} from "@tanstack/react-router";
 import {QUERY_KEYS} from "./query.keys.ts";
 import {transactionServiceApi} from "../api/transaction.api.ts";
 import {type RootState, store} from "../store.ts";
@@ -14,6 +14,11 @@ import { useSelector } from "react-redux";
 export const useTransactionQuery = () => {
   const queryClient = useQueryClient();
   const matchRoute = useMatchRoute();
+  const location = useLocation();
+  // Include /dashboard/trade etc. so layout + bell can read pending counts off the home route match.
+  const isDashboardShell =
+    location.pathname === ROUTES.DASHBOARD ||
+    location.pathname.startsWith(`${ROUTES.DASHBOARD}/`);
   const searchTransactionPayload = useSelector((state: RootState) => state.transaction.dashboard.searchUserTransactions);
 
   // Calculate Amount to Receive
@@ -39,7 +44,11 @@ export const useTransactionQuery = () => {
     enabled: !!store.getState().transaction.exchangeRateId && !!store.getState().transaction.amountToSend && Number(store.getState().transaction?.amountToSend) > 0,
   });
 
-  const { data: userTransactionHistory, isLoading: loadingUserTransactionHistory } = useQuery({
+  const {
+    data: userTransactionHistory,
+    isLoading: loadingUserTransactionHistory,
+    isFetching: fetchingUserTransactionHistory,
+  } = useQuery({
     queryKey: [QUERY_KEYS.TRANSACTION.USER_SEARCH_TRANSACTION_HISTORY, searchTransactionPayload],
     queryFn: async () => {
       if (!searchTransactionPayload) {
@@ -54,7 +63,7 @@ export const useTransactionQuery = () => {
 
       return null;
     },
-    enabled: !!(store.getState() as RootState)?.transaction?.dashboard?.searchUserTransactions && !!matchRoute({ to: ROUTES.DASHBOARD }),
+    enabled: !!searchTransactionPayload && isDashboardShell,
     staleTime: TIME_IN_MILLISECONDS.ONE_HUNDRED_TWENTY_SECONDS,
     retry: 1,
   });
@@ -86,7 +95,7 @@ export const useTransactionQuery = () => {
 
       return null;
     },
-    enabled: !!matchRoute({ to: ROUTES.DASHBOARD }),
+    enabled: isDashboardShell,
   })
 
   // Get transaction Details
@@ -237,12 +246,11 @@ export const useTransactionQuery = () => {
       toast.loading(`Confirming receiving account...`, { toastId: 'confirm-receiving-account' });
       const rootState = store.getState() as RootState;
       const transactionSessionId = sessionStorage.getItem(SESSION_STORAGE_KEYS.SESSION_ID);
-      const walletId = rootState.crypto.tradeCrypto?.selectedWalletId;
       const accountId = rootState.bank.tradeCrypto?.selectedBankAccountId;
       const userEmail = rootState.user.trade.anonymous.email;
 
-      if (!walletId && !accountId) {
-        throw new Error("Either walletId or accountId must be provided, and sessionId must exist");
+      if (!accountId) {
+        throw new Error("accountId must be provided, and sessionId must exist");
       }
 
       if (!transactionSessionId) {
@@ -251,14 +259,12 @@ export const useTransactionQuery = () => {
       
       if (userEmail) {
         return await transactionServiceApi.confirmAnonymousUserReceivingPaymentAccount(transactionSessionId, {
-          walletId,
           accountId,
           email: userEmail,
         })
       }
-      
+
       return await transactionServiceApi.confirmReceivingPaymentAccount(transactionSessionId, {
-        walletId,
         accountId,
       });
     },
@@ -392,6 +398,7 @@ export const useTransactionQuery = () => {
     loadingCalculation,
     userTransactionHistory,
     loadingUserTransactionHistory,
+    fetchingUserTransactionHistory,
     transactionSummary,
     loadingTransactionSummary,
     incompleteTransactionsCount,

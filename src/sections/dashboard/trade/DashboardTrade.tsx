@@ -95,10 +95,10 @@ export default function DashboardTrade() {
   const {
     selectedToken, numberOfToken, AdditionalInfo, amountToBuy,
     selectedCurrency, supportedCurrencies, supportedCryptoCurrencies,
-    exchangeRateId, isInitiatingTrade, loadingExchangeRate, transactionSessionId,
-    showPaymentReceivingModal, userBankAccounts, userCryptoWallets,
+    exchangeRateId, countdown, isInitiatingTrade, loadingExchangeRate, transactionSessionId,
+    showPaymentReceivingModal, userBankAccounts,
     showUserEnterEmail, isLoadingPingUser,
-    loadingSupportedCryptocurrencies, loadingUserCryptoWallets, loadingUserBankAccounts,
+    loadingSupportedCryptocurrencies, loadingUserBankAccounts,
     setAmountToBuy, setSelectedCurrency, setSelectedToken,
     handleReceiptUrl, handleTransactionHash, initiateTransaction,
     makePaymentTransaction, handleConfirmBankDetails,
@@ -286,7 +286,6 @@ export default function DashboardTrade() {
                 selectedNetwork={buyNetwork}
                 onNetworkChange={setBuyNetwork}
                 orderDetails={AdditionalInfo}
-                savedWallets={userCryptoWallets}
                 // SELL-specific props
                 userBankAccounts={userBankAccounts}
                 selectedPayoutAccountId={sellPayoutAccountId}
@@ -311,6 +310,7 @@ export default function DashboardTrade() {
                 selectedToken={selectedToken}
                 selectedCurrency={selectedCurrency}
                 exchangeRateId={exchangeRateId}
+                rateLockCountdown={countdown}
                 transactionRef={transactionSessionId}
                 additionalInfo={AdditionalInfo}
                 handleReceiptUrl={handleReceiptUrl}
@@ -333,14 +333,13 @@ export default function DashboardTrade() {
           )}
 
           {/* STEP 3 — confirm receiving wallet (BUY only) */}
-          {step === 3 && isBuy && !loadingUserCryptoWallets && !loadingUserBankAccounts && (
+          {step === 3 && isBuy && !loadingUserBankAccounts && (
             <motion.div key="s3"
               initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 16 }} transition={{ duration: 0.2 }}>
               <DashboardTradeStep3
                 tradeType={activeTab}
                 bankAccounts={userBankAccounts}
-                cryptoAccounts={userCryptoWallets}
                 selectedTokenNetworks={selectedToken?.networks}
                 selectedToken={selectedToken ?? pendingBuyTokenRef.current}
                 selectedCurrency={selectedCurrency}

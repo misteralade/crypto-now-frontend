@@ -3,13 +3,13 @@
  *
  * BUY sub-views:
  *   "bank"   — purple hero card + blue bank card + warning + "I've Paid" CTA (frame 124)
- *   "upload" — YOUR ORDER table + dashed upload zone + Submit/Skip (frame 133)
+ *   "upload" — YOUR ORDER table + dashed upload zone + Submit (frame 133)
  *
  * SELL sub-views:
  *   "wallet"     — loading → wallet active (frames 156 / 158)
  *   "monitoring" — 4-step animated tracker (frames 172 / 203)
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { Copy, Check, ArrowLeft, ArrowRight, Upload } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { SupportedCryptoOrCurrencyResponse, UserBankAccountResponse } from "../../../types/response.payload.types.ts";
@@ -39,6 +39,8 @@ interface DashboardTradeStep2Props {
   buyNetwork?: string;
   /** Payout bank account for sell flow */
   payoutBank?: UserBankAccountResponse;
+  /** Live label from useTradeStepDisplay (e.g. "2m 15s", "Expired") — quotes expire after ~3 minutes server-side */
+  rateLockCountdown?: string;
 }
 
 /* ── helpers ── */
@@ -57,6 +59,36 @@ function CopyToast({ visible }: { visible: boolean }) {
         </motion.div>
       )}
     </AnimatePresence>
+  );
+}
+
+// Shows how long the locked exchange rate remains valid (backend uses a 3-minute window).
+function RateLockBanner({ countdown, variant }: { countdown: string; variant: "ok" | "expired" }) {
+  if (!countdown || countdown === "Rate Locked") return null;
+  const expired = variant === "expired" || countdown === "Expired";
+  return (
+    <div
+      className="flex items-start gap-2.5 rounded-2xl px-4 py-3"
+      style={{
+        background: expired ? "#FEECEC" : "#F0EFFD",
+        border: `1px solid ${expired ? "#F5C4C4" : "#C7CAFF"}`,
+      }}
+    >
+      <span className="text-sm shrink-0 mt-0.5" aria-hidden>{expired ? "⏱️" : "🔒"}</span>
+      <p className="text-[11px] leading-relaxed" style={{ color: expired ? "#8B2E2E" : "#3D3A7A" }}>
+        {expired ? (
+          <>
+            <strong>Rate expired.</strong> Locked quotes last 3 minutes. Go back one step and confirm your amount again to get a fresh rate before paying or uploading a receipt.
+          </>
+        ) : (
+          <>
+            <strong>Rate locked 3 minutes.</strong> Complete transfer and receipt within{" "}
+            <span className="font-extrabold tabular-nums">{countdown}</span>
+            {" "}or start over from the previous step for a new quote.
+          </>
+        )}
+      </p>
+    </div>
   );
 }
 
@@ -274,27 +306,32 @@ function SellMonitoringView({ selectedToken, payoutBank }: { selectedToken?: Sup
 
 /* ── BUY: Upload receipt view ── */
 function BuyUploadView({
-  selectedToken, numberOfToken, amountToBuy, walletAddress, network,
-  submitInvalid, handleReceiptUrl, setUploadedFileUrl, onSubmit, onSkip,
+  selectedToken, numberOfToken, fiatAmountPaidDisplay, walletAddress, network,
+  submitInvalid, handleReceiptUrl, setUploadedFileUrl, onSubmit,
+  rateLockCountdown,
+  isRateExpired,
 }: {
   selectedToken?: SupportedCryptoOrCurrencyResponse;
   numberOfToken: number;
-  amountToBuy: number;
+  fiatAmountPaidDisplay: ReactNode;
   walletAddress: string;
   network: string;
   submitInvalid: boolean;
   handleReceiptUrl: (url: string) => void;
   setUploadedFileUrl: (url: string | undefined) => void;
   onSubmit: () => void;
-  onSkip: () => void;
+  rateLockCountdown?: string;
+  isRateExpired: boolean;
 }) {
   const tableRows = [
     { label: "Crypto", value: selectedToken?.symbol ?? "—" },
-    { label: "Amount Paid", value: `$${amountToBuy}` },
+    { label: "Amount Paid", value: fiatAmountPaidDisplay },
     { label: "You'll Receive", value: `${numberOfToken} ${selectedToken?.symbol ?? ""}` },
     { label: "Wallet", value: walletAddress ? `${walletAddress.slice(0, 8)}…${walletAddress.slice(-6)}` : "—" },
     { label: "Network", value: network || "—" },
   ];
+
+  const ctaDisabled = submitInvalid || isRateExpired;
 
   return (
     <div className="flex flex-col gap-4">
@@ -302,6 +339,10 @@ function BuyUploadView({
         <p className="text-base font-extrabold" style={{ color: "#0E0F0C" }}>Upload a Screenshot</p>
         <p className="text-[11px] mt-0.5" style={{ color: "#9A9A9A" }}>Of your transfer receipt</p>
       </div>
+
+      {rateLockCountdown ? (
+        <RateLockBanner countdown={rateLockCountdown} variant={isRateExpired ? "expired" : "ok"} />
+      ) : null}
 
       {/* YOUR ORDER table */}
       <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid #EEEEEE" }}>
@@ -339,25 +380,18 @@ function BuyUploadView({
       {/* Submit */}
       <button
         type="button"
-        disabled={submitInvalid}
+        disabled={ctaDisabled}
         onClick={onSubmit}
         className="w-full py-4 rounded-2xl text-sm font-bold transition-all"
         style={{
-          background: !submitInvalid ? "linear-gradient(135deg,#948EEE,#6B45D0)" : "#F0F0F0",
-          color: !submitInvalid ? "#FFFFFF" : "#9A9A9A",
-          boxShadow: !submitInvalid ? "0 6px 20px #948EEE44" : "none",
+          background: !ctaDisabled ? "linear-gradient(135deg,#948EEE,#6B45D0)" : "#F0F0F0",
+          color: !ctaDisabled ? "#FFFFFF" : "#9A9A9A",
+          boxShadow: !ctaDisabled ? "0 6px 20px #948EEE44" : "none",
         }}>
         <span className="inline-flex items-center gap-2">
           <span>Submit Receipt</span>
           <ArrowRight size={16} />
         </span>
-      </button>
-
-      {/* Skip */}
-      <button type="button" onClick={onSkip}
-        className="w-full py-2 text-xs font-semibold text-center"
-        style={{ color: "#9A9A9A" }}>
-        Skip — I'll upload later
       </button>
     </div>
   );
@@ -372,6 +406,7 @@ export default function DashboardTradeStep2({
   exchangeRateId,
   handleReceiptUrl, handleSubmitPaymentProof,
   formatSendAmount, onBack, buyWalletAddress, buyNetwork, payoutBank,
+  rateLockCountdown = "",
 }: DashboardTradeStep2Props) {
   const isBuy = tradeType === "buy";
 
@@ -402,6 +437,8 @@ export default function DashboardTradeStep2({
   const payAmount = storedYouPay
     ? storedYouPay
     : formatSendAmount(amountToBuy.toLocaleString(), selectedCurrency?.code);
+
+  const isRateExpired = rateLockCountdown === "Expired";
 
   const handleCopyAccount = () => {
     navigator.clipboard.writeText(accountNumber).then(() => {
@@ -468,14 +505,15 @@ export default function DashboardTradeStep2({
         <BuyUploadView
           selectedToken={selectedToken}
           numberOfToken={numberOfToken}
-          amountToBuy={amountToBuy}
+          fiatAmountPaidDisplay={payAmount}
           walletAddress={buyWalletAddress ?? ""}
           network={buyNetwork ?? ""}
           submitInvalid={submitInvalid}
           handleReceiptUrl={handleReceiptUrl}
           setUploadedFileUrl={setUploadedFileUrl}
           onSubmit={handleSubmitPaymentProof}
-          onSkip={handleSubmitPaymentProof}
+          rateLockCountdown={rateLockCountdown}
+          isRateExpired={isRateExpired}
         />
       </div>
     );
@@ -490,6 +528,10 @@ export default function DashboardTradeStep2({
 
         <BackHeader onBack={onBack} title="Make Payment" sub="Transfer exact amount to bank" />
 
+        {rateLockCountdown ? (
+          <RateLockBanner countdown={rateLockCountdown} variant={isRateExpired ? "expired" : "ok"} />
+        ) : null}
+
         {/* Purple amount hero */}
         <div className="rounded-2xl p-5 text-center"
           style={{
@@ -503,7 +545,8 @@ export default function DashboardTradeStep2({
             {typeof payAmount === "string" ? payAmount : <span>{payAmount}</span>}
           </p>
           <p className="text-xs text-white/50 mt-1.5">
-            = ${amountToBuy} at ₦{selectedToken?.buyRate ? Number(selectedToken.buyRate).toLocaleString() : "—"}/$1
+            = {formatSendAmount(amountToBuy.toLocaleString(), selectedCurrency?.code)} at ₦
+            {selectedToken?.buyRate ? Number(selectedToken.buyRate).toLocaleString() : "—"}/$1
           </p>
           <p className="text-xs text-white/70 mt-1">
             You'll receive {numberOfToken} {selectedToken?.symbol}
@@ -555,11 +598,12 @@ export default function DashboardTradeStep2({
 
         {/* CTA */}
         <button type="button" onClick={() => setBuyView("upload")}
-          className="w-full py-4 rounded-2xl text-sm font-bold flex items-center justify-center gap-2"
+          disabled={isRateExpired}
+          className="w-full py-4 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           style={{
-            background: "linear-gradient(135deg,#948EEE,#6B45D0)",
+            background: isRateExpired ? "#D8D8D8" : "linear-gradient(135deg,#948EEE,#6B45D0)",
             color: "#FFFFFF",
-            boxShadow: "0 6px 20px #948EEE44",
+            boxShadow: isRateExpired ? "none" : "0 6px 20px #948EEE44",
           }}>
           <Upload size={16} />
           <span>I've Paid — Upload Receipt</span>

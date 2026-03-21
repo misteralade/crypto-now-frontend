@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Copy, Check, RefreshCw, Wallet } from "lucide-react";
+import { Copy, Check, Wallet } from "lucide-react";
 import { useCryptoQuery } from "../../../queries/crypto.query.ts";
 import type { CustodialWalletResponse } from "../../../types/response.payload.types.ts";
 
@@ -120,6 +120,7 @@ export default function DashboardWalletsContent() {
 
   const isGenerating = generateAllCustodialWalletsMutation.isPending;
 
+  // One-shot generate when user has no wallets (addresses are stable after creation).
   const handleGenerateAll = () => {
     generateAllCustodialWalletsMutation.mutate();
   };
@@ -129,28 +130,16 @@ export default function DashboardWalletsContent() {
       <div className="px-5 pt-6 pb-32 lg:px-0 lg:pt-0 lg:pb-0">
 
         {/* Header */}
-        <div className="mb-6 flex items-start justify-between gap-4">
-          <div>
-            <p className="text-[10px] font-bold tracking-[0.12em] uppercase mb-0.5" style={{ color: "#9A9A9A" }}>
-              Deposit Wallets
-            </p>
-            <h2 className="text-xl font-extrabold" style={{ color: "#0E0F0C", letterSpacing: "-0.02em" }}>
-              Your Crypto Wallets
-            </h2>
-            <p className="text-xs mt-1 max-w-sm" style={{ color: "#9A9A9A" }}>
-              Send crypto to any address below and receive NGN instantly to your bank account — no extra steps needed.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={handleGenerateAll}
-            disabled={isGenerating}
-            className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all disabled:opacity-50"
-            style={{ background: "#F0EFFD", color: "#575AE5", border: "1px solid #C7CAFF" }}
-          >
-            <RefreshCw size={13} className={isGenerating ? "animate-spin" : ""} />
-            {isGenerating ? "Generating…" : "Refresh"}
-          </button>
+        <div className="mb-6">
+          <p className="text-[10px] font-bold tracking-[0.12em] uppercase mb-0.5" style={{ color: "#9A9A9A" }}>
+            Deposit Wallets
+          </p>
+          <h2 className="text-xl font-extrabold" style={{ color: "#0E0F0C", letterSpacing: "-0.02em" }}>
+            Your Crypto Wallets
+          </h2>
+          <p className="text-xs mt-1 max-w-sm" style={{ color: "#9A9A9A" }}>
+            Send crypto to any address below and receive NGN instantly to your bank account — no extra steps needed.
+          </p>
         </div>
 
         {/* How it works banner */}

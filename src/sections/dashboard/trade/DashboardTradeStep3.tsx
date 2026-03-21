@@ -5,7 +5,7 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import type { TradeType } from "../../../types/trade.types.ts";
-import type { SupportedCryptoOrCurrencyResponse, UserBankAccountResponse, UserCryptoWalletResponse } from "../../../types/response.payload.types.ts";
+import type { SupportedCryptoOrCurrencyResponse, UserBankAccountResponse } from "../../../types/response.payload.types.ts";
 import { useConfirmBankDetailsModal } from "../../../hooks/components/trade/modal/useConfirmBankDetailsModal.ts";
 import ChangeBankDetails from "../../trade-crypto/ChangeBankDetails.tsx";
 import { Check, ArrowLeft, ArrowRight, Wallet } from "lucide-react";
@@ -14,7 +14,6 @@ import { setSelectedCryptoId } from "../../../redux/crypto.slice.ts";
 interface DashboardTradeStep3Props {
   tradeType: TradeType;
   bankAccounts: UserBankAccountResponse[] | undefined;
-  cryptoAccounts: UserCryptoWalletResponse[] | undefined | null;
   selectedTokenNetworks?: string[];
   /** Full selected token (buy flow) */
   selectedToken?: SupportedCryptoOrCurrencyResponse;
@@ -33,7 +32,7 @@ interface DashboardTradeStep3Props {
 }
 
 export default function DashboardTradeStep3({
-  tradeType, bankAccounts, cryptoAccounts, selectedTokenNetworks: _selectedTokenNetworks,
+  tradeType, bankAccounts, selectedTokenNetworks: _selectedTokenNetworks,
   selectedToken, selectedCurrency, amountToBuy, numberOfToken,
   buyWalletAddress, buyNetwork, onProceed, onBack,
 }: DashboardTradeStep3Props) {
@@ -41,9 +40,9 @@ export default function DashboardTradeStep3({
   const {
     selectedBankId, selectedBank, viewState,
     handleBankSelection, setViewState,
-    handleSubmitBankDetails, handleSubmitWalletDetails,
+    handleSubmitBankDetails,
     handleViewSelectedBankDetails,
-  } = useConfirmBankDetailsModal(cryptoAccounts ?? [], bankAccounts ?? [], tradeType, onProceed, () => {});
+  } = useConfirmBankDetailsModal(bankAccounts ?? [], tradeType, onProceed, () => {});
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -64,14 +63,8 @@ export default function DashboardTradeStep3({
       if (!buyWalletAddress || !buyNetwork || !selectedToken?.id) return;
       setIsSubmitting(true);
       try {
-        // Ensure Redux has the selected crypto ID so createUserCryptoWalletMutation works
         dispatch(setSelectedCryptoId(selectedToken.id));
-        await handleSubmitWalletDetails({
-          walletAddress: buyWalletAddress,
-          network: buyNetwork,
-          isVerified: true,
-          isPrimary: false,
-        });
+        onProceed(3);
       } finally {
         setIsSubmitting(false);
       }

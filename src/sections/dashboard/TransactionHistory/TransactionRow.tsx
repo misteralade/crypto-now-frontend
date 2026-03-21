@@ -1,11 +1,9 @@
-import { ArrowDownToLine } from "lucide-react";
 import type { TransactionResponseEntity } from "../../../types/response.payload.types.ts";
 import CopyAccountDetails from "../../trade-crypto/CopyAccountDetails.tsx";
 import momentClient from "../../../lib/moment.ts";
 import { getStatusColor, getStatusDot, getStatusDisplayName } from "../../../util/transaction.util.ts";
 import { useNavigate } from "@tanstack/react-router";
 import { ROUTES } from "../../../util/constants.util.ts";
-import { useTransactionQuery } from "../../../queries/transaction.query.ts";
 import { convertToMillify } from "../../../util/index.util.ts";
 
 interface TransactionRowProps {
@@ -15,7 +13,6 @@ interface TransactionRowProps {
 }
 
 const TransactionRow = ({ transaction: tx, isLast, isMobileCard = false }: TransactionRowProps) => {
-  const { downloadSingleTransactionMutation } = useTransactionQuery();
   const navigate = useNavigate();
 
   const isBuy = tx.type.toUpperCase() === "BUY";
@@ -52,18 +49,6 @@ const TransactionRow = ({ transaction: tx, isLast, isMobileCard = false }: Trans
         token: tx.cryptocurrencyId || "",
       } as any,
     });
-  const handleDownload = async () => {
-    const { success, data } = await downloadSingleTransactionMutation.mutateAsync(tx.sessionId);
-    if (success && data) {
-      const url  = URL.createObjectURL(new Blob([data], { type: "text/csv" }));
-      const link = Object.assign(document.createElement("a"), { href: url, download: `${tx.sessionId}.csv` });
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    }
-  };
-
   /* ══ MOBILE CARD — matches inspiration exactly ══ */
   if (isMobileCard) {
     return (
@@ -106,7 +91,7 @@ const TransactionRow = ({ transaction: tx, isLast, isMobileCard = false }: Trans
           <div className="mt-2.5 ml-14 grid grid-cols-3 gap-2">
             {[
               { label: "CRYPTO",  val: `${Number(tx.amountCrypto).toFixed(4)} ${tx.cryptocurrency.symbol}` },
-              { label: "NETWORK", val: tx.userCryptoWallet?.network ?? tx.adminCryptoWallet?.network ?? "—" },
+              { label: "NETWORK", val: tx.userCryptoWallet?.network ?? tx.adminCryptoWallet?.network ?? tx.cryptocurrency.networks?.[0] ?? "—" },
               { label: "RATE",    val: `₦${convertToMillify(Number(tx.stableToFiatRate), 0)}/${tx.cryptocurrency.symbol}` },
             ].map(({ label, val }) => (
               <div key={label}>
@@ -181,41 +166,14 @@ const TransactionRow = ({ transaction: tx, isLast, isMobileCard = false }: Trans
       <td className="px-5 py-4 text-sm" style={{ color: "#6B6E6B" }}>
         ₦{convertToMillify(Number(tx.stableToFiatRate), 0)}
       </td>
+      <td className="px-5 py-4 text-sm font-medium" style={{ color: "#6B6E6B" }}>
+        {tx.userCryptoWallet?.network ?? tx.adminCryptoWallet?.network ?? tx.cryptocurrency.networks?.[0] ?? "—"}
+      </td>
       <td className="px-5 py-4">
         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusColor(tx.status)}`}>
           <span className={`w-1.5 h-1.5 rounded-full ${getStatusDot(tx.status)}`} />
           {getStatusDisplayName(tx.status)}
         </span>
-      </td>
-      <td className="px-5 py-4" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center gap-1.5">
-          <button
-            disabled={!["COMPLETED", "FAILED"].includes(tx.status)}
-            onClick={handleDownload}
-            className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-30">
-            <ArrowDownToLine size={15} style={{ color: "#575AE5" }} />
-          </button>
-          <button
-            onClick={handleView}
-            className="px-3 py-1 rounded-full text-xs font-semibold"
-            style={{ background: "#F0EFFD", color: "#575AE5" }}>
-            View
-          </button>
-          {canDispute && (
-            <button onClick={handleDispute}
-              className="px-3 py-1 rounded-full text-xs font-semibold"
-              style={{ background: "#FEECEC", color: "#EB5757" }}>
-              Dispute
-            </button>
-          )}
-          {canContinue && (
-            <button onClick={handleContinue}
-              className="px-3 py-1 rounded-full text-xs font-semibold"
-              style={{ background: "#ECFDF3", color: "#037847" }}>
-              Continue
-            </button>
-          )}
-        </div>
       </td>
     </tr>
   );

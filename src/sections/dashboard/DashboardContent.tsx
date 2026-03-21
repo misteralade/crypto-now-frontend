@@ -6,7 +6,6 @@ import { useDashboardContent } from "../../hooks/components/dashboard/useDashboa
 import { useCryptoQuery } from "../../queries/crypto.query.ts";
 import { useUserQuery } from "../../queries/user.query.ts";
 import { useTransactionQuery } from "../../queries/transaction.query.ts";
-import { TransactionDashboard } from "./TransactionHistory/TransactionDashboard.tsx";
 import type {
   TransactionResponseEntity,
   SupportedCryptoOrCurrencyResponse,
@@ -39,6 +38,9 @@ function RateChip({ crypto }: { crypto: SupportedCryptoOrCurrencyResponse }) {
         <p className="text-xs font-bold leading-none" style={{ color: "#0E0F0C" }}>{crypto.symbol}</p>
         <p className="text-[10px] leading-none mt-0.5" style={{ color: "#948EEE" }}>
           BUY {formatCurrency(Number(crypto.buyRate))}
+        </p>
+        <p className="text-[10px] leading-none mt-0.5" style={{ color: "#037847" }}>
+          SELL {formatCurrency(Number(crypto.sellRate))}
         </p>
       </div>
     </div>
@@ -160,7 +162,7 @@ export default function DashboardContent() {
   const { transactionSummary, loadingTransactionSummary } = useDashboardContent();
   const { supportedCryptoCurrencies, loadingSupportedCryptocurrencies, custodialWallets, loadingCustodialWallets } = useCryptoQuery();
   const { userProfileData, loadingUserProfile } = useUserQuery();
-  const { userTransactionHistory, loadingUserTransactionHistory } = useTransactionQuery();
+  const { userTransactionHistory, loadingUserTransactionHistory, incompleteTransactionsCount } = useTransactionQuery();
 
   const firstName = userProfileData?.profile?.firstName ?? "";
   const lastName  = userProfileData?.profile?.lastName  ?? "";
@@ -212,11 +214,18 @@ export default function DashboardContent() {
             </h2>
           )}
         </div>
-        {/* TODO: connect to notifications API */}
-        <button className="relative mt-1 w-10 h-10 rounded-full flex items-center justify-center"
-          style={{ background: "#F7F7F9" }}>
+        {/* Opens history — closest to in-app notifications until a dedicated feed exists */}
+        <button
+          type="button"
+          onClick={() => navigate({ to: ROUTES.TRANSACTION })}
+          aria-label="View orders and transaction updates"
+          className="relative mt-1 w-10 h-10 rounded-full flex items-center justify-center"
+          style={{ background: "#F7F7F9" }}
+        >
           <Bell size={18} style={{ color: "#0E0F0C" }} />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#EB5757] border-2 border-white" />
+          {typeof incompleteTransactionsCount === "number" && incompleteTransactionsCount > 0 ? (
+            <span className="absolute top-1.5 right-1.5 min-w-[8px] h-2 px-0.5 rounded-full bg-[#EB5757] border-2 border-white" aria-hidden />
+          ) : null}
         </button>
       </div>
 
@@ -516,10 +525,6 @@ export default function DashboardContent() {
           )}
         </section>
 
-        {/* FULL TRANSACTION TABLE (desktop) / hidden on mobile (mobile sees recent orders above) */}
-        <div className="hidden lg:block">
-          <TransactionDashboard />
-        </div>
       </div>
     </div>
   );
