@@ -13,8 +13,9 @@ import { setInitiateTransactionField } from "../../../redux/transaction.slice.ts
 import { setSelectedCryptoId } from "../../../redux/crypto.slice.ts";
 import { ROUTES } from "../../../util/constants.util.ts";
 
-// ── Quick NGN chips ──────────────────────────────────────────────────────────
-const QUICK_AMOUNTS = [5000, 10000, 20000, 50000];
+// ── Quick amount chips ────────────────────────────────────────────────────────
+const QUICK_AMOUNTS_NGN = [20000, 50000, 100000, 200000];
+const QUICK_AMOUNTS_USD = [20, 50, 100, 200];
 
 // ── Network labels ────────────────────────────────────────────────────────────
 const NETWORK_LABELS: Record<string, string> = {
@@ -91,7 +92,6 @@ function BuyFields({
   onWalletAddressChange,
   selectedNetwork,
   onNetworkChange,
-  savedWallets,
 }: {
   selectedToken: SupportedCryptoOrCurrencyResponse;
   availableCurrencies?: SupportedCryptoOrCurrencyResponse[];
@@ -122,9 +122,9 @@ function BuyFields({
     dispatch(setInitiateTransactionField({ field: "network" as any, value: net }));
   };
 
-  // Auto-set currency to NGN
+  // Auto-set currency to NGN if none selected
   if (availableCurrencies && !selectedCurrency) {
-    const ngn = availableCurrencies.find(c => c.code === "NGN" || c.symbol === "NGN");
+    const ngn = availableCurrencies.find(c => c.code === "NGN");
     if (ngn) {
       setSelectedCurrency?.(ngn);
       dispatch(setInitiateTransactionField({ field: "currencyId", value: ngn.id }));
@@ -135,14 +135,56 @@ function BuyFields({
   dispatch(setSelectedCryptoId(selectedToken.id));
   dispatch(setInitiateTransactionField({ field: "tokenId", value: selectedToken.id }));
 
+  // Determine active currency
+  const isUSD = selectedCurrency?.code === "USD";
+  const currencySymbol = isUSD ? "$" : "₦";
+  const quickAmounts = isUSD ? QUICK_AMOUNTS_USD : QUICK_AMOUNTS_NGN;
+
+  // Derived crypto preview from amount + buyRate
+  const inputValue = Number(amountToBuy ?? 0);
+  const buyRate = Number(selectedToken.buyRate ?? 0);
+  const cryptoPreview = inputValue > 0 && buyRate > 0
+    ? (inputValue / buyRate).toFixed(6)
+    : null;
+
+  const handleCurrencySwitch = (targetCode: "NGN" | "USD") => {
+    const target = availableCurrencies?.find(c => c.code === targetCode);
+    if (target) {
+      setSelectedCurrency?.(target);
+      dispatch(setInitiateTransactionField({ field: "currencyId", value: target.id }));
+      setAmountToBuy?.("");
+    }
+  };
+
   return (
     <div className="flex flex-col gap-3 mt-1">
       {/* Amount input */}
-      <div className="rounded-2xl px-4 pt-3 pb-4" style={{ background: "#F7F7F9", border: "1px solid #EEEEEE" }}>
-        <p className="text-[10px] font-bold tracking-widest uppercase mb-2" style={{ color: "#9A9A9A" }}>
-          Amount in NGN (₦)
-        </p>
-        <div className="flex items-center gap-3">
+      <div className="rounded-2xl overflow-hidden" style={{ background: "#F7F7F9", border: "1px solid #EEEEEE" }}>
+        <div className="flex items-center justify-between px-4 pt-3 pb-1">
+          <p className="text-[10px] font-bold tracking-widest uppercase" style={{ color: "#9A9A9A" }}>
+            Amount in {isUSD ? "USD ($)" : "NGN (₦)"}
+          </p>
+          {/* Currency toggle */}
+          {availableCurrencies && availableCurrencies.length > 1 && (
+            <div className="flex rounded-lg overflow-hidden" style={{ border: "1px solid #E0E0E0" }}>
+              {(["NGN", "USD"] as const).map((code) => {
+                const active = isUSD ? code === "USD" : code === "NGN";
+                return (
+                  <button key={code} type="button"
+                    onClick={() => handleCurrencySwitch(code)}
+                    className="px-2.5 py-1 text-[10px] font-bold transition-colors"
+                    style={{
+                      background: active ? accentColor : "#FFFFFF",
+                      color: active ? "#FFFFFF" : "#9A9A9A",
+                    }}>
+                    {code}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+        <div className="flex items-center gap-3 px-4 pb-3">
           <input
             type="number"
             inputMode="decimal"
@@ -156,23 +198,34 @@ function BuyFields({
           />
           <span className="text-sm font-bold shrink-0 px-3 py-1.5 rounded-xl"
             style={{ background: "#FFFFFF", border: "1px solid #E0E0E0", color: "#6B6E6B" }}>
-            NGN
+            {isUSD ? "USD" : "NGN"}
           </span>
         </div>
+
+        {/* Crypto equivalent preview */}
+        {cryptoPreview && (
+          <div className="px-4 pb-2 -mt-1">
+            <p className="text-xs" style={{ color: "#9A9A9A" }}>
+              ≈ <span className="font-semibold" style={{ color: "#948EEE" }}>{cryptoPreview} {selectedToken.symbol}</span> you will receive
+            </p>
+          </div>
+        )}
+
         {/* Quick chips */}
-        <div className="flex gap-2 mt-3 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
-          {QUICK_AMOUNTS.map((a) => {
+        <div className="flex border-t" style={{ borderColor: "#EEEEEE" }}>
+          {quickAmounts.map((a) => {
             const isActive = String(amountToBuy) === String(a);
+            const label = a >= 1000 ? `${currencySymbol}${a / 1000}k` : `${currencySymbol}${a}`;
             return (
               <button key={a} type="button"
                 onClick={() => setAmountToBuy?.(String(a))}
-                className="shrink-0 px-3.5 py-1.5 rounded-full text-[11px] font-bold transition-all"
+                className="flex-1 py-2.5 text-xs font-semibold border-r last:border-r-0 transition-colors"
                 style={{
-                  background: isActive ? accentColor : "#FFFFFF",
-                  color: isActive ? "#FFFFFF" : "#6B6E6B",
-                  border: `1px solid ${isActive ? accentColor : "#E0E0E0"}`,
+                  borderColor: "#EEEEEE",
+                  background: isActive ? "rgba(148,142,238,0.08)" : "transparent",
+                  color: isActive ? accentColor : "#6B6E6B",
                 }}>
-                ₦{a.toLocaleString()}
+                {label}
               </button>
             );
           })}
@@ -519,7 +572,6 @@ export default function DashboardTradeStep1({
   walletAddress, onWalletAddressChange,
   selectedNetwork, onNetworkChange,
   orderDetails: _orderDetails,
-  savedWallets,
   userBankAccounts, selectedPayoutAccountId, onPayoutAccountChange,
   sellDepositWallet, isGeneratingDepositWallet, sellNetwork, onSellNetworkChange,
 }: DashboardTradeStep1Props) {
@@ -625,7 +677,6 @@ export default function DashboardTradeStep1({
           onWalletAddressChange={onWalletAddressChange}
           selectedNetwork={selectedNetwork}
           onNetworkChange={onNetworkChange}
-          savedWallets={savedWallets}
         />
       )}
 
