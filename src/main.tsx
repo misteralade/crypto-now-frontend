@@ -39,7 +39,7 @@ if (!rootElement.innerHTML) {
               pauseOnFocusLoss
               draggable
               pauseOnHover
-              className="toast-container"
+              theme="light"
             />
             <RouterProvider router={router} />
           </QueryClientProviderWrapper>
