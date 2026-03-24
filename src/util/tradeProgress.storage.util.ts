@@ -14,6 +14,10 @@ export interface TradeProgress {
   numberOfToken?: string | number;
   amountToBuy?: string | number;
 
+  // BUY wallet details
+  buyWalletAddress?: string;
+  buyNetwork?: string;
+
   // Session
   transactionSessionId?: string;
 

@@ -91,10 +91,12 @@ export default function DashboardTrade() {
       if (isBuyResume) {
         // BUY is local-first: buyRateInfo lives only in component memory.
         // On resume the rate is gone, so always restart at step 1 so the user
-        // picks a fresh rate. Wipe any stale rate fields from tradeProgress and Redux.
+        // picks a fresh rate. Restore wallet + amount but wipe stale rate data.
         setStep(1);
-        saveTradeProgress({ amountToBuy: undefined, numberOfToken: undefined });
-        dispatch(clearAmountToSend());
+        if (saved?.buyWalletAddress) setBuyWalletAddress(saved.buyWalletAddress);
+        if (saved?.buyNetwork) setBuyNetwork(saved.buyNetwork);
+        if (saved?.amountToBuy) setAmountToBuy(String(saved.amountToBuy));
+        // Only clear rate-specific Redux state, keep amounts
         dispatch(clearInitiateTransactionField("amountToSend"));
       } else {
         if (saved && typeof saved.step === "number" && saved.step !== 3) setStep(saved.step);
@@ -113,6 +115,18 @@ export default function DashboardTrade() {
     if (step === 3) { clearTradeProgress(); return; }
     saveTradeProgress({ step, activeTab });
   }, [step, activeTab]);
+
+  // Persist BUY wallet details whenever they change
+  useEffect(() => {
+    if (activeTab !== "buy") return;
+    saveTradeProgress({ buyWalletAddress, buyNetwork });
+  }, [buyWalletAddress, buyNetwork, activeTab]);
+
+  // Persist BUY amount whenever it changes
+  useEffect(() => {
+    if (activeTab !== "buy") return;
+    saveTradeProgress({ amountToBuy: amountToBuy ?? undefined });
+  }, [amountToBuy, activeTab]);
 
   // No unmount clear — let progress persist so the dashboard can show "Continue"
 

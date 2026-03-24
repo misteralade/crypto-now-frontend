@@ -24,6 +24,7 @@ import type {
 import { useTradeStepTwo } from "../../../hooks/components/trade/useTradeStepTwo.ts";
 import TradePaymentUpload from "../../trade-crypto/TradePaymentUpload.tsx";
 import { SESSION_STORAGE_KEYS } from "../../../util/constants.util.ts";
+import { clearTradeProgress } from "../../../util/tradeProgress.storage.util.ts";
 import type { BuyRateInfo } from "./DashboardTradeStep1.tsx";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../../store.ts";
@@ -572,6 +573,7 @@ function BuyUploadView({
         </div>
         <TradePaymentUpload
           maxFiles={1}
+          compact
           acceptedTypes={[".jpg", ".jpeg", ".png", ".webp", ".gif", ".pdf"]}
           onFileSelected={onFileSelected}
           onFileCleared={onFileCleared}
@@ -687,6 +689,10 @@ export default function DashboardTradeStep2({
   // Local-first BUY: track selected receipt File for multipart createAndSubmit
   const [localReceiptFile, setLocalReceiptFile] = useState<File | undefined>();
 
+  const handleSetLocalReceiptFile = (file: File) => {
+    setLocalReceiptFile(file);
+  };
+
   const [isLocalBuySubmitting, setIsLocalBuySubmitting] = useState(false);
 
   const handleLocalBuySubmit = async () => {
@@ -722,6 +728,7 @@ export default function DashboardTradeStep2({
         );
       }
       toast.success(result?.message ?? "Transaction submitted!");
+      clearTradeProgress();
       onBuySubmitSuccess?.();
     } catch (err: any) {
       toast.dismiss(toastId);
@@ -836,18 +843,8 @@ export default function DashboardTradeStep2({
           walletAddress={buyWalletAddress ?? ""}
           network={buyNetwork ?? ""}
           submitInvalid={useLocalFlow ? localBuySubmitInvalid : submitInvalid}
-          onFileSelected={
-            useLocalFlow
-              ? (file) => setLocalReceiptFile(file)
-              : (file) => {
-                  void file; /* legacy flow: file not used directly */
-                }
-          }
-          onFileCleared={
-            useLocalFlow
-              ? () => setLocalReceiptFile(undefined)
-              : () => setUploadedFileUrl(undefined)
-          }
+          onFileSelected={useLocalFlow ? handleSetLocalReceiptFile : () => {}}
+          onFileCleared={useLocalFlow ? () => setLocalReceiptFile(undefined) : () => setUploadedFileUrl(undefined)}
           onSubmit={
             useLocalFlow ? handleLocalBuySubmit : handleSubmitPaymentProof
           }
