@@ -7,7 +7,10 @@ import type {
   UserBankAccountResponse,
   CustodialWalletResponse,
 } from "../../../types/response.payload.types.ts";
-import type { TradeType, TradeAdditionalInfoInterface } from "../../../types/trade.types.ts";
+import type {
+  TradeType,
+  TradeAdditionalInfoInterface,
+} from "../../../types/trade.types.ts";
 import { useDispatch } from "react-redux";
 import { setInitiateTransactionField } from "../../../redux/transaction.slice.ts";
 import { setSelectedCryptoId } from "../../../redux/crypto.slice.ts";
@@ -16,6 +19,7 @@ import { exchangeRateServiceApi } from "../../../api/rate.api.ts";
 
 export interface BuyRateInfo {
   rate: number; // NGN per 1 crypto (fiatRate from API)
+  rateId?: string;
   coinGeckoRate: number;
   platformRate: number;
   cryptoAmount: number; // how much crypto they'll receive
@@ -40,9 +44,19 @@ const NETWORK_LABELS: Record<string, string> = {
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 function CryptoIcon({ symbol, icon }: { symbol: string; icon?: string }) {
-  if (icon) return <img src={icon} alt={symbol} className="w-10 h-10 rounded-full object-cover" />;
+  if (icon)
+    return (
+      <img
+        src={icon}
+        alt={symbol}
+        className="w-10 h-10 rounded-full object-cover"
+      />
+    );
   const colors: Record<string, string> = {
-    BTC: "#F7931A", ETH: "#627EEA", SOL: "#9945FF", USDT: "#26A17B",
+    BTC: "#F7931A",
+    ETH: "#627EEA",
+    SOL: "#9945FF",
+    USDT: "#26A17B",
   };
   return (
     <div
@@ -134,27 +148,35 @@ function BuyFields({
 
   const handleWalletChange = (val: string) => {
     onWalletAddressChange?.(val);
-    dispatch(setInitiateTransactionField({ field: "walletAddress" as any, value: val }));
+    dispatch(
+      setInitiateTransactionField({ field: "walletAddress" as any, value: val })
+    );
   };
 
   const handleNetworkSelect = (net: string) => {
     setNetworkDropdownOpen(false);
     onNetworkChange?.(net);
-    dispatch(setInitiateTransactionField({ field: "network" as any, value: net }));
+    dispatch(
+      setInitiateTransactionField({ field: "network" as any, value: net })
+    );
   };
 
   // Auto-set currency to NGN if none selected
   if (availableCurrencies && !selectedCurrency) {
-    const ngn = availableCurrencies.find(c => c.code === "NGN");
+    const ngn = availableCurrencies.find((c) => c.code === "NGN");
     if (ngn) {
       setSelectedCurrency?.(ngn);
-      dispatch(setInitiateTransactionField({ field: "currencyId", value: ngn.id }));
+      dispatch(
+        setInitiateTransactionField({ field: "currencyId", value: ngn.id })
+      );
     }
   }
 
   // Sync token + first network into redux
   dispatch(setSelectedCryptoId(selectedToken.id));
-  dispatch(setInitiateTransactionField({ field: "tokenId", value: selectedToken.id }));
+  dispatch(
+    setInitiateTransactionField({ field: "tokenId", value: selectedToken.id })
+  );
 
   // Determine active currency
   const isUSD = selectedCurrency?.code === "USD";
@@ -162,10 +184,12 @@ function BuyFields({
   const quickAmounts = isUSD ? QUICK_AMOUNTS_USD : QUICK_AMOUNTS_NGN;
 
   const handleCurrencySwitch = (targetCode: "NGN" | "USD") => {
-    const target = availableCurrencies?.find(c => c.code === targetCode);
+    const target = availableCurrencies?.find((c) => c.code === targetCode);
     if (target) {
       setSelectedCurrency?.(target);
-      dispatch(setInitiateTransactionField({ field: "currencyId", value: target.id }));
+      dispatch(
+        setInitiateTransactionField({ field: "currencyId", value: target.id })
+      );
       setAmountToBuy?.("");
       onRateResolved?.(null);
     }
@@ -181,16 +205,25 @@ function BuyFields({
     onRateResolved?.(null); // clear old rate while fetching
     setIsFetchingRate(true);
     try {
-      const { data: rateData, success: rateOk } = await exchangeRateServiceApi.getExchangeRate(cryptoId, currencyId, "BUY");
+      const { data: rateData, success: rateOk } =
+        await exchangeRateServiceApi.getExchangeRate(
+          cryptoId,
+          currencyId,
+          "BUY"
+        );
       if (!rateOk || !rateData) return;
 
       // BUY: crypto received = fiatAmount / (coinGeckoRate * platformRate)
       const cryptoAmount = parseFloat(
-        (fiatAmount / (rateData.coinGeckoRate * Number(rateData.platformRate))).toFixed(8)
+        (
+          fiatAmount /
+          (rateData.coinGeckoRate * Number(rateData.platformRate))
+        ).toFixed(8)
       );
 
       onRateResolved?.({
         rate: rateData.fiatRate,
+        rateId: (rateData as unknown as { id?: string }).id,
         coinGeckoRate: rateData.coinGeckoRate,
         platformRate: Number(rateData.platformRate),
         cryptoAmount,
@@ -226,33 +259,46 @@ function BuyFields({
 
   // Preview: use live rate if amount matches, else static rate estimate
   const inputValue = Number(amountToBuy ?? 0);
-  const cryptoPreview = buyRateInfo && buyRateInfo.fiatAmount === inputValue
-    ? buyRateInfo.cryptoAmount.toFixed(6)
-    : inputValue > 0 && Number(selectedToken.buyRate ?? 0) > 0
+  const cryptoPreview =
+    buyRateInfo && buyRateInfo.fiatAmount === inputValue
+      ? buyRateInfo.cryptoAmount.toFixed(6)
+      : inputValue > 0 && Number(selectedToken.buyRate ?? 0) > 0
       ? (inputValue / Number(selectedToken.buyRate)).toFixed(6)
       : null;
 
   return (
     <div className="flex flex-col gap-3 mt-1">
       {/* Amount input */}
-      <div className="rounded-2xl overflow-hidden" style={{ background: "#F7F7F9", border: "1px solid #EEEEEE" }}>
+      <div
+        className="rounded-2xl overflow-hidden"
+        style={{ background: "#F7F7F9", border: "1px solid #EEEEEE" }}
+      >
         <div className="flex items-center justify-between px-4 pt-3 pb-1">
-          <p className="text-[10px] font-bold tracking-widest uppercase" style={{ color: "#9A9A9A" }}>
+          <p
+            className="text-[10px] font-bold tracking-widest uppercase"
+            style={{ color: "#9A9A9A" }}
+          >
             Amount in {isUSD ? "USD ($)" : "NGN (₦)"}
           </p>
           {/* Currency toggle */}
           {availableCurrencies && availableCurrencies.length > 1 && (
-            <div className="flex rounded-lg overflow-hidden" style={{ border: "1px solid #E0E0E0" }}>
+            <div
+              className="flex rounded-lg overflow-hidden"
+              style={{ border: "1px solid #E0E0E0" }}
+            >
               {(["NGN", "USD"] as const).map((code) => {
                 const active = isUSD ? code === "USD" : code === "NGN";
                 return (
-                  <button key={code} type="button"
+                  <button
+                    key={code}
+                    type="button"
                     onClick={() => handleCurrencySwitch(code)}
                     className="px-2.5 py-1 text-[10px] font-bold transition-colors"
                     style={{
                       background: active ? accentColor : "#FFFFFF",
                       color: active ? "#FFFFFF" : "#9A9A9A",
-                    }}>
+                    }}
+                  >
                     {code}
                   </button>
                 );
@@ -273,8 +319,12 @@ function BuyFields({
             style={{ color: "#0E0F0C", minWidth: 0 }}
           />
           {isFetchingRate && (
-            <div className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin shrink-0"
-              style={{ borderColor: `${accentColor} transparent transparent transparent` }} />
+            <div
+              className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin shrink-0"
+              style={{
+                borderColor: `${accentColor} transparent transparent transparent`,
+              }}
+            />
           )}
         </div>
 
@@ -300,16 +350,24 @@ function BuyFields({
         <div className="flex border-t" style={{ borderColor: "#EEEEEE" }}>
           {quickAmounts.map((a) => {
             const isActive = String(amountToBuy) === String(a);
-            const label = a >= 1000 ? `${currencySymbol}${a / 1000}k` : `${currencySymbol}${a}`;
+            const label =
+              a >= 1000
+                ? `${currencySymbol}${a / 1000}k`
+                : `${currencySymbol}${a}`;
             return (
-              <button key={a} type="button"
+              <button
+                key={a}
+                type="button"
                 onClick={() => handleChipClick(a)}
                 className="flex-1 py-2.5 text-xs font-semibold border-r last:border-r-0 transition-colors"
                 style={{
                   borderColor: "#EEEEEE",
-                  background: isActive ? "rgba(148,142,238,0.08)" : "transparent",
+                  background: isActive
+                    ? "rgba(148,142,238,0.08)"
+                    : "transparent",
                   color: isActive ? accentColor : "#6B6E6B",
-                }}>
+                }}
+              >
                 {label}
               </button>
             );
@@ -318,8 +376,14 @@ function BuyFields({
       </div>
 
       {/* Wallet address */}
-      <div className="rounded-2xl px-4 py-3" style={{ background: "#F7F7F9", border: "1px solid #EEEEEE" }}>
-        <p className="text-[10px] font-bold tracking-widest uppercase mb-2" style={{ color: "#9A9A9A" }}>
+      <div
+        className="rounded-2xl px-4 py-3"
+        style={{ background: "#F7F7F9", border: "1px solid #EEEEEE" }}
+      >
+        <p
+          className="text-[10px] font-bold tracking-widest uppercase mb-2"
+          style={{ color: "#9A9A9A" }}
+        >
           Your Wallet Address
         </p>
         <div className="flex items-center gap-2">
@@ -332,9 +396,12 @@ function BuyFields({
             style={{ color: "#0E0F0C", minWidth: 0 }}
           />
           {walletAddress && (
-            <button type="button" onClick={() => handleWalletChange("")}
+            <button
+              type="button"
+              onClick={() => handleWalletChange("")}
               className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center"
-              style={{ background: "#E0E0E0" }}>
+              style={{ background: "#E0E0E0" }}
+            >
               <X size={10} style={{ color: "#6B6E6B" }} />
             </button>
           )}
@@ -343,25 +410,43 @@ function BuyFields({
 
       {/* Network selector */}
       <div className="relative">
-        <div className="rounded-2xl px-4 py-3" style={{ background: "#F7F7F9", border: "1px solid #EEEEEE" }}>
-          <p className="text-[10px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "#9A9A9A" }}>
+        <div
+          className="rounded-2xl px-4 py-3"
+          style={{ background: "#F7F7F9", border: "1px solid #EEEEEE" }}
+        >
+          <p
+            className="text-[10px] font-bold tracking-widest uppercase mb-1.5"
+            style={{ color: "#9A9A9A" }}
+          >
             Network
           </p>
           {tokenNetworks.length <= 1 ? (
             <p className="text-sm font-semibold" style={{ color: "#0E0F0C" }}>
-              {(NETWORK_LABELS[selectedNetwork ?? ""] ?? selectedNetwork) || "—"}
+              {(NETWORK_LABELS[selectedNetwork ?? ""] ?? selectedNetwork) ||
+                "—"}
             </p>
           ) : (
-            <button type="button" onClick={() => setNetworkDropdownOpen(v => !v)}
-              className="flex items-center justify-between w-full">
-              <span className="text-sm font-semibold" style={{ color: "#0E0F0C" }}>
+            <button
+              type="button"
+              onClick={() => setNetworkDropdownOpen((v) => !v)}
+              className="flex items-center justify-between w-full"
+            >
+              <span
+                className="text-sm font-semibold"
+                style={{ color: "#0E0F0C" }}
+              >
                 {NETWORK_LABELS[selectedNetwork ?? ""] ?? selectedNetwork}
               </span>
-              <ChevronDown size={16} style={{
-                color: "#9A9A9A",
-                transform: networkDropdownOpen ? "rotate(180deg)" : "rotate(0)",
-                transition: "transform 0.2s",
-              }} />
+              <ChevronDown
+                size={16}
+                style={{
+                  color: "#9A9A9A",
+                  transform: networkDropdownOpen
+                    ? "rotate(180deg)"
+                    : "rotate(0)",
+                  transition: "transform 0.2s",
+                }}
+              />
             </button>
           )}
         </div>
@@ -370,16 +455,35 @@ function BuyFields({
           <AnimatePresence>
             {networkDropdownOpen && (
               <motion.div
-                initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.15 }}
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.15 }}
                 className="absolute left-0 right-0 z-20 mt-1 rounded-2xl overflow-hidden"
-                style={{ background: "#FFFFFF", border: "1px solid #EEEEEE", boxShadow: "0 8px 24px rgba(0,0,0,0.10)" }}>
+                style={{
+                  background: "#FFFFFF",
+                  border: "1px solid #EEEEEE",
+                  boxShadow: "0 8px 24px rgba(0,0,0,0.10)",
+                }}
+              >
                 {tokenNetworks.map((net) => (
-                  <button key={net} type="button" onClick={() => handleNetworkSelect(net)}
+                  <button
+                    key={net}
+                    type="button"
+                    onClick={() => handleNetworkSelect(net)}
                     className="w-full flex items-center justify-between px-4 py-3 text-left text-sm font-semibold transition-colors hover:bg-gray-50"
-                    style={{ color: selectedNetwork === net ? accentColor : "#0E0F0C", borderBottom: "1px solid #F7F7F9" }}>
+                    style={{
+                      color: selectedNetwork === net ? accentColor : "#0E0F0C",
+                      borderBottom: "1px solid #F7F7F9",
+                    }}
+                  >
                     {NETWORK_LABELS[net] ?? net}
-                    {selectedNetwork === net && <span className="w-2 h-2 rounded-full" style={{ background: accentColor }} />}
+                    {selectedNetwork === net && (
+                      <span
+                        className="w-2 h-2 rounded-full"
+                        style={{ background: accentColor }}
+                      />
+                    )}
                   </button>
                 ))}
               </motion.div>
@@ -429,7 +533,10 @@ function SellDepositWalletSection({
 
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-[10px] font-bold tracking-widest uppercase" style={{ color: "#9A9A9A" }}>
+      <p
+        className="text-[10px] font-bold tracking-widest uppercase"
+        style={{ color: "#9A9A9A" }}
+      >
         Send {selectedToken.symbol} To
       </p>
 
@@ -438,35 +545,66 @@ function SellDepositWalletSection({
         <div className="relative">
           <button
             type="button"
-            onClick={() => setNetworkDropdownOpen(v => !v)}
+            onClick={() => setNetworkDropdownOpen((v) => !v)}
             className="w-full flex items-center justify-between px-4 py-3 rounded-2xl"
-            style={{ background: "#F7F7F9", border: "1px solid #EEEEEE" }}>
+            style={{ background: "#F7F7F9", border: "1px solid #EEEEEE" }}
+          >
             <div>
-              <p className="text-[10px] font-bold tracking-widest uppercase text-left" style={{ color: "#9A9A9A" }}>Network</p>
-              <p className="text-sm font-semibold mt-0.5" style={{ color: "#0E0F0C" }}>
+              <p
+                className="text-[10px] font-bold tracking-widest uppercase text-left"
+                style={{ color: "#9A9A9A" }}
+              >
+                Network
+              </p>
+              <p
+                className="text-sm font-semibold mt-0.5"
+                style={{ color: "#0E0F0C" }}
+              >
                 {NETWORK_LABELS[activeNetwork] ?? activeNetwork}
               </p>
             </div>
-            <ChevronDown size={16} style={{
-              color: "#9A9A9A",
-              transform: networkDropdownOpen ? "rotate(180deg)" : "rotate(0)",
-              transition: "transform 0.2s",
-            }} />
+            <ChevronDown
+              size={16}
+              style={{
+                color: "#9A9A9A",
+                transform: networkDropdownOpen ? "rotate(180deg)" : "rotate(0)",
+                transition: "transform 0.2s",
+              }}
+            />
           </button>
 
           <AnimatePresence>
             {networkDropdownOpen && (
               <motion.div
-                initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.15 }}
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.15 }}
                 className="absolute left-0 right-0 z-20 mt-1 rounded-2xl overflow-hidden"
-                style={{ background: "#FFFFFF", border: "1px solid #EEEEEE", boxShadow: "0 8px 24px rgba(0,0,0,0.10)" }}>
+                style={{
+                  background: "#FFFFFF",
+                  border: "1px solid #EEEEEE",
+                  boxShadow: "0 8px 24px rgba(0,0,0,0.10)",
+                }}
+              >
                 {tokenNetworks.map((net) => (
-                  <button key={net} type="button" onClick={() => handleNetworkSelect(net)}
+                  <button
+                    key={net}
+                    type="button"
+                    onClick={() => handleNetworkSelect(net)}
                     className="w-full flex items-center justify-between px-4 py-3 text-left text-sm font-semibold transition-colors hover:bg-gray-50"
-                    style={{ color: activeNetwork === net ? accentColor : "#0E0F0C", borderBottom: "1px solid #F7F7F9" }}>
+                    style={{
+                      color: activeNetwork === net ? accentColor : "#0E0F0C",
+                      borderBottom: "1px solid #F7F7F9",
+                    }}
+                  >
                     {NETWORK_LABELS[net] ?? net}
-                    {activeNetwork === net && <span className="w-2 h-2 rounded-full" style={{ background: accentColor }} />}
+                    {activeNetwork === net && (
+                      <span
+                        className="w-2 h-2 rounded-full"
+                        style={{ background: accentColor }}
+                      />
+                    )}
                   </button>
                 ))}
               </motion.div>
@@ -475,22 +613,42 @@ function SellDepositWalletSection({
         </div>
       )}
 
-      <div className="rounded-2xl px-4 py-3" style={{ background: "#FFFBF0", border: `1.5px solid ${accentColor}44` }}>
+      <div
+        className="rounded-2xl px-4 py-3"
+        style={{
+          background: "#FFFBF0",
+          border: `1.5px solid ${accentColor}44`,
+        }}
+      >
         {isGenerating ? (
           <div className="flex items-center gap-2 py-1">
-            <div className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: `${accentColor} transparent transparent transparent` }} />
-            <p className="text-xs" style={{ color: "#A07000" }}>Generating deposit address…</p>
+            <div
+              className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin"
+              style={{
+                borderColor: `${accentColor} transparent transparent transparent`,
+              }}
+            />
+            <p className="text-xs" style={{ color: "#A07000" }}>
+              Generating deposit address…
+            </p>
           </div>
         ) : depositWallet ? (
           <>
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
                 {!hasMultipleNetworks && (
-                  <p className="text-[10px] font-bold mb-1" style={{ color: "#A07000" }}>
-                    {NETWORK_LABELS[depositWallet.network] ?? depositWallet.network}
+                  <p
+                    className="text-[10px] font-bold mb-1"
+                    style={{ color: "#A07000" }}
+                  >
+                    {NETWORK_LABELS[depositWallet.network] ??
+                      depositWallet.network}
                   </p>
                 )}
-                <p className="text-xs font-mono break-all leading-relaxed" style={{ color: "#0E0F0C" }}>
+                <p
+                  className="text-xs font-mono break-all leading-relaxed"
+                  style={{ color: "#0E0F0C" }}
+                >
                   {depositWallet.walletAddress}
                 </p>
               </div>
@@ -502,13 +660,16 @@ function SellDepositWalletSection({
                   background: copied ? "#E8F8F0" : "#FFF3D0",
                   color: copied ? "#037847" : "#A07000",
                   border: `1px solid ${copied ? "#A8E6C8" : "#FFD980"}`,
-                }}>
+                }}
+              >
                 {copied ? <Check size={11} /> : <Copy size={11} />}
                 {copied ? "Copied" : "Copy"}
               </button>
             </div>
             <p className="text-[10px] mt-2" style={{ color: "#A07000" }}>
-              Only send {selectedToken.symbol} on {NETWORK_LABELS[depositWallet.network] ?? depositWallet.network}. Wrong network = lost funds.
+              Only send {selectedToken.symbol} on{" "}
+              {NETWORK_LABELS[depositWallet.network] ?? depositWallet.network}.
+              Wrong network = lost funds.
             </p>
           </>
         ) : (
@@ -545,19 +706,29 @@ function BankAccountRow({
     >
       <div className="flex items-center gap-3">
         {account.bankLogo ? (
-          <img src={account.bankLogo} alt={account.bankName}
-            className="w-8 h-8 rounded-lg object-cover shrink-0" />
+          <img
+            src={account.bankLogo}
+            alt={account.bankName}
+            className="w-8 h-8 rounded-lg object-cover shrink-0"
+          />
         ) : (
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-            style={{ background: selected ? "#FFE4A0" : "#F0F0F0" }}>
-            <span className="text-[10px] font-black"
-              style={{ color: selected ? "#A07000" : "#9A9A9A" }}>
+          <div
+            className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+            style={{ background: selected ? "#FFE4A0" : "#F0F0F0" }}
+          >
+            <span
+              className="text-[10px] font-black"
+              style={{ color: selected ? "#A07000" : "#9A9A9A" }}
+            >
               {account.bankName.slice(0, 2).toUpperCase()}
             </span>
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-bold truncate" style={{ color: "#0E0F0C" }}>
+          <p
+            className="text-xs font-bold truncate"
+            style={{ color: "#0E0F0C" }}
+          >
             {account.bankName}
           </p>
           <p className="text-[11px] font-mono" style={{ color: "#6B6E6B" }}>
@@ -566,16 +737,25 @@ function BankAccountRow({
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
           {account.isDefault && (
-            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full"
-              style={{ background: "#E8F8F0", color: "#037847" }}>
+            <span
+              className="text-[9px] font-bold px-2 py-0.5 rounded-full"
+              style={{ background: "#E8F8F0", color: "#037847" }}
+            >
               DEFAULT
             </span>
           )}
           {/* Radio dot */}
-          <div className="w-4 h-4 rounded-full flex items-center justify-center"
-            style={{ border: `2px solid ${selected ? accentColor : "#D0D0D0"}` }}>
+          <div
+            className="w-4 h-4 rounded-full flex items-center justify-center"
+            style={{
+              border: `2px solid ${selected ? accentColor : "#D0D0D0"}`,
+            }}
+          >
             {selected && (
-              <div className="w-2 h-2 rounded-full" style={{ background: accentColor }} />
+              <div
+                className="w-2 h-2 rounded-full"
+                style={{ background: accentColor }}
+              />
             )}
           </div>
         </div>
@@ -597,22 +777,31 @@ function SellPayoutBank({
   const accentColor = "#F7A600";
 
   const accounts = userBankAccounts ?? [];
-  const selectedId = selectedPayoutAccountId
-    ?? accounts.find(b => b.isDefault)?.id
-    ?? accounts[0]?.id;
+  const selectedId =
+    selectedPayoutAccountId ??
+    accounts.find((b) => b.isDefault)?.id ??
+    accounts[0]?.id;
 
   if (accounts.length === 0) {
     return (
-      <div className="rounded-2xl px-4 py-4 flex flex-col gap-2"
-        style={{ background: "#FFFBF0", border: "1px solid #FFE4A0" }}>
-        <p className="text-xs font-bold" style={{ color: "#A07000" }}>No bank account linked</p>
+      <div
+        className="rounded-2xl px-4 py-4 flex flex-col gap-2"
+        style={{ background: "#FFFBF0", border: "1px solid #FFE4A0" }}
+      >
+        <p className="text-xs font-bold" style={{ color: "#A07000" }}>
+          No bank account linked
+        </p>
         <p className="text-[11px]" style={{ color: "#A07000" }}>
           You need a bank account to receive NGN from your sale.
         </p>
-        <button type="button"
-          onClick={() => navigate({ to: ROUTES.PROFILE, search: { section: "bank" } })}
+        <button
+          type="button"
+          onClick={() =>
+            navigate({ to: ROUTES.PROFILE, search: { section: "bank" } })
+          }
           className="self-start text-[11px] font-bold underline"
-          style={{ color: "#F7A600" }}>
+          style={{ color: "#F7A600" }}
+        >
           Add a bank account →
         </button>
       </div>
@@ -621,7 +810,10 @@ function SellPayoutBank({
 
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-[10px] font-bold tracking-widest uppercase" style={{ color: "#9A9A9A" }}>
+      <p
+        className="text-[10px] font-bold tracking-widest uppercase"
+        style={{ color: "#9A9A9A" }}
+      >
         Payout Account
       </p>
 
@@ -637,10 +829,14 @@ function SellPayoutBank({
       ))}
 
       {/* Manage accounts link */}
-      <button type="button"
-        onClick={() => navigate({ to: ROUTES.PROFILE, search: { section: "bank" } })}
+      <button
+        type="button"
+        onClick={() =>
+          navigate({ to: ROUTES.PROFILE, search: { section: "bank" } })
+        }
         className="text-[11px] font-semibold text-left"
-        style={{ color: "#9A9A9A" }}>
+        style={{ color: "#9A9A9A" }}
+      >
         Manage bank accounts →
       </button>
     </div>
@@ -649,17 +845,33 @@ function SellPayoutBank({
 
 // ── Main component ────────────────────────────────────────────────────────────
 export default function DashboardTradeStep1({
-  tradeType, availableTokens, selectedToken, setSelectedToken,
-  isInitiatingTrade, isRateLoading, onProceed,
-  buyRateInfo, onRateResolved,
-  availableCurrencies, selectedCurrency, setSelectedCurrency,
-  amountToBuy, setAmountToBuy,
+  tradeType,
+  availableTokens,
+  selectedToken,
+  setSelectedToken,
+  isInitiatingTrade,
+  isRateLoading,
+  onProceed,
+  buyRateInfo,
+  onRateResolved,
+  availableCurrencies,
+  selectedCurrency,
+  setSelectedCurrency,
+  amountToBuy,
+  setAmountToBuy,
   handleFocusAmountToBuy,
-  walletAddress, onWalletAddressChange,
-  selectedNetwork, onNetworkChange,
+  walletAddress,
+  onWalletAddressChange,
+  selectedNetwork,
+  onNetworkChange,
   orderDetails: _orderDetails,
-  userBankAccounts, selectedPayoutAccountId, onPayoutAccountChange,
-  sellDepositWallet, isGeneratingDepositWallet, sellNetwork, onSellNetworkChange,
+  userBankAccounts,
+  selectedPayoutAccountId,
+  onPayoutAccountChange,
+  sellDepositWallet,
+  isGeneratingDepositWallet,
+  sellNetwork,
+  onSellNetworkChange,
 }: DashboardTradeStep1Props) {
   const isBuy = tradeType === "buy";
   const accentColor = isBuy ? "#948EEE" : "#F7A600";
@@ -668,34 +880,47 @@ export default function DashboardTradeStep1({
   const noBankAccounts = !isBuy && !hasBankAccounts;
 
   // For BUY: require amount, wallet, AND a fetched rate before allowing proceed
-  const buySubmitDisabled = isBuy && (
-    !amountToBuy || Number(amountToBuy) <= 0 || !walletAddress?.trim() || !buyRateInfo
-  );
-  const activeNetwork = (!isBuy && selectedToken)
-    ? (sellNetwork ?? selectedToken.networks?.[0])
-    : undefined;
-  const sellWalletLoading = !isBuy && !!selectedToken && (
-    isGeneratingDepositWallet ||
-    !sellDepositWallet ||
-    (activeNetwork && sellDepositWallet?.network !== activeNetwork)
-  );
+  const buySubmitDisabled =
+    isBuy &&
+    (!amountToBuy ||
+      Number(amountToBuy) <= 0 ||
+      !walletAddress?.trim() ||
+      !buyRateInfo);
+  const activeNetwork =
+    !isBuy && selectedToken
+      ? sellNetwork ?? selectedToken.networks?.[0]
+      : undefined;
+  const sellWalletLoading =
+    !isBuy &&
+    !!selectedToken &&
+    (isGeneratingDepositWallet ||
+      !sellDepositWallet ||
+      (activeNetwork && sellDepositWallet?.network !== activeNetwork));
 
-  const isCtaBusy = isInitiatingTrade || (!!selectedToken && isRateLoading) || sellWalletLoading;
+  const isCtaBusy =
+    isInitiatingTrade ||
+    (!!selectedToken && isRateLoading) ||
+    sellWalletLoading;
   const ctaLabel = isInitiatingTrade
     ? "Processing…"
-    : (isRateLoading && selectedToken)
-      ? "Loading rate…"
-      : sellWalletLoading
-        ? "Getting deposit address…"
-        : noBankAccounts
-          ? "Add a bank account first"
-          : isBuy && amountToBuy && Number(amountToBuy) > 0 && walletAddress?.trim() && !buyRateInfo
-            ? "Fetching rate…"
-            : selectedToken
-              ? `${isBuy ? "Buy" : "Sell"} ${selectedToken.symbol} — Continue`
-              : "Select a Crypto to Continue";
+    : isRateLoading && selectedToken
+    ? "Loading rate…"
+    : sellWalletLoading
+    ? "Getting deposit address…"
+    : noBankAccounts
+    ? "Add a bank account first"
+    : isBuy &&
+      amountToBuy &&
+      Number(amountToBuy) > 0 &&
+      walletAddress?.trim() &&
+      !buyRateInfo
+    ? "Fetching rate…"
+    : selectedToken
+    ? `${isBuy ? "Buy" : "Sell"} ${selectedToken.symbol} — Continue`
+    : "Select a Crypto to Continue";
 
-  const ctaDisabled = !selectedToken || isCtaBusy || noBankAccounts || buySubmitDisabled;
+  const ctaDisabled =
+    !selectedToken || isCtaBusy || noBankAccounts || buySubmitDisabled;
 
   return (
     <div className="flex flex-col gap-4">
@@ -710,10 +935,20 @@ export default function DashboardTradeStep1({
       </div>
 
       {/* Info banner */}
-      <div className="flex items-start gap-3 rounded-2xl px-4 py-3"
-        style={{ background: isBuy ? "#EEF0FF" : "#FFFBF0", border: `1px solid ${isBuy ? "#C7CAFF" : "#FFE4A0"}` }}>
-        <span className="text-base leading-none mt-0.5">{isBuy ? "💳" : "📤"}</span>
-        <p className="text-xs leading-relaxed" style={{ color: isBuy ? "#5B5EA6" : "#A07000" }}>
+      <div
+        className="flex items-start gap-3 rounded-2xl px-4 py-3"
+        style={{
+          background: isBuy ? "#EEF0FF" : "#FFFBF0",
+          border: `1px solid ${isBuy ? "#C7CAFF" : "#FFE4A0"}`,
+        }}
+      >
+        <span className="text-base leading-none mt-0.5">
+          {isBuy ? "💳" : "📤"}
+        </span>
+        <p
+          className="text-xs leading-relaxed"
+          style={{ color: isBuy ? "#5B5EA6" : "#A07000" }}
+        >
           {isBuy
             ? "Pay with NGN bank transfer. We verify your payment and send crypto directly to your wallet within 5 minutes."
             : "Send crypto to your unique wallet. We auto-detect receipt and instantly send NGN to your bank. Zero action needed after sending."}
@@ -725,16 +960,27 @@ export default function DashboardTradeStep1({
         {availableTokens.map((token) => {
           const selected = selectedToken?.id === token.id;
           const rate = isBuy ? token.buyRate : token.sellRate;
-          const rateLabel = rate ? `${isBuy ? "Buy" : "Sell"}: ₦${Number(rate).toLocaleString()}` : "";
+          const rateLabel = rate
+            ? `${isBuy ? "Buy" : "Sell"}: ₦${Number(rate).toLocaleString()}`
+            : "";
           return (
-            <motion.button key={token.id} type="button"
+            <motion.button
+              key={token.id}
+              type="button"
               onClick={() => setSelectedToken(token)}
               whileTap={{ scale: 0.97 }}
               className="relative flex flex-col items-center gap-2.5 rounded-2xl p-4 transition-all"
               style={{
-                background: selected ? (isBuy ? "#EEF0FF" : "#FFFBF0") : "#FAFAFA",
-                border: selected ? `2px solid ${accentColor}` : "2px solid #F0F0F0",
-              }}>
+                background: selected
+                  ? isBuy
+                    ? "#EEF0FF"
+                    : "#FFFBF0"
+                  : "#FAFAFA",
+                border: selected
+                  ? `2px solid ${accentColor}`
+                  : "2px solid #F0F0F0",
+              }}
+            >
               {selected && (
                 <span className="absolute top-2.5 right-2.5">
                   <CheckCircle size={15} style={{ color: accentColor }} />
@@ -742,10 +988,22 @@ export default function DashboardTradeStep1({
               )}
               <CryptoIcon symbol={token.symbol} icon={token.logoUrl} />
               <div className="text-center">
-                <p className="text-sm font-extrabold" style={{ color: "#0E0F0C" }}>{token.symbol}</p>
-                <p className="text-[10px] mt-0.5" style={{ color: "#9A9A9A" }}>{token.name}</p>
+                <p
+                  className="text-sm font-extrabold"
+                  style={{ color: "#0E0F0C" }}
+                >
+                  {token.symbol}
+                </p>
+                <p className="text-[10px] mt-0.5" style={{ color: "#9A9A9A" }}>
+                  {token.name}
+                </p>
                 {rateLabel && (
-                  <p className="text-[10px] font-bold mt-1" style={{ color: accentColor }}>{rateLabel}</p>
+                  <p
+                    className="text-[10px] font-bold mt-1"
+                    style={{ color: accentColor }}
+                  >
+                    {rateLabel}
+                  </p>
                 )}
               </div>
             </motion.button>
@@ -800,11 +1058,14 @@ export default function DashboardTradeStep1({
         className="w-full py-4 rounded-2xl text-sm font-bold transition-all mt-1"
         style={{
           background: !ctaDisabled
-            ? `linear-gradient(135deg, ${accentColor}, ${isBuy ? "#6B45D0" : "#E09000"})`
+            ? `linear-gradient(135deg, ${accentColor}, ${
+                isBuy ? "#6B45D0" : "#E09000"
+              })`
             : "#F0F0F0",
           color: !ctaDisabled ? "#FFFFFF" : "#9A9A9A",
           boxShadow: !ctaDisabled ? `0 6px 20px ${accentColor}44` : "none",
-        }}>
+        }}
+      >
         {ctaLabel}
       </button>
     </div>

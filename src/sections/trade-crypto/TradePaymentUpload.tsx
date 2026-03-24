@@ -8,6 +8,7 @@ interface FileUploadProps {
   onFileCleared: () => void;
   maxFiles: number;
   acceptedTypes?: string[];
+  compact?: boolean;
 }
 
 const TradePaymentUpload = ({
@@ -15,6 +16,7 @@ const TradePaymentUpload = ({
   onFileCleared,
   maxFiles = 5,
   acceptedTypes = [".jpg", ".jpeg", ".png", ".webp", ".gif"],
+  compact = false,
 }: FileUploadProps) => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [filePreviewUrl, setFilePreviewUrl] = useState<string>("");
@@ -83,8 +85,8 @@ const TradePaymentUpload = ({
       <div
         className={`relative border-2 border-dashed rounded-lg transition-all cursor-pointer overflow-hidden ${
           previewImage
-            ? "border-transparent min-h-[300px] md:min-h-[400px]"
-            : `py-5 text-center bg-white min-h-[300px] ${isDragOver ? "border-placeholder" : "border-accent2"}`
+            ? `border-transparent ${compact ? "min-h-[140px]" : "min-h-[300px] md:min-h-[400px]"}`
+            : `py-5 text-center bg-white ${compact ? "min-h-[140px]" : "min-h-[300px]"} ${isDragOver ? "border-placeholder" : "border-accent2"}`
         }`}
         onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
         onDragLeave={(e) => { e.preventDefault(); setIsDragOver(false); }}

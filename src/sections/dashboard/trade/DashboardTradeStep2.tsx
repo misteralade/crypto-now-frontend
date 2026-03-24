@@ -12,6 +12,7 @@
 import { useState, useEffect, type ReactNode } from "react";
 import { Copy, Check, ArrowLeft, ArrowRight, Upload } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "react-toastify";
 import type {
   SupportedCryptoOrCurrencyResponse,
   UserBankAccountResponse,
@@ -24,7 +25,6 @@ import { useTradeStepTwo } from "../../../hooks/components/trade/useTradeStepTwo
 import TradePaymentUpload from "../../trade-crypto/TradePaymentUpload.tsx";
 import { SESSION_STORAGE_KEYS } from "../../../util/constants.util.ts";
 import type { BuyRateInfo } from "./DashboardTradeStep1.tsx";
-import { useTransactionQuery } from "../../../queries/transaction.query.ts";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../../store.ts";
 import { useQuery } from "@tanstack/react-query";
@@ -45,11 +45,11 @@ interface DashboardTradeStep2Props {
   handleSubmitPaymentProof: () => void;
   formatReceiveAmount: (
     amount: number | string,
-    code: string | undefined,
+    code: string | undefined
   ) => React.ReactNode | string;
   formatSendAmount: (
     amount: number | string,
-    code: string | undefined,
+    code: string | undefined
   ) => React.ReactNode | string;
   onBack: () => void;
   /** Wallet address entered in Step 1 (buy flow) */
@@ -234,7 +234,9 @@ function SellWalletView({
   };
 
   const rate = selectedToken?.sellRate
-    ? `₦${Math.round(Number(selectedToken.sellRate)).toLocaleString()} per 1 ${selectedToken.symbol}`
+    ? `₦${Math.round(Number(selectedToken.sellRate)).toLocaleString()} per 1 ${
+        selectedToken.symbol
+      }`
     : null;
 
   return (
@@ -609,7 +611,7 @@ export default function DashboardTradeStep2({
   numberOfToken,
   selectedToken,
   selectedCurrency,
-  handleReceiptUrl,
+  handleReceiptUrl: _handleReceiptUrl,
   handleSubmitPaymentProof,
   formatSendAmount,
   onBack,
@@ -621,20 +623,22 @@ export default function DashboardTradeStep2({
   onBuySubmitSuccess,
 }: DashboardTradeStep2Props) {
   const isBuy = tradeType === "buy";
-  const { createAndSubmitTransactionMutation } = useTransactionQuery();
-  const initiateForm = useSelector((s: RootState) => s.transaction.initiate.initiateTransaction);
+  const initiateForm = useSelector(
+    (s: RootState) => s.transaction.initiate.initiateTransaction
+  );
   const userEmail = useSelector((s: RootState) => s.user.trade.anonymous.email);
   const isLocalBuyFlow = isBuy && !!buyRateInfo;
 
   // For local-first BUY flow: fetch bank details directly
-  const { data: localBankDetails, isLoading: localBankDetailsLoading } = useQuery({
-    queryKey: [QUERY_KEYS.BANK.PLATFORM_BANK_DETAILS, "local-buy"],
-    queryFn: async () => {
-      const { data } = await bankServiceApi.getPlatformBankDetails();
-      return data;
-    },
-    enabled: isLocalBuyFlow,
-  });
+  const { data: localBankDetails, isLoading: localBankDetailsLoading } =
+    useQuery({
+      queryKey: [QUERY_KEYS.BANK.PLATFORM_BANK_DETAILS, "local-buy"],
+      queryFn: async () => {
+        const { data } = await bankServiceApi.getPlatformBankDetails();
+        return data;
+      },
+      enabled: isLocalBuyFlow,
+    });
 
   const {
     setUploadedFileUrl,
@@ -660,7 +664,9 @@ export default function DashboardTradeStep2({
   const network = walletDetails?.network ?? "";
 
   // Merge bank details: prefer local fetch for local-first BUY flow
-  const bankDetails = isLocalBuyFlow ? (localBankDetails ?? hookBankDetails) : hookBankDetails;
+  const bankDetails = isLocalBuyFlow
+    ? localBankDetails ?? hookBankDetails
+    : hookBankDetails;
 
   // Bank details
   const bankName = bankDetails?.bankName ?? "";
@@ -690,23 +696,30 @@ export default function DashboardTradeStep2({
     formData.append("file", localReceiptFile);
     formData.append("coinId", initiateForm?.tokenId ?? "");
     formData.append("currencyId", buyRateInfo.currencyId);
+    const exchangeRateId = buyRateInfo.rateId;
+    if (exchangeRateId) formData.append("exchangeRateId", exchangeRateId);
     formData.append("amountToSend", String(buyRateInfo.fiatAmount));
     formData.append("amountToReceive", String(buyRateInfo.cryptoAmount));
     formData.append("walletAddress", buyWalletAddress ?? "");
     formData.append("network", buyNetwork ?? "");
     if (userEmail) formData.append("email", userEmail);
 
-    setIsLocalBuySubmitting(true);
     const toastId = "buy-submit";
     toast.loading("Submitting transaction…", { toastId });
+    setIsLocalBuySubmitting(true);
     try {
       const result = userEmail
-        ? await transactionServiceApi.anonymousCreateAndSubmitTransaction(formData)
+        ? await transactionServiceApi.anonymousCreateAndSubmitTransaction(
+            formData
+          )
         : await transactionServiceApi.createAndSubmitTransaction(formData);
 
       toast.dismiss(toastId);
       if (result?.data?.sessionId) {
-        sessionStorage.setItem(SESSION_STORAGE_KEYS.SESSION_ID, result.data.sessionId);
+        sessionStorage.setItem(
+          SESSION_STORAGE_KEYS.SESSION_ID,
+          result.data.sessionId
+        );
       }
       toast.success(result?.message ?? "Transaction submitted!");
       onBuySubmitSuccess?.();
@@ -732,7 +745,9 @@ export default function DashboardTradeStep2({
   };
 
   /* ── loading ── */
-  const effectiveBuyLoading = isLocalBuyFlow ? localBankDetailsLoading : paymentDetailsLoading;
+  const effectiveBuyLoading = isLocalBuyFlow
+    ? localBankDetailsLoading
+    : paymentDetailsLoading;
   if (effectiveBuyLoading && isBuy) {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-3">
@@ -814,18 +829,28 @@ export default function DashboardTradeStep2({
         />
         <BuyUploadView
           selectedToken={selectedToken}
-          numberOfToken={useLocalFlow ? buyRateInfo!.cryptoAmount : numberOfToken}
+          numberOfToken={
+            useLocalFlow ? buyRateInfo!.cryptoAmount : numberOfToken
+          }
           fiatAmountPaidDisplay={payAmount}
           walletAddress={buyWalletAddress ?? ""}
           network={buyNetwork ?? ""}
           submitInvalid={useLocalFlow ? localBuySubmitInvalid : submitInvalid}
-          onFileSelected={useLocalFlow
-            ? (file) => setLocalReceiptFile(file)
-            : (file) => { void file; /* legacy flow: file not used directly */ }}
-          onFileCleared={useLocalFlow
-            ? () => setLocalReceiptFile(undefined)
-            : () => setUploadedFileUrl(undefined)}
-          onSubmit={useLocalFlow ? handleLocalBuySubmit : handleSubmitPaymentProof}
+          onFileSelected={
+            useLocalFlow
+              ? (file) => setLocalReceiptFile(file)
+              : (file) => {
+                  void file; /* legacy flow: file not used directly */
+                }
+          }
+          onFileCleared={
+            useLocalFlow
+              ? () => setLocalReceiptFile(undefined)
+              : () => setUploadedFileUrl(undefined)
+          }
+          onSubmit={
+            useLocalFlow ? handleLocalBuySubmit : handleSubmitPaymentProof
+          }
           rateLockCountdown={useLocalFlow ? undefined : rateLockCountdown}
           isRateExpired={useLocalFlow ? false : isRateExpired}
         />
@@ -875,12 +900,22 @@ export default function DashboardTradeStep2({
           </p>
           <p className="text-xs text-white/50 mt-1.5">
             {isLocalBuyFlow && buyRateInfo ? (
-              <>at ₦{Math.round(buyRateInfo.rate).toLocaleString()}/{selectedToken?.symbol}</>
+              <>
+                at ₦{Math.round(buyRateInfo.rate).toLocaleString()}/
+                {selectedToken?.symbol}
+              </>
             ) : (
               <>
                 ={" "}
-                {formatSendAmount(amountToBuy.toLocaleString(), selectedCurrency?.code)}{" "}
-                at ₦{selectedToken?.buyRate ? Number(selectedToken.buyRate).toLocaleString() : "—"}/$1
+                {formatSendAmount(
+                  amountToBuy.toLocaleString(),
+                  selectedCurrency?.code
+                )}{" "}
+                at ₦
+                {selectedToken?.buyRate
+                  ? Number(selectedToken.buyRate).toLocaleString()
+                  : "—"}
+                /$1
               </>
             )}
           </p>
