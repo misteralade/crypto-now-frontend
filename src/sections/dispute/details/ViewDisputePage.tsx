@@ -5,19 +5,15 @@ import {AlertCircle, CheckCircle, Clock, HelpCircle, Loader, X, Zap} from "lucid
 import Navbar from "../../../components/global/navbar/Navbar.tsx";
 import TransactionDisputeInfo from "./TransactionDisputeInfo.tsx";
 import DisputeInformation from "./DisputeInformation.tsx";
-import DisputeMessage from "./DisputeMessage.tsx";
 
 const ViewDisputePage = () => {
   const {
     // 🧩 Values
-    disputeMessages,
-    loadingDisputeMessages,
     disputeDetails,
     loadingDisputeDetails,
     
     // ⚙️ Functions
     getDisputeStatusColor,
-    userSendDisputeMutation,
   } = useViewDisputeDetailsPage();
   
   const getStatusIcon = (status: | 'OPEN' | 'UNDER_REVIEW' | 'AWAITING_EVIDENCE' | 'AWAITING_USER_RESPONSE' | 'AWAITING_ADMIN_RESPONSE' | 'ESCALATED' | 'RESOLVED' | 'REJECTED' | 'CLOSED') => {
@@ -80,7 +76,7 @@ const ViewDisputePage = () => {
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   {/* Left Column - Transaction & Dispute Info */}
-                  <div className="lg:col-span-1 space-y-6">
+                  <div className="lg:col-span-3 space-y-6">
                     {/* Transaction Details */}
                     <TransactionDisputeInfo
                       sessionId={disputeDetails.transaction?.sessionId || ''}
@@ -99,15 +95,6 @@ const ViewDisputePage = () => {
                       updatedAt={disputeDetails.updatedAt}
                       attachments={disputeDetails.attachments}
                       adminNotes={disputeDetails?.resolutionNotes || ''}
-                    />
-                  </div>
-                  
-                  {/* Right Column - Dispute Messages */}
-                  <div className="lg:col-span-2">
-                    <DisputeMessage
-                      loading={loadingDisputeMessages}
-                      messages={disputeMessages || []}
-                      sendMessageMutation={userSendDisputeMutation}
                     />
                   </div>
                 </div>

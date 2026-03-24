@@ -14,11 +14,11 @@ import {
 } from "../../../util/tradeProgress.storage.util.ts";
 import { LoadingSpinner } from "../../../components/global/LoadingSpinner.tsx";
 import EmailModal from "../../trade-crypto/modals/EmailModal.tsx";
-import DashboardTradeStep1 from "./DashboardTradeStep1.tsx";
+import DashboardTradeStep1, { type BuyRateInfo } from "./DashboardTradeStep1.tsx";
 import DashboardTradeStep2 from "./DashboardTradeStep2.tsx";
 import DashboardTradeStep3 from "./DashboardTradeStep3.tsx";
 import DashboardTradeSuccess from "./DashboardTradeSuccess.tsx";
-import { setInitiateTransactionField } from "../../../redux/transaction.slice.ts";
+import { clearExchangeRateId, clearAmountToSend, clearInitiateTransactionField, setInitiateTransactionField } from "../../../redux/transaction.slice.ts";
 import { useDispatch } from "react-redux";
 import { LOCAL_STORAGE_KEYS } from "../../../util/constants.util.ts";
 
@@ -49,9 +49,24 @@ export default function DashboardTrade() {
   const [sellPayoutAccountId, setSellPayoutAccountId] = useState<string | undefined>();
   // Sell network selection (for multi-network tokens like USDT)
   const [sellNetwork, setSellNetwork] = useState<string | undefined>();
+  // BUY local-first rate (fetched at Step 1, used at Step 2 for submission)
+  const [buyRateInfo, setBuyRateInfo] = useState<BuyRateInfo | null>(null);
 
   const hasRestoredRef = useRef<string | null>(null);
   const hasInitializedRef = useRef<boolean>(false);
+
+  // For BUY local-first flow: wipe any stale exchangeRateId / amountToSend from Redux
+  // and tradeProgress on mount so the global calculateAmountToReceive query never
+  // fires with an expired rate ID.
+  useEffect(() => {
+    if (activeTab === "buy") {
+      dispatch(clearExchangeRateId());
+      dispatch(clearAmountToSend());
+      dispatch(clearInitiateTransactionField("exchangeRateId"));
+      dispatch(clearInitiateTransactionField("amountToSend"));
+      saveTradeProgress({ exchangeRateId: undefined });
+    }
+  }, [activeTab]);
 
   // Restore / clear progress on mount
   useEffect(() => {
@@ -96,7 +111,7 @@ export default function DashboardTrade() {
     selectedToken, numberOfToken, AdditionalInfo, amountToBuy,
     selectedCurrency, supportedCurrencies, supportedCryptoCurrencies,
     exchangeRateId, countdown, isInitiatingTrade, loadingExchangeRate, transactionSessionId,
-    showPaymentReceivingModal, userBankAccounts,
+    userBankAccounts,
     showUserEnterEmail, isLoadingPingUser,
     loadingSupportedCryptocurrencies, loadingUserBankAccounts,
     setAmountToBuy, setSelectedCurrency, setSelectedToken,
@@ -104,18 +119,12 @@ export default function DashboardTrade() {
     makePaymentTransaction, handleConfirmBankDetails,
     handleAnonymousUserEmailInput, toggleShowUserEnterEmail,
     togglePaymentReceivingModal, formatReceiveAmount, formatSendAmount,
-    handleFocusAmountToBuy, handleBlurAmountToBuy,
+    handleFocusAmountToBuy,
     sellDepositWallet, isGeneratingDepositWallet,
-  } = useTradeStepDisplay("", activeTab, "", setStep, setActiveTab, undefined, step, sessionId, sellNetwork);
+  } = useTradeStepDisplay("", activeTab, "", setStep, setActiveTab, undefined, step, sessionId, sellNetwork, true);
 
-  // For BUY: only trigger step 3 (wallet confirmation) on showPaymentReceivingModal
-  // For SELL: skip step 3 entirely (bank was attached at initiate time)
-  useEffect(() => {
-    if (showPaymentReceivingModal && activeTab === "buy") setStep(3);
-  }, [showPaymentReceivingModal, activeTab]);
-
-  // For SELL: after initiateTransaction sets step to 2, immediately advance to step 4
-  // (deposit wallet is shown inline on Step 1; monitoring/confirmation is not needed as a separate step)
+  // For SELL: after initiateTransaction creates the INITIATED record and sets step=2,
+  // immediately jump to step 4 (success). The deposit wallet is shown inline on Step 1.
   useEffect(() => {
     if (step === 2 && activeTab === "sell") setStep(4);
   }, [step, activeTab]);
@@ -250,6 +259,7 @@ export default function DashboardTrade() {
                     setSelectedToken(t);
                     const firstNetwork = t.networks?.[0] ?? "";
                     if (firstNetwork) setBuyNetwork(firstNetwork);
+                    setBuyRateInfo(null); // reset rate when token changes
                   } else {
                     setPendingSellToken(t);
                     setSelectedToken(t);
@@ -258,6 +268,8 @@ export default function DashboardTrade() {
                 }}
                 isInitiatingTrade={isInitiatingTrade}
                 isRateLoading={activeTab === "sell" && loadingExchangeRate}
+                buyRateInfo={activeTab === "buy" ? buyRateInfo : undefined}
+                onRateResolved={activeTab === "buy" ? setBuyRateInfo : undefined}
                 onProceed={() => {
                   if (activeTab === "sell") {
                     if (!pendingSellToken) return;
@@ -268,9 +280,10 @@ export default function DashboardTrade() {
                     }
                     initiateTransaction();
                   } else {
-                    if (!pendingBuyToken) return;
+                    // BUY: local-first — no server call yet, just advance to step 2
+                    if (!pendingBuyToken || !buyRateInfo) return;
                     setSelectedToken(pendingBuyToken);
-                    initiateTransaction();
+                    setStep(2);
                   }
                 }}
                 // BUY-specific props
@@ -280,7 +293,6 @@ export default function DashboardTrade() {
                 amountToBuy={amountToBuy}
                 setAmountToBuy={setAmountToBuy}
                 handleFocusAmountToBuy={handleFocusAmountToBuy}
-                handleBlurAmountToBuy={handleBlurAmountToBuy}
                 walletAddress={buyWalletAddress}
                 onWalletAddressChange={setBuyWalletAddress}
                 selectedNetwork={buyNetwork}
@@ -306,7 +318,7 @@ export default function DashboardTrade() {
               <DashboardTradeStep2
                 tradeType={activeTab}
                 amountToBuy={typeof amountToBuy === "string" ? (amountToBuy ? Number(amountToBuy) : 0) : (amountToBuy || 0)}
-                numberOfToken={typeof numberOfToken === "string" ? (numberOfToken ? Number(numberOfToken) : 0) : (numberOfToken || 0)}
+                numberOfToken={isBuy && buyRateInfo ? buyRateInfo.cryptoAmount : (typeof numberOfToken === "string" ? (numberOfToken ? Number(numberOfToken) : 0) : (numberOfToken || 0))}
                 selectedToken={selectedToken}
                 selectedCurrency={selectedCurrency}
                 exchangeRateId={exchangeRateId}
@@ -320,14 +332,10 @@ export default function DashboardTrade() {
                 formatSendAmount={formatSendAmount}
                 buyWalletAddress={buyWalletAddress}
                 buyNetwork={buyNetwork}
+                buyRateInfo={isBuy ? buyRateInfo : undefined}
+                onBuySubmitSuccess={() => setStep(4)}
                 payoutBank={!isBuy ? (userBankAccounts?.find(b => b.id === sellPayoutAccountId) ?? userBankAccounts?.[0]) : undefined}
-                onBack={() => {
-                  if (isBuy) {
-                    setStep(1);
-                  } else {
-                    setStep(1);
-                  }
-                }}
+                onBack={() => setStep(1)}
               />
             </motion.div>
           )}

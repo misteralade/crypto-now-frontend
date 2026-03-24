@@ -82,6 +82,14 @@ class TransactionServiceApi {
     ) as InitiateTransactionAPIResponse
   }
 
+  async createAndSubmitTransaction(payload: Record<string, any>): Promise<InitiateTransactionAPIResponse> {
+    return await axiosPostRequestHandler('/transaction/create-and-submit', payload) as InitiateTransactionAPIResponse;
+  }
+
+  async anonymousCreateAndSubmitTransaction(payload: Record<string, any>): Promise<InitiateTransactionAPIResponse> {
+    return await axiosPostRequestHandler('/transaction/create-and-submit/anonymous', payload) as InitiateTransactionAPIResponse;
+  }
+
   async initiateTransaction(transactionData: Record<string, any>) {
     return await axiosPostRequestHandler(
       '/transaction/initiate',

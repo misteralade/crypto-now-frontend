@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { CheckCircle, ChevronDown, X } from "lucide-react";
+import { useState, useRef } from "react";
+import { Check, CheckCircle, ChevronDown, Copy, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "@tanstack/react-router";
 import type {
@@ -12,6 +12,18 @@ import { useDispatch } from "react-redux";
 import { setInitiateTransactionField } from "../../../redux/transaction.slice.ts";
 import { setSelectedCryptoId } from "../../../redux/crypto.slice.ts";
 import { ROUTES } from "../../../util/constants.util.ts";
+import { exchangeRateServiceApi } from "../../../api/rate.api.ts";
+import { transactionServiceApi } from "../../../api/transaction.api.ts";
+
+export interface BuyRateInfo {
+  rateId: string;
+  rate: number; // NGN per 1 crypto (fiatRate from API)
+  cryptoAmount: number; // how much crypto they'll receive
+  fiatAmount: number; // what they typed in
+  currencyCode: string;
+  currencyId: string;
+  fetchedAt: number; // Date.now()
+}
 
 // ── Quick amount chips ────────────────────────────────────────────────────────
 const QUICK_AMOUNTS_NGN = [20000, 50000, 100000, 200000];
@@ -52,6 +64,10 @@ interface DashboardTradeStep1Props {
   isRateLoading?: boolean;
   onProceed: () => void;
 
+  // BUY rate (local-first flow)
+  buyRateInfo?: BuyRateInfo | null;
+  onRateResolved?: (info: BuyRateInfo | null) => void;
+
   // BUY-specific (from Step 1b)
   availableCurrencies?: SupportedCryptoOrCurrencyResponse[];
   selectedCurrency?: SupportedCryptoOrCurrencyResponse;
@@ -87,11 +103,12 @@ function BuyFields({
   amountToBuy,
   setAmountToBuy,
   handleFocusAmountToBuy,
-  handleBlurAmountToBuy,
   walletAddress,
   onWalletAddressChange,
   selectedNetwork,
   onNetworkChange,
+  buyRateInfo,
+  onRateResolved,
 }: {
   selectedToken: SupportedCryptoOrCurrencyResponse;
   availableCurrencies?: SupportedCryptoOrCurrencyResponse[];
@@ -100,16 +117,20 @@ function BuyFields({
   amountToBuy?: string | number;
   setAmountToBuy?: (v: string | number) => void;
   handleFocusAmountToBuy?: () => void;
-  handleBlurAmountToBuy?: () => void;
   walletAddress?: string;
   onWalletAddressChange?: (v: string) => void;
   selectedNetwork?: string;
   onNetworkChange?: (v: string) => void;
+  buyRateInfo?: BuyRateInfo | null;
+  onRateResolved?: (info: BuyRateInfo | null) => void;
 }) {
   const dispatch = useDispatch();
   const accentColor = "#948EEE";
   const tokenNetworks: string[] = selectedToken.networks ?? [];
   const [networkDropdownOpen, setNetworkDropdownOpen] = useState(false);
+  const [isFetchingRate, setIsFetchingRate] = useState(false);
+  // Track the fiatAmount that's currently being fetched to avoid duplicate in-flight requests
+  const fetchingRef = useRef<number | null>(null);
 
   const handleWalletChange = (val: string) => {
     onWalletAddressChange?.(val);
@@ -140,21 +161,81 @@ function BuyFields({
   const currencySymbol = isUSD ? "$" : "₦";
   const quickAmounts = isUSD ? QUICK_AMOUNTS_USD : QUICK_AMOUNTS_NGN;
 
-  // Derived crypto preview from amount + buyRate
-  const inputValue = Number(amountToBuy ?? 0);
-  const buyRate = Number(selectedToken.buyRate ?? 0);
-  const cryptoPreview = inputValue > 0 && buyRate > 0
-    ? (inputValue / buyRate).toFixed(6)
-    : null;
-
   const handleCurrencySwitch = (targetCode: "NGN" | "USD") => {
     const target = availableCurrencies?.find(c => c.code === targetCode);
     if (target) {
       setSelectedCurrency?.(target);
       dispatch(setInitiateTransactionField({ field: "currencyId", value: target.id }));
       setAmountToBuy?.("");
+      onRateResolved?.(null);
     }
   };
+
+  // Always fetch a fresh rate — no caching. Called on blur and on chip click.
+  const fetchRate = async (fiatAmount: number, currencyId: string) => {
+    const cryptoId = selectedToken.id;
+    if (!fiatAmount || fiatAmount <= 0 || !currencyId || !cryptoId) return;
+    if (fetchingRef.current === fiatAmount) return; // already fetching this amount
+
+    fetchingRef.current = fiatAmount;
+    onRateResolved?.(null); // clear old rate while fetching
+    setIsFetchingRate(true);
+    try {
+      const { data: rateData, success: rateOk } = await exchangeRateServiceApi.getExchangeRate(cryptoId, currencyId, "BUY");
+      if (!rateOk || !rateData) return;
+
+      let cryptoAmountStr: string | null = null;
+      try {
+        const { data, success: calcOk } = await transactionServiceApi.calculateAmountToReceive(rateData.rateId, fiatAmount);
+        if (calcOk) cryptoAmountStr = data;
+      } catch {
+        // calculate failed (e.g. rate just expired) — resolve with null so UI can fallback
+        return;
+      }
+
+      if (cryptoAmountStr === null) return;
+
+      onRateResolved?.({
+        rateId: rateData.rateId,
+        rate: rateData.fiatRate,
+        cryptoAmount: Number(cryptoAmountStr ?? 0),
+        fiatAmount,
+        currencyCode: selectedCurrency?.code ?? "NGN",
+        currencyId,
+        fetchedAt: Date.now(),
+      });
+    } finally {
+      fetchingRef.current = null;
+      setIsFetchingRate(false);
+    }
+  };
+
+  const handleAmountChange = (val: string) => {
+    setAmountToBuy?.(val);
+    onRateResolved?.(null); // clear rate when user edits amount
+  };
+
+  const handleBlur = () => {
+    handleFocusAmountToBuy?.();
+    const fiatAmount = Number(amountToBuy ?? 0);
+    const currencyId = selectedCurrency?.id;
+    if (fiatAmount > 0 && currencyId) fetchRate(fiatAmount, currencyId);
+  };
+
+  const handleChipClick = (a: number) => {
+    setAmountToBuy?.(String(a));
+    onRateResolved?.(null);
+    const currencyId = selectedCurrency?.id;
+    if (currencyId) fetchRate(a, currencyId);
+  };
+
+  // Preview: use live rate if amount matches, else static rate estimate
+  const inputValue = Number(amountToBuy ?? 0);
+  const cryptoPreview = buyRateInfo && buyRateInfo.fiatAmount === inputValue
+    ? buyRateInfo.cryptoAmount.toFixed(6)
+    : inputValue > 0 && Number(selectedToken.buyRate ?? 0) > 0
+      ? (inputValue / Number(selectedToken.buyRate)).toFixed(6)
+      : null;
 
   return (
     <div className="flex flex-col gap-3 mt-1">
@@ -189,24 +270,33 @@ function BuyFields({
             type="number"
             inputMode="decimal"
             value={String(amountToBuy ?? "")}
-            onChange={(e) => setAmountToBuy?.(e.target.value)}
+            onChange={(e) => handleAmountChange(e.target.value)}
             onFocus={handleFocusAmountToBuy}
-            onBlur={handleBlurAmountToBuy}
+            onBlur={handleBlur}
             placeholder="0.00"
             className="flex-1 bg-transparent text-3xl font-black outline-none"
             style={{ color: "#0E0F0C", minWidth: 0 }}
           />
-          <span className="text-sm font-bold shrink-0 px-3 py-1.5 rounded-xl"
-            style={{ background: "#FFFFFF", border: "1px solid #E0E0E0", color: "#6B6E6B" }}>
-            {isUSD ? "USD" : "NGN"}
-          </span>
+          {isFetchingRate && (
+            <div className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin shrink-0"
+              style={{ borderColor: `${accentColor} transparent transparent transparent` }} />
+          )}
         </div>
 
         {/* Crypto equivalent preview */}
-        {cryptoPreview && (
+        {cryptoPreview && !isFetchingRate && (
           <div className="px-4 pb-2 -mt-1">
             <p className="text-xs" style={{ color: "#9A9A9A" }}>
-              ≈ <span className="font-semibold" style={{ color: "#948EEE" }}>{cryptoPreview} {selectedToken.symbol}</span> you will receive
+              ≈{" "}
+              <span className="font-semibold" style={{ color: accentColor }}>
+                {cryptoPreview} {selectedToken.symbol}
+              </span>{" "}
+              you will receive
+              {buyRateInfo && buyRateInfo.fiatAmount === inputValue && (
+                <span className="ml-1 text-[10px]" style={{ color: "#BDBDBD" }}>
+                  (live rate)
+                </span>
+              )}
             </p>
           </div>
         )}
@@ -218,7 +308,7 @@ function BuyFields({
             const label = a >= 1000 ? `${currencySymbol}${a / 1000}k` : `${currencySymbol}${a}`;
             return (
               <button key={a} type="button"
-                onClick={() => setAmountToBuy?.(String(a))}
+                onClick={() => handleChipClick(a)}
                 className="flex-1 py-2.5 text-xs font-semibold border-r last:border-r-0 transition-colors"
                 style={{
                   borderColor: "#EEEEEE",
@@ -566,9 +656,10 @@ function SellPayoutBank({
 export default function DashboardTradeStep1({
   tradeType, availableTokens, selectedToken, setSelectedToken,
   isInitiatingTrade, isRateLoading, onProceed,
+  buyRateInfo, onRateResolved,
   availableCurrencies, selectedCurrency, setSelectedCurrency,
   amountToBuy, setAmountToBuy,
-  handleFocusAmountToBuy, handleBlurAmountToBuy,
+  handleFocusAmountToBuy,
   walletAddress, onWalletAddressChange,
   selectedNetwork, onNetworkChange,
   orderDetails: _orderDetails,
@@ -581,7 +672,10 @@ export default function DashboardTradeStep1({
   const hasBankAccounts = (userBankAccounts?.length ?? 0) > 0;
   const noBankAccounts = !isBuy && !hasBankAccounts;
 
-  const buySubmitDisabled = isBuy && (!amountToBuy || Number(amountToBuy) <= 0 || !walletAddress?.trim());
+  // For BUY: require amount, wallet, AND a fetched rate before allowing proceed
+  const buySubmitDisabled = isBuy && (
+    !amountToBuy || Number(amountToBuy) <= 0 || !walletAddress?.trim() || !buyRateInfo
+  );
   const activeNetwork = (!isBuy && selectedToken)
     ? (sellNetwork ?? selectedToken.networks?.[0])
     : undefined;
@@ -600,9 +694,11 @@ export default function DashboardTradeStep1({
         ? "Getting deposit address…"
         : noBankAccounts
           ? "Add a bank account first"
-          : selectedToken
-            ? `${isBuy ? "Buy" : "Sell"} ${selectedToken.symbol} — Continue`
-            : "Select a Crypto to Continue";
+          : isBuy && amountToBuy && Number(amountToBuy) > 0 && walletAddress?.trim() && !buyRateInfo
+            ? "Fetching rate…"
+            : selectedToken
+              ? `${isBuy ? "Buy" : "Sell"} ${selectedToken.symbol} — Continue`
+              : "Select a Crypto to Continue";
 
   const ctaDisabled = !selectedToken || isCtaBusy || noBankAccounts || buySubmitDisabled;
 
@@ -672,11 +768,12 @@ export default function DashboardTradeStep1({
           amountToBuy={amountToBuy}
           setAmountToBuy={setAmountToBuy}
           handleFocusAmountToBuy={handleFocusAmountToBuy}
-          handleBlurAmountToBuy={handleBlurAmountToBuy}
           walletAddress={walletAddress}
           onWalletAddressChange={onWalletAddressChange}
           selectedNetwork={selectedNetwork}
           onNetworkChange={onNetworkChange}
+          buyRateInfo={buyRateInfo}
+          onRateResolved={onRateResolved}
         />
       )}
 

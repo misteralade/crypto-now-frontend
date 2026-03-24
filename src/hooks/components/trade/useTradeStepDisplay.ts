@@ -56,7 +56,7 @@ const shallowEqual = (a: any, b: any) => {
   return true;
 };
 
-export const useTradeStepDisplay = ( token: string, activeTab: TradeType, currency: string, setStep: (value: number) => void, _setActiveTab: (value: TradeType) => void, initialAmount?: string, currentStep?: number, sessionId?: string, sellNetwork?: string ) => {
+export const useTradeStepDisplay = ( token: string, activeTab: TradeType, currency: string, setStep: (value: number) => void, _setActiveTab: (value: TradeType) => void, initialAmount?: string, currentStep?: number, sessionId?: string, sellNetwork?: string, skipBuyRateFetch?: boolean ) => {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-expect-error
   const countdownIntervalRef = useRef<any>();
@@ -65,7 +65,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   const { userBankAccounts, loadingUserBankAccounts } = useBankQuery();
   const { supportedCurrencies } = useCurrencyQuery();
   const { supportedCryptoCurrencies, loadingSupportedCryptocurrencies, custodialWallets, generateCustodialWalletMutation } = useCryptoQuery();
-  const { calculatedAmount, loadingCalculation, initiateTransactionMutation, makePaymentTransactionMutation, receivingPaymentAccountConfirmationMutation } = useTransactionQuery();
+  const { calculatedAmount, loadingCalculation, initiateTransactionMutation, makePaymentTransactionMutation, receivingPaymentAccountConfirmationMutation, createAndSubmitTransactionMutation } = useTransactionQuery();
   
   const [transactionSessionId, setTransactionSessionId] = useState<string>();
   const [selectedToken, setSelectedToken] = useState<SupportedCryptoOrCurrencyResponse>();
@@ -82,9 +82,12 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   const saved = useMemo(() => loadTradeProgress(), []);
   const isContinuingTransaction = !!sessionId;
   const shouldDisableRateQuery = currentStep === 2 && isCountdownLocked && saved?.receiptUrl;
-  
+
+  // For BUY local-first flow: BuyFields manages its own rate fetch, so skip here entirely
+  const isBuyLocalFlow = activeTab.toUpperCase() === "BUY" && !!skipBuyRateFetch;
+
   // When continuing a transaction, allow rate to fetch once but prevent refetching
-  const shouldFetchRate = !shouldDisableRateQuery;
+  const shouldFetchRate = !shouldDisableRateQuery && !isBuyLocalFlow;
   const shouldDisableRefetch = isContinuingTransaction && currentStep === 2;
   const { exchangeRate, loadingExchangeRate } = useRateQuery(
     selectedToken?.id || "",
@@ -304,8 +307,8 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       }));
     }
     
-    // Always restore exchangeRateId (needed for bank details query)
-    if (saved.exchangeRateId) {
+    // Restore exchangeRateId — skip for BUY local-first flow (BuyFields fetches a fresh rate)
+    if (saved.exchangeRateId && !skipBuyRateFetch) {
       setExchangeRateId(saved.exchangeRateId);
       // Restore exchangeRateId to Redux state and transaction form
       const ratePartial: Partial<InitiateTransactionRequestPayload> = {
@@ -1166,34 +1169,51 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     try {
       if (!canInitiateTransaction()) return;
 
-      // Sync exchange rate into Redux right before initiating.
+      // Sync exchange rate into Redux right before proceeding.
       dispatch(setInitiateTransactionField({ field: "exchangeRateId", value: exchangeRateId }));
 
-      // For BUY: sync the entered amounts. For SELL: amounts are 0 (unknown until crypto arrives).
       if (activeTab === "buy") {
+        // BUY: no API call here — just advance to step 2 with amounts synced.
+        // Transaction is created at AWAITING_PAYMENT when receipt is submitted.
         const tokenAmount = Number(numberOfToken || 0);
         const receiveAmount = Number(amountToBuy || 0);
         dispatch(setInitiateTransactionField({ field: "amountToSend", value: receiveAmount }));
         dispatch(setInitiateTransactionField({ field: "amountToReceive", value: tokenAmount }));
+        saveTradeProgress({ step: 2 });
+        setStep(2);
+      } else {
+        // SELL: keep existing flow — create INITIATED transaction to lock the rate
+        const { data: { sessionId }} = await initiateTransactionMutation.mutateAsync();
+        setTransactionSessionId(sessionId);
+        sessionStorage.setItem(SESSION_STORAGE_KEYS.SESSION_ID, sessionId);
+        saveTradeProgress({ transactionSessionId: sessionId, step: 2 });
+        setStep(2);
       }
-
-      const { data: { sessionId }} = await initiateTransactionMutation.mutateAsync();
-      setTransactionSessionId(sessionId);
-      sessionStorage.setItem(SESSION_STORAGE_KEYS.SESSION_ID, sessionId);
-      saveTradeProgress({ transactionSessionId: sessionId, step: 2 });
-      setStep(2);
     } catch {
       // Error already handled by mutation's onError (toast shown); just let button re-enable
     }
   };
 
   const makePaymentTransaction = async () => {
-    await makePaymentTransactionMutation.mutateAsync();
-    setIsCountdownLocked(true);
-    if (countdownIntervalRef.current) {
-      clearInterval(countdownIntervalRef.current);
+    if (activeTab === "buy") {
+      // BUY: create transaction at AWAITING_PAYMENT in one shot
+      await createAndSubmitTransactionMutation.mutateAsync();
+      setIsCountdownLocked(true);
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+      }
+      clearTradeProgress();
+      dispatch(clearAnonymousUserEmail());
+      setStep(4);
+    } else {
+      // SELL: existing flow — update INITIATED → AWAITING_CRYPTO + open bank modal
+      await makePaymentTransactionMutation.mutateAsync();
+      setIsCountdownLocked(true);
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+      }
+      togglePaymentReceivingModal();
     }
-    togglePaymentReceivingModal();
   };
 
   const handleConfirmBankDetails = async (step: number) => {
@@ -1458,7 +1478,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     isCountdownLocked,
     showPaymentReceivingModal,
     userBankAccounts,
-    isInitiatingTrade: initiateTransactionMutation.isPending,
+    isInitiatingTrade: initiateTransactionMutation.isPending || createAndSubmitTransactionMutation.isPending,
     showUserEnterEmail,
     isLoadingPingUser,
     loadingSupportedCryptocurrencies,

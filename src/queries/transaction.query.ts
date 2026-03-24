@@ -21,27 +21,19 @@ export const useTransactionQuery = () => {
     location.pathname.startsWith(`${ROUTES.DASHBOARD}/`);
   const searchTransactionPayload = useSelector((state: RootState) => state.transaction.dashboard.searchUserTransactions);
 
-  // Calculate Amount to Receive
+  // Calculate Amount to Receive — use reactive selectors so dispatching
+  // clearExchangeRateId() immediately disables this query.
+  const calcExchangeRateId = useSelector((s: RootState) => s.transaction.exchangeRateId);
+  const calcAmountToSend = useSelector((s: RootState) => s.transaction.amountToSend);
+
   const { data: calculatedAmount, isLoading: loadingCalculation } = useQuery({
-    queryKey: [QUERY_KEYS.TRANSACTION.GET_AMOUNT_TO_SEND, store.getState().transaction.exchangeRateId, store.getState().transaction.amountToSend],
+    queryKey: [QUERY_KEYS.TRANSACTION.GET_AMOUNT_TO_SEND, calcExchangeRateId, calcAmountToSend],
     queryFn: async () => {
-      const rootState = store.getState() as RootState;
-      const transaction = rootState.transaction;
-
-      if (!transaction.amountToSend || !transaction.exchangeRateId) {
-        return;
-      }
-
-      const { data, success } = await transactionServiceApi.calculateAmountToReceive(transaction.exchangeRateId || '', transaction.amountToSend || 0);
-
-      if (success) {
-        return data;
-      }
-
-      return null;
+      if (!calcAmountToSend || !calcExchangeRateId) return null;
+      const { data, success } = await transactionServiceApi.calculateAmountToReceive(calcExchangeRateId, calcAmountToSend);
+      return success ? data : null;
     },
-    // enabled: !!exchangeRateId && !!amountToSend && amountToSend > 0, // Only run the query if exchangeRateId and amountToSend are provided and valid
-    enabled: !!store.getState().transaction.exchangeRateId && !!store.getState().transaction.amountToSend && Number(store.getState().transaction?.amountToSend) > 0,
+    enabled: !!calcExchangeRateId && !!calcAmountToSend && Number(calcAmountToSend) > 0,
   });
 
   const {
@@ -343,6 +335,46 @@ export const useTransactionQuery = () => {
     },
   });
 
+  // Create and Submit BUY Transaction Mutation (replaces initiate+makePayment for BUY)
+  const createAndSubmitTransactionMutation = useMutation({
+    mutationKey: [QUERY_KEYS.TRANSACTION.CREATE_AND_SUBMIT_TRANSACTION],
+    mutationFn: async () => {
+      toast.loading(`Submitting transaction...`, { toastId: QUERY_KEYS.TRANSACTION.CREATE_AND_SUBMIT_TRANSACTION });
+      const rootState = store.getState() as RootState;
+      const transactionForm = rootState.transaction.initiate.initiateTransaction;
+      const userEmail = rootState.user.trade.anonymous.email;
+
+      if (!transactionForm) throw new Error("Transaction form data missing");
+
+      const payload = {
+        coinId: transactionForm.tokenId,
+        currencyId: transactionForm.currencyId,
+        exchangeRateId: transactionForm.exchangeRateId,
+        amountToSend: transactionForm.amountToSend ?? 0,
+        amountToReceive: transactionForm.amountToReceive ?? 0,
+        receiptUrl: transactionForm.receiptUrl,
+        walletAddress: transactionForm.walletAddress,
+        network: transactionForm.network,
+        ...(userEmail ? { email: userEmail } : {}),
+      };
+
+      if (userEmail) {
+        return await transactionServiceApi.anonymousCreateAndSubmitTransaction(payload);
+      }
+      return await transactionServiceApi.createAndSubmitTransaction(payload);
+    },
+    onSuccess: ({ data, message }) => {
+      toast.dismiss(QUERY_KEYS.TRANSACTION.CREATE_AND_SUBMIT_TRANSACTION);
+      sessionStorage.setItem(SESSION_STORAGE_KEYS.SESSION_ID, data?.sessionId as string);
+      toast.success(message);
+    },
+    onError: (error: AxiosServerError) => {
+      toast.dismiss(QUERY_KEYS.TRANSACTION.CREATE_AND_SUBMIT_TRANSACTION);
+      const message = extractErrorMessage(error) || "Failed to submit transaction. Please try again.";
+      toast.error(message);
+    },
+  });
+
   const downloadSingleTransactionMutation= useMutation({
     mutationFn: async (sessionId: string) => {
       toast.loading(`Downloading Transaction Details...`)
@@ -415,6 +447,7 @@ export const useTransactionQuery = () => {
     initiateTransactionMutation,
     makePaymentTransactionMutation,
     receivingPaymentAccountConfirmationMutation,
+    createAndSubmitTransactionMutation,
     disputeTransactionInitiationMutation,
     userSendDisputeMutation,
     downloadSingleTransactionMutation,

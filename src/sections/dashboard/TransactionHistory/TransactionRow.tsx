@@ -91,7 +91,7 @@ const TransactionRow = ({ transaction: tx, isLast, isMobileCard = false }: Trans
           <div className="mt-2.5 ml-14 grid grid-cols-3 gap-2">
             {[
               { label: "CRYPTO",  val: `${Number(tx.amountCrypto).toFixed(4)} ${tx.cryptocurrency.symbol}` },
-              { label: "NETWORK", val: tx.userCryptoWallet?.network ?? tx.adminCryptoWallet?.network ?? tx.cryptocurrency.networks?.[0] ?? "—" },
+              { label: "NETWORK", val: tx.userCryptoWallet?.network ?? tx.adminCryptoWallet?.network ?? "—" },
               { label: "RATE",    val: `₦${convertToMillify(Number(tx.stableToFiatRate), 0)}/${tx.cryptocurrency.symbol}` },
             ].map(({ label, val }) => (
               <div key={label}>
@@ -167,7 +167,7 @@ const TransactionRow = ({ transaction: tx, isLast, isMobileCard = false }: Trans
         ₦{convertToMillify(Number(tx.stableToFiatRate), 0)}
       </td>
       <td className="px-5 py-4 text-sm font-medium" style={{ color: "#6B6E6B" }}>
-        {tx.userCryptoWallet?.network ?? tx.adminCryptoWallet?.network ?? tx.cryptocurrency.networks?.[0] ?? "—"}
+        {tx.userCryptoWallet?.network ?? tx.adminCryptoWallet?.network ?? "—"}
       </td>
       <td className="px-5 py-4">
         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusColor(tx.status)}`}>

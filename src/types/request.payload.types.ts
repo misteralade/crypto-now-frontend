@@ -11,6 +11,8 @@ export type InitiateTransactionRequestPayload = {
   receiptUrl?: string;
   transactionHash?: string;
   accountId?: string;
+  walletAddress?: string;
+  network?: string;
 }
 
 export type CreateBankAccountRequestPayload = {
