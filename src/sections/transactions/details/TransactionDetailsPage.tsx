@@ -340,7 +340,7 @@ const TransactionDetailsPage = () => {
                   value={(transaction?.user ? transaction.user.email : (transaction as any).email) || ""}
                   field="email"
                 />
-                <CopyRow label="Exchange Rate ID" value={transaction.exchangeRateId} field="exchange" mono />
+                <CopyRow label="Rate Snapshot" value={transaction.rateSnapshot ? JSON.stringify(transaction.rateSnapshot) : '—'} field="exchange" mono />
               </div>
             </Card>
 

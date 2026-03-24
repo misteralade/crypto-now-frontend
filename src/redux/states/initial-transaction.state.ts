@@ -5,7 +5,6 @@ import type {
 
 export const initiateTransactionInitialState: InitiateTransactionRequestPayload | null =
   {
-    exchangeRateId: undefined,
     action: undefined,
     tokenId: undefined,
     currencyId: undefined,
@@ -22,7 +21,6 @@ export const userSearchTransactionInitialState: SearchTransactionsRequestPayload
     sessionId: undefined,
     userId: undefined,
     cryptoCurrencyId: undefined,
-    exchangeRateId: undefined,
     type: undefined,
     amountCrypto: undefined,
     amountFiat: undefined,

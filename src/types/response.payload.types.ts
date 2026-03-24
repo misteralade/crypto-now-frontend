@@ -60,10 +60,8 @@ export type SupportedExchangeRateResponse = {
   fiatRate: number;
   coinGeckoRate: number;
   currency: string; // "NGN" or "USD"
-  validUntil: string; // ISO date string
-  rateId: string;
+  platformRate: number;
   usdRate?: number; // Only present when currency is "USD"
-  platformRate: string;
 };
 
 export type SupportedPlatformBankAccountResponse = {
@@ -192,7 +190,6 @@ export type ExchangeRateResponseEntity = {
   platformRate: string;
   rate: string;
   action: TradeType;
-  validUntil: Date;
   createdAt: Date;
 };
 
@@ -247,7 +244,7 @@ export type TransactionResponseEntity = {
   userId: string;
   sessionId: string;
   cryptocurrencyId: string;
-  exchangeRateId: string;
+  rateSnapshot: Record<string, any> | null;
   type: TradeType;
   amountCrypto: string;
   amountFiatNGN: string;
@@ -276,7 +273,6 @@ export type TransactionResponseEntity = {
   cryptocurrency: CryptoCurrencyResponseEntity;
   dispute: DisputeDetailsResponse;
   user: UserResponseEntity;
-  exchangeRate: ExchangeRateResponseEntity;
   userBankAccount: UserBankAccountResponseEntity | null;
   adminBankAccount: AdminBankAccountResponseEntity | null;
   userCryptoWallet: AdminAndUserCryptoWalletResponseEntity | null;
@@ -347,7 +343,7 @@ export type SearchTransactionsResponse = {
   userId: string;
   sessionId: string;
   cryptocurrencyId: string;
-  exchangeRateId: string;
+  rateSnapshot: Record<string, any> | null;
   type: TransactionAction;
   amountCrypto: string;
   amountFiat: string;
@@ -379,7 +375,6 @@ export type SearchTransactionsResponse = {
   user?: GetUserProfileResponse;
   profile?: UserProfilePayload;
   cryptocurrency?: CryptoCurrencyResponseEntity;
-  exchangeRate?: ExchangeRateResponseEntity;
   userBankAccount?: UserBankAccountResponse;
   userCryptoWallet?: UserCryptoWalletResponse;
 };

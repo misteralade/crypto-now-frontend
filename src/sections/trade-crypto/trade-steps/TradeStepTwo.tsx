@@ -8,6 +8,8 @@ import CopyAccountDetails from "../CopyAccountDetails.tsx";
 import {SESSION_STORAGE_KEYS} from "../../../util/constants.util.ts";
 import {useState, useEffect} from "react";
 import type React from "react";
+import {transactionServiceApi} from "../../../api/transaction.api.ts";
+import {toast} from "react-toastify";
 
 interface TradeStepTwoProps {
   amountToBuy: number;
@@ -17,7 +19,6 @@ interface TradeStepTwoProps {
   handleReceiptUrl: (value: string) => void;
   selectedToken?: SupportedCryptoOrCurrencyResponse;
   selectedCurrency?: SupportedCryptoOrCurrencyResponse;
-  exchangeRateId: string;
   transactionRef: string | undefined;
   handleTransactionHash: (string: string) => void;
   handleSubmitPaymentProof: () => void;
@@ -26,7 +27,7 @@ interface TradeStepTwoProps {
   sellDepositWallet?: CustodialWalletResponse | null;
 }
 
-const TradeStepTwo = ({ amountToBuy, tradeType, numberOfToken, additionalInfo, handleReceiptUrl, selectedToken, selectedCurrency, exchangeRateId, transactionRef, handleTransactionHash, handleSubmitPaymentProof, formatReceiveAmount, formatSendAmount, sellDepositWallet }: TradeStepTwoProps) => {
+const TradeStepTwo = ({ amountToBuy, tradeType, numberOfToken, additionalInfo, handleReceiptUrl, selectedToken, selectedCurrency, transactionRef, handleTransactionHash, handleSubmitPaymentProof, formatReceiveAmount, formatSendAmount, sellDepositWallet }: TradeStepTwoProps) => {
   const {
     // Values
     // files,
@@ -40,7 +41,7 @@ const TradeStepTwo = ({ amountToBuy, tradeType, numberOfToken, additionalInfo, h
     // Functions
     setTransactionHash,
     setUploadedFileUrl,
-  } = useTradeStepTwo({tradeType, exchangeRateId, amountToBuy, numberOfToken, selectedToken, selectedCurrency, sellDepositWallet });
+  } = useTradeStepTwo({tradeType, amountToBuy, numberOfToken, selectedToken, selectedCurrency, sellDepositWallet });
   
   // Retrieve stored values from session storage (if receipt was uploaded)
   // Only use stored values if they exist and are not empty
@@ -238,8 +239,23 @@ const TradeStepTwo = ({ amountToBuy, tradeType, numberOfToken, additionalInfo, h
           <TradePaymentUpload
             maxFiles={1}
             acceptedTypes={[".jpg", ".jpeg", ".png", ".webp", ".gif"]}
-            onFileUploaded={handleReceiptUrl}
-            setUploadedFileUrl={setUploadedFileUrl}
+            onFileSelected={async (file) => {
+              const fd = new FormData();
+              fd.append("file", file);
+              toast.loading("Uploading receipt…", { toastId: "receipt-upload" });
+              try {
+                const result = await transactionServiceApi.uploadTransactionReceipt(fd);
+                toast.dismiss("receipt-upload");
+                if (result?.url) {
+                  handleReceiptUrl(result.url);
+                  setUploadedFileUrl(result.url);
+                }
+              } catch {
+                toast.dismiss("receipt-upload");
+                toast.error("Failed to upload receipt. Please try again.");
+              }
+            }}
+            onFileCleared={() => { handleReceiptUrl(""); setUploadedFileUrl(undefined); }}
           />
         </div>
 

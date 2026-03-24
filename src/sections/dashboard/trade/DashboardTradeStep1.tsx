@@ -13,11 +13,11 @@ import { setInitiateTransactionField } from "../../../redux/transaction.slice.ts
 import { setSelectedCryptoId } from "../../../redux/crypto.slice.ts";
 import { ROUTES } from "../../../util/constants.util.ts";
 import { exchangeRateServiceApi } from "../../../api/rate.api.ts";
-import { transactionServiceApi } from "../../../api/transaction.api.ts";
 
 export interface BuyRateInfo {
-  rateId: string;
   rate: number; // NGN per 1 crypto (fiatRate from API)
+  coinGeckoRate: number;
+  platformRate: number;
   cryptoAmount: number; // how much crypto they'll receive
   fiatAmount: number; // what they typed in
   currencyCode: string;
@@ -171,7 +171,7 @@ function BuyFields({
     }
   };
 
-  // Always fetch a fresh rate — no caching. Called on blur and on chip click.
+  // Fetch rate from backend (cached server-side), compute crypto amount locally.
   const fetchRate = async (fiatAmount: number, currencyId: string) => {
     const cryptoId = selectedToken.id;
     if (!fiatAmount || fiatAmount <= 0 || !currencyId || !cryptoId) return;
@@ -184,21 +184,16 @@ function BuyFields({
       const { data: rateData, success: rateOk } = await exchangeRateServiceApi.getExchangeRate(cryptoId, currencyId, "BUY");
       if (!rateOk || !rateData) return;
 
-      let cryptoAmountStr: string | null = null;
-      try {
-        const { data, success: calcOk } = await transactionServiceApi.calculateAmountToReceive(rateData.rateId, fiatAmount);
-        if (calcOk) cryptoAmountStr = data;
-      } catch {
-        // calculate failed (e.g. rate just expired) — resolve with null so UI can fallback
-        return;
-      }
-
-      if (cryptoAmountStr === null) return;
+      // BUY: crypto received = fiatAmount / (coinGeckoRate * platformRate)
+      const cryptoAmount = parseFloat(
+        (fiatAmount / (rateData.coinGeckoRate * Number(rateData.platformRate))).toFixed(8)
+      );
 
       onRateResolved?.({
-        rateId: rateData.rateId,
         rate: rateData.fiatRate,
-        cryptoAmount: Number(cryptoAmountStr ?? 0),
+        coinGeckoRate: rateData.coinGeckoRate,
+        platformRate: Number(rateData.platformRate),
+        cryptoAmount,
         fiatAmount,
         currencyCode: selectedCurrency?.code ?? "NGN",
         currencyId,

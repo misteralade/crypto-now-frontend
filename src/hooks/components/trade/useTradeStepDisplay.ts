@@ -17,7 +17,6 @@ import { useBankQuery } from "../../../queries/bank.query.ts";
 import { transactionServiceApi } from "../../../api/transaction.api.ts";
 import { useQuery } from "@tanstack/react-query";
 import {
-  setExchangeRateId as setReduxExchangeRateId,
   setAmountToSend, setInitiateTransactionField,
 } from "../../../redux/transaction.slice.ts";
 import { setSelectedCryptoId } from "../../../redux/crypto.slice.ts";
@@ -65,7 +64,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   const { userBankAccounts, loadingUserBankAccounts } = useBankQuery();
   const { supportedCurrencies } = useCurrencyQuery();
   const { supportedCryptoCurrencies, loadingSupportedCryptocurrencies, custodialWallets, generateCustodialWalletMutation } = useCryptoQuery();
-  const { calculatedAmount, loadingCalculation, initiateTransactionMutation, makePaymentTransactionMutation, receivingPaymentAccountConfirmationMutation, createAndSubmitTransactionMutation } = useTransactionQuery();
+  const { initiateTransactionMutation, makePaymentTransactionMutation, receivingPaymentAccountConfirmationMutation, createAndSubmitTransactionMutation } = useTransactionQuery();
   
   const [transactionSessionId, setTransactionSessionId] = useState<string>();
   const [selectedToken, setSelectedToken] = useState<SupportedCryptoOrCurrencyResponse>();
@@ -99,8 +98,6 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
 
 
   const [numberOfToken, setNumberOfToken] = useState<string | number>("");
-  const [exchangeRateId, setExchangeRateId] = useState("");
-  const [validUntil, setValidUntil] = useState<Date>();
   const [amountToBuy, setAmountToBuy] = useState<string | number>(initialAmount || "");
   
   // Track last calculation to prevent circular updates
@@ -307,24 +304,6 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       }));
     }
     
-    // Restore exchangeRateId — skip for BUY local-first flow (BuyFields fetches a fresh rate)
-    if (saved.exchangeRateId && !skipBuyRateFetch) {
-      setExchangeRateId(saved.exchangeRateId);
-      // Restore exchangeRateId to Redux state and transaction form
-      const ratePartial: Partial<InitiateTransactionRequestPayload> = {
-        exchangeRateId: saved.exchangeRateId,
-      };
-      const rateMerged: InitiateTransactionRequestPayload = {
-        ...(transactionFormRef.current || {}),
-        ...ratePartial,
-      } as InitiateTransactionRequestPayload;
-      transactionFormRef.current = rateMerged;
-      setTransactionForm(rateMerged);
-      dispatch(setInitiateTransactionField({
-        field: "exchangeRateId",
-        value: saved.exchangeRateId
-      }));
-    }
     // Restore transaction session ID from saved progress or sessionStorage
     const sessionIdFromStorage = sessionStorage.getItem(SESSION_STORAGE_KEYS.SESSION_ID);
     if (saved.transactionSessionId) {
@@ -472,16 +451,6 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       }
     }
 
-    // Restore exchange rate ID
-    if (transaction.exchangeRateId) {
-      setExchangeRateId(transaction.exchangeRateId);
-      dispatch(setInitiateTransactionField({
-        field: "exchangeRateId",
-        value: transaction.exchangeRateId,
-      }));
-      saveTradeProgress({ exchangeRateId: transaction.exchangeRateId });
-    }
-
     // When continuing a transaction, always lock the exchange rate
     // This ensures the rate doesn't change while the user completes the transaction
     setIsCountdownLocked(true);
@@ -557,13 +526,22 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId, restoredTransaction, loadingUserBankAccounts, currentStep, setShowPaymentReceivingModal]);
 
-  // Countdown
+  // Track when the current exchange rate was received so we can drive a 3-min countdown
+  const rateReceivedAtRef = useRef<number | null>(null);
   useEffect(() => {
-    if (!validUntil || isCountdownLocked) return;
+    if (exchangeRate) {
+      rateReceivedAtRef.current = Date.now();
+    }
+  }, [exchangeRate]);
+
+  // Countdown — 3 minutes TTL driven by rateReceivedAtRef
+  const RATE_TTL_MS = 3 * 60 * 1000;
+  useEffect(() => {
+    if (!rateReceivedAtRef.current || isCountdownLocked) return;
 
     const updateCountdown = () => {
       const now = new Date().getTime();
-      const target = validUntil.getTime();
+      const target = rateReceivedAtRef.current! + RATE_TTL_MS;
       const diff = target - now;
 
       if (diff <= 0) {
@@ -611,7 +589,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
         clearInterval(countdownIntervalRef.current);
     };
   }, [
-    validUntil,
+    exchangeRate,
     isCountdownLocked,
     selectedToken?.id,
     selectedCurrency?.id,
@@ -851,44 +829,19 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
 
   // Exchange rate updates (guarded)
   useEffect(() => {
-    const rateId = exchangeRate?.rateId || "";
-    setExchangeRateId(rateId);
-    dispatch(setReduxExchangeRateId(rateId));
-    setValidUntil(
-      exchangeRate?.validUntil ? new Date(exchangeRate.validUntil) : undefined
-    );
     // Reset calculation tracking when exchange rate changes to allow recalculation
     lastCalculationRef.current = null;
 
-    const partial: Partial<InitiateTransactionRequestPayload> = {
-      exchangeRateId: rateId,
-    };
-    const merged: InitiateTransactionRequestPayload = {
-      ...(transactionFormRef.current || {}),
-      ...partial,
-    } as InitiateTransactionRequestPayload;
-
-    if (!shallowEqual(transactionFormRef.current, merged)) {
-      transactionFormRef.current = merged;
-      setTransactionForm(merged);
-      dispatch(setInitiateTransactionField({
-        field: "exchangeRateId",
-        value: rateId
-      }))
+    if (exchangeRate) {
+      // Don't unlock countdown if receipt has been uploaded or if continuing a transaction
+      const rootState = store.getState() as RootState;
+      const hasReceipt = rootState.transaction.initiate.initiateTransaction?.receiptUrl;
+      const isContinuing = !!sessionId;
+      if (isCountdownLocked && !hasReceipt && !isContinuing) {
+        setIsCountdownLocked(false);
+      }
     }
-
-    if (rateId) {
-      sessionStorage.setItem("exchangeRateId", rateId);
-      saveTradeProgress({ exchangeRateId: rateId });
-    }
-    // Don't unlock countdown if receipt has been uploaded or if continuing a transaction - check if receiptUrl exists
-    const rootState = store.getState() as RootState;
-    const hasReceipt = rootState.transaction.initiate.initiateTransaction?.receiptUrl;
-    const isContinuing = !!sessionId;
-    if (rateId && isCountdownLocked && !hasReceipt && !isContinuing) {
-      setIsCountdownLocked(false);
-    }
-  }, [exchangeRate, dispatch, isCountdownLocked, sessionId]);
+  }, [exchangeRate, isCountdownLocked, sessionId]);
 
   // 🔹 Only clear amounts when the tab ACTUALLY changes (not on mount)
   const prevActiveTabRef = useRef<TradeType>(activeTab);
@@ -908,9 +861,6 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     amountToSend !== debouncedAmountToSend && amountToSend > 0;
 
   const amountToReceive: number = useMemo(() => {
-    if (calculatedAmount && !loadingCalculation && !isDebouncing) {
-      return Number(calculatedAmount);
-    }
     const calculationRate = getCalculationRate();
     if (calculationRate && amountToSend > 0) {
       return activeTab === "sell"
@@ -919,9 +869,6 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     }
     return 0;
   }, [
-    calculatedAmount,
-    loadingCalculation,
-    isDebouncing,
     exchangeRate?.fiatRate,
     exchangeRate?.usdRate,
     exchangeRate?.currency,
@@ -1144,9 +1091,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
 
   // Validate required fields before initiating a transaction.
   const canInitiateTransaction = () => {
-    const exchangeRateIdVal = String(exchangeRateId || "").trim();
-    if (!exchangeRateIdVal) {
-      // Sell flow: rate might still be loading — surface a friendlier message
+    if (!exchangeRate) {
       toast.error("Exchange rate is still loading. Please wait a moment and try again.");
       return false;
     }
@@ -1168,9 +1113,6 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   const initiateTransaction = async () => {
     try {
       if (!canInitiateTransaction()) return;
-
-      // Sync exchange rate into Redux right before proceeding.
-      dispatch(setInitiateTransactionField({ field: "exchangeRateId", value: exchangeRateId }));
 
       if (activeTab === "buy") {
         // BUY: no API call here — just advance to step 2 with amounts synced.
@@ -1253,11 +1195,6 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     // The restoration logic will filter out invalid values
     saveTradeProgress({ numberOfToken, amountToBuy, isCountdownLocked });
   }, [numberOfToken, amountToBuy, isCountdownLocked]);
-
-  useEffect(() => {
-    if (!hydratedRef.current) return;
-    if (exchangeRateId) saveTradeProgress({ exchangeRateId });
-  }, [exchangeRateId]);
 
   // Clear guest user email when reaching Step 3
   useEffect(() => {
@@ -1468,10 +1405,8 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     supportedCurrencies,
     supportedCryptoCurrencies,
     countdown,
-    exchangeRateId,
     exchangeRate,
     loadingExchangeRate,
-    loadingCalculation,
     isDebouncing,
     transactionForm,
     transactionSessionId,

@@ -38,7 +38,6 @@ interface DashboardTradeStep2Props {
   numberOfToken: number;
   selectedToken?: SupportedCryptoOrCurrencyResponse;
   selectedCurrency?: SupportedCryptoOrCurrencyResponse;
-  exchangeRateId: string;
   transactionRef: string | undefined;
   additionalInfo: TradeAdditionalInfoInterface[];
   handleReceiptUrl: (url: string) => void;
@@ -462,8 +461,8 @@ function BuyUploadView({
   walletAddress,
   network,
   submitInvalid,
-  handleReceiptUrl,
-  setUploadedFileUrl,
+  onFileSelected,
+  onFileCleared,
   onSubmit,
   rateLockCountdown,
   isRateExpired,
@@ -474,8 +473,8 @@ function BuyUploadView({
   walletAddress: string;
   network: string;
   submitInvalid: boolean;
-  handleReceiptUrl: (url: string) => void;
-  setUploadedFileUrl: (url: string | undefined) => void;
+  onFileSelected: (file: File) => void;
+  onFileCleared: () => void;
   onSubmit: () => void;
   rateLockCountdown?: string;
   isRateExpired: boolean;
@@ -572,8 +571,8 @@ function BuyUploadView({
         <TradePaymentUpload
           maxFiles={1}
           acceptedTypes={[".jpg", ".jpeg", ".png", ".webp", ".gif", ".pdf"]}
-          onFileUploaded={handleReceiptUrl}
-          setUploadedFileUrl={setUploadedFileUrl}
+          onFileSelected={onFileSelected}
+          onFileCleared={onFileCleared}
         />
       </div>
 
@@ -610,7 +609,6 @@ export default function DashboardTradeStep2({
   numberOfToken,
   selectedToken,
   selectedCurrency,
-  exchangeRateId,
   handleReceiptUrl,
   handleSubmitPaymentProof,
   formatSendAmount,
@@ -628,7 +626,7 @@ export default function DashboardTradeStep2({
   const userEmail = useSelector((s: RootState) => s.user.trade.anonymous.email);
   const isLocalBuyFlow = isBuy && !!buyRateInfo;
 
-  // For local-first BUY flow: fetch bank details directly (no exchangeRateId needed)
+  // For local-first BUY flow: fetch bank details directly
   const { data: localBankDetails, isLoading: localBankDetailsLoading } = useQuery({
     queryKey: [QUERY_KEYS.BANK.PLATFORM_BANK_DETAILS, "local-buy"],
     queryFn: async () => {
@@ -646,7 +644,6 @@ export default function DashboardTradeStep2({
     walletDetails,
   } = useTradeStepTwo({
     tradeType,
-    exchangeRateId,
     amountToBuy,
     numberOfToken,
     selectedToken,
@@ -681,40 +678,31 @@ export default function DashboardTradeStep2({
 
   const isRateExpired = rateLockCountdown === "Expired";
 
-  // Local-first BUY: track uploaded receipt URL for createAndSubmit call
-  const [localReceiptUrl, setLocalReceiptUrl] = useState<string | undefined>();
-
-  const handleLocalReceiptUrl = (url: string) => {
-    setLocalReceiptUrl(url);
-    handleReceiptUrl(url); // keep existing redux flow for fallback
-  };
+  // Local-first BUY: track selected receipt File for multipart createAndSubmit
+  const [localReceiptFile, setLocalReceiptFile] = useState<File | undefined>();
 
   const [isLocalBuySubmitting, setIsLocalBuySubmitting] = useState(false);
 
   const handleLocalBuySubmit = async () => {
-    if (!buyRateInfo || !localReceiptUrl) return;
+    if (!buyRateInfo || !localReceiptFile) return;
 
-    // Build payload directly from buyRateInfo — no Redux dispatch needed,
-    // so there's no async state flush timing issue.
-    const payload = {
-      coinId: initiateForm?.tokenId,
-      currencyId: buyRateInfo.currencyId,
-      exchangeRateId: buyRateInfo.rateId,
-      amountToSend: buyRateInfo.fiatAmount,
-      amountToReceive: buyRateInfo.cryptoAmount,
-      receiptUrl: localReceiptUrl,
-      walletAddress: buyWalletAddress ?? "",
-      network: buyNetwork ?? "",
-      ...(userEmail ? { email: userEmail } : {}),
-    };
+    const formData = new FormData();
+    formData.append("file", localReceiptFile);
+    formData.append("coinId", initiateForm?.tokenId ?? "");
+    formData.append("currencyId", buyRateInfo.currencyId);
+    formData.append("amountToSend", String(buyRateInfo.fiatAmount));
+    formData.append("amountToReceive", String(buyRateInfo.cryptoAmount));
+    formData.append("walletAddress", buyWalletAddress ?? "");
+    formData.append("network", buyNetwork ?? "");
+    if (userEmail) formData.append("email", userEmail);
 
     setIsLocalBuySubmitting(true);
     const toastId = "buy-submit";
     toast.loading("Submitting transaction…", { toastId });
     try {
       const result = userEmail
-        ? await transactionServiceApi.anonymousCreateAndSubmitTransaction(payload)
-        : await transactionServiceApi.createAndSubmitTransaction(payload);
+        ? await transactionServiceApi.anonymousCreateAndSubmitTransaction(formData)
+        : await transactionServiceApi.createAndSubmitTransaction(formData);
 
       toast.dismiss(toastId);
       if (result?.data?.sessionId) {
@@ -734,7 +722,7 @@ export default function DashboardTradeStep2({
     }
   };
 
-  const localBuySubmitInvalid = !localReceiptUrl || isLocalBuySubmitting;
+  const localBuySubmitInvalid = !localReceiptFile || isLocalBuySubmitting;
 
   const handleCopyAccount = () => {
     navigator.clipboard.writeText(accountNumber).then(() => {
@@ -831,8 +819,12 @@ export default function DashboardTradeStep2({
           walletAddress={buyWalletAddress ?? ""}
           network={buyNetwork ?? ""}
           submitInvalid={useLocalFlow ? localBuySubmitInvalid : submitInvalid}
-          handleReceiptUrl={useLocalFlow ? handleLocalReceiptUrl : handleReceiptUrl}
-          setUploadedFileUrl={setUploadedFileUrl}
+          onFileSelected={useLocalFlow
+            ? (file) => setLocalReceiptFile(file)
+            : (file) => { void file; /* legacy flow: file not used directly */ }}
+          onFileCleared={useLocalFlow
+            ? () => setLocalReceiptFile(undefined)
+            : () => setUploadedFileUrl(undefined)}
           onSubmit={useLocalFlow ? handleLocalBuySubmit : handleSubmitPaymentProof}
           rateLockCountdown={useLocalFlow ? undefined : rateLockCountdown}
           isRateExpired={useLocalFlow ? false : isRateExpired}

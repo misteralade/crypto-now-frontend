@@ -139,7 +139,6 @@ const TradeStepDisplay = ({ activeTab,setActiveTab, step, currency, token, setSt
     selectedCurrency,
     supportedCurrencies,
     supportedCryptoCurrencies,
-    exchangeRateId,
     isInitiatingTrade,
     transactionSessionId,
     showPaymentReceivingModal,
@@ -263,7 +262,6 @@ const TradeStepDisplay = ({ activeTab,setActiveTab, step, currency, token, setSt
                 additionalInfo={AdditionalInfo}
                 selectedToken={selectedToken}
                 selectedCurrency={selectedCurrency}
-                exchangeRateId={exchangeRateId}
                 handleReceiptUrl={handleReceiptUrl}
                 transactionRef={transactionSessionId}
                 handleTransactionHash={handleTransactionHash}

@@ -1,9 +1,8 @@
 import { type ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, User, LogOut, TrendingUp, Bell, Settings, Wallet, History } from "lucide-react";
+import { LayoutDashboard, User, LogOut, TrendingUp, Settings, Wallet, History } from "lucide-react";
 import { LOCAL_STORAGE_KEYS, ROUTES } from "../util/constants.util.ts";
 import { useUserQuery } from "../queries/user.query.ts";
-import { useTransactionQuery } from "../queries/transaction.query.ts";
 import Logo from "../assets/logo/logo.svg";
 
 interface AuthenticatedLayoutProps {
@@ -44,7 +43,6 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
   const location  = useLocation();
   const navigate  = useNavigate();
   const { userProfileData } = useUserQuery();
-  const { incompleteTransactionsCount } = useTransactionQuery();
 
   const initials  = getInitials(userProfileData?.profile?.firstName, userProfileData?.profile?.lastName);
   const fullName  = userProfileData?.profile?.firstName
@@ -134,17 +132,6 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
             style={{ background: "#FFFFFF", borderBottom: "1px solid #F0F0F0" }}>
             <h1 className="text-sm font-semibold" style={{ color: "#0E0F0C" }}>{pageTitle}</h1>
             <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => navigate({ to: ROUTES.TRANSACTION })}
-                aria-label="View orders and transaction updates"
-                className="relative p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                <Bell size={18} style={{ color: "#6B6E6B" }} />
-                {typeof incompleteTransactionsCount === "number" && incompleteTransactionsCount > 0 ? (
-                  <span className="absolute top-1 right-1 min-w-[6px] h-1.5 rounded-full bg-[#EB5757]" aria-hidden />
-                ) : null}
-              </button>
               <Link to={ROUTES.PROFILE}>
                 <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
                   style={{ background: "linear-gradient(135deg,#948EEE,#575AE5)" }}>

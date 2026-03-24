@@ -21,21 +21,6 @@ export const useTransactionQuery = () => {
     location.pathname.startsWith(`${ROUTES.DASHBOARD}/`);
   const searchTransactionPayload = useSelector((state: RootState) => state.transaction.dashboard.searchUserTransactions);
 
-  // Calculate Amount to Receive — use reactive selectors so dispatching
-  // clearExchangeRateId() immediately disables this query.
-  const calcExchangeRateId = useSelector((s: RootState) => s.transaction.exchangeRateId);
-  const calcAmountToSend = useSelector((s: RootState) => s.transaction.amountToSend);
-
-  const { data: calculatedAmount, isLoading: loadingCalculation } = useQuery({
-    queryKey: [QUERY_KEYS.TRANSACTION.GET_AMOUNT_TO_SEND, calcExchangeRateId, calcAmountToSend],
-    queryFn: async () => {
-      if (!calcAmountToSend || !calcExchangeRateId) return null;
-      const { data, success } = await transactionServiceApi.calculateAmountToReceive(calcExchangeRateId, calcAmountToSend);
-      return success ? data : null;
-    },
-    enabled: !!calcExchangeRateId && !!calcAmountToSend && Number(calcAmountToSend) > 0,
-  });
-
   const {
     data: userTransactionHistory,
     isLoading: loadingUserTransactionHistory,
@@ -349,7 +334,6 @@ export const useTransactionQuery = () => {
       const payload = {
         coinId: transactionForm.tokenId,
         currencyId: transactionForm.currencyId,
-        exchangeRateId: transactionForm.exchangeRateId,
         amountToSend: transactionForm.amountToSend ?? 0,
         amountToReceive: transactionForm.amountToReceive ?? 0,
         receiptUrl: transactionForm.receiptUrl,
@@ -426,8 +410,6 @@ export const useTransactionQuery = () => {
   
   return {
     // Values
-    calculatedAmount,
-    loadingCalculation,
     userTransactionHistory,
     loadingUserTransactionHistory,
     fetchingUserTransactionHistory,

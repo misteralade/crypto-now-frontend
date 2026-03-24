@@ -15,7 +15,6 @@ const transactionSlice = createSlice({
     initiate: {
       initiateTransaction: initiateTransactionInitialState,
     },
-    exchangeRateId: undefined as string | undefined,
     amountToSend: undefined as number | undefined,
     dashboard: {
       searchUserTransactions: userSearchTransactionInitialState
@@ -47,9 +46,6 @@ const transactionSlice = createSlice({
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-expect-error
       state.initiate.initiateTransaction[field] = value;
-    },
-    setExchangeRateId: (state, action: PayloadAction<string | undefined>) => {
-      state.exchangeRateId = action.payload;
     },
     setAmountToSend: (state, action: PayloadAction<number | undefined>) => {
       state.amountToSend = action.payload;
@@ -98,9 +94,6 @@ const transactionSlice = createSlice({
       // @ts-expect-error
       state.initiate.initiateTransaction[field] = undefined;
     },
-    clearExchangeRateId: (state) => {
-      state.exchangeRateId = undefined;
-    },
     clearAmountToSend: (state) => {
       state.amountToSend = undefined;
     },
@@ -132,7 +125,6 @@ export const {
   // Set States
   setInitiateTransaction,
   setInitiateTransactionField,
-  setExchangeRateId,
   setAmountToSend,
   setSearchUserTransactions,
   setTransactionDetailSessionId,
@@ -147,7 +139,6 @@ export const {
   // Clear States
   clearInitiateTransaction,
   clearInitiateTransactionField,
-  clearExchangeRateId,
   clearAmountToSend,
   clearSearchUserTransactions,
   clearTransactionDetailSessionId,

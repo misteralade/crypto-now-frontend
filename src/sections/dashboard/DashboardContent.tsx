@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
+import { loadTradeProgress, type TradeProgress } from "../../util/tradeProgress.storage.util.ts";
 import { motion } from "framer-motion";
 import { Bell, ArrowUpRight, ChevronRight, Copy, Check } from "lucide-react";
 import { useDashboardContent } from "../../hooks/components/dashboard/useDashboardContent.ts";
@@ -186,6 +187,25 @@ export default function DashboardContent() {
     navigate({ to: ROUTES.DASHBOARD_TRADE, search: { option } as any });
   };
 
+  // Check for in-progress trade to offer "Continue" banner
+  const [pendingTrade, setPendingTrade] = useState<TradeProgress | null>(null);
+  useEffect(() => {
+    const saved = loadTradeProgress();
+    if (saved && typeof saved.step === "number" && saved.step >= 1 && saved.step <= 2 && saved.activeTab) {
+      setPendingTrade(saved);
+    } else {
+      setPendingTrade(null);
+    }
+  }, []);
+
+  const handleContinueTrade = () => {
+    if (!pendingTrade) return;
+    navigate({
+      to: ROUTES.DASHBOARD_TRADE,
+      search: { option: pendingTrade.activeTab, resume: "true" } as any,
+    });
+  };
+
   /* ─── Skeleton loaders ─── */
   const Skel = ({ w, h = 4 }: { w: string; h?: number }) => (
     <div className={`animate-pulse rounded bg-white/25`} style={{ width: w, height: `${h * 4}px` }} />
@@ -343,6 +363,53 @@ export default function DashboardContent() {
           BODY CONTENT
       ════════════════════════════════════════════ */}
       <div className="px-5 lg:px-0 space-y-7">
+
+        {/* CONTINUE TRADE BANNER */}
+        {pendingTrade && (() => {
+          const isBuy = pendingTrade.activeTab !== "sell";
+          const token = pendingTrade.selectedTokenId ? cryptoMap.get(pendingTrade.selectedTokenId) : undefined;
+          const fiatAmt = pendingTrade.amountToBuy ? formatCurrency(Number(pendingTrade.amountToBuy)) : null;
+          const cryptoAmt = pendingTrade.numberOfToken ? Number(pendingTrade.numberOfToken) : null;
+          const action = isBuy ? "Complete Buying" : "Complete Selling";
+          // e.g. "Complete Buying ₦50,000 of USDT" or "Complete Selling 0.05 BTC"
+          const detail = token
+            ? isBuy && fiatAmt
+              ? `${fiatAmt} of ${token.symbol}`
+              : !isBuy && cryptoAmt
+              ? `${cryptoAmt} ${token.symbol}`
+              : token.symbol
+            : null;
+
+          return (
+            <button
+              type="button"
+              onClick={handleContinueTrade}
+              className="w-full flex items-center justify-between gap-3 px-4 py-3.5 rounded-2xl transition-all active:scale-[0.98] cursor-pointer"
+              style={{ background: "linear-gradient(135deg, #948EEE 0%, #575AE5 100%)", border: "none" }}
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 overflow-hidden"
+                  style={{ background: "rgba(255,255,255,0.2)" }}>
+                  {token?.logoUrl
+                    ? <img src={token.logoUrl} alt={token.symbol} className="w-6 h-6 object-contain" />
+                    : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+                  }
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-bold text-white leading-tight">
+                    {action}{detail ? ` ${detail}` : ""}
+                  </p>
+                  <p className="text-[11px] text-white/70 leading-tight mt-0.5">
+                    {isBuy
+                      ? "Get a fresh rate & complete your order"
+                      : `Step ${pendingTrade.step} of 3 · Tap to resume`}
+                  </p>
+                </div>
+              </div>
+              <ChevronRight size={18} className="text-white/80 shrink-0" />
+            </button>
+          );
+        })()}
 
         {/* QUICK ACTIONS */}
         <section>

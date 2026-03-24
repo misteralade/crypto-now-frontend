@@ -66,15 +66,6 @@ class TransactionServiceApi {
     }
   }
 
-  async calculateAmountToReceive(exchangeRateId: string, amountToSend: number) {
-    const { data, success }: { data: string, success: boolean} = await axiosPostRequestHandler(
-      `/transaction/calculate/amount/${exchangeRateId}`,
-      { amountToSend }
-    )
-
-    return { data, success };
-  }
-  
   async initiateTransactionAnonymousUser(transactionData: Record<string, any>): Promise<InitiateTransactionAPIResponse> {
     return await axiosPostRequestHandler(
       '/transaction/initiate/anonymous',
@@ -82,12 +73,22 @@ class TransactionServiceApi {
     ) as InitiateTransactionAPIResponse
   }
 
-  async createAndSubmitTransaction(payload: Record<string, any>): Promise<InitiateTransactionAPIResponse> {
-    return await axiosPostRequestHandler('/transaction/create-and-submit', payload) as InitiateTransactionAPIResponse;
+  async createAndSubmitTransaction(payload: FormData | Record<string, any>): Promise<InitiateTransactionAPIResponse> {
+    const isMultipart = payload instanceof FormData;
+    return await axiosPostRequestHandler(
+      '/transaction/create-and-submit',
+      payload,
+      isMultipart ? { headers: { 'Content-Type': 'multipart/form-data' } } : undefined,
+    ) as InitiateTransactionAPIResponse;
   }
 
-  async anonymousCreateAndSubmitTransaction(payload: Record<string, any>): Promise<InitiateTransactionAPIResponse> {
-    return await axiosPostRequestHandler('/transaction/create-and-submit/anonymous', payload) as InitiateTransactionAPIResponse;
+  async anonymousCreateAndSubmitTransaction(payload: FormData | Record<string, any>): Promise<InitiateTransactionAPIResponse> {
+    const isMultipart = payload instanceof FormData;
+    return await axiosPostRequestHandler(
+      '/transaction/create-and-submit/anonymous',
+      payload,
+      isMultipart ? { headers: { 'Content-Type': 'multipart/form-data' } } : undefined,
+    ) as InitiateTransactionAPIResponse;
   }
 
   async initiateTransaction(transactionData: Record<string, any>) {

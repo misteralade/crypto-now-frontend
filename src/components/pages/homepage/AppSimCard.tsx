@@ -123,7 +123,6 @@ const AppSimCard = () => {
   const [sellReceiveCurrency, setSellReceiveCurrency] = useState<"NGN" | "USD">("NGN");
   const [usdToNgnRate, setUsdToNgnRate] = useState<number | null>(null);
   const [usdRateLoading, setUsdRateLoading] = useState(false);
-  const [rateId, setRateId] = useState(saved.rateId || "");
 
   const [email, setEmail] = useState(saved.email || "");
   const [walletAddress, setWalletAddress] = useState(saved.walletAddress || "");
@@ -179,11 +178,11 @@ const AppSimCard = () => {
   // Persist all state to localStorage on every change
   useEffect(() => {
     localStorage.setItem(LS_KEY, JSON.stringify({
-      tab, step, selectedCrypto, selectedCurrency, amount, receiveAmount, rateId,
+      tab, step, selectedCrypto, selectedCurrency, amount, receiveAmount,
       email, walletAddress, network, bankName, accountNumber, accountName,
       platformBank, sessionId, depositWallet, done,
     }));
-  }, [tab, step, selectedCrypto, selectedCurrency, amount, receiveAmount, rateId,
+  }, [tab, step, selectedCrypto, selectedCurrency, amount, receiveAmount,
       email, walletAddress, network, bankName, accountNumber, accountName,
       platformBank, sessionId, depositWallet, done]);
 
@@ -244,11 +243,16 @@ const AppSimCard = () => {
         selectedCrypto, selectedCurrency, isBuy ? "BUY" : "SELL"
       );
       if (success && data) {
-        setRateId(data.rateId);
-        const { data: calc } = await transactionServiceApi.calculateAmountToReceive(
-          data.rateId, parseFloat(effectiveAmount)
-        );
-        setReceiveAmount(calc ? String(calc) : "");
+        const fiatAmt = parseFloat(effectiveAmount);
+        let computed: number;
+        if (isBuy) {
+          // BUY: user sends fiat, receives crypto
+          computed = fiatAmt / (data.coinGeckoRate * data.platformRate);
+        } else {
+          // SELL: user sends crypto, receives fiat
+          computed = fiatAmt * data.coinGeckoRate * data.platformRate;
+        }
+        setReceiveAmount(computed > 0 ? String(computed) : "");
       }
     } catch {}
   };
@@ -276,7 +280,6 @@ const AppSimCard = () => {
         currencyId: selectedCurrency,
         amountToSend: parseFloat(amount),
         amountToReceive: parseFloat(receiveAmount) || 0,
-        exchangeRateId: rateId,
         email,
         walletAddress,
         network,
@@ -311,7 +314,6 @@ const AppSimCard = () => {
         currencyId: selectedCurrency,
         amountToSend: parseFloat(amount),
         amountToReceive: parseFloat(receiveAmount) || 0,
-        exchangeRateId: rateId,
         email,
         bankName,
         accountNumber,

@@ -21,7 +21,6 @@ import { useRateQuery } from "../../../queries/rate.query.ts";
 
 interface UseTradeStepTwoProps {
   tradeType: TradeType;
-  exchangeRateId: string;
   amountToBuy: number;
   numberOfToken: number;
   selectedToken?: SupportedCryptoOrCurrencyResponse;
@@ -31,7 +30,6 @@ interface UseTradeStepTwoProps {
 
 export const useTradeStepTwo = ({
   tradeType,
-  exchangeRateId,
   amountToBuy,
   numberOfToken,
   selectedToken,
@@ -90,7 +88,6 @@ export const useTradeStepTwo = ({
       queryKey: [
         QUERY_KEYS.BANK.PLATFORM_BANK_DETAILS,
         QUERY_KEYS.CRYPTO.PLATFORM_CRYPTO_WALLET,
-        exchangeRateId,
         tradeType,
       ],
       queryFn: async () => {
@@ -115,7 +112,7 @@ export const useTradeStepTwo = ({
         }
       },
       // For sell: only fetch platform wallet if no custodial wallet is available
-      enabled: tradeType === "buy" ? !!exchangeRateId : !!exchangeRateId && !sellDepositWallet,
+      enabled: tradeType === "buy" ? true : !sellDepositWallet,
     });
 
   // Validation based on trade type - only require uploaded file

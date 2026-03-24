@@ -1,13 +1,49 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Copy, Check, Wallet } from "lucide-react";
 import { useCryptoQuery } from "../../../queries/crypto.query.ts";
 import type { CustodialWalletResponse } from "../../../types/response.payload.types.ts";
 
+// Shortens long addresses while preserving the first and last parts.
 function truncateAddress(addr: string) {
   if (addr.length <= 20) return addr;
   return `${addr.slice(0, 10)}…${addr.slice(-8)}`;
 }
 
+// Displays a full wallet address, truncating only when overflow is detected.
+function AdaptiveWalletAddress({ address }: { address: string }) {
+  const textRef = useRef<HTMLParagraphElement | null>(null);
+  const [shouldTruncate, setShouldTruncate] = useState(false);
+
+  useEffect(() => {
+    const element = textRef.current;
+    if (!element) return;
+
+    // Checks if rendered content overflows the available horizontal space.
+    const checkOverflow = () => {
+      setShouldTruncate(element.scrollWidth > element.clientWidth + 1);
+    };
+
+    checkOverflow();
+
+    // Re-checks truncation when the text container resizes.
+    const resizeObserver = new ResizeObserver(checkOverflow);
+    resizeObserver.observe(element);
+    window.addEventListener("resize", checkOverflow);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", checkOverflow);
+    };
+  }, [address]);
+
+  return (
+    <p ref={textRef} className="text-xs font-mono truncate flex-1" style={{ color: "#0E0F0C" }}>
+      {shouldTruncate ? truncateAddress(address) : address}
+    </p>
+  );
+}
+
+// Renders a copy button with temporary copied state feedback.
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
 
@@ -38,6 +74,7 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
+// Renders one wallet card with network, address, and copy action.
 function WalletCard({
   wallet,
   cryptoName,
@@ -92,9 +129,7 @@ function WalletCard({
         className="rounded-2xl px-4 py-3 flex items-center justify-between gap-3"
         style={{ background: "#FFFFFF", border: "1px solid #EEEEEE" }}
       >
-        <p className="text-xs font-mono truncate flex-1" style={{ color: "#0E0F0C" }}>
-          {truncateAddress(wallet.walletAddress)}
-        </p>
+        <AdaptiveWalletAddress address={wallet.walletAddress} />
         <CopyButton text={wallet.walletAddress} />
       </div>
 
@@ -106,6 +141,7 @@ function WalletCard({
   );
 }
 
+// Shows the dashboard wallets section with loading, empty, and wallet states.
 export default function DashboardWalletsContent() {
   const {
     custodialWallets,

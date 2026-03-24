@@ -2,7 +2,6 @@ export type TradeType = "BUY" | "SELL";
 export type OrderBy = "ASC" | "DESC";
 
 export type InitiateTransactionRequestPayload = {
-  exchangeRateId?: string;
   action?: TradeType;
   tokenId?: string;
   currencyId?: string;
@@ -40,7 +39,6 @@ export type SearchTransactionsRequestPayload = {
   sessionId: string | undefined;
   userId: string | undefined;
   cryptoCurrencyId: string | undefined;
-  exchangeRateId: string | undefined;
   type: TradeType | undefined;
   amountCrypto: number | undefined;
   amountFiat: number | undefined;

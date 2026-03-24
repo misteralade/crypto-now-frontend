@@ -14,8 +14,7 @@ export interface TradeProgress {
   numberOfToken?: string | number;
   amountToBuy?: string | number;
 
-  // Session / rate
-  exchangeRateId?: string;
+  // Session
   transactionSessionId?: string;
 
   // UX flags

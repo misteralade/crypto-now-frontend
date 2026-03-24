@@ -18,18 +18,19 @@ import DashboardTradeStep1, { type BuyRateInfo } from "./DashboardTradeStep1.tsx
 import DashboardTradeStep2 from "./DashboardTradeStep2.tsx";
 import DashboardTradeStep3 from "./DashboardTradeStep3.tsx";
 import DashboardTradeSuccess from "./DashboardTradeSuccess.tsx";
-import { clearExchangeRateId, clearAmountToSend, clearInitiateTransactionField, setInitiateTransactionField } from "../../../redux/transaction.slice.ts";
+import { clearAmountToSend, clearInitiateTransactionField, setInitiateTransactionField } from "../../../redux/transaction.slice.ts";
 import { useDispatch } from "react-redux";
 import { LOCAL_STORAGE_KEYS } from "../../../util/constants.util.ts";
 
 export default function DashboardTrade() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const searchParams: { option?: string; sessionId?: string } =
+  const searchParams: { option?: string; sessionId?: string; resume?: string } =
     useSearch({ strict: false });
 
   const routeOption = searchParams.option;
   const sessionId = searchParams.sessionId;
+  const isResume = searchParams.resume === "true";
 
   const [step, setStep] = useState<number>(1);
   const [activeTab, setActiveTab] = useState<TradeType>(
@@ -55,16 +56,10 @@ export default function DashboardTrade() {
   const hasRestoredRef = useRef<string | null>(null);
   const hasInitializedRef = useRef<boolean>(false);
 
-  // For BUY local-first flow: wipe any stale exchangeRateId / amountToSend from Redux
-  // and tradeProgress on mount so the global calculateAmountToReceive query never
-  // fires with an expired rate ID.
   useEffect(() => {
     if (activeTab === "buy") {
-      dispatch(clearExchangeRateId());
       dispatch(clearAmountToSend());
-      dispatch(clearInitiateTransactionField("exchangeRateId"));
       dispatch(clearInitiateTransactionField("amountToSend"));
-      saveTradeProgress({ exchangeRateId: undefined });
     }
   }, [activeTab]);
 
@@ -86,31 +81,45 @@ export default function DashboardTrade() {
     const saved = loadTradeProgress();
 
     if (saved?.step === 3) { clearTradeProgress(); setStep(1); hasInitializedRef.current = true; return; }
-    if (!isReload) { clearTradeProgress(); setStep(1); hasInitializedRef.current = true; return; }
-    if (saved && typeof saved.step === "number" && saved.step !== 3) setStep(saved.step);
-    if (saved?.activeTab) setActiveTab(saved.activeTab as TradeType);
+    // Resume from dashboard "Continue" banner or page reload — restore saved state
+    if (isResume || isReload) {
+      const restoredTab = (saved?.activeTab ?? "buy") as TradeType;
+      const isBuyResume = restoredTab === "buy";
+
+      if (saved?.activeTab) { setActiveTab(restoredTab); setHasChosenMode(true); }
+
+      if (isBuyResume) {
+        // BUY is local-first: buyRateInfo lives only in component memory.
+        // On resume the rate is gone, so always restart at step 1 so the user
+        // picks a fresh rate. Wipe any stale rate fields from tradeProgress and Redux.
+        setStep(1);
+        saveTradeProgress({ amountToBuy: undefined, numberOfToken: undefined });
+        dispatch(clearAmountToSend());
+        dispatch(clearInitiateTransactionField("amountToSend"));
+      } else {
+        if (saved && typeof saved.step === "number" && saved.step !== 3) setStep(saved.step);
+      }
+
+      hasInitializedRef.current = true;
+      return;
+    }
+    // Fresh navigation (no resume, no reload) — clear stale progress
+    clearTradeProgress();
+    setStep(1);
     hasInitializedRef.current = true;
-  }, [sessionId]);
+  }, [sessionId, isResume]);
 
   useEffect(() => {
     if (step === 3) { clearTradeProgress(); return; }
     saveTradeProgress({ step, activeTab });
   }, [step, activeTab]);
 
-  useEffect(() => {
-    let isReloading = false;
-    const onBeforeUnload = () => { isReloading = true; };
-    window.addEventListener("beforeunload", onBeforeUnload);
-    return () => {
-      window.removeEventListener("beforeunload", onBeforeUnload);
-      if (!isReloading) clearTradeProgress();
-    };
-  }, []);
+  // No unmount clear — let progress persist so the dashboard can show "Continue"
 
   const {
     selectedToken, numberOfToken, AdditionalInfo, amountToBuy,
     selectedCurrency, supportedCurrencies, supportedCryptoCurrencies,
-    exchangeRateId, countdown, isInitiatingTrade, loadingExchangeRate, transactionSessionId,
+    countdown, isInitiatingTrade, loadingExchangeRate, transactionSessionId,
     userBankAccounts,
     showUserEnterEmail, isLoadingPingUser,
     loadingSupportedCryptocurrencies, loadingUserBankAccounts,
@@ -321,7 +330,6 @@ export default function DashboardTrade() {
                 numberOfToken={isBuy && buyRateInfo ? buyRateInfo.cryptoAmount : (typeof numberOfToken === "string" ? (numberOfToken ? Number(numberOfToken) : 0) : (numberOfToken || 0))}
                 selectedToken={selectedToken}
                 selectedCurrency={selectedCurrency}
-                exchangeRateId={exchangeRateId}
                 rateLockCountdown={countdown}
                 transactionRef={transactionSessionId}
                 additionalInfo={AdditionalInfo}
