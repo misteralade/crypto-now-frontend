@@ -202,7 +202,7 @@ export default function DashboardContent() {
     if (!pendingTrade) return;
     navigate({
       to: ROUTES.DASHBOARD_TRADE,
-      search: { option: pendingTrade.activeTab, resume: "true" } as any,
+      search: { option: pendingTrade.activeTab, resume: true } as any,
     });
   };
 

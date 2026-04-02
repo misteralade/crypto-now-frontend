@@ -10,27 +10,38 @@ import { AnimatePresence, motion } from "framer-motion";
 import type { TradeType } from "../../../types/trade.types.ts";
 import { useTradeStepDisplay } from "../../../hooks/components/trade/useTradeStepDisplay.ts";
 import {
-  clearTradeProgress, loadTradeProgress, saveTradeProgress,
+  clearTradeProgress,
+  loadTradeProgress,
+  saveTradeProgress,
 } from "../../../util/tradeProgress.storage.util.ts";
 import { LoadingSpinner } from "../../../components/global/LoadingSpinner.tsx";
 import EmailModal from "../../trade-crypto/modals/EmailModal.tsx";
-import DashboardTradeStep1, { type BuyRateInfo } from "./DashboardTradeStep1.tsx";
+import DashboardTradeStep1, {
+  type BuyRateInfo,
+} from "./DashboardTradeStep1.tsx";
 import DashboardTradeStep2 from "./DashboardTradeStep2.tsx";
 import DashboardTradeStep3 from "./DashboardTradeStep3.tsx";
 import DashboardTradeSuccess from "./DashboardTradeSuccess.tsx";
-import { clearAmountToSend, clearInitiateTransactionField, setInitiateTransactionField } from "../../../redux/transaction.slice.ts";
+import {
+  clearAmountToSend,
+  clearInitiateTransactionField,
+  setInitiateTransactionField,
+} from "../../../redux/transaction.slice.ts";
 import { useDispatch } from "react-redux";
 import { LOCAL_STORAGE_KEYS } from "../../../util/constants.util.ts";
 
 export default function DashboardTrade() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const searchParams: { option?: string; sessionId?: string; resume?: string } =
+  const searchParams: { option?: string; sessionId?: string; resume?: string | boolean } =
     useSearch({ strict: false });
 
   const routeOption = searchParams.option;
   const sessionId = searchParams.sessionId;
-  const isResume = searchParams.resume === "true";
+  const isResume =
+    searchParams.resume === true ||
+    searchParams.resume === "true" ||
+    searchParams.resume === '"true"';
 
   const [step, setStep] = useState<number>(1);
   const [activeTab, setActiveTab] = useState<TradeType>(
@@ -39,15 +50,26 @@ export default function DashboardTrade() {
   const [hasChosenMode, setHasChosenMode] = useState<boolean>(!!routeOption);
 
   // Local pending token for sell flow (hook's useEffect resets selectedToken so we track locally)
-  const [pendingSellToken, setPendingSellToken] = useState<import("../../../types/response.payload.types.ts").SupportedCryptoOrCurrencyResponse | undefined>();
+  const [pendingSellToken, setPendingSellToken] = useState<
+    | import("../../../types/response.payload.types.ts").SupportedCryptoOrCurrencyResponse
+    | undefined
+  >();
   // State + ref to hold the token selected for buy
-  const [pendingBuyToken, setPendingBuyToken] = useState<import("../../../types/response.payload.types.ts").SupportedCryptoOrCurrencyResponse | undefined>();
-  const pendingBuyTokenRef = useRef<import("../../../types/response.payload.types.ts").SupportedCryptoOrCurrencyResponse | undefined>(undefined);
+  const [pendingBuyToken, setPendingBuyToken] = useState<
+    | import("../../../types/response.payload.types.ts").SupportedCryptoOrCurrencyResponse
+    | undefined
+  >();
+  const pendingBuyTokenRef = useRef<
+    | import("../../../types/response.payload.types.ts").SupportedCryptoOrCurrencyResponse
+    | undefined
+  >(undefined);
   // Lifted wallet+network state so Step 3 can show a read-only summary
   const [buyWalletAddress, setBuyWalletAddress] = useState("");
   const [buyNetwork, setBuyNetwork] = useState("");
   // Sell payout account selection
-  const [sellPayoutAccountId, setSellPayoutAccountId] = useState<string | undefined>();
+  const [sellPayoutAccountId, setSellPayoutAccountId] = useState<
+    string | undefined
+  >();
   // Sell network selection (for multi-network tokens like USDT)
   const [sellNetwork, setSellNetwork] = useState<string | undefined>();
   // BUY local-first rate (fetched at Step 1, used at Step 2 for submission)
@@ -55,6 +77,8 @@ export default function DashboardTrade() {
 
   const hasRestoredRef = useRef<string | null>(null);
   const hasInitializedRef = useRef<boolean>(false);
+  // Holds the saved amount to restore after setAmountToBuy is available
+  const pendingAmountRestoreRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (activeTab === "buy") {
@@ -76,17 +100,27 @@ export default function DashboardTrade() {
     }
     if (hasInitializedRef.current) return;
 
-    const nav = performance?.getEntriesByType?.("navigation")?.[0] as PerformanceNavigationTiming | undefined;
+    const nav = performance?.getEntriesByType?.("navigation")?.[0] as
+      | PerformanceNavigationTiming
+      | undefined;
     const isReload = nav?.type === "reload";
     const saved = loadTradeProgress();
 
-    if (saved?.step === 3) { clearTradeProgress(); setStep(1); hasInitializedRef.current = true; return; }
+    if (saved?.step === 3) {
+      clearTradeProgress();
+      setStep(1);
+      hasInitializedRef.current = true;
+      return;
+    }
     // Resume from dashboard "Continue" banner or page reload — restore saved state
     if (isResume || isReload) {
       const restoredTab = (saved?.activeTab ?? "buy") as TradeType;
       const isBuyResume = restoredTab === "buy";
 
-      if (saved?.activeTab) { setActiveTab(restoredTab); setHasChosenMode(true); }
+      if (saved?.activeTab) {
+        setActiveTab(restoredTab);
+        setHasChosenMode(true);
+      }
 
       if (isBuyResume) {
         // BUY is local-first: buyRateInfo lives only in component memory.
@@ -95,11 +129,12 @@ export default function DashboardTrade() {
         setStep(1);
         if (saved?.buyWalletAddress) setBuyWalletAddress(saved.buyWalletAddress);
         if (saved?.buyNetwork) setBuyNetwork(saved.buyNetwork);
-        if (saved?.amountToBuy) setAmountToBuy(String(saved.amountToBuy));
-        // Only clear rate-specific Redux state, keep amounts
+        // Defer amount restore — setAmountToBuy comes from useTradeStepDisplay below
+        if (saved?.amountToBuy) pendingAmountRestoreRef.current = String(saved.amountToBuy);
         dispatch(clearInitiateTransactionField("amountToSend"));
       } else {
-        if (saved && typeof saved.step === "number" && saved.step !== 3) setStep(saved.step);
+        if (saved && typeof saved.step === "number" && saved.step !== 3)
+          setStep(saved.step);
       }
 
       hasInitializedRef.current = true;
@@ -112,7 +147,10 @@ export default function DashboardTrade() {
   }, [sessionId, isResume]);
 
   useEffect(() => {
-    if (step === 3) { clearTradeProgress(); return; }
+    if (step === 3) {
+      clearTradeProgress();
+      return;
+    }
     saveTradeProgress({ step, activeTab });
   }, [step, activeTab]);
 
@@ -122,29 +160,66 @@ export default function DashboardTrade() {
     saveTradeProgress({ buyWalletAddress, buyNetwork });
   }, [buyWalletAddress, buyNetwork, activeTab]);
 
+  // No unmount clear — let progress persist so the dashboard can show "Continue"
+
+  const {
+    selectedToken,
+    numberOfToken,
+    AdditionalInfo,
+    amountToBuy,
+    selectedCurrency,
+    supportedCurrencies,
+    supportedCryptoCurrencies,
+    countdown,
+    isInitiatingTrade,
+    loadingExchangeRate,
+    transactionSessionId,
+    userBankAccounts,
+    showUserEnterEmail,
+    isLoadingPingUser,
+    loadingSupportedCryptocurrencies,
+    loadingUserBankAccounts,
+    setAmountToBuy,
+    setSelectedCurrency,
+    setSelectedToken,
+    handleReceiptUrl,
+    handleTransactionHash,
+    initiateTransaction,
+    makePaymentTransaction,
+    handleConfirmBankDetails,
+    handleAnonymousUserEmailInput,
+    toggleShowUserEnterEmail,
+    togglePaymentReceivingModal,
+    formatReceiveAmount,
+    formatSendAmount,
+    handleFocusAmountToBuy,
+    sellDepositWallet,
+    isGeneratingDepositWallet,
+  } = useTradeStepDisplay(
+    "",
+    activeTab,
+    "",
+    setStep,
+    setActiveTab,
+    undefined,
+    step,
+    sessionId,
+    sellNetwork,
+    true
+  );
+
+  // Apply deferred amount restore once setAmountToBuy is available
+  useEffect(() => {
+    if (pendingAmountRestoreRef.current === null) return;
+    setAmountToBuy(pendingAmountRestoreRef.current);
+    pendingAmountRestoreRef.current = null;
+  }, [setAmountToBuy]);
+
   // Persist BUY amount whenever it changes
   useEffect(() => {
     if (activeTab !== "buy") return;
     saveTradeProgress({ amountToBuy: amountToBuy ?? undefined });
   }, [amountToBuy, activeTab]);
-
-  // No unmount clear — let progress persist so the dashboard can show "Continue"
-
-  const {
-    selectedToken, numberOfToken, AdditionalInfo, amountToBuy,
-    selectedCurrency, supportedCurrencies, supportedCryptoCurrencies,
-    countdown, isInitiatingTrade, loadingExchangeRate, transactionSessionId,
-    userBankAccounts,
-    showUserEnterEmail, isLoadingPingUser,
-    loadingSupportedCryptocurrencies, loadingUserBankAccounts,
-    setAmountToBuy, setSelectedCurrency, setSelectedToken,
-    handleReceiptUrl, handleTransactionHash, initiateTransaction,
-    makePaymentTransaction, handleConfirmBankDetails,
-    handleAnonymousUserEmailInput, toggleShowUserEnterEmail,
-    togglePaymentReceivingModal, formatReceiveAmount, formatSendAmount,
-    handleFocusAmountToBuy,
-    sellDepositWallet, isGeneratingDepositWallet,
-  } = useTradeStepDisplay("", activeTab, "", setStep, setActiveTab, undefined, step, sessionId, sellNetwork, true);
 
   // For SELL: after initiateTransaction creates the INITIATED record and sets step=2,
   // immediately jump to step 4 (success). The deposit wallet is shown inline on Step 1.
@@ -155,7 +230,8 @@ export default function DashboardTrade() {
   // Auto-initialize sellPayoutAccountId from default bank
   useEffect(() => {
     if (activeTab === "sell" && userBankAccounts?.length) {
-      const def = userBankAccounts.find(b => b.isDefault) ?? userBankAccounts[0];
+      const def =
+        userBankAccounts.find((b) => b.isDefault) ?? userBankAccounts[0];
       if (def && !sellPayoutAccountId) setSellPayoutAccountId(def.id);
     }
   }, [userBankAccounts, activeTab]);
@@ -169,7 +245,11 @@ export default function DashboardTrade() {
   const handleChooseMode = (mode: TradeType) => {
     setActiveTab(mode);
     setHasChosenMode(true);
-    navigate({ to: "/dashboard/trade", search: { option: mode }, replace: true });
+    navigate({
+      to: "/dashboard/trade",
+      search: { option: mode },
+      replace: true,
+    });
   };
 
   // Restore the last-used token from localStorage when the supported list loads
@@ -213,8 +293,8 @@ export default function DashboardTrade() {
               What would you like to do?
             </h1>
             <p className="mt-2 text-sm text-gray-600 max-w-xl">
-              Choose whether you want to buy or sell crypto. You can always switch
-              later in the flow.
+              Choose whether you want to buy or sell crypto. You can always
+              switch later in the flow.
             </p>
           </div>
 
@@ -266,16 +346,29 @@ export default function DashboardTrade() {
         <AnimatePresence mode="wait">
           {/* STEP 1 — combined crypto grid + buy fields or sell payout bank */}
           {step === 1 && (
-            <motion.div key="s1"
-              initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.2 }}>
+            <motion.div
+              key="s1"
+              initial={{ opacity: 0, x: -16 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -16 }}
+              transition={{ duration: 0.2 }}
+            >
               <DashboardTradeStep1
                 tradeType={activeTab}
-                availableTokens={(!loadingSupportedCryptocurrencies && supportedCryptoCurrencies) || []}
-                selectedToken={activeTab === "sell" ? pendingSellToken : pendingBuyToken}
+                availableTokens={
+                  (!loadingSupportedCryptocurrencies &&
+                    supportedCryptoCurrencies) ||
+                  []
+                }
+                selectedToken={
+                  activeTab === "sell" ? pendingSellToken : pendingBuyToken
+                }
                 setSelectedToken={(t) => {
                   // Persist so the next visit pre-selects this token
-                  localStorage.setItem(LOCAL_STORAGE_KEYS.LAST_TRADE_TOKEN, t.id);
+                  localStorage.setItem(
+                    LOCAL_STORAGE_KEYS.LAST_TRADE_TOKEN,
+                    t.id
+                  );
                   if (activeTab === "buy") {
                     setPendingBuyToken(t);
                     pendingBuyTokenRef.current = t;
@@ -292,14 +385,21 @@ export default function DashboardTrade() {
                 isInitiatingTrade={isInitiatingTrade}
                 isRateLoading={activeTab === "sell" && loadingExchangeRate}
                 buyRateInfo={activeTab === "buy" ? buyRateInfo : undefined}
-                onRateResolved={activeTab === "buy" ? setBuyRateInfo : undefined}
+                onRateResolved={
+                  activeTab === "buy" ? setBuyRateInfo : undefined
+                }
                 onProceed={() => {
                   if (activeTab === "sell") {
                     if (!pendingSellToken) return;
                     setSelectedToken(pendingSellToken);
                     // Attach the selected payout accountId before initiating
                     if (sellPayoutAccountId) {
-                      dispatch(setInitiateTransactionField({ field: "accountId", value: sellPayoutAccountId }));
+                      dispatch(
+                        setInitiateTransactionField({
+                          field: "accountId",
+                          value: sellPayoutAccountId,
+                        })
+                      );
                     }
                     initiateTransaction();
                   } else {
@@ -335,13 +435,31 @@ export default function DashboardTrade() {
 
           {/* STEP 2 — payment / wallet */}
           {step === 2 && (
-            <motion.div key="s2"
-              initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 16 }} transition={{ duration: 0.2 }}>
+            <motion.div
+              key="s2"
+              initial={{ opacity: 0, x: 16 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 16 }}
+              transition={{ duration: 0.2 }}
+            >
               <DashboardTradeStep2
                 tradeType={activeTab}
-                amountToBuy={typeof amountToBuy === "string" ? (amountToBuy ? Number(amountToBuy) : 0) : (amountToBuy || 0)}
-                numberOfToken={isBuy && buyRateInfo ? buyRateInfo.cryptoAmount : (typeof numberOfToken === "string" ? (numberOfToken ? Number(numberOfToken) : 0) : (numberOfToken || 0))}
+                amountToBuy={
+                  typeof amountToBuy === "string"
+                    ? amountToBuy
+                      ? Number(amountToBuy)
+                      : 0
+                    : amountToBuy || 0
+                }
+                numberOfToken={
+                  isBuy && buyRateInfo
+                    ? buyRateInfo.cryptoAmount
+                    : typeof numberOfToken === "string"
+                    ? numberOfToken
+                      ? Number(numberOfToken)
+                      : 0
+                    : numberOfToken || 0
+                }
                 selectedToken={selectedToken}
                 selectedCurrency={selectedCurrency}
                 rateLockCountdown={countdown}
@@ -356,7 +474,13 @@ export default function DashboardTrade() {
                 buyNetwork={buyNetwork}
                 buyRateInfo={isBuy ? buyRateInfo : undefined}
                 onBuySubmitSuccess={() => setStep(4)}
-                payoutBank={!isBuy ? (userBankAccounts?.find(b => b.id === sellPayoutAccountId) ?? userBankAccounts?.[0]) : undefined}
+                payoutBank={
+                  !isBuy
+                    ? userBankAccounts?.find(
+                        (b) => b.id === sellPayoutAccountId
+                      ) ?? userBankAccounts?.[0]
+                    : undefined
+                }
                 onBack={() => setStep(1)}
               />
             </motion.div>
@@ -364,9 +488,13 @@ export default function DashboardTrade() {
 
           {/* STEP 3 — confirm receiving wallet (BUY only) */}
           {step === 3 && isBuy && !loadingUserBankAccounts && (
-            <motion.div key="s3"
-              initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 16 }} transition={{ duration: 0.2 }}>
+            <motion.div
+              key="s3"
+              initial={{ opacity: 0, x: 16 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 16 }}
+              transition={{ duration: 0.2 }}
+            >
               <DashboardTradeStep3
                 tradeType={activeTab}
                 bankAccounts={userBankAccounts}
@@ -378,16 +506,22 @@ export default function DashboardTrade() {
                 buyWalletAddress={buyWalletAddress}
                 buyNetwork={buyNetwork}
                 onProceed={handleConfirmBankDetails}
-                onBack={() => { togglePaymentReceivingModal(); setStep(2); }}
+                onBack={() => {
+                  togglePaymentReceivingModal();
+                  setStep(2);
+                }}
               />
             </motion.div>
           )}
 
           {/* STEP 4 — success */}
           {step === 4 && (
-            <motion.div key="s4"
-              initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.25 }}>
+            <motion.div
+              key="s4"
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.25 }}
+            >
               <DashboardTradeSuccess
                 tradeType={activeTab}
                 selectedTokenSymbol={selectedToken?.symbol}

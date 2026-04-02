@@ -17,6 +17,7 @@ import { Route as SecurityPolicyRouteImport } from './routes/security-policy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RatesRouteImport } from './routes/rates'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
+import { Route as KycRouteImport } from './routes/kyc'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ContactRouteImport } from './routes/contact'
@@ -34,6 +35,7 @@ import { Route as DisputeIdRouteImport } from './routes/dispute/$id'
 import { Route as DashboardWalletsRouteImport } from './routes/dashboard/wallets'
 import { Route as DashboardTradeRouteImport } from './routes/dashboard/trade'
 import { Route as DashboardProfileRouteImport } from './routes/dashboard/profile'
+import { Route as DashboardKycRouteImport } from './routes/dashboard/kyc'
 import { Route as DashboardTransactionsIndexRouteImport } from './routes/dashboard/transactions/index'
 import { Route as DashboardTransactionsIdRouteImport } from './routes/dashboard/transactions/$id'
 
@@ -75,6 +77,11 @@ const RatesRoute = RatesRouteImport.update({
 const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
   id: '/privacy-policy',
   path: '/privacy-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KycRoute = KycRouteImport.update({
+  id: '/kyc',
+  path: '/kyc',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
@@ -162,6 +169,11 @@ const DashboardProfileRoute = DashboardProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardKycRoute = DashboardKycRouteImport.update({
+  id: '/kyc',
+  path: '/kyc',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardTransactionsIndexRoute =
   DashboardTransactionsIndexRouteImport.update({
     id: '/transactions/',
@@ -183,6 +195,7 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
+  '/kyc': typeof KycRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/rates': typeof RatesRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -191,6 +204,7 @@ export interface FileRoutesByFullPath {
   '/terms-of-service': typeof TermsOfServiceRoute
   '/trade-crypto': typeof TradeCryptoRoute
   '/verify-account': typeof VerifyAccountRoute
+  '/dashboard/kyc': typeof DashboardKycRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/trade': typeof DashboardTradeRoute
   '/dashboard/wallets': typeof DashboardWalletsRoute
@@ -211,6 +225,7 @@ export interface FileRoutesByTo {
   '/aml-policy': typeof AmlPolicyRoute
   '/contact': typeof ContactRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/kyc': typeof KycRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/rates': typeof RatesRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -219,6 +234,7 @@ export interface FileRoutesByTo {
   '/terms-of-service': typeof TermsOfServiceRoute
   '/trade-crypto': typeof TradeCryptoRoute
   '/verify-account': typeof VerifyAccountRoute
+  '/dashboard/kyc': typeof DashboardKycRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/trade': typeof DashboardTradeRoute
   '/dashboard/wallets': typeof DashboardWalletsRoute
@@ -241,6 +257,7 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
+  '/kyc': typeof KycRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/rates': typeof RatesRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -249,6 +266,7 @@ export interface FileRoutesById {
   '/terms-of-service': typeof TermsOfServiceRoute
   '/trade-crypto': typeof TradeCryptoRoute
   '/verify-account': typeof VerifyAccountRoute
+  '/dashboard/kyc': typeof DashboardKycRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/trade': typeof DashboardTradeRoute
   '/dashboard/wallets': typeof DashboardWalletsRoute
@@ -272,6 +290,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/dashboard'
     | '/forgot-password'
+    | '/kyc'
     | '/privacy-policy'
     | '/rates'
     | '/reset-password'
@@ -280,6 +299,7 @@ export interface FileRouteTypes {
     | '/terms-of-service'
     | '/trade-crypto'
     | '/verify-account'
+    | '/dashboard/kyc'
     | '/dashboard/profile'
     | '/dashboard/trade'
     | '/dashboard/wallets'
@@ -300,6 +320,7 @@ export interface FileRouteTypes {
     | '/aml-policy'
     | '/contact'
     | '/forgot-password'
+    | '/kyc'
     | '/privacy-policy'
     | '/rates'
     | '/reset-password'
@@ -308,6 +329,7 @@ export interface FileRouteTypes {
     | '/terms-of-service'
     | '/trade-crypto'
     | '/verify-account'
+    | '/dashboard/kyc'
     | '/dashboard/profile'
     | '/dashboard/trade'
     | '/dashboard/wallets'
@@ -329,6 +351,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/dashboard'
     | '/forgot-password'
+    | '/kyc'
     | '/privacy-policy'
     | '/rates'
     | '/reset-password'
@@ -337,6 +360,7 @@ export interface FileRouteTypes {
     | '/terms-of-service'
     | '/trade-crypto'
     | '/verify-account'
+    | '/dashboard/kyc'
     | '/dashboard/profile'
     | '/dashboard/trade'
     | '/dashboard/wallets'
@@ -359,6 +383,7 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   DashboardRoute: typeof DashboardRouteWithChildren
   ForgotPasswordRoute: typeof ForgotPasswordRoute
+  KycRoute: typeof KycRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   RatesRoute: typeof RatesRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -430,6 +455,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy-policy'
       fullPath: '/privacy-policy'
       preLoaderRoute: typeof PrivacyPolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kyc': {
+      id: '/kyc'
+      path: '/kyc'
+      fullPath: '/kyc'
+      preLoaderRoute: typeof KycRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forgot-password': {
@@ -551,6 +583,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardProfileRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/kyc': {
+      id: '/dashboard/kyc'
+      path: '/kyc'
+      fullPath: '/dashboard/kyc'
+      preLoaderRoute: typeof DashboardKycRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/transactions/': {
       id: '/dashboard/transactions/'
       path: '/transactions'
@@ -569,6 +608,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface DashboardRouteChildren {
+  DashboardKycRoute: typeof DashboardKycRoute
   DashboardProfileRoute: typeof DashboardProfileRoute
   DashboardTradeRoute: typeof DashboardTradeRoute
   DashboardWalletsRoute: typeof DashboardWalletsRoute
@@ -578,6 +618,7 @@ interface DashboardRouteChildren {
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardKycRoute: DashboardKycRoute,
   DashboardProfileRoute: DashboardProfileRoute,
   DashboardTradeRoute: DashboardTradeRoute,
   DashboardWalletsRoute: DashboardWalletsRoute,
@@ -599,6 +640,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   DashboardRoute: DashboardRouteWithChildren,
   ForgotPasswordRoute: ForgotPasswordRoute,
+  KycRoute: KycRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   RatesRoute: RatesRoute,
   ResetPasswordRoute: ResetPasswordRoute,
