@@ -15,7 +15,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { toast } from "react-toastify";
 import { useKycQuery } from "../queries/kyc.query.ts";
 import { useKycLongPoll } from "../hooks/useKycLongPoll.ts";
-import { useUserQuery } from "../queries/user.query.ts";
+
 import { setKycSession } from "../redux/kyc.slice.ts";
 import type { RootState } from "../store.ts";
 import type { KycStatusResponse } from "../types/kyc.types.ts";
@@ -500,7 +500,6 @@ export default function KycPage() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const session = useSelector((s: RootState) => s.kyc.session);
-  const { userProfileData } = useUserQuery();
 
   const {
     sessionData,
@@ -648,7 +647,7 @@ export default function KycPage() {
             : stepState.didit === "failed"
               ? "Failed"
               : stepState.didit === "current"
-                ? "In Progress"
+                ? "Ready"
                 : "Pending";
 
   const canStartDidit = ninSaved && !startDiditMutation.isPending;
