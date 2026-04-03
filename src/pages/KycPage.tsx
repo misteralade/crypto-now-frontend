@@ -3,12 +3,12 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   AlertCircle,
   CheckCircle2,
-  Clock3,
-  Frown,
+  Clock,
   Loader2,
+  Mail,
   RotateCcw,
+  ScanFace,
   ShieldCheck,
-  XCircle,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { useKycQuery } from "../queries/kyc.query.ts";
@@ -33,12 +33,12 @@ function statusText(step?: string) {
   if (step === "Declined" || step === "Expired" || step === "Abandoned")
     return "Your verification was unsuccessful. Please try again.";
   if (step === "In Review")
-    return "Your verification is under review. We will notify you once completed.";
+    return "Your verification is under review. We'll notify you once completed.";
   if (step === "Resubmitted")
     return "Additional verification is required. Please complete the resubmission steps.";
   if (step === "In Progress" || step === "submitted")
     return "We are confirming your verification result.";
-  return "Identity verification is required to continue.";
+  return "Complete the steps below to verify your identity.";
 }
 
 function getStepState(
@@ -77,30 +77,397 @@ function getStepState(
   };
 }
 
-function stepIcon(state: StepState) {
+// ── Step Badge ───────────────────────────────────────────────────────────────
+
+function StepBadge({ state, label }: { state: StepState; label?: string }) {
   if (state === "done") {
-    return <CheckCircle2 className="h-5 w-5 text-green-600" />;
+    return <CheckCircle2 className="h-6 w-6 text-success" />;
   }
-  if (state === "failed") {
-    return <XCircle className="h-5 w-5 text-red-600" />;
-  }
-  if (state === "current") {
-    return <Clock3 className="h-5 w-5 text-[#03034D]" />;
-  }
+
+  const map: Record<StepState, string> = {
+    done: "", // Unused
+    failed: "bg-bgFailed text-red border border-red/10",
+    current: "bg-accentBg text-accent1 border border-accent1/10",
+    pending: "bg-greyBg text-grey2 border border-border/50",
+  };
+
+  const text =
+    label ??
+    {
+      done: "",
+      failed: "Failed",
+      current: "In Progress",
+      pending: "Pending",
+    }[state];
+
   return (
-    <div
-      className="h-5 w-5 rounded-full border-2 border-gray-300"
-      aria-hidden="true"
-    />
+    <span
+      className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide ${map[state]}`}
+    >
+      {text}
+    </span>
   );
 }
 
-function stepLabel(state: StepState) {
-  if (state === "done") return "Done";
-  if (state === "failed") return "Issue";
-  if (state === "current") return "In progress";
-  return "Pending";
+// ── Individual Step Cards ────────────────────────────────────────────────────
+
+function EmailStepCard({ state }: { state: StepState }) {
+  const isActive = state === "current";
+  const isDone = state === "done";
+  return (
+    <div
+      className={`rounded-2xl border transition-all duration-300 ${
+        isDone
+          ? "border-success/30 bg-bgSuccess"
+          : isActive
+            ? "border-primary/20 bg-white shadow-md ring-1 ring-primary/5"
+            : "border-border bg-greyBg/30 opacity-80"
+      }`}
+    >
+      <div className="flex items-start justify-between gap-3 p-5">
+        <div className="flex items-start gap-3">
+          <div
+            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white border border-border/50 shadow-sm`}
+          >
+            <Mail
+              className={`h-4.5 w-4.5 ${isDone ? "text-success" : "text-titleColor"}`}
+            />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-titleColor">
+              Email Verification
+            </p>
+            <p className="mt-0.5 text-xs text-textSec">
+              Confirm your email address to begin
+            </p>
+          </div>
+        </div>
+        <StepBadge state={state} />
+      </div>
+    </div>
+  );
 }
+
+function NinStepCard({
+  state,
+  nin,
+  setNin,
+  ninTouched,
+  setNinTouched,
+  ninError,
+  onSave,
+  isPending,
+}: {
+  state: StepState;
+  nin: string;
+  setNin: (v: string) => void;
+  ninTouched: boolean;
+  setNinTouched: (v: boolean) => void;
+  ninError: string;
+  onSave: () => void;
+  isPending: boolean;
+}) {
+  const isActive = state === "current";
+  const isDone = state === "done";
+  const isFailed = state === "failed";
+
+  return (
+    <div
+      className={`rounded-2xl border transition-all duration-300 ${
+        isDone
+          ? "border-success/30 bg-bgSuccess"
+          : isActive
+            ? "border-primary/20 bg-white shadow-md ring-1 ring-primary/5"
+            : isFailed
+              ? "border-red/30 bg-bgFailed ring-1 ring-red/5"
+              : "border-border bg-greyBg/30 opacity-80"
+      }`}
+    >
+      {/* Card header */}
+      <div className="flex items-start justify-between gap-3 p-5">
+        <div className="flex items-start gap-3">
+          {/* NIMC logo */}
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white border border-border/50 shadow-sm">
+            <img
+              src="/decorations/nimc-logo.png"
+              alt="NIMC"
+              className="h-7 w-7 object-contain"
+            />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-titleColor">
+              NIN Verification
+            </p>
+            <p className="mt-0.5 text-xs text-textSec">
+              Powered by NIMC — National Identity Management Commission
+            </p>
+          </div>
+        </div>
+        <StepBadge state={state} />
+      </div>
+
+      {/* NIN input section — only shown when active */}
+      {isActive && (
+        <div
+          className="border-t border-border/60 p-5 pt-4"
+          style={{
+            animation: "slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) both",
+          }}
+        >
+          <label
+            htmlFor="nin-input"
+            className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-textSec"
+          >
+            National Identification Number
+          </label>
+          <div className="relative">
+            <input
+              id="nin-input"
+              value={nin}
+              onBlur={() => setNinTouched(true)}
+              onChange={(e) => {
+                setNin(e.target.value.replace(/\D/g, ""));
+                if (!ninTouched) setNinTouched(true);
+              }}
+              inputMode="numeric"
+              placeholder="Enter your 11-digit NIN"
+              className="w-full rounded-xl border border-border bg-formGroupBg px-4 py-3 pr-16 text-sm font-medium text-titleColor placeholder:text-placeholder transition-all duration-200 focus:border-accent1 focus:outline-none focus:ring-2 focus:ring-accent1/20 disabled:opacity-50"
+              maxLength={11}
+              disabled={isPending}
+              aria-invalid={Boolean(ninError)}
+              aria-describedby={ninError ? "nin-error" : "nin-help"}
+            />
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold tabular-nums text-grey2">
+              {nin.length}/11
+            </span>
+          </div>
+          {ninError ? (
+            <p
+              id="nin-error"
+              className="mt-1.5 text-xs font-medium text-red"
+              role="alert"
+            >
+              {ninError}
+            </p>
+          ) : (
+            <p id="nin-help" className="mt-1.5 text-xs text-grey2">
+              11 digits, numbers only
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={onSave}
+            disabled={nin.length !== 11 || isPending}
+            className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-primary/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isPending ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Verifying NIN…
+              </>
+            ) : (
+              "Continue to Identity Verification"
+            )}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function IdentityStepCard({
+  state,
+  diditLabel,
+  canStart,
+  isPending,
+  onStart,
+  onRetry,
+  onRestart,
+  retryPending,
+  restartPending,
+  retryCount,
+  maxRetries,
+  failureReason,
+}: {
+  state: StepState;
+  diditLabel: string;
+  canStart: boolean;
+  isPending: boolean;
+  onStart: () => void;
+  onRetry: () => void;
+  onRestart: () => void;
+  retryPending: boolean;
+  restartPending: boolean;
+  retryCount: number;
+  maxRetries: number;
+  failureReason?: string | null;
+}) {
+  const isActive = state === "current";
+  const isDone = state === "done";
+  const isFailed = state === "failed";
+
+  return (
+    <div
+      className={`rounded-2xl border transition-all duration-300 ${
+        isDone
+          ? "border-success/30 bg-bgSuccess"
+          : isActive
+            ? "border-primary/20 bg-white shadow-md ring-1 ring-primary/5"
+            : isFailed
+              ? "border-red/30 bg-bgFailed ring-1 ring-red/5"
+              : "border-border bg-greyBg/30 opacity-80"
+      }`}
+    >
+      {/* Card header */}
+      <div className="flex items-start justify-between gap-3 p-5">
+        <div className="flex items-start gap-3">
+          <div
+            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white border border-border/50 shadow-sm`}
+          >
+            <ScanFace
+              className={`h-4.5 w-4.5 ${
+                isDone
+                  ? "text-success"
+                  : isFailed
+                    ? "text-red"
+                    : "text-titleColor"
+              }`}
+            />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-titleColor">
+              Identity Verification
+            </p>
+            <p className="mt-0.5 text-xs text-textSec">
+              Biometric face match &amp; document scan
+            </p>
+          </div>
+        </div>
+        <StepBadge state={state} label={isFailed ? "Failed" : diditLabel} />
+      </div>
+
+      {/* Action area */}
+      {isActive && !isFailed && (
+        <div
+          className="border-t border-border/60 p-5 pt-4"
+          style={{
+            animation: "slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) both",
+          }}
+        >
+          {/* In-progress / review hint */}
+          {(diditLabel === "In Progress" ||
+            diditLabel === "In Review" ||
+            diditLabel === "Resubmitted") && (
+            <div className="mb-4 flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 p-3.5">
+              <Clock className="mt-px h-4 w-4 shrink-0 text-amber-600" />
+              <p className="text-xs text-amber-800">
+                {diditLabel === "In Review"
+                  ? "Your verification is under manual review. You can wait or retry for a faster result."
+                  : "We're confirming your verification result. This usually takes a moment."}
+              </p>
+            </div>
+          )}
+
+          {diditLabel === "In Review" ? (
+            <button
+              type="button"
+              onClick={onRestart}
+              disabled={restartPending}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-primary/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {restartPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Restarting…
+                </>
+              ) : (
+                <>
+                  <RotateCcw className="h-4 w-4" />
+                  Retry Verification
+                </>
+              )}
+            </button>
+          ) : (
+            canStart &&
+            diditLabel !== "In Progress" &&
+            diditLabel !== "Resubmitted" && (
+              <button
+                type="button"
+                onClick={onStart}
+                disabled={!canStart || isPending}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-primary/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Redirecting…
+                  </>
+                ) : (
+                  <>
+                    <ScanFace className="h-4 w-4" />
+                    Start Identity Verification
+                  </>
+                )}
+              </button>
+            )
+          )}
+        </div>
+      )}
+
+      {/* Failure area */}
+      {isFailed && (
+        <div
+          className="border-t border-red/10 p-5 pt-4"
+          style={{
+            animation: "slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) both",
+          }}
+        >
+          <div className="mb-4 flex items-start gap-2.5 rounded-xl border border-red/20 bg-red/5 p-3.5">
+            <AlertCircle className="mt-px h-4 w-4 shrink-0 text-red" />
+            <div className="space-y-1">
+              <p className="text-xs font-semibold text-red">
+                Verification failed
+              </p>
+              <p className="text-xs text-red/80">
+                {failureReason ?? "Please retry or restart your verification."}
+              </p>
+              <p className="text-xs text-red/70">
+                Attempts used: {retryCount} / {maxRetries}
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {retryCount < maxRetries && (
+              <button
+                type="button"
+                onClick={onRetry}
+                disabled={retryPending}
+                className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-primary/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {retryPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <RotateCcw className="h-4 w-4" />
+                )}
+                Retry
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onRestart}
+              disabled={restartPending}
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-primary px-5 py-3 text-sm font-semibold text-primary transition-all duration-200 ease-out hover:bg-primary/5 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Restart
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Main Page ────────────────────────────────────────────────────────────────
 
 export default function KycPage() {
   const dispatch = useDispatch();
@@ -141,31 +508,17 @@ export default function KycPage() {
     ) {
       startSession();
     }
-  }, [
-    sessionData,
-    loadingSession,
-    isStartingSession,
-    sessionStarted,
-    startSession,
-  ]);
+  }, [sessionData, loadingSession, isStartingSession, sessionStarted, startSession]);
 
   useEffect(() => {
-    if (sessionData) {
-      dispatch(setKycSession(sessionData));
-    }
+    if (sessionData) dispatch(setKycSession(sessionData));
   }, [sessionData, dispatch]);
 
   useEffect(() => {
-    if (callbackProcessedRef.current) {
-      return;
-    }
-
-    if (!callback.verificationSessionId && !callback.status) {
-      return;
-    }
+    if (callbackProcessedRef.current) return;
+    if (!callback.verificationSessionId && !callback.status) return;
 
     callbackProcessedRef.current = true;
-
     setIsReconciling(true);
     reconcileCallbackMutation.mutate(
       {
@@ -175,11 +528,7 @@ export default function KycPage() {
       {
         onSettled: () => {
           setIsReconciling(false);
-          window.history.replaceState(
-            {},
-            document.title,
-            window.location.pathname,
-          );
+          window.history.replaceState({}, document.title, window.location.pathname);
         },
       },
     );
@@ -193,7 +542,6 @@ export default function KycPage() {
   const updateStatus = useCallback(
     (nextStatus: KycStatusResponse) => {
       if (!session) return;
-
       dispatch(
         setKycSession({
           ...session,
@@ -219,15 +567,11 @@ export default function KycPage() {
 
   useKycLongPoll({
     enabled: isProcessing,
-    onStatusChange: (status) => {
-      updateStatus(status);
-    },
+    onStatusChange: (status) => updateStatus(status),
     onError: () => {
       statusMutation.mutate(undefined, {
         onSuccess: ({ success, data }) => {
-          if (success && data) {
-            updateStatus(data);
-          }
+          if (success && data) updateStatus(data);
         },
       });
     },
@@ -235,8 +579,12 @@ export default function KycPage() {
 
   if (loadingSession || startSessionMutation.isPending || !session) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-[#03034D]" />
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3">
+        <div className="relative flex h-14 w-14 items-center justify-center rounded-full bg-accentBg">
+          <ShieldCheck className="h-7 w-7 text-accent1" />
+          <span className="absolute inset-0 rounded-full bg-accentBg animate-ping opacity-40" />
+        </div>
+        <p className="text-sm text-textSec">Setting up your session…</p>
       </div>
     );
   }
@@ -247,20 +595,6 @@ export default function KycPage() {
       ? "NIN must be exactly 11 digits."
       : "";
 
-  const statusTone =
-    session.currentStep === "Approved"
-      ? "success"
-      : session.currentStep === "Declined" ||
-          session.currentStep === "Expired" ||
-          session.currentStep === "Abandoned"
-        ? "error"
-        : session.currentStep === "In Progress" ||
-            session.currentStep === "submitted" ||
-            session.currentStep === "In Review" ||
-            session.currentStep === "Resubmitted"
-          ? "pending"
-          : "default";
-
   const stepState = getStepState(session.currentStep, ninSaved);
 
   const diditLabel =
@@ -268,21 +602,29 @@ export default function KycPage() {
       ? "In Review"
       : session.currentStep === "Resubmitted"
         ? "Resubmitted"
-        : stepLabel(stepState.didit);
+        : session.currentStep === "In Progress" || session.currentStep === "submitted"
+          ? "In Progress"
+          : stepState.didit === "done"
+            ? "Completed"
+            : stepState.didit === "failed"
+              ? "Failed"
+              : stepState.didit === "current"
+                ? "In Progress"
+                : "Pending";
+
   const canStartDidit = ninSaved && !startDiditMutation.isPending;
-  const emailVerified =
-    (userProfileData as { isVerified?: boolean } | undefined)?.isVerified ??
-    true;
+  const isApproved = session.currentStep === "Approved";
+
+  const handleSaveNin = () => {
+    setNinTouched(true);
+    if (nin.length !== 11) return;
+    saveNinMutation.mutate(nin);
+  };
 
   const onStartDidit = () => {
     startDiditMutation.mutate(undefined, {
       onSuccess: ({ success, data, message }) => {
-        if (
-          !success ||
-          !data ||
-          !("verificationUrl" in data) ||
-          !data.verificationUrl
-        ) {
+        if (!success || !data || !("verificationUrl" in data) || !data.verificationUrl) {
           toast.error(message || "Unable to create verification session");
           return;
         }
@@ -291,244 +633,104 @@ export default function KycPage() {
     });
   };
 
-  const handleSaveNin = () => {
-    setNinTouched(true);
-
-    if (nin.length !== 11) {
-      return;
-    }
-
-    saveNinMutation.mutate(nin);
-  };
-
   return (
-    <div className="mx-auto max-w-2xl px-4 py-6 lg:py-8">
-      <div className="mb-6 flex items-center gap-3">
-        <div className="rounded-xl bg-[#03034D]/10 p-2">
-          <ShieldCheck className="h-6 w-6 text-[#03034D]" />
-        </div>
-        <div>
-          <h1 className="text-lg font-bold text-gray-900">
-            Identity Verification
-          </h1>
-          <p className="text-sm text-gray-500">
-            {statusText(session.currentStep)}
-          </p>
-        </div>
-      </div>
+    <>
+      {/* slide-down keyframe injection */}
+      <style>{`
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-10px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(16px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
 
-      <div className="space-y-5 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm lg:p-6">
+      <div className="mx-auto max-w-lg px-4 py-8">
+
+        {/* ── Page header ── */}
         <div
-          className={`rounded-xl border p-3 text-sm ${
-            statusTone === "success"
-              ? "border-green-200 bg-green-50 text-green-700"
-              : statusTone === "error"
-                ? "border-red-200 bg-red-50 text-red-700"
-                : statusTone === "pending"
-                  ? "border-amber-200 bg-amber-50 text-amber-700"
-                  : "border-gray-200 bg-gray-50 text-gray-700"
-          }`}
-          role="status"
+          className="mb-8 text-center"
+          style={{ animation: "fadeInUp 0.4s cubic-bezier(0.16,1,0.3,1) both" }}
         >
-          {session.currentStep === "Approved"
-            ? "Verification complete. Your account is fully verified."
-            : session.currentStep === "Declined" ||
-                session.currentStep === "Expired" ||
-                session.currentStep === "Abandoned"
-              ? session.failureReason ||
-                "Verification failed. Review details below and retry."
-              : session.currentStep === "In Review"
-                ? "Verification is in review. We will notify you once completed."
-                : session.currentStep === "Resubmitted"
-                  ? "Additional verification is required. Please complete the resubmission steps."
-                  : session.currentStep === "In Progress" ||
-                      session.currentStep === "submitted"
-                    ? "Verification is in progress. We are syncing the result from Didit."
-                    : "Complete the quick steps below to start identity verification."}
-        </div>
-
-        <div className="rounded-xl border border-gray-200 bg-white p-4">
-          <h2 className="text-sm font-semibold text-gray-900">Progress</h2>
-          <div className="mt-3 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm text-gray-800">
-                {stepIcon(stepState.email)}
-                Email verification
-              </div>
-              <span className="text-xs font-medium text-gray-500">
-                {emailVerified ? "Done" : "Pending"}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm text-gray-800">
-                {stepIcon(stepState.nin)}
-                Save NIN
-              </div>
-              <span className="text-xs font-medium text-gray-500">
-                {stepLabel(stepState.nin)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm text-gray-800">
-                {stepIcon(stepState.didit)}
-                Identity Verification
-              </div>
-              <span className="text-xs font-medium text-gray-500">
-                {diditLabel}
-              </span>
-            </div>
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20">
+            <ShieldCheck className="h-8 w-8 text-white" />
           </div>
-        </div>
+          <h1 className="text-xl font-bold text-titleColor">Identity Verification</h1>
+          <p className="mt-1.5 text-sm text-textSec">{statusText(session.currentStep)}</p>
 
-        {session.currentStep === "In Review" && (
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-            <div className="flex items-start gap-3">
-              <Frown className="mt-0.5 h-5 w-5 text-amber-600" />
-              <div className="space-y-1 text-sm text-amber-800">
-                <p className="font-semibold">Manual review required</p>
-                <p>
-                  Your verification needs manual review. You can wait for review
-                  or retry the verification for a faster outcome.
-                </p>
-              </div>
+          {/* Global status banner */}
+          {isApproved && (
+            <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-success/30 bg-bgSuccess px-4 py-2 text-sm font-semibold text-success">
+              <CheckCircle2 className="h-4 w-4" />
+              Account fully verified
             </div>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => restartMutation.mutate()}
-                disabled={restartMutation.isPending}
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#03034D] px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {restartMutation.isPending
-                  ? "Restarting..."
-                  : "Retry verification"}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {!ninSaved && (
-          <div className="space-y-2 rounded-xl border border-gray-200 bg-gray-50 p-4">
-            <label
-              className="block text-sm font-medium text-gray-700"
-              htmlFor="nin-input"
+          )}
+          {isReconciling && (
+            <div
+              className="mt-4 inline-flex items-center gap-2 rounded-full border border-accent2/30 bg-accentBg px-4 py-2 text-sm font-semibold text-accent1"
+              role="status"
+              aria-live="polite"
             >
-              National Identification Number (NIN)
-            </label>
-            <input
-              id="nin-input"
-              value={nin}
-              onBlur={() => setNinTouched(true)}
-              onChange={(e) => {
-                setNin(e.target.value.replace(/\D/g, ""));
-                if (!ninTouched) {
-                  setNinTouched(true);
-                }
-              }}
-              inputMode="numeric"
-              placeholder="Enter your 11-digit NIN"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-[#03034D]"
-              maxLength={11}
-              disabled={saveNinMutation.isPending}
-              aria-invalid={Boolean(ninError)}
-              aria-describedby={ninError ? "nin-error" : "nin-help"}
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Finishing verification…
+            </div>
+          )}
+        </div>
+
+        {/* ── Steps ── */}
+        <div className="space-y-4">
+          {/* Step 1 — Email */}
+          <div style={{ animation: "fadeInUp 0.4s 0.05s cubic-bezier(0.16,1,0.3,1) both" }}>
+            <EmailStepCard state={stepState.email} />
+          </div>
+
+          {/* Step 2 — NIN */}
+          <div style={{ animation: "fadeInUp 0.4s 0.12s cubic-bezier(0.16,1,0.3,1) both" }}>
+            <NinStepCard
+              state={stepState.nin}
+              nin={nin}
+              setNin={setNin}
+              ninTouched={ninTouched}
+              setNinTouched={setNinTouched}
+              ninError={ninError}
+              onSave={handleSaveNin}
+              isPending={saveNinMutation.isPending}
             />
-            <div className="flex items-center justify-between">
-              <p id="nin-help" className="text-xs text-gray-500">
-                Digits only. Must be 11 digits.
-              </p>
-              <p className="text-xs text-gray-400">{nin.length}/11</p>
-            </div>
-            {ninError && (
-              <p id="nin-error" className="text-xs text-red-600" role="alert">
-                {ninError}
-              </p>
-            )}
-
-            <button
-              type="button"
-              onClick={handleSaveNin}
-              disabled={nin.length !== 11 || saveNinMutation.isPending}
-              className="mt-2 inline-flex items-center justify-center rounded-lg bg-[#03034D] px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {saveNinMutation.isPending ? "Saving NIN..." : "Continue"}
-            </button>
           </div>
-        )}
 
-        {ninSaved && session.currentStep !== "In Review" && (
-          <button
-            type="button"
-            onClick={onStartDidit}
-            disabled={!canStartDidit}
-            className="inline-flex w-full items-center justify-center rounded-lg bg-[#03034D] px-4 py-2.5 text-sm font-semibold text-white transition-all duration-200 ease-out disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {startDiditMutation.isPending
-              ? "Redirecting..."
-              : "Start Identity Verification"}
-          </button>
-        )}
-
-        {isReconciling && (
-          <div
-            className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700"
-            role="status"
-            aria-live="polite"
-          >
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Finishing verification...
+          {/* Step 3 — Identity Verification */}
+          <div style={{ animation: "fadeInUp 0.4s 0.2s cubic-bezier(0.16,1,0.3,1) both" }}>
+            <IdentityStepCard
+              state={stepState.didit}
+              diditLabel={diditLabel}
+              canStart={canStartDidit}
+              isPending={startDiditMutation.isPending}
+              onStart={onStartDidit}
+              onRetry={() => retryMutation.mutate()}
+              onRestart={() => restartMutation.mutate()}
+              retryPending={retryMutation.isPending}
+              restartPending={restartMutation.isPending}
+              retryCount={session.retryCount}
+              maxRetries={session.maxRetries}
+              failureReason={session.failureReason}
+            />
           </div>
-        )}
+        </div>
 
-        {(session.currentStep === "Declined" ||
-          session.currentStep === "Expired" ||
-          session.currentStep === "Abandoned") && (
-          <div className="space-y-3 rounded-xl border border-red-200 bg-red-50 p-4">
-            <div className="flex items-start gap-2">
-              <AlertCircle className="mt-0.5 h-4 w-4 text-red-600" />
-              <div>
-                <p className="text-sm font-medium text-red-700">
-                  Verification could not be completed.
-                </p>
-                <p className="mt-1 text-xs text-red-700">
-                  {session.failureReason ||
-                    "Please retry or restart your verification."}
-                </p>
-                <p className="mt-1 text-xs text-red-700">
-                  Retry usage: {session.retryCount} / {session.maxRetries}
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              {session.retryCount < session.maxRetries && (
-                <button
-                  type="button"
-                  onClick={() => retryMutation.mutate()}
-                  disabled={retryMutation.isPending}
-                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#03034D] px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {retryMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <RotateCcw className="h-4 w-4" />
-                  )}
-                  Retry verification
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => restartMutation.mutate()}
-                disabled={restartMutation.isPending}
-                className="inline-flex items-center justify-center rounded-lg border border-[#03034D] px-4 py-2 text-sm font-semibold text-[#03034D] transition-all duration-200 ease-out disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {restartMutation.isPending
-                  ? "Restarting..."
-                  : "Restart from scratch"}
-              </button>
-            </div>
-          </div>
-        )}
+        {/* Footer note */}
+        <p
+          className="mt-8 text-center text-xs text-grey2"
+          style={{ animation: "fadeInUp 0.4s 0.28s cubic-bezier(0.16,1,0.3,1) both" }}
+        >
+          Your data is encrypted and handled in line with our{" "}
+          <a href="/legal/privacy" className="font-medium text-accent1 underline-offset-2 hover:underline">
+            Privacy Policy
+          </a>
+          .
+        </p>
       </div>
-    </div>
+    </>
   );
 }
