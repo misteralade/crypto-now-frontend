@@ -9,7 +9,9 @@ import {
   RotateCcw,
   ScanFace,
   ShieldCheck,
+  ArrowRight,
 } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 import { toast } from "react-toastify";
 import { useKycQuery } from "../queries/kyc.query.ts";
 import { useKycLongPoll } from "../hooks/useKycLongPoll.ts";
@@ -198,9 +200,7 @@ function NinStepCard({
             <p className="text-sm font-semibold text-titleColor">
               NIN Verification
             </p>
-            <p className="mt-0.5 text-xs text-textSec">
-              Powered by NIMC — National Identity Management Commission
-            </p>
+            <p className="mt-0.5 text-xs text-textSec">Powered by Prembly</p>
           </div>
         </div>
         <StepBadge state={state} />
@@ -209,48 +209,75 @@ function NinStepCard({
       {/* NIN input section — only shown when active */}
       {isActive && (
         <div
-          className="border-t border-border/60 p-5 pt-4"
+          className="border-t border-border/60 p-6"
           style={{
-            animation: "slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) both",
+            animation: "slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) both",
           }}
         >
           <label
             htmlFor="nin-input"
-            className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-textSec"
+            className="mb-2 block text-xs font-bold uppercase tracking-wider text-textSec transition-colors duration-200 focus-within:text-titleColor"
           >
             National Identification Number
           </label>
-          <div className="relative">
-            <input
-              id="nin-input"
-              value={nin}
-              onBlur={() => setNinTouched(true)}
-              onChange={(e) => {
-                setNin(e.target.value.replace(/\D/g, ""));
-                if (!ninTouched) setNinTouched(true);
-              }}
-              inputMode="numeric"
-              placeholder="Enter your 11-digit NIN"
-              className="w-full rounded-xl border border-border bg-formGroupBg px-4 py-3 pr-16 text-sm font-medium text-titleColor placeholder:text-placeholder transition-all duration-200 focus:border-accent1 focus:outline-none focus:ring-2 focus:ring-accent1/20 disabled:opacity-50"
-              maxLength={11}
-              disabled={isPending}
-              aria-invalid={Boolean(ninError)}
-              aria-describedby={ninError ? "nin-error" : "nin-help"}
+          <div className="group relative">
+            <div
+              className={`absolute -inset-0.5 rounded-2xl opacity-0 blur backdrop-blur-sm transition-all duration-300 group-focus-within:opacity-100 ${
+                ninError ? "bg-red/20" : "bg-primary/20"
+              }`}
             />
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold tabular-nums text-grey2">
-              {nin.length}/11
-            </span>
+            <div className="relative">
+              <input
+                id="nin-input"
+                value={nin}
+                onBlur={() => setNinTouched(true)}
+                onChange={(e) => {
+                  setNin(e.target.value.replace(/\D/g, ""));
+                  if (!ninTouched) setNinTouched(true);
+                }}
+                inputMode="numeric"
+                placeholder="Enter your 11-digit NIN"
+                className={`relative w-full rounded-2xl border bg-white px-5 py-4 pr-16 text-[15px] font-semibold text-titleColor placeholder:font-medium placeholder:text-placeholder/70 shadow-sm transition-all duration-300 focus:outline-none focus:ring-0 disabled:opacity-50 ${
+                  ninError
+                    ? "border-red/40 focus:border-red"
+                    : "border-border focus:border-primary/40 focus:shadow-[0_4px_20px_-4px_rgba(3,3,77,0.1)]"
+                }`}
+                style={
+                  ninError
+                    ? {
+                        animation:
+                          "shake 0.5s cubic-bezier(.36,.07,.19,.97) both",
+                      }
+                    : {}
+                }
+                maxLength={11}
+                disabled={isPending}
+                aria-invalid={Boolean(ninError)}
+                aria-describedby={ninError ? "nin-error" : "nin-help"}
+              />
+              <div className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center">
+                <span
+                  className={`rounded-lg px-2 py-1 text-xs font-bold tabular-nums transition-colors duration-300 ${
+                    nin.length === 11
+                      ? "bg-success/10 text-success"
+                      : "bg-greyBg text-grey2"
+                  }`}
+                >
+                  {nin.length}/11
+                </span>
+              </div>
+            </div>
           </div>
           {ninError ? (
             <p
               id="nin-error"
-              className="mt-1.5 text-xs font-medium text-red"
+              className="mt-2 text-xs font-semibold text-red"
               role="alert"
             >
               {ninError}
             </p>
           ) : (
-            <p id="nin-help" className="mt-1.5 text-xs text-grey2">
+            <p id="nin-help" className="mt-2 text-xs font-medium text-grey2">
               11 digits, numbers only
             </p>
           )}
@@ -258,11 +285,11 @@ function NinStepCard({
             type="button"
             onClick={onSave}
             disabled={nin.length !== 11 || isPending}
-            className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-primary/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+            className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-4 text-[15px] font-bold text-white shadow-[0_4px_14px_0_rgba(3,3,77,0.2)] transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-primary/95 hover:shadow-[0_6px_20px_rgba(3,3,77,0.23)] active:translate-y-0 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
           >
             {isPending ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-5 w-5 animate-spin" />
                 Verifying NIN…
               </>
             ) : (
@@ -373,16 +400,16 @@ function IdentityStepCard({
               type="button"
               onClick={onRestart}
               disabled={restartPending}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-primary/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-4 text-[15px] font-bold text-white shadow-[0_4px_14px_0_rgba(3,3,77,0.2)] transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-primary/95 hover:shadow-[0_6px_20px_rgba(3,3,77,0.23)] active:translate-y-0 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
             >
               {restartPending ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-5 w-5 animate-spin" />
                   Restarting…
                 </>
               ) : (
                 <>
-                  <RotateCcw className="h-4 w-4" />
+                  <RotateCcw className="h-5 w-5" />
                   Retry Verification
                 </>
               )}
@@ -395,16 +422,16 @@ function IdentityStepCard({
                 type="button"
                 onClick={onStart}
                 disabled={!canStart || isPending}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-primary/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-4 text-[15px] font-bold text-white shadow-[0_4px_14px_0_rgba(3,3,77,0.2)] transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-primary/95 hover:shadow-[0_6px_20px_rgba(3,3,77,0.23)] active:translate-y-0 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
               >
                 {isPending ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-5 w-5 animate-spin" />
                     Redirecting…
                   </>
                 ) : (
                   <>
-                    <ScanFace className="h-4 w-4" />
+                    <ScanFace className="h-5 w-5" />
                     Start Identity Verification
                   </>
                 )}
@@ -470,6 +497,7 @@ function IdentityStepCard({
 // ── Main Page ────────────────────────────────────────────────────────────────
 
 export default function KycPage() {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const session = useSelector((s: RootState) => s.kyc.session);
   const { userProfileData } = useUserQuery();
@@ -508,7 +536,13 @@ export default function KycPage() {
     ) {
       startSession();
     }
-  }, [sessionData, loadingSession, isStartingSession, sessionStarted, startSession]);
+  }, [
+    sessionData,
+    loadingSession,
+    isStartingSession,
+    sessionStarted,
+    startSession,
+  ]);
 
   useEffect(() => {
     if (sessionData) dispatch(setKycSession(sessionData));
@@ -528,7 +562,11 @@ export default function KycPage() {
       {
         onSettled: () => {
           setIsReconciling(false);
-          window.history.replaceState({}, document.title, window.location.pathname);
+          window.history.replaceState(
+            {},
+            document.title,
+            window.location.pathname,
+          );
         },
       },
     );
@@ -602,7 +640,8 @@ export default function KycPage() {
       ? "In Review"
       : session.currentStep === "Resubmitted"
         ? "Resubmitted"
-        : session.currentStep === "In Progress" || session.currentStep === "submitted"
+        : session.currentStep === "In Progress" ||
+            session.currentStep === "submitted"
           ? "In Progress"
           : stepState.didit === "done"
             ? "Completed"
@@ -624,7 +663,12 @@ export default function KycPage() {
   const onStartDidit = () => {
     startDiditMutation.mutate(undefined, {
       onSuccess: ({ success, data, message }) => {
-        if (!success || !data || !("verificationUrl" in data) || !data.verificationUrl) {
+        if (
+          !success ||
+          !data ||
+          !("verificationUrl" in data) ||
+          !data.verificationUrl
+        ) {
           toast.error(message || "Unable to create verification session");
           return;
         }
@@ -645,10 +689,15 @@ export default function KycPage() {
           from { opacity: 0; transform: translateY(16px); }
           to   { opacity: 1; transform: translateY(0); }
         }
+        @keyframes shake {
+          10%, 90% { transform: translateX(-1px); }
+          20%, 80% { transform: translateX(2px); }
+          30%, 50%, 70% { transform: translateX(-4px); }
+          40%, 60% { transform: translateX(4px); }
+        }
       `}</style>
 
       <div className="mx-auto max-w-lg px-4 py-8">
-
         {/* ── Page header ── */}
         <div
           className="mb-8 text-center"
@@ -657,8 +706,12 @@ export default function KycPage() {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20">
             <ShieldCheck className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-xl font-bold text-titleColor">Identity Verification</h1>
-          <p className="mt-1.5 text-sm text-textSec">{statusText(session.currentStep)}</p>
+          <h1 className="text-xl font-bold text-titleColor">
+            Identity Verification
+          </h1>
+          <p className="mt-1.5 text-sm text-textSec">
+            {statusText(session.currentStep)}
+          </p>
 
           {/* Global status banner */}
           {isApproved && (
@@ -682,12 +735,20 @@ export default function KycPage() {
         {/* ── Steps ── */}
         <div className="space-y-4">
           {/* Step 1 — Email */}
-          <div style={{ animation: "fadeInUp 0.4s 0.05s cubic-bezier(0.16,1,0.3,1) both" }}>
+          <div
+            style={{
+              animation: "fadeInUp 0.4s 0.05s cubic-bezier(0.16,1,0.3,1) both",
+            }}
+          >
             <EmailStepCard state={stepState.email} />
           </div>
 
           {/* Step 2 — NIN */}
-          <div style={{ animation: "fadeInUp 0.4s 0.12s cubic-bezier(0.16,1,0.3,1) both" }}>
+          <div
+            style={{
+              animation: "fadeInUp 0.4s 0.12s cubic-bezier(0.16,1,0.3,1) both",
+            }}
+          >
             <NinStepCard
               state={stepState.nin}
               nin={nin}
@@ -701,7 +762,11 @@ export default function KycPage() {
           </div>
 
           {/* Step 3 — Identity Verification */}
-          <div style={{ animation: "fadeInUp 0.4s 0.2s cubic-bezier(0.16,1,0.3,1) both" }}>
+          <div
+            style={{
+              animation: "fadeInUp 0.4s 0.2s cubic-bezier(0.16,1,0.3,1) both",
+            }}
+          >
             <IdentityStepCard
               state={stepState.didit}
               diditLabel={diditLabel}
@@ -719,13 +784,37 @@ export default function KycPage() {
           </div>
         </div>
 
+        {/* Continue Action */}
+        {isApproved && (
+          <div
+            className="mt-8"
+            style={{
+              animation: "fadeInUp 0.4s 0.25s cubic-bezier(0.16,1,0.3,1) both",
+            }}
+          >
+            <button
+              onClick={() => navigate({ to: "/dashboard" })}
+              type="button"
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-4 text-[15px] font-bold text-white shadow-[0_4px_14px_0_rgba(3,3,77,0.2)] transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-primary/95 hover:shadow-[0_6px_20px_rgba(3,3,77,0.23)] active:translate-y-0 active:scale-[0.98]"
+            >
+              Continue to Dashboard
+              <ArrowRight className="h-5 w-5" />
+            </button>
+          </div>
+        )}
+
         {/* Footer note */}
         <p
           className="mt-8 text-center text-xs text-grey2"
-          style={{ animation: "fadeInUp 0.4s 0.28s cubic-bezier(0.16,1,0.3,1) both" }}
+          style={{
+            animation: "fadeInUp 0.4s 0.28s cubic-bezier(0.16,1,0.3,1) both",
+          }}
         >
           Your data is encrypted and handled in line with our{" "}
-          <a href="/legal/privacy" className="font-medium text-accent1 underline-offset-2 hover:underline">
+          <a
+            href="/legal/privacy"
+            className="font-medium text-accent1 underline-offset-2 hover:underline"
+          >
             Privacy Policy
           </a>
           .
