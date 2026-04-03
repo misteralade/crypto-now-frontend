@@ -25,12 +25,13 @@ export const Route = createFileRoute("/dashboard")({
     // KYC gate: only verified users can access dashboard routes.
     try {
       const { data } = await kycServiceApi.getSession();
-      if (!data || data.currentStep !== "verified") {
+      if (!data || data.currentStep !== "Approved") {
         throw redirect({ to: ROUTES.KYC });
       }
     } catch (error) {
       // If redirect was already thrown, re-throw it
-      if (error && typeof error === "object" && "isRedirect" in error) throw error;
+      if (error && typeof error === "object" && "isRedirect" in error)
+        throw error;
       // If session fetch fails (404 = no session yet), redirect to KYC
       throw redirect({ to: ROUTES.KYC });
     }
@@ -46,4 +47,3 @@ function DashboardLayoutRoute() {
     </AuthenticatedLayout>
   );
 }
-
