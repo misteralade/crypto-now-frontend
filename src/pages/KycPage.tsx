@@ -4,6 +4,7 @@ import {
   AlertCircle,
   CheckCircle2,
   Clock3,
+  Frown,
   Loader2,
   RotateCcw,
   ShieldCheck,
@@ -28,45 +29,51 @@ function getCallbackParams() {
 }
 
 function statusText(step?: string) {
-  if (step === "verified") return "Your identity has been verified.";
-  if (step === "failed")
+  if (step === "Approved") return "Your identity has been verified.";
+  if (step === "Declined" || step === "Expired" || step === "Abandoned")
     return "Your verification was unsuccessful. Please try again.";
-  if (step === "processing" || step === "submitted")
+  if (step === "In Review")
+    return "Your verification is under review. We will notify you once completed.";
+  if (step === "Resubmitted")
+    return "Additional verification is required. Please complete the resubmission steps.";
+  if (step === "In Progress" || step === "submitted")
     return "We are confirming your verification result.";
   return "Identity verification is required to continue.";
 }
 
 function getStepState(
   step: string,
-  ninSaved: boolean
+  ninSaved: boolean,
 ): {
   email: StepState;
   nin: StepState;
   didit: StepState;
-  confirm: StepState;
 } {
-  if (step === "verified") {
-    return { email: "done", nin: "done", didit: "done", confirm: "done" };
+  if (step === "Approved") {
+    return { email: "done", nin: "done", didit: "done" };
   }
 
-  if (step === "failed") {
+  if (step === "Declined" || step === "Expired" || step === "Abandoned") {
     return {
       email: "done",
       nin: ninSaved ? "done" : "current",
-      didit: "done",
-      confirm: "failed",
+      didit: "failed",
     };
   }
 
-  if (step === "processing" || step === "submitted") {
-    return { email: "done", nin: "done", didit: "done", confirm: "current" };
+  if (
+    step === "In Review" ||
+    step === "Resubmitted" ||
+    step === "In Progress" ||
+    step === "submitted"
+  ) {
+    return { email: "done", nin: "done", didit: "current" };
   }
 
   return {
     email: "done",
     nin: ninSaved ? "done" : "current",
     didit: ninSaved ? "current" : "pending",
-    confirm: "pending",
   };
 }
 
@@ -119,11 +126,28 @@ export default function KycPage() {
 
   const callback = useMemo(() => getCallbackParams(), []);
 
+  const {
+    mutate: startSession,
+    isPending: isStartingSession,
+    isSuccess: sessionStarted,
+  } = startSessionMutation;
+
   useEffect(() => {
-    if (!sessionData && !loadingSession) {
-      startSessionMutation.mutate();
+    if (
+      !sessionData &&
+      !loadingSession &&
+      !isStartingSession &&
+      !sessionStarted
+    ) {
+      startSession();
     }
-  }, [sessionData, loadingSession, startSessionMutation]);
+  }, [
+    sessionData,
+    loadingSession,
+    isStartingSession,
+    sessionStarted,
+    startSession,
+  ]);
 
   useEffect(() => {
     if (sessionData) {
@@ -154,10 +178,10 @@ export default function KycPage() {
           window.history.replaceState(
             {},
             document.title,
-            window.location.pathname
+            window.location.pathname,
           );
         },
-      }
+      },
     );
   }, [
     callback.status,
@@ -182,13 +206,16 @@ export default function KycPage() {
           verifiedAt: nextStatus.verifiedAt,
           diditCallbackStatus: nextStatus.diditCallbackStatus,
           diditWebhookStatus: nextStatus.diditWebhookStatus,
-        })
+        }),
       );
     },
-    [dispatch, session]
+    [dispatch, session],
   );
 
-  const isProcessing = session?.currentStep === "processing";
+  const isProcessing =
+    session?.currentStep === "In Progress" ||
+    session?.currentStep === "submitted" ||
+    session?.currentStep === "Resubmitted";
 
   useKycLongPoll({
     enabled: isProcessing,
@@ -221,35 +248,33 @@ export default function KycPage() {
       : "";
 
   const statusTone =
-    session.currentStep === "verified"
+    session.currentStep === "Approved"
       ? "success"
-      : session.currentStep === "failed"
-      ? "error"
-      : session.currentStep === "processing" ||
-        session.currentStep === "submitted"
-      ? "pending"
-      : "default";
+      : session.currentStep === "Declined" ||
+          session.currentStep === "Expired" ||
+          session.currentStep === "Abandoned"
+        ? "error"
+        : session.currentStep === "In Progress" ||
+            session.currentStep === "submitted" ||
+            session.currentStep === "In Review" ||
+            session.currentStep === "Resubmitted"
+          ? "pending"
+          : "default";
 
   const stepState = getStepState(session.currentStep, ninSaved);
+
+  const diditLabel =
+    session.currentStep === "In Review"
+      ? "In Review"
+      : session.currentStep === "Resubmitted"
+        ? "Resubmitted"
+        : stepLabel(stepState.didit);
   const canStartDidit = ninSaved && !startDiditMutation.isPending;
   const emailVerified =
     (userProfileData as { isVerified?: boolean } | undefined)?.isVerified ??
     true;
 
   const onStartDidit = () => {
-    const verificationWindow = window.open(
-      "about:blank",
-      "_blank",
-      "noopener,noreferrer"
-    );
-
-    if (!verificationWindow) {
-      toast.error(
-        "Unable to open verification in a new tab. Please allow pop-ups and try again."
-      );
-      return;
-    }
-
     startDiditMutation.mutate(undefined, {
       onSuccess: ({ success, data, message }) => {
         if (
@@ -258,14 +283,10 @@ export default function KycPage() {
           !("verificationUrl" in data) ||
           !data.verificationUrl
         ) {
-          verificationWindow.close();
           toast.error(message || "Unable to create verification session");
           return;
         }
-        verificationWindow.location.href = data.verificationUrl as string;
-      },
-      onError: () => {
-        verificationWindow.close();
+        window.location.href = data.verificationUrl as string;
       },
     });
   };
@@ -302,22 +323,28 @@ export default function KycPage() {
             statusTone === "success"
               ? "border-green-200 bg-green-50 text-green-700"
               : statusTone === "error"
-              ? "border-red-200 bg-red-50 text-red-700"
-              : statusTone === "pending"
-              ? "border-amber-200 bg-amber-50 text-amber-700"
-              : "border-gray-200 bg-gray-50 text-gray-700"
+                ? "border-red-200 bg-red-50 text-red-700"
+                : statusTone === "pending"
+                  ? "border-amber-200 bg-amber-50 text-amber-700"
+                  : "border-gray-200 bg-gray-50 text-gray-700"
           }`}
           role="status"
         >
-          {session.currentStep === "verified"
+          {session.currentStep === "Approved"
             ? "Verification complete. Your account is fully verified."
-            : session.currentStep === "failed"
-            ? session.failureReason ||
-              "Verification failed. Review details below and retry."
-            : session.currentStep === "processing" ||
-              session.currentStep === "submitted"
-            ? "Verification is in progress. We are syncing the result from Didit."
-            : "Complete the quick steps below to start identity verification."}
+            : session.currentStep === "Declined" ||
+                session.currentStep === "Expired" ||
+                session.currentStep === "Abandoned"
+              ? session.failureReason ||
+                "Verification failed. Review details below and retry."
+              : session.currentStep === "In Review"
+                ? "Verification is in review. We will notify you once completed."
+                : session.currentStep === "Resubmitted"
+                  ? "Additional verification is required. Please complete the resubmission steps."
+                  : session.currentStep === "In Progress" ||
+                      session.currentStep === "submitted"
+                    ? "Verification is in progress. We are syncing the result from Didit."
+                    : "Complete the quick steps below to start identity verification."}
         </div>
 
         <div className="rounded-xl border border-gray-200 bg-white p-4">
@@ -344,23 +371,41 @@ export default function KycPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm text-gray-800">
                 {stepIcon(stepState.didit)}
-                Complete verification on Didit
+                Identity Verification
               </div>
               <span className="text-xs font-medium text-gray-500">
-                {stepLabel(stepState.didit)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm text-gray-800">
-                {stepIcon(stepState.confirm)}
-                Await backend confirmation
-              </div>
-              <span className="text-xs font-medium text-gray-500">
-                {stepLabel(stepState.confirm)}
+                {diditLabel}
               </span>
             </div>
           </div>
         </div>
+
+        {session.currentStep === "In Review" && (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+            <div className="flex items-start gap-3">
+              <Frown className="mt-0.5 h-5 w-5 text-amber-600" />
+              <div className="space-y-1 text-sm text-amber-800">
+                <p className="font-semibold">Manual review required</p>
+                <p>
+                  Your verification needs manual review. You can wait for review
+                  or retry the verification for a faster outcome.
+                </p>
+              </div>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => restartMutation.mutate()}
+                disabled={restartMutation.isPending}
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#03034D] px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {restartMutation.isPending
+                  ? "Restarting..."
+                  : "Retry verification"}
+              </button>
+            </div>
+          </div>
+        )}
 
         {!ninSaved && (
           <div className="space-y-2 rounded-xl border border-gray-200 bg-gray-50 p-4">
@@ -411,7 +456,7 @@ export default function KycPage() {
           </div>
         )}
 
-        {ninSaved && (
+        {ninSaved && session.currentStep !== "In Review" && (
           <button
             type="button"
             onClick={onStartDidit}
@@ -419,7 +464,7 @@ export default function KycPage() {
             className="inline-flex w-full items-center justify-center rounded-lg bg-[#03034D] px-4 py-2.5 text-sm font-semibold text-white transition-all duration-200 ease-out disabled:cursor-not-allowed disabled:opacity-50"
           >
             {startDiditMutation.isPending
-              ? "Opening..."
+              ? "Redirecting..."
               : "Start Identity Verification"}
           </button>
         )}
@@ -435,7 +480,9 @@ export default function KycPage() {
           </div>
         )}
 
-        {session.currentStep === "failed" && (
+        {(session.currentStep === "Declined" ||
+          session.currentStep === "Expired" ||
+          session.currentStep === "Abandoned") && (
           <div className="space-y-3 rounded-xl border border-red-200 bg-red-50 p-4">
             <div className="flex items-start gap-2">
               <AlertCircle className="mt-0.5 h-4 w-4 text-red-600" />

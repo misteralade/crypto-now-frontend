@@ -1,7 +1,7 @@
 import type {
   ContactUsRequestType,
   CreateUserRequestType,
-  UserProfileUpdateRequestType
+  UserProfileUpdateRequestType,
 } from "../../schemas/user.schema.ts";
 
 export const personalInformationInitialState: UserProfileUpdateRequestType = {
@@ -13,15 +13,13 @@ export const personalInformationInitialState: UserProfileUpdateRequestType = {
 };
 
 export const newUserInitialState: CreateUserRequestType = {
-  email: '',
-  firstName: '',
-  lastName: '',
-  password: '',
-}
+  email: "",
+  password: "",
+};
 
 export const contactUsInitialState: ContactUsRequestType = {
-  firstName: '',
-  lastName: '',
-  email: '',
-  message: ''
-}
+  firstName: "",
+  lastName: "",
+  email: "",
+  message: "",
+};

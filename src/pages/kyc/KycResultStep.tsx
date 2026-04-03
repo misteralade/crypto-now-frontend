@@ -27,16 +27,19 @@ export default function KycResultStep({
   const navigate = useNavigate();
   const canRetry = retryCount < maxRetries;
 
-  if (currentStep === "verified") {
+  if (currentStep === "Approved") {
     return (
       <div className="space-y-6 text-center py-4">
         <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 mx-auto">
           <CheckCircle className="w-10 h-10 text-green-500" />
         </div>
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">Verification Complete!</h2>
+          <h2 className="text-xl font-semibold text-gray-900">
+            Verification Complete!
+          </h2>
           <p className="mt-2 text-sm text-gray-500">
-            Your identity has been verified. You can now access all platform features.
+            Your identity has been verified. You can now access all platform
+            features.
           </p>
         </div>
         <button
@@ -50,7 +53,11 @@ export default function KycResultStep({
     );
   }
 
-  if (currentStep === "failed") {
+  if (
+    currentStep === "Declined" ||
+    currentStep === "Expired" ||
+    currentStep === "Abandoned"
+  ) {
     return (
       <div className="space-y-6 py-4">
         <div className="text-center space-y-3">
@@ -58,7 +65,9 @@ export default function KycResultStep({
             <XCircle className="w-10 h-10 text-red-500" />
           </div>
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">Verification Failed</h2>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Verification Failed
+            </h2>
             {failureReason && (
               <p className="mt-2 text-sm text-gray-500">{failureReason}</p>
             )}
@@ -67,11 +76,15 @@ export default function KycResultStep({
 
         <div className="p-4 rounded-xl bg-gray-50 border border-gray-200 space-y-1 text-sm">
           <p className="text-gray-600">
-            Retries used: <span className="font-semibold text-gray-900">{retryCount} / {maxRetries}</span>
+            Retries used:{" "}
+            <span className="font-semibold text-gray-900">
+              {retryCount} / {maxRetries}
+            </span>
           </p>
           {!canRetry && (
             <p className="text-red-600 text-xs">
-              Maximum retries reached. Your case has been escalated for manual review.
+              Maximum retries reached. Your case has been escalated for manual
+              review.
             </p>
           )}
         </div>
@@ -87,7 +100,9 @@ export default function KycResultStep({
               {isRetryPending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                <><RefreshCw className="w-4 h-4" /> Retry Verification</>
+                <>
+                  <RefreshCw className="w-4 h-4" /> Retry Verification
+                </>
               )}
             </button>
           )}
@@ -109,17 +124,22 @@ export default function KycResultStep({
     );
   }
 
-  // Pending review state
+  // Pending review or resubmission state
   return (
     <div className="space-y-6 text-center py-4">
       <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-amber-100 mx-auto">
         <Clock className="w-10 h-10 text-amber-500" />
       </div>
       <div>
-        <h2 className="text-xl font-semibold text-gray-900">Under Manual Review</h2>
+        <h2 className="text-xl font-semibold text-gray-900">
+          {currentStep === "Resubmitted"
+            ? "Resubmission Required"
+            : "Under Manual Review"}
+        </h2>
         <p className="mt-2 text-sm text-gray-500">
-          Your case has been escalated to our compliance team for manual review.
-          You'll receive an email notification with the outcome.
+          {currentStep === "Resubmitted"
+            ? "Additional verification steps are required. Please complete the resubmission request in Didit."
+            : "Your case has been escalated to our compliance team for manual review. You'll receive an email notification with the outcome."}
         </p>
       </div>
       <button

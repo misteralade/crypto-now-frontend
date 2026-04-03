@@ -2,7 +2,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { kycServiceApi } from "../api/kyc.api.ts";
 import type { KycSessionStep, KycStatusResponse } from "../types/kyc.types.ts";
 
-const PROCESSING_STEP: KycSessionStep = "processing";
+const PROCESSING_STEPS: KycSessionStep[] = [
+  "In Progress",
+  "submitted",
+  "Resubmitted",
+];
 const MAX_CONSECUTIVE_FAILURES = 3;
 const INITIAL_BACKOFF_MS = 1_000;
 const MAX_BACKOFF_MS = 30_000;
@@ -49,7 +53,7 @@ export function useKycLongPoll({
 
         // Keep polling only while still processing
         if (
-          response.data.currentStep === PROCESSING_STEP &&
+          PROCESSING_STEPS.includes(response.data.currentStep) &&
           !abortRef.current
         ) {
           timeoutRef.current = setTimeout(poll, 5000);

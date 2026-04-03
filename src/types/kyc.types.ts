@@ -8,15 +8,15 @@ export type KycStatus =
   | "kyc_failed";
 
 export type KycSessionStep =
-  | "not_started"
-  | "id_type_selected"
-  | "front_uploaded"
-  | "back_uploaded"
-  | "selfie_uploaded"
+  | "Not Started"
   | "submitted"
-  | "processing"
-  | "verified"
-  | "failed"
+  | "In Progress"
+  | "In Review"
+  | "Resubmitted"
+  | "Approved"
+  | "Declined"
+  | "Expired"
+  | "Abandoned"
   | "archived";
 
 export type KycIdType = "national_id" | "drivers_license" | "passport";
@@ -29,7 +29,7 @@ export type KycVerificationResult =
 
 export type KycNinBvnType = "none" | "nin" | "bvn";
 
-export type KycNinStatus = "pending_future_verification";
+export type KycNinStatus = "unverified" | "verified" | "verification_failed";
 
 export type KycSessionResponse = {
   id: string;
@@ -38,13 +38,7 @@ export type KycSessionResponse = {
   userId: string;
   currentStep: KycSessionStep;
   selectedIdType: KycIdType | null;
-  hasSelectedIdType: boolean;
-  hasCompletedFrontUpload: boolean;
-  hasCompletedBackUpload: boolean;
-  hasCompletedSelfieCapture: boolean;
   hasSubmitted: boolean;
-  hasCompletedDocumentVerification: boolean;
-  hasCompletedFaceMatching: boolean;
   documentVerificationStatus: KycVerificationResult;
   faceMatchStatus: KycVerificationResult;
   ninBvnType: KycNinBvnType | null;
