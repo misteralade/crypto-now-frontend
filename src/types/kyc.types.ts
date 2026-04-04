@@ -27,8 +27,6 @@ export type KycVerificationResult =
   | "rejected"
   | "error";
 
-export type KycNinBvnType = "none" | "nin" | "bvn";
-
 export type KycNinStatus = "unverified" | "verified" | "verification_failed";
 
 export type KycSessionResponse = {
@@ -41,8 +39,12 @@ export type KycSessionResponse = {
   hasSubmitted: boolean;
   documentVerificationStatus: KycVerificationResult;
   faceMatchStatus: KycVerificationResult;
-  ninBvnType: KycNinBvnType | null;
+
   ninStatus?: KycNinStatus;
+  ninVerifiedName?: string | null;
+  ninVerificationAttempts?: number;
+  ninVerificationMaxAttempts?: number;
+  ninVerificationAttemptsRemaining?: number;
   diditSessionId?: string | null;
   diditWorkflowId?: string | null;
   diditCallbackStatus?: string | null;

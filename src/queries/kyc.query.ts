@@ -55,7 +55,8 @@ export const useKycQuery = () => {
 
   const saveNinMutation = useMutation({
     mutationKey: [QUERY_KEYS.KYC.SAVE_NIN_BVN],
-    mutationFn: (nin: string) => kycServiceApi.saveNin(nin),
+    mutationFn: (payload: { nin: string; firstName: string }) =>
+      kycServiceApi.saveNin(payload),
     onSuccess: ({ success, data, message }) => {
       if (success && data) {
         dispatch(setKycSession(data));

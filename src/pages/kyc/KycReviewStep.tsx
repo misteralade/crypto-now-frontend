@@ -13,18 +13,16 @@ interface KycReviewStepProps {
   isPending: boolean;
 }
 
-export default function KycReviewStep({ session, onSubmit, isPending }: KycReviewStepProps) {
+export default function KycReviewStep({
+  session,
+  onSubmit,
+  isPending,
+}: KycReviewStepProps) {
   const steps = [
-    { label: "ID Type Selected", done: session.hasSelectedIdType },
-    { label: "Front Document Uploaded", done: session.hasCompletedFrontUpload },
-    {
-      label: "Back Document Uploaded",
-      done: session.hasCompletedBackUpload,
-      skip: session.selectedIdType === "passport",
-    },
-    { label: "Selfie Captured", done: session.hasCompletedSelfieCapture },
-    { label: "NIN/BVN Saved", done: session.ninBvnType !== null },
-  ].filter((s) => !s.skip);
+    { label: "NIN Verified", done: session.ninStatus === "verified" },
+    { label: "Didit session created", done: Boolean(session.diditSessionId) },
+    { label: "Submitted to Didit", done: session.hasSubmitted },
+  ];
 
   const allReady = steps.every((s) => s.done);
 
@@ -39,20 +37,31 @@ export default function KycReviewStep({ session, onSubmit, isPending }: KycRevie
 
       <div className="rounded-xl border border-gray-200 divide-y divide-gray-100 overflow-hidden">
         <div className="px-4 py-3 bg-gray-50">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Submission Summary</p>
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+            Submission Summary
+          </p>
         </div>
         {session.selectedIdType && (
           <div className="px-4 py-3 flex items-center justify-between text-sm">
             <span className="text-gray-600">ID Type</span>
-            <span className="font-medium text-gray-900">{ID_TYPE_LABELS[session.selectedIdType]}</span>
+            <span className="font-medium text-gray-900">
+              {ID_TYPE_LABELS[session.selectedIdType]}
+            </span>
           </div>
         )}
         {steps.map((step) => (
-          <div key={step.label} className="px-4 py-3 flex items-center justify-between text-sm">
+          <div
+            key={step.label}
+            className="px-4 py-3 flex items-center justify-between text-sm"
+          >
             <span className="text-gray-600">{step.label}</span>
-            <span className={`flex items-center gap-1 font-medium ${step.done ? "text-green-600" : "text-red-500"}`}>
+            <span
+              className={`flex items-center gap-1 font-medium ${step.done ? "text-green-600" : "text-red-500"}`}
+            >
               {step.done ? (
-                <><CheckCircle className="w-4 h-4" /> Done</>
+                <>
+                  <CheckCircle className="w-4 h-4" /> Done
+                </>
               ) : (
                 "Missing"
               )}
@@ -68,8 +77,9 @@ export default function KycReviewStep({ session, onSubmit, isPending }: KycRevie
       )}
 
       <div className="p-3 rounded-lg bg-blue-50 border border-blue-100 text-xs text-blue-700">
-        By submitting, you consent to Didit processing your identity documents and selfie for verification.
-        Results are typically returned within 30 seconds.
+        By submitting, you consent to Didit processing your identity documents
+        and selfie for verification. Results are typically returned within 30
+        seconds.
       </div>
 
       <button
@@ -79,7 +89,9 @@ export default function KycReviewStep({ session, onSubmit, isPending }: KycRevie
         className="w-full flex items-center justify-center gap-2 py-3 px-6 rounded-xl bg-[#03034D] text-white font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#03034D]/90 transition-colors"
       >
         {isPending ? (
-          <><Loader2 className="w-4 h-4 animate-spin" /> Submitting…</>
+          <>
+            <Loader2 className="w-4 h-4 animate-spin" /> Submitting…
+          </>
         ) : (
           "Submit for Verification"
         )}
