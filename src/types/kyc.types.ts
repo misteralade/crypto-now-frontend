@@ -27,33 +27,40 @@ export type KycVerificationResult =
   | "rejected"
   | "error";
 
-export type KycNinBvnType = "none" | "nin" | "bvn";
-
 export type KycNinStatus = "unverified" | "verified" | "verification_failed";
+
+export type DiditSessionStatus =
+  | "Not Started"
+  | "In Progress"
+  | "In Review"
+  | "Resubmitted"
+  | "Approved"
+  | "Declined"
+  | "Expired"
+  | "Abandoned"
+  | "Kyc Expired";
 
 export type KycSessionResponse = {
   id: string;
-  sessionId?: string | null;
-  internalKycId?: string;
-  userId: string;
   currentStep: KycSessionStep;
   selectedIdType: KycIdType | null;
+  hasSelectedIdType: boolean;
+
   hasSubmitted: boolean;
-  documentVerificationStatus: KycVerificationResult;
-  faceMatchStatus: KycVerificationResult;
-  ninBvnType: KycNinBvnType | null;
-  ninStatus?: KycNinStatus;
-  ninVerifiedName?: string | null;
-  ninVerificationAttempts?: number;
-  ninVerificationAttemptsRemaining?: number;
-  identityVerificationAttempts?: number;
-  identityVerificationAttemptsRemaining?: number;
-  diditSessionId?: string | null;
-  diditWorkflowId?: string | null;
-  diditCallbackStatus?: string | null;
-  diditWebhookStatus?: string | null;
-  diditSessionUrl?: string | null;
-  lastSyncedAt?: string | null;
+  identityVerificationStatus: DiditSessionStatus;
+  ninStatus: KycNinStatus;
+  ninVerifiedName: string | null;
+  ninVerificationAttempts: number;
+  ninVerificationAttemptsRemaining: number;
+  identityVerificationAttempts: number;
+  identityVerificationAttemptsRemaining: number;
+  diditSessionId: string | null;
+  diditWorkflowId: string | null;
+  diditCallbackStatus: string | null;
+  diditWebhookStatus: string | null;
+  diditSessionUrl: string | null;
+  verificationUrl?: string | null;
+  lastSyncedAt: string | null;
   failureReason: string | null;
   submittedAt: string | null;
   verifiedAt: string | null;
@@ -63,8 +70,7 @@ export type KycSessionResponse = {
 
 export type KycStatusResponse = {
   currentStep: KycSessionStep;
-  documentVerificationStatus: KycVerificationResult;
-  faceMatchStatus: KycVerificationResult;
+  identityVerificationStatus: DiditSessionStatus;
   failureReason: string | null;
   verifiedAt: string | null;
   diditCallbackStatus?: string | null;

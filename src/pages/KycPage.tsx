@@ -667,12 +667,13 @@ export default function KycPage() {
         setKycSession({
           ...session,
           currentStep: nextStatus.currentStep,
-          documentVerificationStatus: nextStatus.documentVerificationStatus,
-          faceMatchStatus: nextStatus.faceMatchStatus,
+          identityVerificationStatus: nextStatus.identityVerificationStatus,
           failureReason: nextStatus.failureReason,
           verifiedAt: nextStatus.verifiedAt,
-          diditCallbackStatus: nextStatus.diditCallbackStatus,
-          diditWebhookStatus: nextStatus.diditWebhookStatus,
+          diditCallbackStatus:
+            nextStatus.diditCallbackStatus ?? session.diditCallbackStatus,
+          diditWebhookStatus:
+            nextStatus.diditWebhookStatus ?? session.diditWebhookStatus,
         })
       );
     },
