@@ -625,6 +625,7 @@ export default function KycPage() {
   const statusMutateRef = useRef(statusMutation.mutate);
 
   const reviewPollCountRef = useRef(0);
+  const reviewConsecutiveErrorsRef = useRef(0);
   const reviewTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reviewPollingActiveRef = useRef(false);
 
@@ -724,6 +725,17 @@ export default function KycPage() {
   const isInReview = useMemo(() => {
     const step = session?.currentStep;
     const identityStatus = session?.identityVerificationStatus;
+    // If the backend step is terminal, do not keep polling even if
+    // `identityVerificationStatus` is stale/mismatched.
+    if (
+      step === "Approved" ||
+      step === "Declined" ||
+      step === "Expired" ||
+      step === "Abandoned"
+    ) {
+      return false;
+    }
+
     return step === "In Review" || identityStatus === "In Review";
   }, [session?.currentStep, session?.identityVerificationStatus]);
 
@@ -753,6 +765,7 @@ export default function KycPage() {
   useEffect(() => {
     const MAX_REVIEW_POLLS = 12;
     const REVIEW_POLL_INTERVAL_MS = 10_000;
+    const MAX_CONSECUTIVE_REVIEW_ERRORS = 2;
     const clear = () => {
       if (reviewTimeoutRef.current) {
         clearTimeout(reviewTimeoutRef.current);
@@ -763,6 +776,7 @@ export default function KycPage() {
     if (!isInReview) {
       reviewPollingActiveRef.current = false;
       reviewPollCountRef.current = 0;
+      reviewConsecutiveErrorsRef.current = 0;
       clear();
       return;
     }
@@ -783,9 +797,39 @@ export default function KycPage() {
       // First call happens after 10s (not immediately) to avoid burst calls.
       reviewTimeoutRef.current = setTimeout(() => {
         if (!reviewPollingActiveRef.current) return;
+
+        // Avoid overlapping requests; if one is already in-flight, try again next tick.
+        if (statusPendingRef.current) {
+          scheduleNext();
+          return;
+        }
+
         reviewPollCountRef.current += 1;
-        refreshStatus({ silent: true });
-        scheduleNext();
+        statusMutateRef.current(
+          { silent: true },
+          {
+            onSuccess: ({ success, data }) => {
+              if (success && data) {
+                reviewConsecutiveErrorsRef.current = 0;
+                updateStatus(data);
+              }
+            },
+            onError: () => {
+              reviewConsecutiveErrorsRef.current += 1;
+              if (
+                reviewConsecutiveErrorsRef.current >=
+                MAX_CONSECUTIVE_REVIEW_ERRORS
+              ) {
+                // Stop auto polling to avoid rate-limit loops.
+                reviewPollingActiveRef.current = false;
+                clear();
+              }
+            },
+            onSettled: () => {
+              if (reviewPollingActiveRef.current) scheduleNext();
+            },
+          }
+        );
       }, REVIEW_POLL_INTERVAL_MS);
     };
 
@@ -836,21 +880,34 @@ export default function KycPage() {
 
   const stepState = getStepState(session.currentStep, ninSaved);
 
-  const diditLabel =
-    session.currentStep === "In Review"
-      ? "In Review"
-      : session.currentStep === "Resubmitted"
-      ? "Resubmitted"
-      : session.currentStep === "In Progress" ||
-        session.currentStep === "submitted"
-      ? "In Progress"
-      : stepState.didit === "done"
-      ? "Completed"
-      : stepState.didit === "failed"
-      ? "Failed"
-      : stepState.didit === "current"
-      ? "Ready"
-      : "Pending";
+  const TERMINAL_DIDIT_STATUSES = new Set([
+    "Approved",
+    "Declined",
+    "Expired",
+    "Abandoned",
+    "Kyc Expired",
+  ]);
+
+  const diditLabel = TERMINAL_DIDIT_STATUSES.has(
+    session.identityVerificationStatus
+  )
+    ? session.identityVerificationStatus
+    : TERMINAL_DIDIT_STATUSES.has(session.currentStep)
+    ? session.currentStep
+    : session.currentStep === "In Review"
+    ? "In Review"
+    : session.currentStep === "Resubmitted"
+    ? "Resubmitted"
+    : session.currentStep === "In Progress" ||
+      session.currentStep === "submitted"
+    ? "In Progress"
+    : stepState.didit === "done"
+    ? "Completed"
+    : stepState.didit === "failed"
+    ? "Failed"
+    : stepState.didit === "current"
+    ? "Ready"
+    : "Pending";
 
   const canStartDidit = ninSaved && !startDiditMutation.isPending;
   const isApproved = session.currentStep === "Approved";
