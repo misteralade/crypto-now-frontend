@@ -6,8 +6,8 @@ import type { KycSessionStep } from "../../types/kyc.types.ts";
 interface KycResultStepProps {
   currentStep: KycSessionStep;
   failureReason: string | null;
-  retryCount: number;
-  maxRetries: number;
+  identityVerificationAttempts: number;
+  identityVerificationAttemptsRemaining: number;
   onRetry: () => void;
   onRestart: () => void;
   isRetryPending: boolean;
@@ -17,15 +17,15 @@ interface KycResultStepProps {
 export default function KycResultStep({
   currentStep,
   failureReason,
-  retryCount,
-  maxRetries,
+  identityVerificationAttempts,
+  identityVerificationAttemptsRemaining,
   onRetry,
   onRestart,
   isRetryPending,
   isRestartPending,
 }: KycResultStepProps) {
   const navigate = useNavigate();
-  const canRetry = retryCount < maxRetries;
+  const canRetry = identityVerificationAttemptsRemaining > 0;
 
   if (currentStep === "Approved") {
     return (
@@ -76,14 +76,20 @@ export default function KycResultStep({
 
         <div className="p-4 rounded-xl bg-gray-50 border border-gray-200 space-y-1 text-sm">
           <p className="text-gray-600">
-            Retries used:{" "}
+            Attempts used:{" "}
             <span className="font-semibold text-gray-900">
-              {retryCount} / {maxRetries}
+              {identityVerificationAttempts}
+            </span>
+          </p>
+          <p className="text-gray-600">
+            Attempts left:{" "}
+            <span className="font-semibold text-gray-900">
+              {identityVerificationAttemptsRemaining}
             </span>
           </p>
           {!canRetry && (
             <p className="text-red-600 text-xs">
-              Maximum retries reached. Your case has been escalated for manual
+              Maximum attempts reached. Your case has been escalated for manual
               review.
             </p>
           )}

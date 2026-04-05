@@ -1,15 +1,12 @@
 import { useState } from "react";
 import { Info, Loader2 } from "lucide-react";
 
-interface KycNinBvnStepProps {
+interface KycNinStepProps {
   onSave: (nin: string, firstName: string) => void;
   isPending: boolean;
 }
 
-export default function KycNinBvnStep({
-  onSave,
-  isPending,
-}: KycNinBvnStepProps) {
+export default function KycNinStep({ onSave, isPending }: KycNinStepProps) {
   const [nin, setNin] = useState("");
   const [firstName, setFirstName] = useState("");
   const [ninTouched, setNinTouched] = useState(false);

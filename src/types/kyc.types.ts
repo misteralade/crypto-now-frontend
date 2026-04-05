@@ -27,6 +27,8 @@ export type KycVerificationResult =
   | "rejected"
   | "error";
 
+export type KycNinBvnType = "none" | "nin" | "bvn";
+
 export type KycNinStatus = "unverified" | "verified" | "verification_failed";
 
 export type KycSessionResponse = {
@@ -39,12 +41,13 @@ export type KycSessionResponse = {
   hasSubmitted: boolean;
   documentVerificationStatus: KycVerificationResult;
   faceMatchStatus: KycVerificationResult;
-
+  ninBvnType: KycNinBvnType | null;
   ninStatus?: KycNinStatus;
   ninVerifiedName?: string | null;
   ninVerificationAttempts?: number;
-  ninVerificationMaxAttempts?: number;
   ninVerificationAttemptsRemaining?: number;
+  identityVerificationAttempts?: number;
+  identityVerificationAttemptsRemaining?: number;
   diditSessionId?: string | null;
   diditWorkflowId?: string | null;
   diditCallbackStatus?: string | null;
@@ -52,8 +55,6 @@ export type KycSessionResponse = {
   diditSessionUrl?: string | null;
   lastSyncedAt?: string | null;
   failureReason: string | null;
-  retryCount: number;
-  maxRetries: number;
   submittedAt: string | null;
   verifiedAt: string | null;
   createdAt: string;
@@ -65,8 +66,6 @@ export type KycStatusResponse = {
   documentVerificationStatus: KycVerificationResult;
   faceMatchStatus: KycVerificationResult;
   failureReason: string | null;
-  retryCount: number;
-  maxRetries: number;
   verifiedAt: string | null;
   diditCallbackStatus?: string | null;
   diditWebhookStatus?: string | null;

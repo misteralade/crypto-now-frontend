@@ -38,6 +38,7 @@ export const useKycQuery = () => {
   const startSessionMutation = useMutation({
     mutationKey: [QUERY_KEYS.KYC.START_SESSION],
     mutationFn: async () => kycServiceApi.startOrResumeSession(),
+    retry: false,
     onSuccess: ({ success, data, message }) => {
       if (success && data) {
         dispatch(setKycSession(data));
@@ -54,9 +55,10 @@ export const useKycQuery = () => {
   });
 
   const saveNinMutation = useMutation({
-    mutationKey: [QUERY_KEYS.KYC.SAVE_NIN_BVN],
-    mutationFn: (payload: { nin: string; firstName: string }) =>
-      kycServiceApi.saveNin(payload),
+    mutationKey: [QUERY_KEYS.KYC.SAVE_NIN],
+    mutationFn: ({ nin, firstName }: { nin: string; firstName: string }) =>
+      kycServiceApi.saveNin(nin, firstName),
+    retry: false,
     onSuccess: ({ success, data, message }) => {
       if (success && data) {
         dispatch(setKycSession(data));
@@ -75,6 +77,7 @@ export const useKycQuery = () => {
   const startDiditMutation = useMutation({
     mutationKey: [QUERY_KEYS.KYC.SUBMIT],
     mutationFn: () => kycServiceApi.startDiditVerification(),
+    retry: false,
     onError: (error: AxiosServerError) => {
       toast.error(extractErrorMessage(error));
     },
@@ -89,6 +92,7 @@ export const useKycQuery = () => {
       verificationSessionId?: string | null;
       status?: string | null;
     }) => kycServiceApi.reconcileDiditCallback(verificationSessionId, status),
+    retry: false,
     onSuccess: ({ success, data, message }) => {
       if (success && data) {
         dispatch(setKycSession(data));
@@ -104,6 +108,7 @@ export const useKycQuery = () => {
   const statusMutation = useMutation({
     mutationKey: [QUERY_KEYS.KYC.GET_STATUS],
     mutationFn: () => kycServiceApi.getStatus(),
+    retry: false,
     onError: (error: AxiosServerError) => {
       toast.error(extractErrorMessage(error));
     },
@@ -112,6 +117,7 @@ export const useKycQuery = () => {
   const retryMutation = useMutation({
     mutationKey: [QUERY_KEYS.KYC.RETRY],
     mutationFn: () => kycServiceApi.retryVerification(),
+    retry: false,
     onSuccess: ({ success, data, message }) => {
       if (success && data) {
         dispatch(setKycSession(data));
@@ -130,6 +136,7 @@ export const useKycQuery = () => {
   const restartMutation = useMutation({
     mutationKey: [QUERY_KEYS.KYC.RESTART],
     mutationFn: () => kycServiceApi.restartSession(),
+    retry: false,
     onSuccess: ({ success, data, message }) => {
       if (success && data) {
         dispatch(setKycSession(data));

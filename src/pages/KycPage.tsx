@@ -45,7 +45,7 @@ function statusText(step?: string) {
 
 function getStepState(
   step: string,
-  ninSaved: boolean,
+  ninSaved: boolean
 ): {
   email: StepState;
   nin: StepState;
@@ -122,8 +122,8 @@ function EmailStepCard({ state }: { state: StepState }) {
         isDone
           ? "border-success/30 bg-bgSuccess"
           : isActive
-            ? "border-primary/20 bg-white shadow-md ring-1 ring-primary/5"
-            : "border-border bg-greyBg/30 opacity-80"
+          ? "border-primary/20 bg-white shadow-md ring-1 ring-primary/5"
+          : "border-border bg-greyBg/30 opacity-80"
       }`}
     >
       <div className="flex items-start justify-between gap-3 p-5">
@@ -132,7 +132,9 @@ function EmailStepCard({ state }: { state: StepState }) {
             className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white border border-border/50 shadow-sm`}
           >
             <Mail
-              className={`h-4.5 w-4.5 ${isDone ? "text-success" : "text-titleColor"}`}
+              className={`h-4.5 w-4.5 ${
+                isDone ? "text-success" : "text-titleColor"
+              }`}
             />
           </div>
           <div>
@@ -197,10 +199,10 @@ function NinStepCard({
         isDone
           ? "border-success/30 bg-bgSuccess"
           : isActive
-            ? "border-primary/20 bg-white shadow-md ring-1 ring-primary/5"
-            : isFailed
-              ? "border-red/30 bg-bgFailed ring-1 ring-red/5"
-              : "border-border bg-greyBg/30 opacity-80"
+          ? "border-primary/20 bg-white shadow-md ring-1 ring-primary/5"
+          : isFailed
+          ? "border-red/30 bg-bgFailed ring-1 ring-red/5"
+          : "border-border bg-greyBg/30 opacity-80"
       }`}
     >
       {/* Card header */}
@@ -369,7 +371,7 @@ function NinStepCard({
               "NIN verification locked"
             ) : (
               <>
-                <ScanFace className="h-5 w-5" />
+                <img width="20" height="20" src="/decorations/fingerprint.png" alt="fingerprint" />
                 {isRetry ? "Retry NIN verification" : "Verify NIN"}
               </>
             )}
@@ -390,8 +392,7 @@ function IdentityStepCard({
   onRestart,
   retryPending,
   restartPending,
-  retryCount,
-  maxRetries,
+  attemptsRemaining,
   failureReason,
 }: {
   state: StepState;
@@ -403,13 +404,13 @@ function IdentityStepCard({
   onRestart: () => void;
   retryPending: boolean;
   restartPending: boolean;
-  retryCount: number;
-  maxRetries: number;
+  attemptsRemaining: number;
   failureReason?: string | null;
 }) {
   const isActive = state === "current";
   const isDone = state === "done";
   const isFailed = state === "failed";
+  const canRetry = attemptsRemaining > 0;
 
   return (
     <div
@@ -417,10 +418,10 @@ function IdentityStepCard({
         isDone
           ? "border-success/30 bg-bgSuccess"
           : isActive
-            ? "border-primary/20 bg-white shadow-md ring-1 ring-primary/5"
-            : isFailed
-              ? "border-red/30 bg-bgFailed ring-1 ring-red/5"
-              : "border-border bg-greyBg/30 opacity-80"
+          ? "border-primary/20 bg-white shadow-md ring-1 ring-primary/5"
+          : isFailed
+          ? "border-red/30 bg-bgFailed ring-1 ring-red/5"
+          : "border-border bg-greyBg/30 opacity-80"
       }`}
     >
       {/* Card header */}
@@ -434,8 +435,8 @@ function IdentityStepCard({
                 isDone
                   ? "text-success"
                   : isFailed
-                    ? "text-red"
-                    : "text-titleColor"
+                  ? "text-red"
+                  : "text-titleColor"
               }`}
             />
           </div>
@@ -537,12 +538,12 @@ function IdentityStepCard({
                 {failureReason ?? "Please retry or restart your verification."}
               </p>
               <p className="text-xs text-red/70">
-                Attempts used: {retryCount} / {maxRetries}
+                Attempts left: {attemptsRemaining}
               </p>
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            {retryCount < maxRetries && (
+            {canRetry && (
               <button
                 type="button"
                 onClick={onRetry}
@@ -561,7 +562,10 @@ function IdentityStepCard({
               type="button"
               onClick={onRestart}
               disabled={restartPending}
-              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-primary px-5 py-3 text-sm font-semibold text-primary transition-all duration-200 ease-out hover:bg-primary/5 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex flex-1 items-center justify-center gap-2
+            rounded-xl border border-primary px-5 py-3 text-sm font-semibold
+            text-primary transition-all duration-200 ease-out hover:bg-primary/5
+            active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
             >
               Restart
             </button>
@@ -644,10 +648,10 @@ export default function KycPage() {
           window.history.replaceState(
             {},
             document.title,
-            window.location.pathname,
+            window.location.pathname
           );
         },
-      },
+      }
     );
   }, [
     callback.status,
@@ -666,15 +670,13 @@ export default function KycPage() {
           documentVerificationStatus: nextStatus.documentVerificationStatus,
           faceMatchStatus: nextStatus.faceMatchStatus,
           failureReason: nextStatus.failureReason,
-          retryCount: nextStatus.retryCount,
-          maxRetries: nextStatus.maxRetries,
           verifiedAt: nextStatus.verifiedAt,
           diditCallbackStatus: nextStatus.diditCallbackStatus,
           diditWebhookStatus: nextStatus.diditWebhookStatus,
-        }),
+        })
       );
     },
-    [dispatch, session],
+    [dispatch, session]
   );
 
   const isProcessing =
@@ -715,10 +717,7 @@ export default function KycPage() {
     !ninSaved && firstNameTouched && !firstName.trim()
       ? "First name is required."
       : "";
-  const ninAttemptsRemaining =
-    session.ninVerificationAttemptsRemaining ??
-    session.ninVerificationMaxAttempts ??
-    3;
+  const ninAttemptsRemaining = session.ninVerificationAttemptsRemaining ?? 3;
   const ninLocked = ninAttemptsRemaining <= 0;
   const ninVerifiedName = session.ninVerifiedName ?? null;
 
@@ -728,17 +727,17 @@ export default function KycPage() {
     session.currentStep === "In Review"
       ? "In Review"
       : session.currentStep === "Resubmitted"
-        ? "Resubmitted"
-        : session.currentStep === "In Progress" ||
-            session.currentStep === "submitted"
-          ? "In Progress"
-          : stepState.didit === "done"
-            ? "Completed"
-            : stepState.didit === "failed"
-              ? "Failed"
-              : stepState.didit === "current"
-                ? "Ready"
-                : "Pending";
+      ? "Resubmitted"
+      : session.currentStep === "In Progress" ||
+        session.currentStep === "submitted"
+      ? "In Progress"
+      : stepState.didit === "done"
+      ? "Completed"
+      : stepState.didit === "failed"
+      ? "Failed"
+      : stepState.didit === "current"
+      ? "Ready"
+      : "Pending";
 
   const canStartDidit = ninSaved && !startDiditMutation.isPending;
   const isApproved = session.currentStep === "Approved";
@@ -876,8 +875,9 @@ export default function KycPage() {
               onRestart={() => restartMutation.mutate()}
               retryPending={retryMutation.isPending}
               restartPending={restartMutation.isPending}
-              retryCount={session.retryCount}
-              maxRetries={session.maxRetries}
+              attemptsRemaining={
+                session.identityVerificationAttemptsRemaining ?? 3
+              }
               failureReason={session.failureReason}
             />
           </div>

@@ -1,4 +1,7 @@
-import { axiosGetRequestHandler, axiosPostRequestHandler } from "./index.ts";
+import {
+  axiosGetRequestHandler,
+  axiosPostRequestHandler,
+} from "./index.ts";
 import type {
   GetKycSessionApiResponse,
   GetKycStatusApiResponse,
@@ -25,11 +28,8 @@ class KycServiceApi {
     return axiosGetRequestHandler("/kyc/session");
   }
 
-  async saveNin(payload: {
-    nin: string;
-    firstName: string;
-  }): Promise<KycActionApiResponse> {
-    return axiosPostRequestHandler("/kyc/nin", payload);
+  async saveNin(nin: string, firstName: string): Promise<KycActionApiResponse> {
+    return axiosPostRequestHandler("/kyc/nin", { nin, firstName });
   }
 
   async startDiditVerification(): Promise<KycActionApiResponse> {
@@ -38,7 +38,7 @@ class KycServiceApi {
 
   async reconcileDiditCallback(
     verificationSessionId?: string | null,
-    status?: string | null,
+    status?: string | null
   ): Promise<KycActionApiResponse> {
     const params = new URLSearchParams();
     if (verificationSessionId)
