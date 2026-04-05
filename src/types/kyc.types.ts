@@ -1,11 +1,31 @@
 import type { BaseApiResponse } from "./response.payload.types.ts";
 
+export enum KycStatusEnum {
+  UNVERIFIED = "unverified",
+  KYC_IN_PROGRESS = "kyc_in_progress",
+  KYC_PENDING_REVIEW = "kyc_pending_review",
+  KYC_VERIFIED = "kyc_verified",
+  KYC_FAILED = "kyc_failed",
+}
+
 export type KycStatus =
   | "unverified"
   | "kyc_in_progress"
   | "kyc_pending_review"
   | "kyc_verified"
   | "kyc_failed";
+
+export enum KycSessionStepEnum {
+  NOT_STARTED = "Not Started",
+  SUBMITTED = "submitted",
+  IN_PROGRESS = "In Progress",
+  IN_REVIEW = "In Review",
+  RESUBMITTED = "Resubmitted",
+  APPROVED = "Approved",
+  DECLINED = "Declined",
+  EXPIRED = "Expired",
+  ABANDONED = "Abandoned",
+}
 
 export type KycSessionStep =
   | "Not Started"
@@ -26,7 +46,25 @@ export type KycVerificationResult =
   | "rejected"
   | "error";
 
+export enum KycNinStatusEnum {
+  UNVERIFIED = "unverified",
+  VERIFIED = "verified",
+  VERIFICATION_FAILED = "verification_failed",
+}
+
 export type KycNinStatus = "unverified" | "verified" | "verification_failed";
+
+export enum DiditSessionStatusEnum {
+  NOT_STARTED = "Not Started",
+  IN_PROGRESS = "In Progress",
+  IN_REVIEW = "In Review",
+  RESUBMITTED = "Resubmitted",
+  APPROVED = "Approved",
+  DECLINED = "Declined",
+  EXPIRED = "Expired",
+  ABANDONED = "Abandoned",
+  KYC_EXPIRED = "Kyc Expired",
+}
 
 export type DiditSessionStatus =
   | "Not Started"

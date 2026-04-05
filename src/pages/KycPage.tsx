@@ -20,6 +20,10 @@ import { useKycLongPoll } from "../hooks/useKycLongPoll.ts";
 import { setKycSession } from "../redux/kyc.slice.ts";
 import type { RootState } from "../store.ts";
 import type { KycStatusResponse } from "../types/kyc.types.ts";
+import {
+  KycSessionStepEnum,
+  DiditSessionStatusEnum,
+} from "../types/kyc.types.ts";
 
 type StepState = "done" | "current" | "pending" | "failed";
 
@@ -32,14 +36,21 @@ function getCallbackParams() {
 }
 
 function statusText(step?: string) {
-  if (step === "Approved") return "Your identity has been verified.";
-  if (step === "Declined" || step === "Expired" || step === "Abandoned")
+  if (step === KycSessionStepEnum.APPROVED) return "Your identity has been verified.";
+  if (
+    step === KycSessionStepEnum.DECLINED ||
+    step === KycSessionStepEnum.EXPIRED ||
+    step === KycSessionStepEnum.ABANDONED
+  )
     return "Your verification was unsuccessful. Please try again.";
-  if (step === "In Review")
+  if (step === KycSessionStepEnum.IN_REVIEW)
     return "Your verification is under review. We'll notify you once completed.";
-  if (step === "Resubmitted")
+  if (step === KycSessionStepEnum.RESUBMITTED)
     return "Additional verification is required. Please complete the resubmission steps.";
-  if (step === "In Progress" || step === "submitted")
+  if (
+    step === KycSessionStepEnum.IN_PROGRESS ||
+    step === KycSessionStepEnum.SUBMITTED
+  )
     return "We are confirming your verification result.";
   return "Complete the steps below to verify your identity.";
 }
@@ -52,11 +63,15 @@ function getStepState(
   nin: StepState;
   didit: StepState;
 } {
-  if (step === "Approved") {
+  if (step === KycSessionStepEnum.APPROVED) {
     return { email: "done", nin: "done", didit: "done" };
   }
 
-  if (step === "Declined" || step === "Expired" || step === "Abandoned") {
+  if (
+    step === KycSessionStepEnum.DECLINED ||
+    step === KycSessionStepEnum.EXPIRED ||
+    step === KycSessionStepEnum.ABANDONED
+  ) {
     return {
       email: "done",
       nin: ninSaved ? "done" : "current",
@@ -65,10 +80,10 @@ function getStepState(
   }
 
   if (
-    step === "In Review" ||
-    step === "Resubmitted" ||
-    step === "In Progress" ||
-    step === "submitted"
+    step === KycSessionStepEnum.IN_REVIEW ||
+    step === KycSessionStepEnum.RESUBMITTED ||
+    step === KycSessionStepEnum.IN_PROGRESS ||
+    step === KycSessionStepEnum.SUBMITTED
   ) {
     return { email: "done", nin: "done", didit: "current" };
   }
@@ -466,9 +481,9 @@ function IdentityStepCard({
           }}
         >
           {/* In-progress / review hint */}
-          {(diditLabel === "In Progress" ||
-            diditLabel === "In Review" ||
-            diditLabel === "Resubmitted") && (
+          {(diditLabel === KycSessionStepEnum.IN_PROGRESS ||
+            diditLabel === KycSessionStepEnum.IN_REVIEW ||
+            diditLabel === KycSessionStepEnum.RESUBMITTED) && (
             <div className="mb-4 flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 p-3.5">
               <Clock className="mt-px h-4 w-4 shrink-0 text-amber-600" />
               <p className="text-xs text-amber-800">
@@ -479,7 +494,7 @@ function IdentityStepCard({
             </div>
           )}
 
-          {diditLabel === "In Review" ? (
+          {diditLabel === KycSessionStepEnum.IN_REVIEW ? (
             <div className="flex w-full flex-col gap-2 sm:flex-row">
               {showContinue ? (
                 <button
@@ -528,7 +543,8 @@ function IdentityStepCard({
               )}
             </div>
           ) : showContinue &&
-            (diditLabel === "In Progress" || diditLabel === "Resubmitted") ? (
+            (diditLabel === KycSessionStepEnum.IN_PROGRESS ||
+              diditLabel === KycSessionStepEnum.RESUBMITTED) ? (
             <button
               type="button"
               onClick={onContinue}
@@ -540,8 +556,8 @@ function IdentityStepCard({
             </button>
           ) : (
             canStart &&
-            diditLabel !== "In Progress" &&
-            diditLabel !== "Resubmitted" && (
+            diditLabel !== KycSessionStepEnum.IN_PROGRESS &&
+            diditLabel !== KycSessionStepEnum.RESUBMITTED && (
               <button
                 type="button"
                 onClick={onStart}
@@ -732,9 +748,9 @@ export default function KycPage() {
   );
 
   const isProcessing =
-    session?.currentStep === "In Progress" ||
-    session?.currentStep === "submitted" ||
-    session?.currentStep === "Resubmitted";
+    session?.currentStep === KycSessionStepEnum.IN_PROGRESS ||
+    session?.currentStep === KycSessionStepEnum.SUBMITTED ||
+    session?.currentStep === KycSessionStepEnum.RESUBMITTED;
 
   const isInReview = useMemo(() => {
     const step = session?.currentStep;
@@ -742,15 +758,18 @@ export default function KycPage() {
     // If the backend step is terminal, do not keep polling even if
     // `identityVerificationStatus` is stale/mismatched.
     if (
-      step === "Approved" ||
-      step === "Declined" ||
-      step === "Expired" ||
-      step === "Abandoned"
+      step === KycSessionStepEnum.APPROVED ||
+      step === KycSessionStepEnum.DECLINED ||
+      step === KycSessionStepEnum.EXPIRED ||
+      step === KycSessionStepEnum.ABANDONED
     ) {
       return false;
     }
 
-    return step === "In Review" || identityStatus === "In Review";
+    return (
+      step === KycSessionStepEnum.IN_REVIEW ||
+      identityStatus === DiditSessionStatusEnum.IN_REVIEW
+    );
   }, [session?.currentStep, session?.identityVerificationStatus]);
 
   useEffect(() => {
@@ -892,39 +911,41 @@ export default function KycPage() {
   const stepState = getStepState(session.currentStep, ninSaved);
 
   const identityTerminalFailedStatuses = new Set([
-    "Declined",
-    "Expired",
-    "Abandoned",
-    "Kyc Expired",
+    DiditSessionStatusEnum.DECLINED,
+    DiditSessionStatusEnum.EXPIRED,
+    DiditSessionStatusEnum.ABANDONED,
+    DiditSessionStatusEnum.KYC_EXPIRED,
   ]);
 
   const diditStepState: StepState = identityTerminalFailedStatuses.has(
-    session.identityVerificationStatus
+    session.identityVerificationStatus as unknown as DiditSessionStatusEnum
   )
     ? "failed"
     : stepState.didit;
 
   const TERMINAL_DIDIT_STATUSES = new Set([
-    "Approved",
-    "Declined",
-    "Expired",
-    "Abandoned",
-    "Kyc Expired",
+    DiditSessionStatusEnum.APPROVED,
+    DiditSessionStatusEnum.DECLINED,
+    DiditSessionStatusEnum.EXPIRED,
+    DiditSessionStatusEnum.ABANDONED,
+    DiditSessionStatusEnum.KYC_EXPIRED,
   ]);
 
   const diditLabel = TERMINAL_DIDIT_STATUSES.has(
-    session.identityVerificationStatus
+    session.identityVerificationStatus as unknown as DiditSessionStatusEnum
   )
     ? session.identityVerificationStatus
-    : TERMINAL_DIDIT_STATUSES.has(session.currentStep)
+    : TERMINAL_DIDIT_STATUSES.has(
+        session.currentStep as unknown as DiditSessionStatusEnum
+      )
     ? session.currentStep
-    : session.currentStep === "In Review"
-    ? "In Review"
-    : session.currentStep === "Resubmitted"
-    ? "Resubmitted"
-    : session.currentStep === "In Progress" ||
-      session.currentStep === "submitted"
-    ? "In Progress"
+    : session.currentStep === KycSessionStepEnum.IN_REVIEW
+    ? KycSessionStepEnum.IN_REVIEW
+    : session.currentStep === KycSessionStepEnum.RESUBMITTED
+    ? KycSessionStepEnum.RESUBMITTED
+    : session.currentStep === KycSessionStepEnum.IN_PROGRESS ||
+      session.currentStep === KycSessionStepEnum.SUBMITTED
+    ? KycSessionStepEnum.IN_PROGRESS
     : stepState.didit === "done"
     ? "Completed"
     : stepState.didit === "failed"
@@ -934,15 +955,20 @@ export default function KycPage() {
     : "Pending";
 
   const canStartDidit = ninSaved && !startDiditMutation.isPending;
-  const isApproved = session.currentStep === "Approved";
+  const isApproved = session.currentStep === KycSessionStepEnum.APPROVED;
 
   const continueVerificationUrl =
     session.verificationUrl ?? session.diditSessionUrl ?? null;
 
-  // Show continue button when URL exists and verification is not in a terminal state
-  const terminalStates = new Set(["Approved", "Declined", "Expired", "Abandoned"]);
+  // Show continue button when diditSessionUrl exists and status is Not Started, In Progress, or In Review
+  const showableStatuses = new Set([
+    KycSessionStepEnum.NOT_STARTED,
+    KycSessionStepEnum.IN_PROGRESS,
+    KycSessionStepEnum.IN_REVIEW,
+  ]);
   const showContinueVerification =
-    !!continueVerificationUrl && !terminalStates.has(session.currentStep);
+    !!session.diditSessionUrl &&
+    showableStatuses.has(session.currentStep as unknown as KycSessionStepEnum);
 
   const handleSaveNin = () => {
     setNinTouched(true);
