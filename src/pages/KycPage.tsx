@@ -918,7 +918,7 @@ export default function KycPage() {
   ]);
 
   const diditStepState: StepState = identityTerminalFailedStatuses.has(
-    session.identityVerificationStatus as unknown as DiditSessionStatusEnum
+    session.identityVerificationStatus as any
   )
     ? "failed"
     : stepState.didit;
@@ -932,11 +932,11 @@ export default function KycPage() {
   ]);
 
   const diditLabel = TERMINAL_DIDIT_STATUSES.has(
-    session.identityVerificationStatus as unknown as DiditSessionStatusEnum
+    session.identityVerificationStatus as any
   )
     ? session.identityVerificationStatus
     : TERMINAL_DIDIT_STATUSES.has(
-        session.currentStep as unknown as DiditSessionStatusEnum
+        session.currentStep as any
       )
     ? session.currentStep
     : session.currentStep === KycSessionStepEnum.IN_REVIEW
@@ -968,7 +968,7 @@ export default function KycPage() {
   ]);
   const showContinueVerification =
     !!session.diditSessionUrl &&
-    showableStatuses.has(session.currentStep as unknown as KycSessionStepEnum);
+    showableStatuses.has(session.currentStep as any);
 
   const handleSaveNin = () => {
     setNinTouched(true);
