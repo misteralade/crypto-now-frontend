@@ -6,6 +6,7 @@ import {
   Clock,
   Loader2,
   Mail,
+  RefreshCw,
   RotateCcw,
   ScanFace,
   ShieldCheck,
@@ -371,7 +372,12 @@ function NinStepCard({
               "NIN verification locked"
             ) : (
               <>
-                <img width="20" height="20" src="/decorations/fingerprint.png" alt="fingerprint" />
+                <img
+                  width="20"
+                  height="20"
+                  src="/decorations/fingerprint.png"
+                  alt="fingerprint"
+                />
                 {isRetry ? "Retry NIN verification" : "Verify NIN"}
               </>
             )}
@@ -388,6 +394,7 @@ function IdentityStepCard({
   canStart,
   isPending,
   onStart,
+  onRefresh,
   onRetry,
   onRestart,
   retryPending,
@@ -400,6 +407,7 @@ function IdentityStepCard({
   canStart: boolean;
   isPending: boolean;
   onStart: () => void;
+  onRefresh: () => void;
   onRetry: () => void;
   onRestart: () => void;
   retryPending: boolean;
@@ -475,24 +483,35 @@ function IdentityStepCard({
           )}
 
           {diditLabel === "In Review" ? (
-            <button
-              type="button"
-              onClick={onRestart}
-              disabled={restartPending}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-4 text-[15px] font-bold text-white shadow-[0_4px_14px_0_rgba(3,3,77,0.2)] transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-primary/95 hover:shadow-[0_6px_20px_rgba(3,3,77,0.23)] active:translate-y-0 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
-            >
-              {restartPending ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  Restarting…
-                </>
-              ) : (
-                <>
-                  <RotateCcw className="h-5 w-5" />
-                  Retry Verification
-                </>
-              )}
-            </button>
+            <div className="flex w-full flex-col gap-2 sm:flex-row">
+              <button
+                type="button"
+                onClick={onRefresh}
+                className="flex w-full items-center justify-center gap-2 rounded-2xl border border-primary px-5 py-4 text-[15px] font-bold text-primary transition-all duration-300 ease-out hover:bg-primary/5 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50"
+              >
+                <RefreshCw className="h-5 w-5" />
+                Refresh Status
+              </button>
+
+              <button
+                type="button"
+                onClick={onRestart}
+                disabled={restartPending}
+                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-4 text-[15px] font-bold text-white shadow-[0_4px_14px_0_rgba(3,3,77,0.2)] transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-primary/95 hover:shadow-[0_6px_20px_rgba(3,3,77,0.23)] active:translate-y-0 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
+              >
+                {restartPending ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Restarting…
+                  </>
+                ) : (
+                  <>
+                    <RotateCcw className="h-5 w-5" />
+                    Retry Verification
+                  </>
+                )}
+              </button>
+            </div>
           ) : (
             canStart &&
             diditLabel !== "In Progress" &&
@@ -601,6 +620,21 @@ export default function KycPage() {
   const [firstNameTouched, setFirstNameTouched] = useState(false);
   const [isReconciling, setIsReconciling] = useState(false);
   const callbackProcessedRef = useRef(false);
+  const sessionRef = useRef(session);
+  const statusPendingRef = useRef(false);
+  const statusMutateRef = useRef(statusMutation.mutate);
+
+  const reviewPollCountRef = useRef(0);
+  const reviewTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reviewPollingActiveRef = useRef(false);
+
+  useEffect(() => {
+    sessionRef.current = session;
+  }, [session]);
+
+  useEffect(() => {
+    statusMutateRef.current = statusMutation.mutate;
+  }, [statusMutation.mutate]);
 
   const callback = useMemo(() => getCallbackParams(), []);
 
@@ -662,28 +696,106 @@ export default function KycPage() {
 
   const updateStatus = useCallback(
     (nextStatus: KycStatusResponse) => {
-      if (!session) return;
+      const currentSession = sessionRef.current;
+      if (!currentSession) return;
       dispatch(
         setKycSession({
-          ...session,
+          ...currentSession,
           currentStep: nextStatus.currentStep,
           identityVerificationStatus: nextStatus.identityVerificationStatus,
           failureReason: nextStatus.failureReason,
           verifiedAt: nextStatus.verifiedAt,
           diditCallbackStatus:
-            nextStatus.diditCallbackStatus ?? session.diditCallbackStatus,
+            nextStatus.diditCallbackStatus ??
+            currentSession.diditCallbackStatus,
           diditWebhookStatus:
-            nextStatus.diditWebhookStatus ?? session.diditWebhookStatus,
+            nextStatus.diditWebhookStatus ?? currentSession.diditWebhookStatus,
         })
       );
     },
-    [dispatch, session]
+    [dispatch]
   );
 
   const isProcessing =
     session?.currentStep === "In Progress" ||
     session?.currentStep === "submitted" ||
     session?.currentStep === "Resubmitted";
+
+  const isInReview = useMemo(() => {
+    const step = session?.currentStep;
+    const identityStatus = session?.identityVerificationStatus;
+    return step === "In Review" || identityStatus === "In Review";
+  }, [session?.currentStep, session?.identityVerificationStatus]);
+
+  useEffect(() => {
+    statusPendingRef.current = statusMutation.isPending;
+  }, [statusMutation.isPending]);
+
+  const refreshStatus = useCallback(
+    (opts?: { silent?: boolean }) => {
+      if (statusPendingRef.current) return;
+      statusMutateRef.current(undefined, {
+        onSuccess: ({ success, data, message }) => {
+          if (success && data) {
+            updateStatus(data);
+            return;
+          }
+          if (!opts?.silent) {
+            toast.error(message || "Unable to refresh status");
+          }
+        },
+      });
+    },
+    [updateStatus]
+  );
+
+  // While in review: check status every 10s (max 12 auto calls) while page is open.
+  useEffect(() => {
+    const MAX_REVIEW_POLLS = 12;
+    const REVIEW_POLL_INTERVAL_MS = 10_000;
+    const clear = () => {
+      if (reviewTimeoutRef.current) {
+        clearTimeout(reviewTimeoutRef.current);
+        reviewTimeoutRef.current = null;
+      }
+    };
+
+    if (!isInReview) {
+      reviewPollingActiveRef.current = false;
+      reviewPollCountRef.current = 0;
+      clear();
+      return;
+    }
+
+    // Already running; don't restart (prevents render-driven rapid polling).
+    if (reviewPollingActiveRef.current) return;
+    reviewPollingActiveRef.current = true;
+
+    const scheduleNext = () => {
+      clear();
+
+      if (!reviewPollingActiveRef.current) return;
+      if (reviewPollCountRef.current >= MAX_REVIEW_POLLS) {
+        reviewPollingActiveRef.current = false;
+        return;
+      }
+
+      // First call happens after 10s (not immediately) to avoid burst calls.
+      reviewTimeoutRef.current = setTimeout(() => {
+        if (!reviewPollingActiveRef.current) return;
+        reviewPollCountRef.current += 1;
+        refreshStatus({ silent: true });
+        scheduleNext();
+      }, REVIEW_POLL_INTERVAL_MS);
+    };
+
+    scheduleNext();
+
+    return () => {
+      reviewPollingActiveRef.current = false;
+      clear();
+    };
+  }, [isInReview, refreshStatus]);
 
   useKycLongPoll({
     enabled: isProcessing,
@@ -872,6 +984,7 @@ export default function KycPage() {
               canStart={canStartDidit}
               isPending={startDiditMutation.isPending}
               onStart={onStartDidit}
+              onRefresh={() => refreshStatus({ silent: false })}
               onRetry={() => retryMutation.mutate()}
               onRestart={() => restartMutation.mutate()}
               retryPending={retryMutation.isPending}
