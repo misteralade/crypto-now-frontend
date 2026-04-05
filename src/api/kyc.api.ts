@@ -58,10 +58,6 @@ class KycServiceApi {
   async retryVerification(): Promise<KycActionApiResponse> {
     return axiosPostRequestHandler("/kyc/retry", {});
   }
-
-  async restartSession(): Promise<KycActionApiResponse> {
-    return axiosPostRequestHandler("/kyc/restart", {});
-  }
 }
 
 export const kycServiceApi = KycServiceApi.getInstance();

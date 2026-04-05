@@ -396,9 +396,9 @@ function IdentityStepCard({
   onStart,
   onRefresh,
   onRetry,
-  onRestart,
+  onContinue,
+  showContinue,
   retryPending,
-  restartPending,
   attemptsRemaining,
   failureReason,
 }: {
@@ -409,9 +409,9 @@ function IdentityStepCard({
   onStart: () => void;
   onRefresh: () => void;
   onRetry: () => void;
-  onRestart: () => void;
+  onContinue: () => void;
+  showContinue: boolean;
   retryPending: boolean;
-  restartPending: boolean;
   attemptsRemaining: number;
   failureReason?: string | null;
 }) {
@@ -484,34 +484,63 @@ function IdentityStepCard({
 
           {diditLabel === "In Review" ? (
             <div className="flex w-full flex-col gap-2 sm:flex-row">
-              <button
-                type="button"
-                onClick={onRefresh}
-                className="flex w-full items-center justify-center gap-2 rounded-2xl border border-primary px-5 py-4 text-[15px] font-bold text-primary transition-all duration-300 ease-out hover:bg-primary/5 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50"
-              >
-                <RefreshCw className="h-5 w-5" />
-                Refresh Status
-              </button>
+              {showContinue ? (
+                <button
+                  type="button"
+                  onClick={onContinue}
+                  disabled={isPending}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-4 text-[15px] font-bold text-white shadow-[0_4px_14px_0_rgba(3,3,77,0.2)] transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-primary/95 hover:shadow-[0_6px_20px_rgba(3,3,77,0.23)] active:translate-y-0 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
+                >
+                  <ArrowRight className="h-5 w-5" />
+                  Continue Verification
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onRefresh}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl border border-primary px-5 py-4 text-[15px] font-bold text-primary transition-all duration-300 ease-out hover:bg-primary/5 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50"
+                >
+                  <RefreshCw className="h-5 w-5" />
+                  Refresh Status
+                </button>
+              )}
 
-              <button
-                type="button"
-                onClick={onRestart}
-                disabled={restartPending}
-                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-4 text-[15px] font-bold text-white shadow-[0_4px_14px_0_rgba(3,3,77,0.2)] transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-primary/95 hover:shadow-[0_6px_20px_rgba(3,3,77,0.23)] active:translate-y-0 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
-              >
-                {restartPending ? (
-                  <>
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    Restarting…
-                  </>
-                ) : (
-                  <>
-                    <RotateCcw className="h-5 w-5" />
-                    Retry Verification
-                  </>
-                )}
-              </button>
+              {canRetry && (
+                <button
+                  type="button"
+                  onClick={onRetry}
+                  disabled={retryPending}
+                  className={`flex w-full items-center justify-center gap-2 rounded-2xl px-5 py-4 text-[15px] font-bold transition-all duration-300 ease-out active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 ${
+                    showContinue
+                      ? "border border-primary text-primary hover:bg-primary/5"
+                      : "bg-primary text-white shadow-[0_4px_14px_0_rgba(3,3,77,0.2)] hover:-translate-y-0.5 hover:bg-primary/95 hover:shadow-[0_6px_20px_rgba(3,3,77,0.23)] disabled:shadow-none"
+                  }`}
+                >
+                  {retryPending ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      Retrying…
+                    </>
+                  ) : (
+                    <>
+                      <RotateCcw className="h-5 w-5" />
+                      Retry Verification
+                    </>
+                  )}
+                </button>
+              )}
             </div>
+          ) : showContinue &&
+            (diditLabel === "In Progress" || diditLabel === "Resubmitted") ? (
+            <button
+              type="button"
+              onClick={onContinue}
+              disabled={isPending}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-4 text-[15px] font-bold text-white shadow-[0_4px_14px_0_rgba(3,3,77,0.2)] transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-primary/95 hover:shadow-[0_6px_20px_rgba(3,3,77,0.23)] active:translate-y-0 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
+            >
+              <ArrowRight className="h-5 w-5" />
+              Continue Verification
+            </button>
           ) : (
             canStart &&
             diditLabel !== "In Progress" &&
@@ -554,7 +583,7 @@ function IdentityStepCard({
                 Verification failed
               </p>
               <p className="text-xs text-red/80">
-                {failureReason ?? "Please retry or restart your verification."}
+                {failureReason ?? "Please retry your verification."}
               </p>
               <p className="text-xs text-red/70">
                 Attempts left: {attemptsRemaining}
@@ -577,17 +606,6 @@ function IdentityStepCard({
                 Retry
               </button>
             )}
-            <button
-              type="button"
-              onClick={onRestart}
-              disabled={restartPending}
-              className="inline-flex flex-1 items-center justify-center gap-2
-            rounded-xl border border-primary px-5 py-3 text-sm font-semibold
-            text-primary transition-all duration-200 ease-out hover:bg-primary/5
-            active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Restart
-            </button>
           </div>
         </div>
       )}
@@ -611,7 +629,6 @@ export default function KycPage() {
     reconcileCallbackMutation,
     statusMutation,
     retryMutation,
-    restartMutation,
   } = useKycQuery();
 
   const [nin, setNin] = useState("");
@@ -743,23 +760,22 @@ export default function KycPage() {
     statusPendingRef.current = statusMutation.isPending;
   }, [statusMutation.isPending]);
 
-  const refreshStatus = useCallback(
-    (opts?: { silent?: boolean }) => {
-      if (statusPendingRef.current) return;
-      statusMutateRef.current(undefined, {
-        onSuccess: ({ success, data, message }) => {
-          if (success && data) {
-            updateStatus(data);
-            return;
-          }
-          if (!opts?.silent) {
-            toast.error(message || "Unable to refresh status");
-          }
-        },
-      });
-    },
-    [updateStatus]
-  );
+  const refreshStatus = useCallback(() => {
+    if (statusPendingRef.current) return;
+    statusMutateRef.current(undefined, {
+      onSuccess: ({ success, data, message }) => {
+        if (success && data) {
+          updateStatus(data);
+          return;
+        }
+        toast.error(message || "Unable to refresh status");
+      },
+      onError: (error) => {
+        console.error("[KYC] Manual status refresh failed", error);
+        toast.error("Unable to refresh status");
+      },
+    });
+  }, [updateStatus]);
 
   // While in review: check status every 10s (max 12 auto calls) while page is open.
   useEffect(() => {
@@ -805,31 +821,29 @@ export default function KycPage() {
         }
 
         reviewPollCountRef.current += 1;
-        statusMutateRef.current(
-          { silent: true },
-          {
-            onSuccess: ({ success, data }) => {
-              if (success && data) {
-                reviewConsecutiveErrorsRef.current = 0;
-                updateStatus(data);
-              }
-            },
-            onError: () => {
-              reviewConsecutiveErrorsRef.current += 1;
-              if (
-                reviewConsecutiveErrorsRef.current >=
-                MAX_CONSECUTIVE_REVIEW_ERRORS
-              ) {
-                // Stop auto polling to avoid rate-limit loops.
-                reviewPollingActiveRef.current = false;
-                clear();
-              }
-            },
-            onSettled: () => {
-              if (reviewPollingActiveRef.current) scheduleNext();
-            },
-          }
-        );
+        statusMutateRef.current(undefined, {
+          onSuccess: ({ success, data }) => {
+            if (success && data) {
+              reviewConsecutiveErrorsRef.current = 0;
+              updateStatus(data);
+            }
+          },
+          onError: (error) => {
+            console.error("[KYC] In-review status poll failed", error);
+            reviewConsecutiveErrorsRef.current += 1;
+            if (
+              reviewConsecutiveErrorsRef.current >=
+              MAX_CONSECUTIVE_REVIEW_ERRORS
+            ) {
+              // Stop auto polling to avoid rate-limit loops.
+              reviewPollingActiveRef.current = false;
+              clear();
+            }
+          },
+          onSettled: () => {
+            if (reviewPollingActiveRef.current) scheduleNext();
+          },
+        });
       }, REVIEW_POLL_INTERVAL_MS);
     };
 
@@ -880,6 +894,19 @@ export default function KycPage() {
 
   const stepState = getStepState(session.currentStep, ninSaved);
 
+  const identityTerminalFailedStatuses = new Set([
+    "Declined",
+    "Expired",
+    "Abandoned",
+    "Kyc Expired",
+  ]);
+
+  const diditStepState: StepState = identityTerminalFailedStatuses.has(
+    session.identityVerificationStatus
+  )
+    ? "failed"
+    : stepState.didit;
+
   const TERMINAL_DIDIT_STATUSES = new Set([
     "Approved",
     "Declined",
@@ -911,6 +938,15 @@ export default function KycPage() {
 
   const canStartDidit = ninSaved && !startDiditMutation.isPending;
   const isApproved = session.currentStep === "Approved";
+
+  const continueVerificationUrl =
+    session.verificationUrl ?? session.diditSessionUrl ?? null;
+
+  const showContinueVerification =
+    !!continueVerificationUrl &&
+    !session.diditCallbackStatus &&
+    !session.diditWebhookStatus &&
+    session.currentStep !== "Approved";
 
   const handleSaveNin = () => {
     setNinTouched(true);
@@ -1036,16 +1072,19 @@ export default function KycPage() {
             }}
           >
             <IdentityStepCard
-              state={stepState.didit}
+              state={diditStepState}
               diditLabel={diditLabel}
               canStart={canStartDidit}
               isPending={startDiditMutation.isPending}
               onStart={onStartDidit}
-              onRefresh={() => refreshStatus({ silent: false })}
+              onRefresh={() => refreshStatus()}
               onRetry={() => retryMutation.mutate()}
-              onRestart={() => restartMutation.mutate()}
+              onContinue={() => {
+                if (continueVerificationUrl)
+                  window.location.href = continueVerificationUrl;
+              }}
+              showContinue={showContinueVerification}
               retryPending={retryMutation.isPending}
-              restartPending={restartMutation.isPending}
               attemptsRemaining={
                 session.identityVerificationAttemptsRemaining ?? 3
               }

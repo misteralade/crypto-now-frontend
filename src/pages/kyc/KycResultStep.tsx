@@ -9,9 +9,7 @@ interface KycResultStepProps {
   identityVerificationAttempts: number;
   identityVerificationAttemptsRemaining: number;
   onRetry: () => void;
-  onRestart: () => void;
   isRetryPending: boolean;
-  isRestartPending: boolean;
 }
 
 export default function KycResultStep({
@@ -20,9 +18,7 @@ export default function KycResultStep({
   identityVerificationAttempts,
   identityVerificationAttemptsRemaining,
   onRetry,
-  onRestart,
   isRetryPending,
-  isRestartPending,
 }: KycResultStepProps) {
   const navigate = useNavigate();
   const canRetry = identityVerificationAttemptsRemaining > 0;
@@ -112,19 +108,6 @@ export default function KycResultStep({
               )}
             </button>
           )}
-
-          <button
-            type="button"
-            onClick={onRestart}
-            disabled={isRestartPending}
-            className="w-full flex items-center justify-center gap-2 py-3 px-6 rounded-xl border border-gray-300 text-gray-700 font-medium text-sm disabled:opacity-50 hover:bg-gray-50 transition-colors"
-          >
-            {isRestartPending ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              "Start Over"
-            )}
-          </button>
         </div>
       </div>
     );

@@ -3,7 +3,7 @@ import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
 import { QUERY_KEYS } from "./query.keys.ts";
 import { kycServiceApi } from "../api/kyc.api.ts";
-import { setKycSession, clearKycSession } from "../redux/kyc.slice.ts";
+import { setKycSession } from "../redux/kyc.slice.ts";
 import { LOCAL_STORAGE_KEYS } from "../util/constants.util.ts";
 import type { AxiosServerError } from "../types/response.payload.types.ts";
 
@@ -133,26 +133,6 @@ export const useKycQuery = () => {
     },
   });
 
-  const restartMutation = useMutation({
-    mutationKey: [QUERY_KEYS.KYC.RESTART],
-    mutationFn: () => kycServiceApi.restartSession(),
-    retry: false,
-    onSuccess: ({ success, data, message }) => {
-      if (success && data) {
-        dispatch(setKycSession(data));
-        queryClient.invalidateQueries({
-          queryKey: [QUERY_KEYS.KYC.GET_SESSION],
-        });
-      } else {
-        toast.error(message);
-      }
-    },
-    onError: (error: AxiosServerError) => {
-      dispatch(clearKycSession());
-      toast.error(extractErrorMessage(error));
-    },
-  });
-
   return {
     sessionData,
     loadingSession,
@@ -163,6 +143,5 @@ export const useKycQuery = () => {
     reconcileCallbackMutation,
     statusMutation,
     retryMutation,
-    restartMutation,
   };
 };

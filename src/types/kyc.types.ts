@@ -16,8 +16,7 @@ export type KycSessionStep =
   | "Approved"
   | "Declined"
   | "Expired"
-  | "Abandoned"
-  | "archived";
+  | "Abandoned";
 
 export type KycIdType = "national_id" | "drivers_license" | "passport";
 

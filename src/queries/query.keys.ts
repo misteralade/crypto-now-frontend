@@ -60,6 +60,5 @@ export const QUERY_KEYS = {
     SAVE_NIN: "KYC_SAVE_NIN",
     SUBMIT: "KYC_SUBMIT",
     RETRY: "KYC_RETRY",
-    RESTART: "KYC_RESTART",
   },
 };
