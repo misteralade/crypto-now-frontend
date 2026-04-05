@@ -942,11 +942,10 @@ export default function KycPage() {
   const continueVerificationUrl =
     session.verificationUrl ?? session.diditSessionUrl ?? null;
 
+  // Show continue button when URL exists and verification is not in a terminal state
+  const terminalStates = new Set(["Approved", "Declined", "Expired", "Abandoned"]);
   const showContinueVerification =
-    !!continueVerificationUrl &&
-    !session.diditCallbackStatus &&
-    !session.diditWebhookStatus &&
-    session.currentStep !== "Approved";
+    !!continueVerificationUrl && !terminalStates.has(session.currentStep);
 
   const handleSaveNin = () => {
     setNinTouched(true);
