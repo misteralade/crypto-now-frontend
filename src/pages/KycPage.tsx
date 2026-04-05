@@ -157,7 +157,6 @@ function NinStepCard({
   state,
   nin,
   setNin,
-  ninTouched,
   setNinTouched,
   ninError,
   firstName,
@@ -175,7 +174,6 @@ function NinStepCard({
   state: StepState;
   nin: string;
   setNin: (v: string) => void;
-  ninTouched: boolean;
   setNinTouched: (v: boolean) => void;
   ninError: string;
   firstName: string;
@@ -303,7 +301,6 @@ function NinStepCard({
               onBlur={() => setNinTouched(true)}
               onChange={(e) => {
                 setNin(e.target.value.replace(/\D/g, ""));
-                if (!ninTouched) setNinTouched(true);
               }}
               inputMode="numeric"
               placeholder="Enter your 11-digit NIN"
@@ -1047,7 +1044,6 @@ export default function KycPage() {
               state={stepState.nin}
               nin={nin}
               setNin={setNin}
-              ninTouched={ninTouched}
               setNinTouched={setNinTouched}
               ninError={ninError}
               firstName={firstName}
