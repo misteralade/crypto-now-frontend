@@ -1077,7 +1077,15 @@ export default function KycPage() {
               isPending={startDiditMutation.isPending}
               onStart={onStartDidit}
               onRefresh={() => refreshStatus()}
-              onRetry={() => retryMutation.mutate()}
+              onRetry={() =>
+                retryMutation.mutate(undefined, {
+                  onSuccess: ({ success, data }) => {
+                    if (!success || !data) return;
+                    const url = data.verificationUrl ?? data.diditSessionUrl;
+                    if (url) window.location.href = url;
+                  },
+                })
+              }
               onContinue={() => {
                 if (continueVerificationUrl)
                   window.location.href = continueVerificationUrl;

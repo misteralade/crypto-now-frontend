@@ -109,9 +109,6 @@ export const useKycQuery = () => {
     mutationKey: [QUERY_KEYS.KYC.GET_STATUS],
     mutationFn: () => kycServiceApi.getStatus(),
     retry: false,
-    onError: (error: AxiosServerError) => {
-      toast.error(extractErrorMessage(error));
-    },
   });
 
   const retryMutation = useMutation({
@@ -119,14 +116,19 @@ export const useKycQuery = () => {
     mutationFn: () => kycServiceApi.retryVerification(),
     retry: false,
     onSuccess: ({ success, data, message }) => {
-      if (success && data) {
-        dispatch(setKycSession(data));
-        queryClient.invalidateQueries({
-          queryKey: [QUERY_KEYS.KYC.GET_SESSION],
-        });
-      } else {
+      if (!success) {
         toast.error(message);
+        return;
       }
+
+      // Some actions can return success with null data; always re-fetch session.
+      if (data) {
+        dispatch(setKycSession(data));
+      }
+
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.KYC.GET_SESSION],
+      });
     },
     onError: (error: AxiosServerError) => {
       toast.error(extractErrorMessage(error));
