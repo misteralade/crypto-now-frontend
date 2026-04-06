@@ -97,7 +97,7 @@ export function IdentityStepCard({
               <p className="text-xs text-amber-800">
                 {diditLabel === KycSessionStepEnum.IN_REVIEW
                   ? "Your verification is under manual review. You can wait or retry for a faster result."
-                  : "We're confirming your verification result. This usually takes a moment."}
+                  : "We're confirming your verification, ensure you've completed the procedure."}
               </p>
             </div>
           )}
