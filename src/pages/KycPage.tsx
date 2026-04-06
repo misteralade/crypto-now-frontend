@@ -487,7 +487,7 @@ function IdentityStepCard({
             <div className="mb-4 flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 p-3.5">
               <Clock className="mt-px h-4 w-4 shrink-0 text-amber-600" />
               <p className="text-xs text-amber-800">
-                {diditLabel === "In Review"
+                {diditLabel === KycSessionStepEnum.IN_REVIEW
                   ? "Your verification is under manual review. You can wait or retry for a faster result."
                   : "We're confirming your verification result. This usually takes a moment."}
               </p>
@@ -542,9 +542,7 @@ function IdentityStepCard({
                 </button>
               )}
             </div>
-          ) : showContinue &&
-            (diditLabel === KycSessionStepEnum.IN_PROGRESS ||
-              diditLabel === KycSessionStepEnum.RESUBMITTED) ? (
+          ) : showContinue ? (
             <button
               type="button"
               onClick={onContinue}
@@ -578,6 +576,9 @@ function IdentityStepCard({
               </button>
             )
           )}
+          <p className="mt-3 text-xs font-medium text-grey2">
+            Attempts left: <span className="font-semibold">{attemptsRemaining}</span>
+          </p>
         </div>
       )}
 
@@ -966,15 +967,16 @@ export default function KycPage() {
     KycSessionStepEnum.IN_PROGRESS,
     KycSessionStepEnum.IN_REVIEW,
   ]);
-  const showContinueVerification =
-    !!session.diditSessionUrl &&
+    // Show continue button when URL exists and status is Not Started, In Progress, or In Review
+    const showableStatuses = new Set<string>([
     showableStatuses.has(session.currentStep as any);
 
   const handleSaveNin = () => {
+      // Backend sometimes uses this while awaiting callbacks/webhooks.
+      KycSessionStepEnum.SUBMITTED,
     setNinTouched(true);
     setFirstNameTouched(true);
-    if (nin.length !== 11 || !firstName.trim()) return;
-    saveNinMutation.mutate({ nin, firstName: firstName.trim() });
+      !!continueVerificationUrl && showableStatuses.has(session.currentStep);
   };
 
   const onStartDidit = () => {
