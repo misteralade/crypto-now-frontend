@@ -1,11 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { kycServiceApi } from "../api/kyc.api.ts";
-import type { KycSessionStep, KycStatusResponse } from "../types/kyc.types.ts";
+import {
+  KycSessionStepEnum,
+  type KycSessionStep,
+  type KycStatusResponse,
+} from "../types/kyc.types.ts";
 
 const PROCESSING_STEPS: KycSessionStep[] = [
-  "In Progress",
-  "submitted",
-  "Resubmitted",
+  KycSessionStepEnum.IN_PROGRESS,
+  KycSessionStepEnum.SUBMITTED,
+  KycSessionStepEnum.RESUBMITTED,
 ];
 const MAX_CONSECUTIVE_FAILURES = 3;
 const INITIAL_BACKOFF_MS = 1_000;
