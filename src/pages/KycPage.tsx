@@ -174,7 +174,11 @@ export default function KycPage() {
       {
         onSettled: () => {
           setIsReconciling(false);
-          window.history.replaceState({}, document.title, window.location.pathname);
+          window.history.replaceState(
+            {},
+            document.title,
+            window.location.pathname
+          );
         },
       }
     );
@@ -197,7 +201,8 @@ export default function KycPage() {
           failureReason: nextStatus.failureReason,
           verifiedAt: nextStatus.verifiedAt,
           diditCallbackStatus:
-            nextStatus.diditCallbackStatus ?? currentSession.diditCallbackStatus,
+            nextStatus.diditCallbackStatus ??
+            currentSession.diditCallbackStatus,
           diditWebhookStatus:
             nextStatus.diditWebhookStatus ?? currentSession.diditWebhookStatus,
         })
@@ -411,13 +416,15 @@ export default function KycPage() {
   const continueVerificationUrl =
     session.verificationUrl ?? session.diditSessionUrl ?? null;
 
+  const terminalKycSteps = new Set<string>([
+    KycSessionStepEnum.APPROVED,
+    KycSessionStepEnum.DECLINED,
+    KycSessionStepEnum.EXPIRED,
+    KycSessionStepEnum.ABANDONED,
+  ]);
+
   const showContinueVerification =
-    !!continueVerificationUrl &&
-    (session.currentStep === KycSessionStepEnum.NOT_STARTED ||
-      session.currentStep === KycSessionStepEnum.IN_PROGRESS ||
-      session.currentStep === KycSessionStepEnum.SUBMITTED ||
-      session.currentStep === KycSessionStepEnum.IN_REVIEW ||
-      session.currentStep === KycSessionStepEnum.RESUBMITTED);
+    !!continueVerificationUrl && !terminalKycSteps.has(session.currentStep);
 
   const handleSaveNin = () => {
     setNinTouched(true);
@@ -500,8 +507,7 @@ export default function KycPage() {
         <div className="space-y-4">
           <div
             style={{
-              animation:
-                "fadeInUp 0.4s 0.05s cubic-bezier(0.16,1,0.3,1) both",
+              animation: "fadeInUp 0.4s 0.05s cubic-bezier(0.16,1,0.3,1) both",
             }}
           >
             <EmailStepCard state={stepState.email} />
@@ -509,8 +515,7 @@ export default function KycPage() {
 
           <div
             style={{
-              animation:
-                "fadeInUp 0.4s 0.12s cubic-bezier(0.16,1,0.3,1) both",
+              animation: "fadeInUp 0.4s 0.12s cubic-bezier(0.16,1,0.3,1) both",
             }}
           >
             <NinStepCard
@@ -537,8 +542,7 @@ export default function KycPage() {
 
           <div
             style={{
-              animation:
-                "fadeInUp 0.4s 0.2s cubic-bezier(0.16,1,0.3,1) both",
+              animation: "fadeInUp 0.4s 0.2s cubic-bezier(0.16,1,0.3,1) both",
             }}
           >
             <IdentityStepCard
@@ -575,8 +579,7 @@ export default function KycPage() {
           <div
             className="mt-8"
             style={{
-              animation:
-                "fadeInUp 0.4s 0.25s cubic-bezier(0.16,1,0.3,1) both",
+              animation: "fadeInUp 0.4s 0.25s cubic-bezier(0.16,1,0.3,1) both",
             }}
           >
             <button
@@ -593,8 +596,7 @@ export default function KycPage() {
         <p
           className="mt-8 text-center text-xs text-grey2"
           style={{
-            animation:
-              "fadeInUp 0.4s 0.28s cubic-bezier(0.16,1,0.3,1) both",
+            animation: "fadeInUp 0.4s 0.28s cubic-bezier(0.16,1,0.3,1) both",
           }}
         >
           Your data is encrypted and handled in line with our{" "}
