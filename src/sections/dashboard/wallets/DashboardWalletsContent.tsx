@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Copy, Check, Wallet } from "lucide-react";
 import { useCryptoQuery } from "../../../queries/crypto.query.ts";
 import type { CustodialWalletResponse } from "../../../types/response.payload.types.ts";
+import { useBankQuery } from "../../../queries/bank.query.ts";
+import { toast } from "react-toastify";
 
 // Shortens long addresses while preserving the first and last parts.
 function truncateAddress(addr: string) {
@@ -149,6 +151,9 @@ export default function DashboardWalletsContent() {
     supportedCryptoCurrencies,
     generateAllCustodialWalletsMutation,
   } = useCryptoQuery();
+  
+  const { userBankAccounts, loadingUserBankAccounts } = useBankQuery();
+  const hasBankAccounts = userBankAccounts && userBankAccounts.length > 0;
 
   const cryptoMap = new Map(
     (supportedCryptoCurrencies ?? []).map((c) => [c.id, c])
@@ -158,6 +163,10 @@ export default function DashboardWalletsContent() {
 
   // One-shot generate when user has no wallets (addresses are stable after creation).
   const handleGenerateAll = () => {
+    if (!hasBankAccounts) {
+      toast.error("Please link a bank account before generating wallets.");
+      return;
+    }
     generateAllCustodialWalletsMutation.mutate();
   };
 
@@ -191,7 +200,7 @@ export default function DashboardWalletsContent() {
         </div>
 
         {/* Wallet cards */}
-        {loadingCustodialWallets ? (
+        {loadingCustodialWallets || loadingUserBankAccounts ? (
           <div className="grid gap-4 sm:grid-cols-2">
             {[...Array(4)].map((_, i) => (
               <div
@@ -200,6 +209,30 @@ export default function DashboardWalletsContent() {
                 style={{ border: "1px solid #F0F0F0", background: "#FAFAFA", height: "160px" }}
               />
             ))}
+          </div>
+        ) : !hasBankAccounts ? (
+          <div
+            className="rounded-3xl px-6 py-14 flex flex-col items-center gap-4 text-center"
+            style={{ border: "1px solid #F0F0F0" }}
+          >
+            <div
+              className="w-14 h-14 rounded-2xl flex items-center justify-center"
+              style={{ background: "#FEE2E2" }}
+            >
+              <Wallet size={24} style={{ color: "#EF4444" }} />
+            </div>
+            <div>
+              <p className="text-sm font-semibold" style={{ color: "#0E0F0C" }}>Action Required</p>
+              <p className="text-xs mt-1" style={{ color: "#9A9A9A" }}>Please link a bank account before generating or viewing your wallets.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => toast.error("Please add a bank account first")}
+              className="px-5 py-2.5 rounded-xl text-sm font-semibold opacity-50 cursor-not-allowed"
+              style={{ background: "#948EEE", color: "#FFFFFF" }}
+            >
+              Generate Wallets
+            </button>
           </div>
         ) : !custodialWallets || custodialWallets.length === 0 ? (
           <div

@@ -128,9 +128,9 @@ const NewBankAccountModal = ({ isOpen, banks, selectedBankId, onClose, onSubmit,
         
         {/* Modal */}
         <div className="max-w-2xl relative bg-white rounded-3xl shadow-2xl w-full max-h-[90vh] overflow-y-auto">
-          <div className="p-6 md:p-8">
+          <div className="p-5 md:p-8">
             {/* Header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-4">
               <h2 
                 id="modal-title"
                 className="text-2xl font-bold text-[#0E0F0C]"
@@ -148,22 +148,22 @@ const NewBankAccountModal = ({ isOpen, banks, selectedBankId, onClose, onSubmit,
             </div>
 
             {/* Disclaimer */}
-            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex gap-3 mb-6">
-              <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex gap-2.5 mb-4 items-start">
+              <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
               <div className="flex-1">
-                <p className="text-sm text-amber-900 font-semibold leading-relaxed">
-                  Important: Account holder name must match your profile name
+                <p className="text-xs text-amber-900 font-bold">
+                  Account name must match your profile
                 </p>
-                <p className="text-xs text-amber-700 mt-1.5 leading-relaxed">
-                  Ensure the name on your bank account matches the name registered on your profile. Any mismatch may result in verification failure.
+                <p className="text-[11px] text-amber-700 mt-0.5 leading-snug">
+                  Mismatches will result in verification failure.
                 </p>
               </div>
             </div>
             
             <Formik initialValues={iniitalState} onSubmit={handleSubmit}>
               {({ values, handleChange, handleBlur, touched, errors, isValid, isSubmitting }) => (
-                <Form className="space-y-5">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <Form className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Bank Selector */}
                     <div className="flex flex-col gap-1">
                       <BankSelector
@@ -256,7 +256,7 @@ const NewBankAccountModal = ({ isOpen, banks, selectedBankId, onClose, onSubmit,
                   </div>
                   
                   {/* Action Buttons */}
-                  <div className="flex gap-3 pt-6 border-t border-gray-100">
+                  <div className="flex gap-3 pt-5 border-t border-gray-100">
                     <button
                       onClick={onClose}
                       type="button"

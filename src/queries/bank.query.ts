@@ -50,7 +50,7 @@ export const useBankQuery = () => {
 
       return [];
     },
-    enabled: !!(matchRoute({ to: ROUTES.PROFILE }) || matchRoute({ to: ROUTES.TRADE_CRYPTO }) || matchRoute({ to: ROUTES.DASHBOARD_TRADE })),
+    enabled: !!(matchRoute({ to: ROUTES.PROFILE }) || matchRoute({ to: ROUTES.TRADE_CRYPTO }) || matchRoute({ to: ROUTES.DASHBOARD_TRADE }) || matchRoute({ to: ROUTES.DASHBOARD_WALLETS })),
   });
 
   const createUserBankAccountMutation = useMutation({
