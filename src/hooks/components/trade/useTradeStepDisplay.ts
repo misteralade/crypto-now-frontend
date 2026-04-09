@@ -194,6 +194,8 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     }
   }, [isLoadingPingUser])
 
+  const generationLockRef = useRef<string | null>(null);
+
   // Resolve custodial deposit wallet for sell flow
   useEffect(() => {
     if (activeTab !== "sell" || !selectedToken) {
@@ -225,7 +227,15 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
 
     if (existing) {
       setSellDepositWallet(existing);
+      generationLockRef.current = null; // Clear lock once loaded
     } else {
+      const lockKey = `${selectedToken.id}-${network}`;
+      if (generationLockRef.current === lockKey || generateCustodialWalletMutation.isPending) {
+         return; // Already generating this specific wallet, skip duplicate call
+      }
+      
+      generationLockRef.current = lockKey;
+      
       // Clear stale address and generate for the selected network via the HD wallet service
       setSellDepositWallet(null);
       generateCustodialWalletMutation.mutate(
@@ -236,6 +246,10 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
               setSellDepositWallet(data);
             }
           },
+          onSettled: () => {
+             // Unlock after completion (whether success or fail) so we can retry if needed
+             generationLockRef.current = null;
+          }
         }
       );
     }
