@@ -35,7 +35,7 @@ const WhyCryptoNow = () => {
               Fixed Exchange Rates
             </h3>
             <p className="text-[#454745] text-lg leading-normal font-normal text-center">
-              Your rate is locked and  fixed for several minutes, giving you ample time to complete the transaction without any slippage or surprises.
+              Your rate is locked for several minutes, giving you ample time to complete the transaction without slippage or surprises.
             </p>
           </div>
 
@@ -49,7 +49,7 @@ const WhyCryptoNow = () => {
               Lightning-Fast Processing
             </h3>
             <p className="text-[#454745] text-lg leading-normal font-normal text-center">
-              Trades execute at lightning speed , zero delays , fast processing
+              Trades execute at lightning speed with zero delays.
             </p>
           </div>
         </div>

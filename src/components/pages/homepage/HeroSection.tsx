@@ -22,7 +22,7 @@ const HeroSection = ({ tradeCrypto, isAuthenticated }: HeroSectionProps) => {
   };
 
   const buttonText = isAuthenticated === false 
-    ? "Setup an account now" 
+    ? "Set up an account now" 
     : "Buy & sell crypto now";
   return (
     <section className="bg-white relative overflow-hidden max-md:px-4">
@@ -68,9 +68,7 @@ const HeroSection = ({ tradeCrypto, isAuthenticated }: HeroSectionProps) => {
 
         {/* Description text */}
         <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-10">
-          With CryptoNow, trading Bitcoin and USDT is as easy as sending a text.
-          No complex charts. No hidden fees. Just safe, straightforward
-          transactions.
+          Trading Bitcoin and USDT shouldn't be complicated. Enjoy zero hidden fees, no complex charts, and safe, straightforward transactions.
         </p>
 
         {/* CTA Button */}

@@ -15,7 +15,7 @@ export const faqs: FAQ[] = [
   },
   {
     question: "How do I buy cryptocurrency on CryptoNow?",
-    answer: "To buy on CryptoNow is as easy as ABC ,  click on the buy now button and select the desired token to buy, provide and confirm your wallet details , make your naira payment into the bank account we have provided and we will process  your transaction immediately",
+    answer: "Click the 'Buy Now' button, select your desired token, and provide your wallet details. Make a Naira payment to the provided bank account, and we will process your transaction immediately.",
   },
   {
     question: "How do I sell my crypto?",
