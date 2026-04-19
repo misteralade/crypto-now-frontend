@@ -61,4 +61,10 @@ export const QUERY_KEYS = {
     SUBMIT: "KYC_SUBMIT",
     RETRY: "KYC_RETRY",
   },
+  SWEEP: {
+    PREVIEW: "SWEEP_PREVIEW",
+    HISTORY: "SWEEP_HISTORY",
+    BY_ID: "SWEEP_BY_ID",
+    INITIATE: "SWEEP_INITIATE",
+  },
 };
