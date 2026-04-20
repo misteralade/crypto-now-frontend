@@ -266,6 +266,9 @@ export type TransactionResponseEntity = {
   userNotes: string | null;
   internalNotes: string | null;
   failureReason: string | null;
+  payoutFailureReason?: string | null;
+  confirmationCount?: number;
+  requiredConfirmations?: number;
   processedBy: string | null;
   processedAt: string | null;
   createdAt: Date;
@@ -365,6 +368,9 @@ export type SearchTransactionsResponse = {
   userNotes: string;
   internalNotes: string;
   failureReason: string;
+  payoutFailureReason?: string | null;
+  confirmationCount?: number;
+  requiredConfirmations?: number;
   processedBy: string;
   processedAt: Date;
   usdAmount: number;

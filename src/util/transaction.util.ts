@@ -44,30 +44,30 @@ const FAILED_CONFIG = {
 
 // All statuses map to Pending / Completed / Failed — the backend owns the label
 const statusConfig: Record<string, typeof PENDING_CONFIG> = {
-  INITIATED: PENDING_CONFIG,
-  PENDING: PENDING_CONFIG,
-  AWAITING_PAYMENT: PENDING_CONFIG,
-  PAYMENT_RECEIVED: PENDING_CONFIG,
-  PAYMENT_CONFIRMED: PENDING_CONFIG,
-  PROCESSING: PENDING_CONFIG,
-  AWAITING_CRYPTO: PENDING_CONFIG,
-  CRYPTO_SENT: PENDING_CONFIG,
-  CRYPTO_RECEIVED: PENDING_CONFIG,
-  CRYPTO_CONFIRMED: PENDING_CONFIG,
-  PAYMENT_ACCOUNT_CONFIRMED: PENDING_CONFIG,
-  DEPOSIT_DETECTED: PENDING_CONFIG,
-  DEPOSIT_CONFIRMED: PENDING_CONFIG,
-  PAYOUT_INITIATED: PENDING_CONFIG,
-  REFUNDING: PENDING_CONFIG,
+  INITIATED: { ...PENDING_CONFIG, displayName: "Pending" },
+  PENDING: { ...PENDING_CONFIG, displayName: "Pending" },
+  AWAITING_PAYMENT: { ...PENDING_CONFIG, displayName: "Pending" },
+  PAYMENT_RECEIVED: { ...PENDING_CONFIG, displayName: "Pending" },
+  PAYMENT_CONFIRMED: { ...PENDING_CONFIG, displayName: "Pending" },
+  PROCESSING: { ...PENDING_CONFIG, displayName: "Pending" },
+  AWAITING_CRYPTO: { ...PENDING_CONFIG, displayName: "Pending" },
+  CRYPTO_SENT: { ...PENDING_CONFIG, displayName: "Pending" },
+  CRYPTO_RECEIVED: { ...PENDING_CONFIG, displayName: "Pending" },
+  CRYPTO_CONFIRMED: { ...PENDING_CONFIG, displayName: "Pending" },
+  PAYMENT_ACCOUNT_CONFIRMED: { ...PENDING_CONFIG, displayName: "Pending" },
+  DEPOSIT_DETECTED: { ...PENDING_CONFIG, displayName: "Pending" },
+  DEPOSIT_CONFIRMED: { ...PENDING_CONFIG, displayName: "Pending" },
+  PAYOUT_INITIATED: { ...PENDING_CONFIG, displayName: "Pending" },
+  REFUNDING: { ...PENDING_CONFIG, displayName: "Pending" },
 
-  COMPLETED: COMPLETED_CONFIG,
-  REFUNDED: COMPLETED_CONFIG,
+  COMPLETED: { ...COMPLETED_CONFIG, displayName: "Completed" },
+  REFUNDED: { ...COMPLETED_CONFIG, displayName: "Completed" },
 
-  FAILED: FAILED_CONFIG,
-  EXPIRED: FAILED_CONFIG,
-  CANCELLED: FAILED_CONFIG,
-  DISPUTED: FAILED_CONFIG,
-  PAYOUT_FAILED: FAILED_CONFIG,
+  FAILED: { ...FAILED_CONFIG, displayName: "Failed" },
+  EXPIRED: { ...FAILED_CONFIG, displayName: "Failed" },
+  CANCELLED: { ...FAILED_CONFIG, displayName: "Failed" },
+  DISPUTED: { ...FAILED_CONFIG, displayName: "Failed" },
+  PAYOUT_FAILED: { ...FAILED_CONFIG, displayName: "Failed" },
 };
 
 // Utility functions
@@ -86,7 +86,8 @@ export const getStatusColors = (status: string) => {
 };
 
 export const getStatusDisplayName = (status: string): string => {
-  return getStatusConfig(status).displayName;
+  const config = getStatusConfig(status);
+  return config.displayName;
 };
 
 export const getStatusColor = (status: string) => {

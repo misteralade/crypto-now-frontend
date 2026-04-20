@@ -26,7 +26,7 @@ export function TransactionFilters({ onClose, filters, onFiltersChange, supporte
     onClose()
   }
 
-  const statusOptions = ['INITIATED', 'PENDING', 'AWAITING_PAYMENT', 'PAYMENT_RECEIVED', 'PAYMENT_CONFIRMED', 'PROCESSING', 'AWAITING_CRYPTO', 'CRYPTO_SENT', 'CRYPTO_RECEIVED', 'CRYPTO_CONFIRMED', 'COMPLETED', 'FAILED', 'EXPIRED', 'CANCELLED', 'DISPUTED', 'REFUNDING', 'REFUNDED', 'PAYMENT_ACCOUNT_CONFIRMED'];
+  const statusOptions = ['PENDING', 'COMPLETED', 'FAILED'];
 
   return (
     <div

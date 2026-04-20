@@ -136,6 +136,22 @@ export const transactionStatusMessages: Record<string, { title: string, message:
   PAYMENT_ACCOUNT_CONFIRMED: {
     title: 'Payment Account Confirmed',
     message: 'Your payment account has been confirmed. You can now proceed with your transactions.'
+  },
+  DEPOSIT_DETECTED: {
+    title: 'Deposit Detected',
+    message: 'We have detected your deposit on the blockchain. Waiting for network confirmations.'
+  },
+  DEPOSIT_CONFIRMED: {
+    title: 'Deposit Confirmed',
+    message: 'Your deposit has been confirmed. We are now processing your payout to your bank account.'
+  },
+  PAYOUT_INITIATED: {
+    title: 'Payout Initiated',
+    message: 'Your payout has been initiated and is currently being processed by the bank.'
+  },
+  PAYOUT_FAILED: {
+    title: 'Payout Failed',
+    message: 'The payout to your bank account failed. This usually happens if bank details are incorrect or missing.'
   }
 }
 
@@ -144,7 +160,7 @@ export const transactionStatusStyles: Record<
   { text: string; bg: string; dot: string; textColor: string, message: string }
 > = {
   INITIATED: {
-    text: 'Initiated',
+    text: 'Pending',
     bg: 'bg-orange-50',
     dot: 'bg-orange-400',
     textColor: 'text-orange-600',
@@ -158,60 +174,81 @@ export const transactionStatusStyles: Record<
     message: `Your transaction is pending. We are waiting to receive your payment.`
   },
   AWAITING_PAYMENT: {
-    text: 'Awaiting Payment',
+    text: 'Pending',
     bg: 'bg-yellow-50',
     dot: 'bg-yellow-400',
     textColor: 'text-yellow-600',
     message: `We are awaiting your payment. Please ensure to complete the payment within the stipulated time.`
   },
   PAYMENT_RECEIVED: {
-    text: 'Payment Received',
+    text: 'Pending',
     bg: 'bg-blue-50',
     dot: 'bg-blue-400',
     textColor: 'text-blue-600',
     message: `We have received your payment. It is currently under verification.`
   },
   PAYMENT_CONFIRMED: {
-    text: 'Payment Confirmed',
+    text: 'Pending',
     bg: 'bg-blue-50',
     dot: 'bg-blue-400',
     textColor: 'text-blue-600',
     message: `Your payment has been confirmed. We are now processing your transaction.`
   },
   PROCESSING: {
-    text: 'Processing',
+    text: 'Pending',
     bg: 'bg-blue-50',
     dot: 'bg-blue-500',
     textColor: 'text-blue-600',
     message: `Your transaction is being processed. This may take a few moments.`
   },
   AWAITING_CRYPTO: {
-    text: 'Awaiting Crypto',
+    text: 'Pending',
     bg: 'bg-blue-50',
     dot: 'bg-blue-400',
     textColor: 'text-blue-600',
     message: `We are awaiting the cryptocurrency transfer to complete your transaction.`
   },
   CRYPTO_SENT: {
-    text: 'Crypto Sent',
+    text: 'Pending',
     bg: 'bg-blue-50',
     dot: 'bg-blue-400',
     textColor: 'text-blue-600',
     message: `The cryptocurrency has been sent. We are waiting for it to be received and confirmed.`
   },
   CRYPTO_RECEIVED: {
-    text: 'Crypto Received',
+    text: 'Pending',
     bg: 'bg-blue-50',
     dot: 'bg-blue-400',
     textColor: 'text-blue-600',
     message: `The cryptocurrency has been received. It is currently under confirmation.`
   },
   CRYPTO_CONFIRMED: {
-    text: 'Crypto Confirmed',
+    text: 'Pending',
     bg: 'bg-blue-50',
     dot: 'bg-blue-400',
     textColor: 'text-blue-600',
     message: `The cryptocurrency transfer has been confirmed. Your transaction is now complete.`
+  },
+  DEPOSIT_DETECTED: {
+    text: 'Pending',
+    bg: 'bg-amber-50',
+    dot: 'bg-amber-400',
+    textColor: 'text-amber-600',
+    message: `We have detected your deposit on the blockchain. Waiting for network confirmations.`
+  },
+  DEPOSIT_CONFIRMED: {
+    text: 'Pending',
+    bg: 'bg-green-50',
+    dot: 'bg-green-400',
+    textColor: 'text-green-600',
+    message: `Your deposit has been confirmed. We are now processing your payout to your bank account.`
+  },
+  PAYOUT_INITIATED: {
+    text: 'Pending',
+    bg: 'bg-blue-50',
+    dot: 'bg-blue-400',
+    textColor: 'text-blue-600',
+    message: `Your payout has been initiated and is currently being processed by the bank.`
   },
   COMPLETED: {
     text: 'Completed',
@@ -227,8 +264,15 @@ export const transactionStatusStyles: Record<
     textColor: 'text-red-600',
     message: `Unfortunately, your transaction has failed. Please contact support for further assistance.`
   },
+  PAYOUT_FAILED: {
+    text: 'Failed',
+    bg: 'bg-red-50',
+    dot: 'bg-red-400',
+    textColor: 'text-red-600',
+    message: `The payout to your bank account failed. This usually happens if bank details are incorrect or missing.`
+  },
   EXPIRED: {
-    text: 'Expired',
+    text: 'Failed',
     bg: 'bg-gray-100',
     dot: 'bg-gray-500',
     textColor: 'text-gray-700',
@@ -249,21 +293,21 @@ export const transactionStatusStyles: Record<
     message: `Your transaction is currently under dispute. Our support team will review the case and get back to you shortly.`
   },
   REFUNDING: {
-    text: 'Refunding',
+    text: 'Pending',
     bg: 'bg-yellow-50',
     dot: 'bg-yellow-400',
     textColor: 'text-yellow-600',
     message: `Your refund is being processed. This may take a few business days to reflect in your account.`
   },
   REFUNDED: {
-    text: 'Refunded',
+    text: 'Completed',
     bg: 'bg-green-50',
     dot: 'bg-green-400',
     textColor: 'text-green-600',
     message: `Your refund has been successfully processed. Please check your account for the refunded amount.`
   },
   PAYMENT_ACCOUNT_CONFIRMED: {
-    text: 'Payment Account Confirmed',
+    text: 'Pending',
     bg: 'bg-blue-50',
     dot: 'bg-blue-400',
     textColor: 'text-blue-600',

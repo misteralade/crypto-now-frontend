@@ -365,6 +365,97 @@ const TransactionDetailsPage = () => {
                     </p>
                   )}
                 </div>
+
+                {/* ── Confirmation Progress ── */}
+                {transaction.status === "DEPOSIT_DETECTED" &&
+                  transaction.requiredConfirmations &&
+                  transaction.requiredConfirmations > 0 && (
+                    <div className="mt-4">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <p
+                          className="text-[10px] font-bold tracking-widest uppercase"
+                          style={{ color: "#9A9A9A" }}
+                        >
+                          Network Confirmations
+                        </p>
+                        <p
+                          className="text-xs font-bold"
+                          style={{ color: "#A07000" }}
+                        >
+                          {transaction.confirmationCount || 0} /{" "}
+                          {transaction.requiredConfirmations}
+                        </p>
+                      </div>
+                      <div
+                        className="w-full h-1.5 rounded-full overflow-hidden"
+                        style={{ background: "#EEEEEE" }}
+                      >
+                        <div
+                          className="h-full transition-all duration-500"
+                          style={{
+                            width: `${Math.min(
+                              100,
+                              ((transaction.confirmationCount || 0) /
+                                transaction.requiredConfirmations) *
+                                100
+                            )}%`,
+                            background: "#FFE4A0",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                {/* ── Payout Failure Alert & Action ── */}
+                {transaction.status === "PAYOUT_FAILED" && (
+                  <div
+                    className="mt-4 rounded-2xl p-4 space-y-3"
+                    style={{
+                      background: "#FEECEC",
+                      border: "1px solid #F5C0C0",
+                    }}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div
+                        className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+                        style={{ background: "#EB5757" }}
+                      >
+                        <AlertTriangle size={16} className="text-white" />
+                      </div>
+                      <div>
+                        <p
+                          className="text-sm font-bold"
+                          style={{ color: "#0E0F0C" }}
+                        >
+                          {transaction.payoutFailureReason?.includes(
+                            "bank account"
+                          )
+                            ? "Action Required: Add Bank Account"
+                            : "Payout Failed"}
+                        </p>
+                        <p
+                          className="text-xs mt-0.5 leading-relaxed"
+                          style={{ color: "#6B6E6B" }}
+                        >
+                          {transaction.payoutFailureReason ||
+                            "We couldn't process your payout. Please contact support."}
+                        </p>
+                      </div>
+                    </div>
+
+                    {transaction.payoutFailureReason?.includes(
+                      "bank account"
+                    ) && (
+                      <button
+                        onClick={() => navigate({ to: ROUTES.PROFILE })}
+                        className="w-full py-2.5 rounded-xl text-xs font-bold transition-all"
+                        style={{ background: "#EB5757", color: "#FFFFFF" }}
+                      >
+                        Go to Profile to add Bank Account
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
