@@ -23,8 +23,18 @@ class UserServiceApi {
     return { data, message, success };
   }
   
+  private pingCache: { lastChecked: number; result: any } | null = null;
+  private readonly PING_CACHE_DURATION = 1000 * 60; // 1 minute
+
   async pingUser() {
-    return await axiosGetRequestHandler('/user/ping-user') as BaseApiResponse<null>;
+    const now = Date.now();
+    if (this.pingCache && (now - this.pingCache.lastChecked < this.PING_CACHE_DURATION)) {
+      return this.pingCache.result;
+    }
+    
+    const result = await axiosGetRequestHandler('/user/ping-user') as BaseApiResponse<null>;
+    this.pingCache = { lastChecked: now, result };
+    return result;
   }
   
   async uploadProfilePicture(formData: FormData) {

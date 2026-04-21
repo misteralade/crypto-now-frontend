@@ -29,10 +29,8 @@ export const Route = createFileRoute("/dashboard")({
         throw redirect({ to: ROUTES.KYC });
       }
     } catch (error) {
-      // If redirect was already thrown, re-throw it
       if (error && typeof error === "object" && "isRedirect" in error)
         throw error;
-      // If session fetch fails (404 = no session yet), redirect to KYC
       throw redirect({ to: ROUTES.KYC });
     }
   },

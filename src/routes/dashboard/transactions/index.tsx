@@ -1,7 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import TransactionHistoryPage from "../../../pages/TransactionHistoryPage.tsx";
 import { LOCAL_STORAGE_KEYS, ROUTES } from "../../../util/constants.util.ts";
-import { userServiceApi } from "../../../api/user.api.ts";
 
 export const Route = createFileRoute("/dashboard/transactions/")({
   beforeLoad: async () => {
@@ -9,16 +7,5 @@ export const Route = createFileRoute("/dashboard/transactions/")({
     if (!accessToken) {
       throw redirect({ to: ROUTES.SIGNIN });
     }
-    try {
-      const { success } = await userServiceApi.pingUser();
-      if (!success) {
-        localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
-        throw redirect({ to: ROUTES.SIGNIN });
-      }
-    } catch {
-      localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
-      throw redirect({ to: ROUTES.SIGNIN });
-    }
   },
-  component: TransactionHistoryPage,
 });

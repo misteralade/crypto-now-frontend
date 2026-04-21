@@ -22,7 +22,9 @@ export const useBankQuery = () => {
       }
 
       return [];
-    }
+    },
+    staleTime: 1000 * 60 * 60 * 24, // 24 hours — bank list rarely changes
+    gcTime: 1000 * 60 * 60 * 24,
   });
 
   const { data: userBankAccounts, isLoading: loadingUserBankAccounts } = useQuery({
@@ -51,6 +53,7 @@ export const useBankQuery = () => {
       return [];
     },
     enabled: !!(matchRoute({ to: ROUTES.PROFILE }) || matchRoute({ to: ROUTES.TRADE_CRYPTO }) || matchRoute({ to: ROUTES.DASHBOARD_TRADE }) || matchRoute({ to: ROUTES.DASHBOARD_WALLETS })),
+    staleTime: 1000 * 60 * 5, // 5 minutes — bank accounts don't change often
   });
 
   const createUserBankAccountMutation = useMutation({

@@ -24,8 +24,18 @@ class KycServiceApi {
     return axiosPostRequestHandler("/kyc/start", {});
   }
 
+  private sessionCache: { lastChecked: number; result: any } | null = null;
+  private readonly SESSION_CACHE_DURATION = 1000 * 60 * 5; // 5 minutes
+
   async getSession(): Promise<GetKycSessionApiResponse> {
-    return axiosGetRequestHandler("/kyc/session");
+    const now = Date.now();
+    if (this.sessionCache && (now - this.sessionCache.lastChecked < this.SESSION_CACHE_DURATION)) {
+      return this.sessionCache.result;
+    }
+    
+    const result = await axiosGetRequestHandler("/kyc/session");
+    this.sessionCache = { lastChecked: now, result };
+    return result;
   }
 
   async saveNin(nin: string, firstName: string): Promise<KycActionApiResponse> {

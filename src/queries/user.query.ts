@@ -27,6 +27,7 @@ export const useUserQuery = () => {
       return data;
     },
     enabled: !!localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN),
+    staleTime: 1000 * 60 * 5, // 5 minutes
   })
   
   useQuery({

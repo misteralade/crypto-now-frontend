@@ -133,7 +133,9 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => DashboardRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/dashboard/index.lazy').then((d) => d.Route),
+)
 const SignInVerifyRoute = SignInVerifyRouteImport.update({
   id: '/sign-in/verify',
   path: '/sign-in/verify',
@@ -158,17 +160,23 @@ const DashboardWalletsRoute = DashboardWalletsRouteImport.update({
   id: '/wallets',
   path: '/wallets',
   getParentRoute: () => DashboardRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/dashboard/wallets.lazy').then((d) => d.Route),
+)
 const DashboardTradeRoute = DashboardTradeRouteImport.update({
   id: '/trade',
   path: '/trade',
   getParentRoute: () => DashboardRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/dashboard/trade.lazy').then((d) => d.Route),
+)
 const DashboardProfileRoute = DashboardProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
   getParentRoute: () => DashboardRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/dashboard/profile.lazy').then((d) => d.Route),
+)
 const DashboardKycRoute = DashboardKycRouteImport.update({
   id: '/kyc',
   path: '/kyc',
@@ -179,7 +187,9 @@ const DashboardTransactionsIndexRoute =
     id: '/transactions/',
     path: '/transactions/',
     getParentRoute: () => DashboardRoute,
-  } as any)
+  } as any).lazy(() =>
+    import('./routes/dashboard/transactions/index.lazy').then((d) => d.Route),
+  )
 const DashboardTransactionsIdRoute = DashboardTransactionsIdRouteImport.update({
   id: '/transactions/$id',
   path: '/transactions/$id',
