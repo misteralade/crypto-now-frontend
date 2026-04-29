@@ -240,29 +240,29 @@ export default function Navbar() {
 
           {/* Auth Buttons */}
           {isLoggedIn ? (
-            <>
-              {location.pathname === ROUTES.HOMEPAGE ? (
-                <a
-                  href={ROUTES.DASHBOARD}
-                  className="font-medium hidden xl:block transition-colors"
-                  style={{ color: "#03034D" }}
-                  onMouseEnter={(e) =>
-                    ((e.currentTarget as HTMLAnchorElement).style.opacity =
-                      "0.7")
-                  }
-                  onMouseLeave={(e) =>
-                    ((e.currentTarget as HTMLAnchorElement).style.opacity =
-                      "1")
-                  }
-                >
-                  Dashboard
-                </a>
-              ) : (
-                <div className="hidden xl:block">
-                  <ProfileNav />
-                </div>
-              )}
-            </>
+            <div className="hidden xl:flex items-center space-x-6">
+              <Link
+                to={ROUTES.DASHBOARD}
+                className="font-medium transition-colors"
+                style={{ color: "#03034D" }}
+                onMouseEnter={(e) =>
+                  ((e.currentTarget as HTMLAnchorElement).style.opacity = "0.7")
+                }
+                onMouseLeave={(e) =>
+                  ((e.currentTarget as HTMLAnchorElement).style.opacity = "1")
+                }
+              >
+                Dashboard
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="rounded-full text-white font-medium px-6 py-3 inline-block text-center transition-opacity hover:opacity-90 cursor-pointer"
+                style={{ background: "#948EEE" }}
+              >
+                Logout
+              </button>
+              <ProfileNav />
+            </div>
           ) : (
             <>
               <div className="hidden xl:flex items-center space-x-4">

@@ -85,7 +85,10 @@ interface NewBankAccountModalProps {
   handleChangeField: (field: keyof CreateBankAccountRequestPayload, value: any) => void;
 }
 
-const NewBankAccountModal = ({ isOpen, banks, selectedBankId, onClose, onSubmit, handleChangeField }: NewBankAccountModalProps) => {
+const NewBankAccountModal = ({ isOpen, banks, onClose, onSubmit, handleChangeField }: NewBankAccountModalProps) => {
+  const [isLookingUp, setIsLookingUp] = useState(false);
+  const [lookupError, setLookupError] = useState<string | null>(null);
+
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden"
@@ -97,15 +100,40 @@ const NewBankAccountModal = ({ isOpen, banks, selectedBankId, onClose, onSubmit,
     }
   }, [isOpen])
 
+  const handleLookup = async (accountNumber: string, bankCode: string, setFieldValue: any) => {
+    setIsLookingUp(true);
+    setLookupError(null);
+    try {
+      const { bankServiceApi } = await import("../../../../api/bank.api.ts");
+      const { data, success, message } = await bankServiceApi.lookupAccountName(accountNumber, bankCode);
+      if (success && data.accountName) {
+        setFieldValue("accountName", data.accountName);
+        handleChangeField("accountName", data.accountName);
+        return data.accountName;
+      } else {
+        setLookupError(message || "Could not verify account details.");
+        setFieldValue("accountName", "");
+        handleChangeField("accountName", "");
+        return "";
+      }
+    } catch (e) {
+      setLookupError("Verification failed. Please try again.");
+      setFieldValue("accountName", "");
+      handleChangeField("accountName", "");
+      return "";
+    } finally {
+      setIsLookingUp(false);
+    }
+  };
+
   const handleSubmit = () => {
-    console.log("Selected Bank: ", selectedBankId);
     onSubmit();
   }
 
-  const iniitalState = {
-    bankId: null,
-    accountName: null,
-    accountNumber: null,
+  const initialState = {
+    bankId: "",
+    accountName: "",
+    accountNumber: "",
     isDefault: true,
   }
   
@@ -152,16 +180,16 @@ const NewBankAccountModal = ({ isOpen, banks, selectedBankId, onClose, onSubmit,
               <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
               <div className="flex-1">
                 <p className="text-xs text-amber-900 font-bold">
-                  Account name must match your profile
+                  Automated Verification
                 </p>
                 <p className="text-[11px] text-amber-700 mt-0.5 leading-snug">
-                  Mismatches will result in verification failure.
+                  Account name will be automatically derived from your bank details.
                 </p>
               </div>
             </div>
             
-            <Formik initialValues={iniitalState} onSubmit={handleSubmit}>
-              {({ values, handleChange, handleBlur, touched, errors, isValid, isSubmitting }) => (
+            <Formik initialValues={initialState} onSubmit={handleSubmit}>
+              {({ values, handleChange, handleBlur, touched, errors, isValid, isSubmitting, setFieldValue }) => (
                 <Form className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Bank Selector */}
@@ -169,10 +197,22 @@ const NewBankAccountModal = ({ isOpen, banks, selectedBankId, onClose, onSubmit,
                       <BankSelector
                         label="Select Bank"
                         options={banks}
-                        value={values.bankId as unknown as string}
+                        value={values.bankId}
                         onValueChange={(value) => {
-                          handleChange("bankId")(value)
-                          handleChangeField("bankId", value)
+                          setFieldValue("bankId", value);
+                          handleChangeField("bankId", value);
+                          
+                          // Track logo as well
+                          const selectedBank = banks.find(b => b.id === value);
+                          if (selectedBank) {
+                            handleChangeField("bankLogo", selectedBank.logoUrl);
+                            handleChangeField("bankCode", selectedBank.code);
+                            handleChangeField("bankName", selectedBank.name);
+                            
+                            if (values.accountNumber.length === 10) {
+                              handleLookup(values.accountNumber, selectedBank.code, setFieldValue);
+                            }
+                          }
                         }}
                       />
                       {touched.bankId && errors.bankId && (
@@ -180,34 +220,24 @@ const NewBankAccountModal = ({ isOpen, banks, selectedBankId, onClose, onSubmit,
                       )}
                     </div>
                     
-                    {/* Account Holder Name */}
-                    <div className="flex flex-col gap-1">
-                      <CustomInput
-                        label="Account Holder name"
-                        type="text"
-                        value={values.accountName as unknown as string}
-                        onChange={(e) => {
-                          handleChange("accountName")(e.target.value);
-                          handleChangeField("accountName", e.target.value);
-                        }}
-                        onBlur={() => { handleBlur("accountName")(undefined as any); }}
-                        error={!!(touched.accountName && errors.accountName)}
-                      />
-                      {touched.accountName && errors.accountName && (
-                        <p className="text-[#EB5757] text-xs mt-1 ml-3" role="alert">{errors.accountName}</p>
-                      )}
-                    </div>
-
                     {/* Account Number */}
                     <div className="flex flex-col gap-1">
                       <CustomInput
                         label="Account number"
                         type="text"
                         inputMode="numeric"
-                        value={values.accountNumber as unknown as string}
+                        value={values.accountNumber}
                         onChange={(e) => {
-                          handleChange("accountNumber")(e.target.value);
-                          handleChangeField("accountNumber", e.target.value);
+                          const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                          setFieldValue("accountNumber", val);
+                          handleChangeField("accountNumber", val);
+                          
+                          if (val.length === 10 && values.bankId) {
+                            const selectedBank = banks.find(b => b.id === values.bankId);
+                            if (selectedBank) {
+                              handleLookup(val, selectedBank.code, setFieldValue);
+                            }
+                          }
                         }}
                         onBlur={() => { handleBlur("accountNumber")(undefined as any); }}
                         error={!!(touched.accountNumber && errors.accountNumber)}
@@ -216,9 +246,32 @@ const NewBankAccountModal = ({ isOpen, banks, selectedBankId, onClose, onSubmit,
                         <p className="text-[#EB5757] text-xs mt-1 ml-3" role="alert">{errors.accountNumber}</p>
                       )}
                     </div>
+
+                    {/* Derived Account Holder Name */}
+                    <div className="flex flex-col gap-1 md:col-span-2">
+                      <div className={`
+                        w-full h-14 px-4 flex flex-col justify-center
+                        rounded-2xl border bg-gray-50 transition-colors
+                        ${values.accountName ? 'border-green-200 bg-green-50/30' : 'border-[#EEEEEE]'}
+                      `}>
+                        <label className="text-[10px] font-semibold text-[#9A9A9A] mb-0.5">
+                          Verified Account Holder Name
+                        </label>
+                        <div className="text-sm font-medium text-[#0E0F0C] min-h-[1.25rem]">
+                          {isLookingUp ? (
+                            <span className="text-[#03034D] animate-pulse">Verifying details...</span>
+                          ) : (
+                            values.accountName || <span className="text-[#9A9A9A] italic">Enter bank and account number to verify</span>
+                          )}
+                        </div>
+                      </div>
+                      {lookupError && (
+                        <p className="text-[#EB5757] text-xs mt-1 ml-3" role="alert">{lookupError}</p>
+                      )}
+                    </div>
                     
                     {/* Default Bank Toggle */}
-                    <div className="flex flex-col justify-center gap-2">
+                    <div className="flex flex-col justify-center gap-2 md:col-span-2">
                       <div className="flex items-center gap-3">
                         <label className="relative inline-flex items-center cursor-pointer">
                           <input
@@ -227,11 +280,10 @@ const NewBankAccountModal = ({ isOpen, banks, selectedBankId, onClose, onSubmit,
                             className="sr-only peer"
                             onChange={(e) => {
                               handleChangeField("isDefault", e.target.checked)
-                              handleChange("isDefault")(e.target.checked as unknown as string)
+                              setFieldValue("isDefault", e.target.checked)
                             }}
                             onBlur={handleBlur("isDefault")}
-                            defaultChecked={values.isDefault as unknown as boolean}
-                            aria-describedby="default-bank-description"
+                            checked={values.isDefault}
                           />
                           <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#03034D] peer-focus:ring-offset-2 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#03034D]"></div>
                         </label>
@@ -242,16 +294,9 @@ const NewBankAccountModal = ({ isOpen, banks, selectedBankId, onClose, onSubmit,
                           Set as Default Bank
                         </label>
                       </div>
-                      <p 
-                        id="default-bank-description"
-                        className="text-xs text-[#9A9A9A] ml-14"
-                      >
+                      <p className="text-xs text-[#9A9A9A] ml-14">
                         This bank will be used for all transactions by default
                       </p>
-
-                      {touched.isDefault && errors.isDefault && (
-                        <p className="text-red-500 text-xs mt-1 ml-3" role="alert">{errors.isDefault}</p>
-                      )}
                     </div>
                   </div>
                   
@@ -260,16 +305,16 @@ const NewBankAccountModal = ({ isOpen, banks, selectedBankId, onClose, onSubmit,
                     <button
                       onClick={onClose}
                       type="button"
-                      className="flex-1 h-12 rounded-2xl text-[#6B6E6B] font-semibold text-sm bg-white border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-[#03034D] focus:ring-offset-2"
+                      className="flex-1 h-12 rounded-2xl text-[#6B6E6B] font-semibold text-sm bg-white border border-gray-200 hover:bg-gray-50 transition-colors"
                     >
                       Cancel
                     </button>
                     <button
-                      disabled={!isValid || isSubmitting}
+                      disabled={!isValid || isSubmitting || !values.accountName || isLookingUp}
                       type="submit"
-                      className="flex-1 h-12 rounded-2xl font-semibold text-sm bg-[#03034D] transition-all text-white disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed hover:bg-[#02022d] focus:outline-none focus:ring-2 focus:ring-[#03034D] focus:ring-offset-2 shadow-sm hover:shadow-md"
+                      className="flex-1 h-12 rounded-2xl font-semibold text-sm bg-[#03034D] transition-all text-white disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-[#02022d] shadow-sm"
                     >
-                      {isSubmitting ? "Creating..." : "Confirm"}
+                      {isSubmitting ? "Saving..." : "Save Bank Account"}
                     </button>
                   </div>
                 </Form>
