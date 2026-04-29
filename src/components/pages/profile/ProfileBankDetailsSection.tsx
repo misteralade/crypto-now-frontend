@@ -1,5 +1,4 @@
 import type { UserBankAccountResponse } from "../../../types/response.payload.types.ts";
-import CustomButton from "../../global/Button.tsx";
 import {Fragment} from "react";
 import BankAccountCard from "./BankAccountCard.tsx";
 
@@ -10,10 +9,10 @@ interface ProfileBankDetailsSectionProps {
   createNewBankModal: () => void;
 }
 
-const ProfileBankDetailsSection = ({ banks, makeBankAccountDefault, handleDeleteBank, createNewBankModal }: ProfileBankDetailsSectionProps) => {
+const ProfileBankDetailsSection = ({ banks, makeBankAccountDefault, handleDeleteBank }: ProfileBankDetailsSectionProps) => {
   return (
     <Fragment>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div className="flex flex-wrap gap-4 sm:gap-6 justify-center">
         {banks &&
           banks?.map((account, index) => (
             <BankAccountCard

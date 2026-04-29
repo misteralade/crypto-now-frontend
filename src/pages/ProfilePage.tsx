@@ -291,7 +291,7 @@ const ProfilePage = () => {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 24 }}
               transition={{ duration: 0.22 }}
-              className="px-5 pb-10 w-full lg:max-w-3xl lg:mx-auto"
+              className={`px-5 pb-10 w-full lg:mx-auto ${activeSection === 'bank' ? 'lg:max-w-2xl' : 'lg:max-w-3xl'}`}
             >
               {/* Back header */}
               <div className="flex items-center justify-between pt-6 pb-5">
@@ -357,7 +357,7 @@ const ProfilePage = () => {
                           <CustomButton buttonText="Add Bank Account" onClick={toggleShowCreateNewBankAccount} />
                         </div>
                       ) : (
-                        <div className="rounded-3xl p-5" style={{ border: "1px solid #F0F0F0" }}>
+                        <div className="rounded-3xl p-5 w-fit mx-auto" style={{ border: "1px solid #F0F0F0" }}>
                           <ProfileBankDetailsSection
                             banks={userBankAccounts}
                             createNewBankModal={toggleShowCreateNewBankAccount}
