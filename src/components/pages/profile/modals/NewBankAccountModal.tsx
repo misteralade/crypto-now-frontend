@@ -130,13 +130,13 @@ const NewBankAccountModal = ({
         handleChangeField("accountName", data.accountName);
         return data.accountName;
       } else {
-        setLookupError(message || "Could not verify account details.");
+        setLookupError(message || "Couldn't find an account with this bank. Please check and try again.");
         setFieldValue("accountName", "");
         handleChangeField("accountName", "");
         return "";
       }
     } catch (e) {
-      setLookupError("Verification failed. Please try again.");
+      setLookupError("Couldn't find an account with this bank. Please check and try again.");
       setFieldValue("accountName", "");
       handleChangeField("accountName", "");
       return "";

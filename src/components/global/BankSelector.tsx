@@ -1,6 +1,7 @@
-import { ChevronDown } from "lucide-react";
-import { useState, useId, useRef, useEffect, type KeyboardEvent } from "react";
-import type {AllBanksResponse, SupportedCryptoOrCurrencyResponse} from "../../types/response.payload.types.ts";
+import { ChevronDown, Search } from "lucide-react";
+import { useState, useId, useEffect } from "react";
+import { useCombobox } from "downshift";
+import type { AllBanksResponse, SupportedCryptoOrCurrencyResponse } from "../../types/response.payload.types.ts";
 
 interface BankSelectorProps {
   label: string;
@@ -14,210 +15,162 @@ interface BankSelectorProps {
 
 const BankSelector = ({
   label,
-  placeholder,
-  options,
+  placeholder = "Search bank...",
+  options = [],
   value,
   onValueChange,
   error,
   className = "",
 }: BankSelectorProps) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isFocused, setIsFocused] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
   const selectId = useId();
+  const [items, setItems] = useState(options);
 
-  const dropdownRef = useRef<HTMLDivElement | null>(null);
-  const buttonRef = useRef<HTMLButtonElement | null>(null);
-
-  const selectedOption = options?.find((opt) => opt.id === value);
-
-  // filter options by search query
-  const filteredOptions = (options || []).filter((option) =>
-    option.name.toLowerCase().includes(searchQuery.trim().toLowerCase())
-  );
-
-  // handles clicking outside to close dropdown
+  // Sync items when options prop changes
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(e.target as Node) &&
-        !buttonRef.current?.contains(e.target as Node)
-      ) {
-        setIsOpen(false);
-        setIsFocused(false);
-        setHighlightedIndex(-1);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    setItems(options || []);
+  }, [options]);
 
-  const handleSelect = (option: AllBanksResponse | SupportedCryptoOrCurrencyResponse) => {
-    onValueChange(option.id);
-    setIsOpen(false);
-    setIsFocused(false);
-    setSearchQuery("");
-    setHighlightedIndex(-1);
-  };
-
-  const handleFocus = () => {
-    setIsFocused(true);
-    setIsOpen(true);
-  };
-
-  const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (!isOpen) return;
-
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setHighlightedIndex((previous) =>
-        previous < filteredOptions.length - 1 ? previous + 1 : 0
+  const {
+    isOpen,
+    getToggleButtonProps,
+    getLabelProps,
+    getMenuProps,
+    getInputProps,
+    highlightedIndex,
+    getItemProps,
+    selectedItem,
+    setInputValue,
+  } = useCombobox({
+    items,
+    itemToString(item) {
+      return item ? item.name : "";
+    },
+    onInputValueChange({ inputValue }) {
+      setItems(
+        options.filter((item) =>
+          item.name.toLowerCase().includes(inputValue?.toLowerCase() || "")
+        )
       );
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setHighlightedIndex((previous) =>
-        previous > 0 ? previous - 1 : filteredOptions.length - 1
-      );
-    } else if (e.key === "Enter") {
-      e.preventDefault();
-      if (highlightedIndex >= 0 && filteredOptions[highlightedIndex]) {
-        handleSelect(filteredOptions[highlightedIndex]);
+    },
+    onSelectedItemChange({ selectedItem }) {
+      if (selectedItem) {
+        onValueChange(selectedItem.id);
       }
-    } else if (e.key === "Escape") {
-      e.preventDefault();
-      setIsOpen(false);
-      setHighlightedIndex(-1);
-    }
-  };
+    },
+    selectedItem: options.find((opt) => opt.id === value) || null,
+  });
 
-  // scroll highlighted option into view smoothly
-  useEffect(() => {
-    if (dropdownRef.current && highlightedIndex >= 0) {
-      const item =
-        dropdownRef.current.querySelectorAll<HTMLButtonElement>(
-          "[data-option-item]"
-        )[highlightedIndex];
-      item?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-    }
-  }, [highlightedIndex]);
-
-  const isLabelFloating = isFocused || isOpen || value;
+  const isLabelFloating = isOpen || value || getInputProps().value;
 
   return (
-    <div className="space-y-2 relative" onKeyDown={handleKeyDown} tabIndex={0}>
+    <div className="space-y-2 relative">
       <div className="relative">
         {/* Floating Label */}
         <label
-          htmlFor={selectId}
+          {...getLabelProps()}
           className={`absolute left-3 bg-white px-1 text-sm font-medium transition-all duration-200 pointer-events-none z-10
             ${
               isLabelFloating
-                ? "top-0 -translate-y-1/2 text-sm text-body"
-                : "top-1/2 -translate-y-1/2 text-placeholder"
+                ? "top-0 -translate-y-1/2 text-sm text-[#03034D]"
+                : "top-1/2 -translate-y-1/2 text-[#9A9A9A]"
             }
             ${error ? "text-red-500" : ""}
-            ${isFocused && !error ? "text-primary-500" : ""}
           `}
         >
           {label}
         </label>
 
-        {/* Select Button */}
-        <button
-          type="button"
-          id={selectId}
-          ref={buttonRef}
-          onClick={handleFocus}
-          // onBlur={handleBlur}
-          className={`w-full h-14 px-4 border rounded-full bg-white text-left flex items-center justify-between focus:outline-none transition-colors
-            ${error ? "border-red focus:border" : "border-border"}
+        {/* Input Container */}
+        <div
+          className={`w-full h-14 px-4 border rounded-2xl bg-white flex items-center gap-2 focus-within:ring-2 focus-within:ring-[#03034D]/10 transition-all
+            ${error ? "border-red-500" : "border-[#EEEEEE] focus-within:border-[#03034D]"}
             ${className}`}
         >
-          {selectedOption ? (
-            <span className="flex items-center gap-2 text-sm text-primary">
-              {selectedOption.logoUrl && (
+          {selectedItem && !isOpen && (
+             <div className="flex shrink-0 items-center justify-center w-6 h-6">
                 <img
-                  src={selectedOption.logoUrl}
-                  alt={selectedOption.name}
+                  src={selectedItem.logoUrl}
+                  alt=""
                   className="w-5 h-5 rounded-full object-contain"
+                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
                 />
-              )}
-              {selectedOption.name}
-            </span>
-          ) : (
-            <span className="text-placeholder text-sm">{placeholder}</span>
+             </div>
           )}
-          <ChevronDown
-            className={`w-5 h-5 text-gray-400 transition-transform ${
-              isOpen && "rotate-180"
-            }`}
+          
+          <input
+            {...getInputProps({
+               onFocus: () => {
+                 if (!isOpen) {
+                   // Optional: clear input on focus to allow fresh search
+                   // setInputValue("");
+                 }
+               }
+            })}
+            placeholder={isLabelFloating ? "" : placeholder}
+            className="flex-1 h-full bg-transparent text-sm text-[#0E0F0C] focus:outline-none placeholder-[#9A9A9A]"
           />
-        </button>
+
+          <button
+            type="button"
+            {...getToggleButtonProps()}
+            aria-label="toggle menu"
+            className="p-1 hover:bg-gray-50 rounded-full transition-colors"
+          >
+            <ChevronDown
+              className={`w-5 h-5 text-gray-400 transition-transform ${
+                isOpen && "rotate-180"
+              }`}
+            />
+          </button>
+        </div>
 
         {/* Dropdown Options */}
-        {isOpen && (
-          <div
-            ref={dropdownRef}
-            role="listbox"
-            aria-labelledby={selectId}
-            className="absolute top-full left-0 right-0 mt-2 bg-white border border-border rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto"
-          >
-            {/* search input */}
-            <div className="sticky top-0 bg-white p-2 border-b border-border z-10">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setHighlightedIndex(0);
-                }}
-                placeholder="Search banks"
-                className="w-full h-10 px-3 border rounded-md text-sm focus:outline-none border-border"
-                autoFocus
-              />
-            </div>
-
-            {/* options or empty state */}
-            {filteredOptions.length > 0 ? (
-              filteredOptions.map((option, index) => (
-                <button
-                  key={option.id}
-                  data-option-item
-                  type="button"
-                  onClick={() => handleSelect(option)}
-                  className={`w-full px-4 py-3 text-left text-sm flex items-center gap-2 transition-colors
+        <ul
+          {...getMenuProps()}
+          className={`absolute top-full left-0 right-0 mt-2 bg-white border border-[#EEEEEE] rounded-2xl shadow-xl z-50 max-h-64 overflow-y-auto transition-all
+            ${isOpen ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-2"}
+          `}
+        >
+          {isOpen && (
+            <>
+              {items.length > 0 ? (
+                items.map((item, index) => (
+                  <li
+                    key={`${item.id}${index}`}
+                    {...getItemProps({ item, index })}
+                    className={`px-4 py-3 cursor-pointer text-sm flex items-center gap-3 transition-colors
                       ${
                         highlightedIndex === index
-                          ? "bg-blue-50 text-primary"
-                          : value === option.id
-                            ? "bg-blue-50 text-primary"
-                            : "text-black hover:bg-gray-50"
+                          ? "bg-gray-50 text-[#03034D]"
+                          : value === item.id
+                            ? "bg-[#03034D]/5 text-[#03034D] font-semibold"
+                            : "text-[#0E0F0C] hover:bg-gray-50"
                       }
                     `}
-                >
-                  {option.logoUrl && (
-                    <img
-                      src={option.logoUrl}
-                      alt={option.name}
-                      className="w-5 h-5 rounded-full object-contain"
-                    />
-                  )}
-                  <span>{option.name}</span>
-                </button>
-              ))
-            ) : (
-              <div className="py-4 text-center text-sm text-gray-400">
-                No results found
-              </div>
-            )}
-          </div>
-        )}
+                  >
+                    <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-50 flex items-center justify-center shrink-0">
+                      <img
+                        src={item.logoUrl}
+                        alt=""
+                        className="w-full h-full object-contain"
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                      />
+                    </div>
+                    <span className="flex-1 truncate">{item.name}</span>
+                  </li>
+                ))
+              ) : (
+                <li className="px-4 py-8 text-center text-sm text-[#9A9A9A] italic">
+                  No banks found for "{getInputProps().value}"
+                </li>
+              )}
+            </>
+          )}
+        </ul>
       </div>
 
       {/* Error Message */}
-      {error && <p className="text-sm text-red-500 mt-1 ml-3">{error}</p>}
+      {error && <p className="text-xs text-red-500 mt-1 ml-3" role="alert">{error}</p>}
     </div>
   );
 };

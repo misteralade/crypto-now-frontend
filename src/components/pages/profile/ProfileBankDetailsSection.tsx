@@ -13,7 +13,7 @@ interface ProfileBankDetailsSectionProps {
 const ProfileBankDetailsSection = ({ banks, makeBankAccountDefault, handleDeleteBank, createNewBankModal }: ProfileBankDetailsSectionProps) => {
   return (
     <Fragment>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         {banks &&
           banks?.map((account, index) => (
             <BankAccountCard
@@ -24,14 +24,6 @@ const ProfileBankDetailsSection = ({ banks, makeBankAccountDefault, handleDelete
               onDelete={handleDeleteBank}
             />
           ))}
-      </div>
-      
-      
-      <div className="w-full flex items-center justify-center">
-        <CustomButton
-          buttonText="Add New Bank Account"
-          onClick={createNewBankModal}
-        />
       </div>
     </Fragment>
   )

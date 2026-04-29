@@ -1,6 +1,6 @@
 import { Fragment, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, ArrowLeft, CheckCircle } from "lucide-react";
+import { ChevronRight, ArrowLeft, CheckCircle, Plus } from "lucide-react";
 import AuthenticatedLayout from "../layouts/AuthenticatedLayout.tsx";
 import { useProfilePage } from "../hooks/pages/useProfilePage.ts";
 import ProfilePersonalInfoSection from "../components/pages/profile/ProfilePersonalInfoSection.tsx";
@@ -294,19 +294,32 @@ const ProfilePage = () => {
               className="px-5 pb-10 w-full lg:max-w-3xl lg:mx-auto"
             >
               {/* Back header */}
-              <div className="flex items-center gap-3 pt-6 pb-5">
-                <button
-                  onClick={() => setActiveSection(null)}
-                  className="w-9 h-9 rounded-full flex items-center justify-center transition-colors hover:bg-gray-100"
-                  style={{ border: "1px solid #F0F0F0" }}
-                >
-                  <ArrowLeft size={16} style={{ color: "#0E0F0C" }} />
-                </button>
-                <h2 className="text-lg font-bold" style={{ color: "#0E0F0C" }}>
-                  {activeSection === "personal" ? "Edit Profile"
-                   : activeSection === "bank"     ? "Bank Details"
-                   :                                "Security"}
-                </h2>
+              <div className="flex items-center justify-between pt-6 pb-5">
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setActiveSection(null)}
+                    className="w-9 h-9 rounded-full flex items-center justify-center transition-colors hover:bg-gray-100"
+                    style={{ border: "1px solid #F0F0F0" }}
+                  >
+                    <ArrowLeft size={16} style={{ color: "#0E0F0C" }} />
+                  </button>
+                  <h2 className="text-lg font-bold" style={{ color: "#0E0F0C" }}>
+                    {activeSection === "personal" ? "Edit Profile"
+                    : activeSection === "bank"     ? "Bank Details"
+                    :                                "Security"}
+                  </h2>
+                </div>
+
+                {activeSection === "bank" && userBankAccounts && userBankAccounts.length > 0 && (
+                  <button
+                    onClick={toggleShowCreateNewBankAccount}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all active:scale-95"
+                    style={{ background: "#03034D", color: "#FFFFFF" }}
+                  >
+                    <Plus size={14} />
+                    <span>Add New</span>
+                  </button>
+                )}
               </div>
 
               {loadingUserProfile ? (
