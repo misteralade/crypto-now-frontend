@@ -56,8 +56,8 @@ class BankServiceApi {
     return await axiosDeleteRequestHandler(`/bank/user/${id}/delete`) as BaseApiResponse<null>
   }
 
-  async lookupAccountName(accountNumber: string, bankCode: string) {
-    return await axiosPostRequestHandler("/bank/bank/lookup", { accountNumber, bankCode }) as BaseApiResponse<{ accountName: string }>;
+  async lookupAccountName(accountNumber: string, bankId: string) {
+    return await axiosPostRequestHandler("/bank/bank/lookup", { accountNumber, bankId }) as BaseApiResponse<{ accountName: string }>;
   }
 }
 

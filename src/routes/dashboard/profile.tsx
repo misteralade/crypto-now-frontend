@@ -1,6 +1,5 @@
 import {createFileRoute, redirect} from '@tanstack/react-router'
 import {LOCAL_STORAGE_KEYS, ROUTES} from "../../util/constants.util.ts";
-import { userServiceApi } from "../../api/user.api.ts";
 
 export type ProfileSection = "personal" | "bank" | "security";
 
