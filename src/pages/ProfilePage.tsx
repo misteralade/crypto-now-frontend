@@ -1,7 +1,6 @@
 import { Fragment, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight, ArrowLeft, CheckCircle, Plus } from "lucide-react";
-import AuthenticatedLayout from "../layouts/AuthenticatedLayout.tsx";
 import { useProfilePage } from "../hooks/pages/useProfilePage.ts";
 import ProfilePersonalInfoSection from "../components/pages/profile/ProfilePersonalInfoSection.tsx";
 import ProfileBankDetailsSection from "../components/pages/profile/ProfileBankDetailsSection.tsx";
@@ -124,7 +123,7 @@ const ProfilePage = () => {
   const loading = loadingTransactionSummary;
 
   return (
-    <AuthenticatedLayout>
+    <>
       <div style={{ background: "#FFFFFF", minHeight: "100dvh" }}>
 
         <AnimatePresence mode="wait">
@@ -139,7 +138,7 @@ const ProfilePage = () => {
               transition={{ duration: 0.2 }}
             >
               {/* ── Avatar + name + badges ── */}
-              <div className="flex flex-col items-center pt-10 pb-6 px-5 w-full lg:max-w-3xl lg:mx-auto">
+              <div className="flex flex-col items-center pt-10 pb-6 px-5 w-full lg:max-w-3xl">
                 {loadingUserProfile ? (
                   <div className="w-20 h-20 rounded-full animate-pulse" style={{ background: "#EEEEEE" }} />
                 ) : (
@@ -177,7 +176,7 @@ const ProfilePage = () => {
               </div>
 
               {/* ── 2×2 Stats grid ── */}
-              <div className="px-5 mb-5 w-full lg:max-w-3xl lg:mx-auto">
+              <div className="px-5 mb-5 w-full lg:max-w-3xl">
                 <div className="grid grid-cols-2 gap-3">
                   <StatCard
                     label="Total Traded"
@@ -207,7 +206,7 @@ const ProfilePage = () => {
               </div>
 
               {/* ── Menu list ── */}
-              <div className="px-5 space-y-3 pb-8 w-full lg:max-w-3xl lg:mx-auto">
+              <div className="px-5 space-y-3 pb-8 w-full lg:max-w-3xl">
                 {/* Profile & bank */}
                 <div className="rounded-3xl overflow-hidden" style={{ border: "1px solid #F0F0F0" }}>
                   <MenuRow
@@ -291,7 +290,7 @@ const ProfilePage = () => {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 24 }}
               transition={{ duration: 0.22 }}
-              className={`px-5 pb-10 w-full lg:mx-auto ${activeSection === 'bank' ? 'lg:max-w-2xl' : 'lg:max-w-3xl'}`}
+              className={`px-5 pb-10 w-full ${activeSection === 'bank' ? 'lg:max-w-2xl' : 'lg:max-w-3xl'}`}
             >
               {/* Back header */}
               <div className="flex items-center justify-between pt-6 pb-5">
@@ -357,7 +356,7 @@ const ProfilePage = () => {
                           <CustomButton buttonText="Add Bank Account" onClick={toggleShowCreateNewBankAccount} />
                         </div>
                       ) : (
-                        <div className="rounded-3xl p-5 w-fit mx-auto" style={{ border: "1px solid #F0F0F0" }}>
+                        <div className="rounded-3xl p-5 w-full" style={{ border: "1px solid #F0F0F0" }}>
                           <ProfileBankDetailsSection
                             banks={userBankAccounts}
                             createNewBankModal={toggleShowCreateNewBankAccount}
@@ -394,7 +393,7 @@ const ProfilePage = () => {
         onClose={toggleShowCreateNewBankAccount}
         onSubmit={handleCreateBankAccount}
       />
-    </AuthenticatedLayout>
+    </>
   );
 };
 

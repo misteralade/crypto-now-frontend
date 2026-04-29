@@ -12,7 +12,7 @@ interface ProfileBankDetailsSectionProps {
 const ProfileBankDetailsSection = ({ banks, makeBankAccountDefault, handleDeleteBank }: ProfileBankDetailsSectionProps) => {
   return (
     <Fragment>
-      <div className="flex flex-wrap gap-4 sm:gap-6 justify-center">
+      <div className="flex flex-wrap gap-4 sm:gap-6 justify-start">
         {banks &&
           banks?.map((account, index) => (
             <BankAccountCard
