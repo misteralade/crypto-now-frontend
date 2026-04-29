@@ -138,7 +138,7 @@ const ProfilePage = () => {
               transition={{ duration: 0.2 }}
             >
               {/* ── Avatar + name + badges ── */}
-              <div className="flex flex-col items-center pt-10 pb-6 px-5 w-full lg:max-w-3xl">
+              <div className="flex flex-col items-center pt-10 pb-6 px-5 w-full lg:max-w-3xl lg:mx-auto">
                 {loadingUserProfile ? (
                   <div className="w-20 h-20 rounded-full animate-pulse" style={{ background: "#EEEEEE" }} />
                 ) : (
@@ -176,7 +176,7 @@ const ProfilePage = () => {
               </div>
 
               {/* ── 2×2 Stats grid ── */}
-              <div className="px-5 mb-5 w-full lg:max-w-3xl">
+              <div className="px-5 mb-5 w-full lg:max-w-3xl lg:mx-auto">
                 <div className="grid grid-cols-2 gap-3">
                   <StatCard
                     label="Total Traded"
@@ -206,7 +206,7 @@ const ProfilePage = () => {
               </div>
 
               {/* ── Menu list ── */}
-              <div className="px-5 space-y-3 pb-8 w-full lg:max-w-3xl">
+              <div className="px-5 space-y-3 pb-8 w-full lg:max-w-3xl lg:mx-auto">
                 {/* Profile & bank */}
                 <div className="rounded-3xl overflow-hidden" style={{ border: "1px solid #F0F0F0" }}>
                   <MenuRow
