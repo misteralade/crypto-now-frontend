@@ -135,7 +135,7 @@ const NewBankAccountModal = ({
         handleChangeField("accountName", "");
         return "";
       }
-    } catch (e) {
+    } catch {
       setLookupError("Couldn't find an account with this bank. Please check and try again.");
       setFieldValue("accountName", "");
       handleChangeField("accountName", "");
