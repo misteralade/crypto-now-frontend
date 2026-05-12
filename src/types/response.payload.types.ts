@@ -118,6 +118,7 @@ export type CustodialWalletResponse = {
   derivationIndex: number;
   isActive: boolean;
   createdAt: Date;
+  note?: string;
 };
 
 export type UserCryptoWalletResponse = {

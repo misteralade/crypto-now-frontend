@@ -613,7 +613,6 @@ export default function DashboardTradeStep2({
   numberOfToken,
   selectedToken,
   selectedCurrency,
-  handleReceiptUrl: _handleReceiptUrl,
   handleSubmitPaymentProof,
   formatSendAmount,
   onBack,
@@ -730,11 +729,19 @@ export default function DashboardTradeStep2({
       toast.success(result?.message ?? "Transaction submitted!");
       clearTradeProgress();
       onBuySubmitSuccess?.();
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.dismiss(toastId);
+      const error = err as {
+        response?: {
+          data?: {
+            message?: string;
+            error?: { message?: string };
+          };
+        };
+      };
       const msg =
-        err?.response?.data?.message ||
-        err?.response?.data?.error?.message ||
+        error?.response?.data?.message ||
+        error?.response?.data?.error?.message ||
         "Failed to submit transaction. Please try again.";
       toast.error(msg);
     } finally {

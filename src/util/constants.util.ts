@@ -141,6 +141,10 @@ export const transactionStatusMessages: Record<string, { title: string, message:
     title: 'Deposit Detected',
     message: 'We have detected your deposit on the blockchain. Waiting for network confirmations.'
   },
+  DEPOSIT_PENDING_MINIMUM: {
+    title: 'Deposit Pending Minimum',
+    message: 'We received your deposit, but the total is still below the minimum required amount. Send the remaining amount to the same wallet and we will continue automatically.'
+  },
   DEPOSIT_CONFIRMED: {
     title: 'Deposit Confirmed',
     message: 'Your deposit has been confirmed. We are now processing your payout to your bank account.'
@@ -235,6 +239,13 @@ export const transactionStatusStyles: Record<
     dot: 'bg-amber-400',
     textColor: 'text-amber-600',
     message: `We have detected your deposit on the blockchain. Waiting for network confirmations.`
+  },
+  DEPOSIT_PENDING_MINIMUM: {
+    text: 'Pending',
+    bg: 'bg-orange-50',
+    dot: 'bg-orange-400',
+    textColor: 'text-orange-600',
+    message: `We received your deposit, but it is still below the minimum required amount.`
   },
   DEPOSIT_CONFIRMED: {
     text: 'Pending',

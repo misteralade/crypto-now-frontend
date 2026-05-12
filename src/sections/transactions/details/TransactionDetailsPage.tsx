@@ -367,7 +367,8 @@ const TransactionDetailsPage = () => {
                 </div>
 
                 {/* ── Confirmation Progress ── */}
-                {transaction.status === "DEPOSIT_DETECTED" &&
+                {(transaction.status === "DEPOSIT_DETECTED" ||
+                  transaction.status === "DEPOSIT_PENDING_MINIMUM") &&
                   transaction.requiredConfirmations &&
                   transaction.requiredConfirmations > 0 && (
                     <div className="mt-4">

@@ -671,6 +671,11 @@ function SellDepositWalletSection({
               {NETWORK_LABELS[depositWallet.network] ?? depositWallet.network}.
               Wrong network = lost funds.
             </p>
+            {depositWallet.note && (
+              <p className="mt-2 text-[10px] leading-relaxed" style={{ color: "#9A9A9A" }}>
+                {depositWallet.note}
+              </p>
+            )}
           </>
         ) : (
           <p className="text-xs py-1" style={{ color: "#A07000" }}>
@@ -864,7 +869,6 @@ export default function DashboardTradeStep1({
   onWalletAddressChange,
   selectedNetwork,
   onNetworkChange,
-  orderDetails: _orderDetails,
   userBankAccounts,
   selectedPayoutAccountId,
   onPayoutAccountChange,
