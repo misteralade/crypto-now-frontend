@@ -115,8 +115,8 @@ export const useTradeStepTwo = ({
       enabled: tradeType === "buy" ? true : !sellDepositWallet,
     });
 
-  // Validation based on trade type - only require uploaded file
-  const submitInvalid = !uploadedFileUrl;
+  // Validation based on trade type - only require uploaded file for BUY transactions
+  const submitInvalid = tradeType === "buy" && !uploadedFileUrl;
 
   useEffect(() => {
     const saved = loadTradeProgress();

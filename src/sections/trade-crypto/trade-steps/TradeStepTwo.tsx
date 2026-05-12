@@ -139,8 +139,8 @@ const TradeStepTwo = ({ amountToBuy, tradeType, numberOfToken, additionalInfo, h
             <p className="text-orange-700 text-sm">
               Please send <strong>{numberOfToken} {selectedToken?.symbol}</strong> to{" "}
               <strong>your unique deposit address</strong> shown below, on the{" "}
-              <strong>{walletDetails?.network}</strong> network. After sending, upload proof and provide
-              the transaction hash.
+              <strong>{walletDetails?.network}</strong> network. After sending, provide
+              the transaction hash below.
             </p>
           </div>
         )}
@@ -223,53 +223,52 @@ const TradeStepTwo = ({ amountToBuy, tradeType, numberOfToken, additionalInfo, h
           </div>
         )}
 
-        {/* Payment Proof Upload */}
-        <div className="w-full md:w-3/4 mx-auto">
-          <div className="mb-2">
-            <label className="block text-sm font-medium text-gray-700">
-              {tradeType === "buy" ? "Payment Receipt/Proof *" : "Transaction Proof *"}
-            </label>
-            <p className="text-xs text-gray-500">
-              {tradeType === "buy"
-                ? "Upload bank transfer receipt, screenshot, or payment confirmation"
-                : "Upload screenshot of transaction confirmation from your wallet or block explorer"
-              }
-            </p>
-          </div>
-          <TradePaymentUpload
-            maxFiles={1}
-            acceptedTypes={[".jpg", ".jpeg", ".png", ".webp", ".gif"]}
-            onFileSelected={async (file) => {
-              const fd = new FormData();
-              fd.append("file", file);
-              toast.loading("Uploading receipt…", { toastId: "receipt-upload" });
-              try {
-                const result = await transactionServiceApi.uploadTransactionReceipt(fd);
-                toast.dismiss("receipt-upload");
-                if (result?.url) {
-                  handleReceiptUrl(result.url);
-                  setUploadedFileUrl(result.url);
+        {/* Payment Proof Upload - Only for Buy Orders */}
+        {tradeType === "buy" && (
+          <div className="w-full md:w-3/4 mx-auto">
+            <div className="mb-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Payment Receipt/Proof *
+              </label>
+              <p className="text-xs text-gray-500">
+                Upload bank transfer receipt, screenshot, or payment confirmation
+              </p>
+            </div>
+            <TradePaymentUpload
+              maxFiles={1}
+              acceptedTypes={[".jpg", ".jpeg", ".png", ".webp", ".gif"]}
+              onFileSelected={async (file) => {
+                const fd = new FormData();
+                fd.append("file", file);
+                toast.loading("Uploading receipt…", { toastId: "receipt-upload" });
+                try {
+                  const result = await transactionServiceApi.uploadTransactionReceipt(fd);
+                  toast.dismiss("receipt-upload");
+                  if (result?.url) {
+                    handleReceiptUrl(result.url);
+                    setUploadedFileUrl(result.url);
+                  }
+                } catch {
+                  toast.dismiss("receipt-upload");
+                  toast.error("Failed to upload receipt. Please try again.");
                 }
-              } catch {
-                toast.dismiss("receipt-upload");
-                toast.error("Failed to upload receipt. Please try again.");
-              }
-            }}
-            onFileCleared={() => { handleReceiptUrl(""); setUploadedFileUrl(undefined); }}
-          />
-        </div>
+              }}
+              onFileCleared={() => { handleReceiptUrl(""); setUploadedFileUrl(undefined); }}
+            />
+          </div>
+        )}
 
         {/* Submit Button */}
         <div className="md:w-1/2 w-full mx-auto px-5 md:px-0">
           <CustomButton
             className="w-full"
-            buttonText={tradeType === "buy" ? "Submit Payment Proof" : "Submit Transaction Proof"}
+            buttonText={tradeType === "buy" ? "Submit Payment Proof" : "Confirm Transaction"}
             disabled={submitInvalid}
             onClick={handleSubmitPaymentProof}
           />
-          {submitInvalid && (
+          {submitInvalid && tradeType === "buy" && (
             <p className="text-xs text-red-500 mt-2 text-center">
-              Please upload {tradeType === "sell" ? "transaction" : "payment"} proof (file must be successfully uploaded)
+              Please upload payment proof (file must be successfully uploaded)
             </p>
           )}
         </div>

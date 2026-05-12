@@ -480,12 +480,14 @@ const TransactionDetailsPage = () => {
             </Card>
 
             {/* ── Receipts ── */}
-            <TransactionReceiptsSection
-              receiptImageUrl={transaction.receiptImageUrl}
-              adminPaymentReceiptUrl={
-                (transaction as any).adminPaymentReceiptUrl
-              }
-            />
+            {transaction.type === "BUY" && (
+              <TransactionReceiptsSection
+                receiptImageUrl={transaction.receiptImageUrl}
+                adminPaymentReceiptUrl={
+                  (transaction as any).adminPaymentReceiptUrl
+                }
+              />
+            )}
 
             {/* ── Crypto wallet ── */}
             {transaction.userCryptoWallet && (
