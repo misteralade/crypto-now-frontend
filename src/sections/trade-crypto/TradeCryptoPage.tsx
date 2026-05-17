@@ -1,4 +1,4 @@
-import Navbar from "../../components/global/navbar/Navbar.tsx";
+import PublicNavbar from "../../components/global/navbar/PublicNavbar.tsx";
 import Footer from "../../components/global/Footer.tsx";
 import TradeCryptoLayout from "./TradeCryptoLayout.tsx";
 import { useSearch } from "@tanstack/react-router";
@@ -14,7 +14,7 @@ export default function TradeCryptoPage() {
 
     return (
         <div className={`space-y-10 md:space-y-20`}>
-            <Navbar />
+            <PublicNavbar />
             <TradeCryptoLayout option={option} currency={currency} token={token} sessionId={sessionId} />
             <Footer />
         </div>

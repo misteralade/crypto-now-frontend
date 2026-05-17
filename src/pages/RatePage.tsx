@@ -1,5 +1,5 @@
 import {Fragment, useState} from "react";
-import Navbar from "../components/global/navbar/Navbar.tsx";
+import PublicNavbar from "../components/global/navbar/PublicNavbar.tsx";
 import Footer from "../components/global/Footer.tsx";
 import {useCryptoQuery} from "../queries/crypto.query.ts";
 import {convertToMillify, formatCurrency} from "../util/index.util.ts";
@@ -12,7 +12,7 @@ const RatePage = () => {
 
   return (
     <Fragment>
-      <Navbar />
+      <PublicNavbar />
       
       <main className="w-full md:w-[90%] 2xl:max-w-7xl mx-auto px-4 md:px-0 mt-[34px] mb-[30px] text-lg text-[#454745] flex flex-col gap-x-8 lg:gap-[51px] md:mt-24">
         <section className="w-full px-4">

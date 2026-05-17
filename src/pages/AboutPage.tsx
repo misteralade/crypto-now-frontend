@@ -1,4 +1,4 @@
-import Navbar from "../components/global/navbar/Navbar.tsx";
+import PublicNavbar from "../components/global/navbar/PublicNavbar.tsx";
 import Footer from "../components/global/Footer.tsx";
 import aboutImage from "../assets/backgrounds/crypto-about.png";
 import { WhatWeDo, WhyChooseUs } from "../components/pages/about/about.data.ts";
@@ -11,7 +11,7 @@ const AboutPage = () => {
   
   return (
     <Fragment>
-      <Navbar />
+      <PublicNavbar />
       <main className="w-full md:w-[90%] 2xl:max-w-7xl mx-auto px-4 md:px-0 mt-[64px] mb-[30px] lg:mb-[121px] text-lg text-[#454745]">
         <aside className="xl:pr-56">
           <h1 className="text-3xl tracking-normal lg:text-3xl xl:text-[64px] xl:leading-[70px] text-[#0E0F0C] font-bold mb-6 xl">

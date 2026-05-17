@@ -1,4 +1,4 @@
-import Navbar from "../../components/global/navbar/Navbar.tsx";
+import PublicNavbar from "../../components/global/navbar/PublicNavbar.tsx";
 import Footer from "../../components/global/Footer.tsx";
 import { Fragment } from "react";
 
@@ -7,7 +7,7 @@ const SecurityPolicyPage = () => {
 
   return (
     <Fragment>
-      <Navbar />
+      <PublicNavbar />
       <section className="w-full md:w-[90%] 2xl:max-w-8xl mx-auto mt-[34px] mb-[30px] lg:mb-[143px] px-4 text-lg text-[#454745] flex flex-col lg:grid lg:grid-cols-[30%_70%] lg:gap-8 items-start gap-x-6 lg:gap-x-24">
         {/* LHS Table of Content */}
         <nav

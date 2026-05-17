@@ -2,7 +2,7 @@ import {Fragment} from "react";
 import {useViewDisputeDetailsPage} from "../../../hooks/pages/useViewDisputeDetailsPage.ts";
 import {LoadingSpinner} from "../../../components/global/LoadingSpinner.tsx";
 import {AlertCircle, CheckCircle, Clock, HelpCircle, Loader, X, Zap} from "lucide-react";
-import Navbar from "../../../components/global/navbar/Navbar.tsx";
+import PublicNavbar from "../../../components/global/navbar/PublicNavbar.tsx";
 import TransactionDisputeInfo from "./TransactionDisputeInfo.tsx";
 import DisputeInformation from "./DisputeInformation.tsx";
 
@@ -48,7 +48,7 @@ const ViewDisputePage = () => {
       ) : disputeDetails && (
         <Fragment>
           <div className={`space-y-10 md:space-y-20 min-h-screen bg-gray-50`}>
-            <Navbar />
+            <PublicNavbar />
             
             <div className="mx-auto">
               {/* Header */}
