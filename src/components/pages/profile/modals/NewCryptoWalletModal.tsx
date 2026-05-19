@@ -6,7 +6,6 @@ import BankSelector from "../../../global/BankSelector.tsx";
 import {CustomInput} from "../../../global/CustomInput.tsx";
 import {CustomSelect} from "../../../global/CustomSelect.tsx";
 import {cryptoNetworkTypes} from "../../../../util/constants.util.ts";
-import { walletAddressRegex } from "../../../../util/regex.util.ts";
 
 interface NewCryptoWalletModalProps {
   isOpen: boolean;
@@ -26,17 +25,17 @@ const NewCryptoWalletModal = ({ isOpen, supportedCryptoWallet, selectedWalletId,
   const selectedOption = supportedCryptoWallet && supportedCryptoWallet?.find((opt) => opt.id === selectedWalletId);
 
   const validateWalletAddress = (address: string) => {
-    if (!address || address.trim() === "") {
+    const trimmedAddress = address.trim();
+    if (!trimmedAddress) {
       setWalletAddressError("Wallet address is required");
       return false;
     }
-    
-    const trimmedAddress = address.trim();
-    if (!walletAddressRegex.test(trimmedAddress)) {
-      setWalletAddressError("Please enter a valid wallet address");
+
+    if (trimmedAddress.length < 10) {
+      setWalletAddressError("Wallet address must be at least 10 characters");
       return false;
     }
-    
+
     setWalletAddressError("");
     return true;
   }
@@ -132,6 +131,7 @@ const NewCryptoWalletModal = ({ isOpen, supportedCryptoWallet, selectedWalletId,
                   onChange={handleWalletAddressChange}
                   onBlur={handleWalletAddressBlur}
                   error={walletAddressError}
+                  placeholder="Enter wallet address"
                 />
                 
                 
