@@ -534,8 +534,30 @@ function SellDepositWalletSection({
 
   if (!selectedToken) return null;
 
+  const rate = selectedToken.sellRate
+    ? `₦${Math.round(Number(selectedToken.sellRate)).toLocaleString()} per 1 ${
+        selectedToken.symbol
+      }`
+    : null;
+
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3">
+      {/* Rate bar */}
+      {rate && (
+        <div
+          className="flex items-center gap-2 px-4 py-2 rounded-2xl"
+          style={{ background: "#FFF8F0", border: "1px solid #FFE4A0" }}
+        >
+          <span
+            className="w-2 h-2 rounded-full animate-pulse shrink-0"
+            style={{ background: "#EB5757" }}
+          />
+          <span className="text-xs font-bold" style={{ color: "#A07000" }}>
+            {rate} • Live
+          </span>
+        </div>
+      )}
+
       <p
         className="text-[10px] font-bold tracking-widest uppercase"
         style={{ color: "#9A9A9A" }}
@@ -881,7 +903,8 @@ export default function DashboardTradeStep1({
   isGeneratingDepositWallet,
   sellNetwork,
   onSellNetworkChange,
-}: DashboardTradeStep1Props) {
+  onBack, // Added onBack prop
+}: DashboardTradeStep1Props & { onBack?: () => void }) {
   const isBuy = tradeType === "buy";
   const accentColor = isBuy ? "#948EEE" : "#F7A600";
 
@@ -925,7 +948,7 @@ export default function DashboardTradeStep1({
               !buyRateInfo
             ? "Fetching rate…"
             : selectedToken
-              ? `${isBuy ? "Buy" : "Sell"} ${selectedToken.symbol} — Continue`
+              ? `${isBuy ? "Buy" : "Start Transaction"} — Continue`
               : "Select a Crypto to Continue";
 
   const ctaDisabled =
@@ -933,14 +956,24 @@ export default function DashboardTradeStep1({
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Page header */}
-      <div className="mb-1">
-        <h2 className="text-lg font-extrabold" style={{ color: "#0E0F0C" }}>
-          {isBuy ? "Buy Crypto" : "Sell Crypto"}
-        </h2>
-        <p className="text-xs mt-0.5" style={{ color: "#9A9A9A" }}>
-          {isBuy ? "Choose what to buy" : "Choose what to sell"}
-        </p>
+      {/* Page header with Back Button */}
+      <div className="flex items-center gap-3 mb-1">
+        <button
+          type="button"
+          onClick={onBack}
+          className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-colors hover:bg-gray-50"
+          style={{ border: "1px solid #E8E8E8", background: "#FAFAFA" }}
+        >
+          <ArrowLeft size={16} style={{ color: "#0E0F0C" }} />
+        </button>
+        <div>
+          <h2 className="text-lg font-extrabold" style={{ color: "#0E0F0C" }}>
+            {isBuy ? "Buy Crypto" : "Sell Crypto"}
+          </h2>
+          <p className="text-xs" style={{ color: "#9A9A9A" }}>
+            {isBuy ? "Choose what to buy" : "Choose what to sell"}
+          </p>
+        </div>
       </div>
 
       {/* Info banner */}

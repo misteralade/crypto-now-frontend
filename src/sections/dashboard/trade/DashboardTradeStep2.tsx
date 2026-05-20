@@ -65,6 +65,7 @@ interface DashboardTradeStep2Props {
   buyRateInfo?: BuyRateInfo | null;
   /** Called after BUY is successfully submitted (local-first flow) */
   onBuySubmitSuccess?: () => void;
+  setTransactionSessionId: (id: string) => void;
 }
 
 /* ── helpers ── */
@@ -144,10 +145,10 @@ function BackHeader({
       <button
         type="button"
         onClick={onBack}
-        className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
+        className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-colors hover:bg-gray-50"
         style={{ border: "1px solid #E8E8E8", background: "#FAFAFA" }}
       >
-        <ArrowLeft size={15} style={{ color: "#0E0F0C" }} />
+        <ArrowLeft size={16} style={{ color: "#0E0F0C" }} />
       </button>
       <div>
         <p className="text-base font-extrabold" style={{ color: "#0E0F0C" }}>
@@ -163,206 +164,36 @@ function BackHeader({
   );
 }
 
-/* ── Paying To bank row (SELL) ── */
-function PayingToRow({ payoutBank }: { payoutBank?: UserBankAccountResponse }) {
-  if (!payoutBank) return null;
-  return (
-    <div
-      className="flex items-center gap-3 rounded-2xl px-4 py-3"
-      style={{ background: "#F7F7F9", border: "1px solid #EEEEEE" }}
-    >
-      {payoutBank.bankLogo ? (
-        <img
-          src={payoutBank.bankLogo}
-          alt={payoutBank.bankName}
-          className="w-7 h-7 rounded-lg object-cover shrink-0"
-        />
-      ) : (
-        <div
-          className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-          style={{ background: "#E0E0E0" }}
-        >
-          <span className="text-[9px] font-black" style={{ color: "#6B6E6B" }}>
-            {payoutBank.bankName.slice(0, 2).toUpperCase()}
-          </span>
-        </div>
-      )}
-      <div className="flex-1 min-w-0">
-        <p
-          className="text-[10px] font-bold tracking-widest uppercase"
-          style={{ color: "#9A9A9A" }}
-        >
-          Paying to
-        </p>
-        <p
-          className="text-xs font-semibold truncate"
-          style={{ color: "#0E0F0C" }}
-        >
-          {payoutBank.bankName} ****{payoutBank.accountNumber.slice(-4)}
-        </p>
-        <p className="text-[10px]" style={{ color: "#6B6E6B" }}>
-          {payoutBank.accountName}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-/* ── SELL: Wallet screen ── */
-function SellWalletView({
-  selectedToken,
-  walletAddress,
-  network,
-  paymentDetailsLoading,
-  onStartMonitoring,
-  payoutBank,
-}: {
-  selectedToken?: SupportedCryptoOrCurrencyResponse;
-  walletAddress: string;
-  network: string;
-  paymentDetailsLoading: boolean;
-  onStartMonitoring: () => void;
-  payoutBank?: UserBankAccountResponse;
-}) {
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = () => {
-    if (!walletAddress) return;
-    navigator.clipboard.writeText(walletAddress).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  };
-
-  const rate = selectedToken?.sellRate
-    ? `₦${Math.round(Number(selectedToken.sellRate)).toLocaleString()} per 1 ${
-        selectedToken.symbol
-      }`
-    : null;
-
-  return (
-    <div className="flex flex-col gap-4">
-      {/* Rate bar */}
-      {rate && (
-        <div
-          className="flex items-center gap-2 px-4 py-2 rounded-2xl"
-          style={{ background: "#FFF8F0", border: "1px solid #FFE4A0" }}
-        >
-          <span
-            className="w-2 h-2 rounded-full animate-pulse shrink-0"
-            style={{ background: "#EB5757" }}
-          />
-          <span className="text-xs font-bold" style={{ color: "#A07000" }}>
-            {rate} • Live
-          </span>
-        </div>
-      )}
-
-      {/* Loading state */}
-      {paymentDetailsLoading ? (
-        <div className="flex flex-col items-center gap-3 py-10">
-          <div
-            className="w-10 h-10 rounded-full border-2 border-t-transparent animate-spin"
-            style={{ borderColor: "#F7A600", borderTopColor: "transparent" }}
-          />
-          <p className="text-sm font-semibold" style={{ color: "#9A9A9A" }}>
-            Generating your unique wallet…
-          </p>
-          <p className="text-xs" style={{ color: "#BDBDBD" }}>
-            Connecting to blockchain…
-          </p>
-        </div>
-      ) : (
-        <>
-          {/* Wallet address box */}
-          <div
-            className="rounded-2xl px-4 py-4"
-            style={{ border: "2px solid #EB5757", background: "#FFF8F8" }}
-          >
-            <p
-              className="text-[10px] font-bold tracking-widest uppercase mb-2"
-              style={{ color: "#EB5757" }}
-            >
-              Your Unique {selectedToken?.symbol} Wallet ({network || "Network"}
-              )
-            </p>
-            <p
-              className="text-xs font-mono break-all leading-relaxed mb-3"
-              style={{ color: "#0E0F0C" }}
-            >
-              {walletAddress || "—"}
-            </p>
-            <button
-              type="button"
-              onClick={handleCopy}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all"
-              style={{
-                background: copied ? "#E8F8F0" : "#EB57571A",
-                color: copied ? "#037847" : "#EB5757",
-                border: `1px solid ${copied ? "#03784733" : "#EB575733"}`,
-              }}
-            >
-              {copied ? <Check size={12} /> : <Copy size={12} />}
-              {copied ? "Copied!" : "Copy Address"}
-            </button>
-          </div>
-
-          {/* Paying to bank row */}
-          <PayingToRow payoutBank={payoutBank} />
-
-          {/* Send & forget banner */}
-          <div
-            className="flex items-start gap-3 rounded-2xl px-4 py-3"
-            style={{ background: "#FFFBF0", border: "1px solid #FFE4A0" }}
-          >
-            <span className="text-base leading-none mt-0.5">⚡</span>
-            <p className="text-xs leading-relaxed" style={{ color: "#A07000" }}>
-              <span className="font-bold">Send &amp; forget.</span> The moment
-              your crypto arrives, we auto-detect and instantly send NGN to your
-              bank. No further action needed.
-            </p>
-          </div>
-
-          {/* CTA */}
-          <button
-            type="button"
-            onClick={onStartMonitoring}
-            className="w-full py-4 rounded-2xl text-sm font-bold flex items-center justify-center gap-2"
-            style={{
-              background: "linear-gradient(135deg,#037847,#04A860)",
-              color: "#FFFFFF",
-              boxShadow: "0 6px 20px #03784744",
-            }}
-          >
-            <span className="w-2 h-2 rounded-full bg-green-200" />
-            <span>Wallet Active — Start Monitoring</span>
-            <ArrowRight size={16} />
-          </button>
-        </>
-      )}
-    </div>
-  );
-}
-
 /* ── SELL: Monitoring screen ── */
 type MonitoringStep = {
   label: string;
   status: "done" | "active" | "pending";
 };
 
-const MONITORING_STEPS: MonitoringStep[] = [
+const MONITORING_STEPS_SELL: MonitoringStep[] = [
   { label: "Blockchain Monitoring Active", status: "done" },
   { label: "Waiting for Crypto Detection", status: "active" },
   { label: "Auto-Converting to NGN", status: "pending" },
   { label: "Bank Transfer", status: "pending" },
 ];
 
-function SellMonitoringView({
+const MONITORING_STEPS_BUY: MonitoringStep[] = [
+  { label: "Payment Receipt Submitted", status: "done" },
+  { label: "Admin Verifying Payment", status: "active" },
+  { label: "Releasing Crypto to Wallet", status: "pending" },
+  { label: "Transaction Completed", status: "pending" },
+];
+
+function TradeMonitoringView({
   selectedToken,
   payoutBank,
+  status,
+  isBuy,
 }: {
   selectedToken?: SupportedCryptoOrCurrencyResponse;
   payoutBank?: UserBankAccountResponse;
+  status?: string;
+  isBuy?: boolean;
 }) {
   const statusColors = {
     done: {
@@ -385,39 +216,93 @@ function SellMonitoringView({
     },
   };
 
+  const getStepStatus = (i: number): "done" | "active" | "pending" => {
+    if (isBuy) {
+      switch (i) {
+        case 0: return "done"; // Receipt submitted
+        case 1: // Admin Verifying
+          if (status === "PAYMENT_RECEIVED") return "active";
+          if (status === "PAYMENT_CONFIRMED" || status === "CRYPTO_SENT" || status === "COMPLETED") return "done";
+          return "active"; // Default active after submission
+        case 2: // Releasing
+          if (status === "PAYMENT_CONFIRMED" || status === "CRYPTO_SENT") return "active";
+          if (status === "COMPLETED") return "done";
+          return "pending";
+        case 3: // Completed
+          if (status === "COMPLETED") return "done";
+          return "pending";
+        default: return "pending";
+      }
+    } else {
+      switch (i) {
+        case 0: return "done"; // Monitoring active
+        case 1: // Detection
+          if (status === "INITIATED" || status === "PENDING" || !status) return "active";
+          return "done";
+        case 2: // Conversion
+          if (status === "DEPOSIT_DETECTED") return "active";
+          if (status === "DEPOSIT_CONFIRMED" || status === "PAYOUT_INITIATED" || status === "COMPLETED") return "done";
+          return "pending";
+        case 3: // Bank Transfer
+          if (status === "DEPOSIT_CONFIRMED" || status === "PAYOUT_INITIATED") return "active";
+          if (status === "COMPLETED") return "done";
+          return "pending";
+        default: return "pending";
+      }
+    }
+  };
+
+  const steps: MonitoringStep[] = (isBuy ? MONITORING_STEPS_BUY : MONITORING_STEPS_SELL).map((step, i) => ({
+    ...step,
+    status: getStepStatus(i),
+  }));
+
+  const headline = isBuy ? "Verifying Payment" : "Monitoring Wallet";
+  const subHeadline = isBuy ? "Checking your receipt…" : "Listening for Transaction…";
+
   return (
     <div className="flex flex-col gap-5">
       {/* Icon + headline */}
       <div className="flex flex-col items-center gap-3 py-4">
         <div
           className="w-16 h-16 rounded-full flex items-center justify-center text-3xl"
-          style={{ background: "#E0F7F4", border: "2px solid #00BFA533" }}
+          style={{ 
+            background: isBuy ? "#F0EFFD" : "#E0F7F4", 
+            border: `2px solid ${isBuy ? "#6B45D033" : "#00BFA533"}` 
+          }}
         >
-          📡
+          {status === "COMPLETED" ? "✅" : (isBuy ? "🔍" : "📡")}
         </div>
         <div className="text-center">
           <p className="text-base font-extrabold" style={{ color: "#0E0F0C" }}>
-            Monitoring Wallet
+            {status === "COMPLETED" ? "Transaction Completed" : headline}
           </p>
           <p className="text-xs mt-1" style={{ color: "#9A9A9A" }}>
-            Listening for Transaction…
+            {status === "COMPLETED" ? "Success!" : 
+             isBuy ? (status === "PAYMENT_CONFIRMED" ? "Payment Confirmed - Releasing Crypto..." : subHeadline) :
+             (status === "DEPOSIT_DETECTED" ? "Deposit Detected - Confirming..." : 
+              status === "DEPOSIT_CONFIRMED" ? "Deposit Confirmed - Processing Payout..." :
+              status === "PAYOUT_INITIATED" ? "Payout Initiated - Checking Bank..." : subHeadline)}
           </p>
         </div>
         <p
           className="text-xs text-center px-4 leading-relaxed"
           style={{ color: "#6B6E6B" }}
         >
-          Send any amount of {selectedToken?.symbol ?? "crypto"} to your wallet.
-          NGN will hit your bank automatically.
+          {status === "COMPLETED" ? 
+            (isBuy ? `Your payment was verified and ${selectedToken?.symbol} has been sent to your wallet.` : 
+                    `Your ${selectedToken?.symbol} has been sold and NGN sent to your bank.`) :
+            (isBuy ? "We're verifying your bank transfer. Crypto will be released automatically once confirmed." :
+                    `Send any amount of ${selectedToken?.symbol ?? "crypto"} to your wallet. NGN will hit your bank automatically.`)}
         </p>
       </div>
 
-      {/* Paying to bank */}
-      <PayingToRow payoutBank={payoutBank} />
+      {/* Paying to bank (only for SELL) */}
+      {!isBuy && <PayingToRow payoutBank={payoutBank} />}
 
       {/* 4-step progress */}
       <div className="flex flex-col gap-2.5">
-        {MONITORING_STEPS.map(({ label, status }, i) => {
+        {steps.map(({ label, status }, i) => {
           const c = statusColors[status];
           return (
             <motion.div
@@ -605,7 +490,6 @@ function BuyUploadView({
 
 /* ── Main component ── */
 type BuyView = "bank" | "upload";
-type SellView = "wallet" | "monitoring";
 
 export default function DashboardTradeStep2({
   tradeType,
@@ -622,11 +506,24 @@ export default function DashboardTradeStep2({
   rateLockCountdown = "",
   buyRateInfo,
   onBuySubmitSuccess,
+  setTransactionSessionId,
 }: DashboardTradeStep2Props) {
   const isBuy = tradeType === "buy";
+  const { getTransactionStatus } = useTransactionQuery();
+  const { data: txData } = getTransactionStatus(transactionRef);
+  const txStatus = txData?.status;
+
   const initiateForm = useSelector(
     (s: RootState) => s.transaction.initiate.initiateTransaction
   );
+
+  // Auto-transition to success screen (Step 4) only when status is COMPLETED
+  useEffect(() => {
+    if (txStatus === "COMPLETED") {
+      onBuySubmitSuccess?.();
+    }
+  }, [txStatus, onBuySubmitSuccess]);
+
   const userEmail = useSelector((s: RootState) => s.user.trade.anonymous.email);
   const isLocalBuyFlow = isBuy && !!buyRateInfo;
 
@@ -656,7 +553,6 @@ export default function DashboardTradeStep2({
   });
 
   const [buyView, setBuyView] = useState<BuyView>("bank");
-  const [sellView, setSellView] = useState<SellView>("wallet");
   const [copyToastVisible, setCopyToastVisible] = useState(false);
   const [storedYouPay, setStoredYouPay] = useState<string | null>(null);
 
@@ -725,10 +621,11 @@ export default function DashboardTradeStep2({
           SESSION_STORAGE_KEYS.SESSION_ID,
           result.data.sessionId
         );
+        setTransactionSessionId(result.data.sessionId);
       }
       toast.success(result?.message ?? "Transaction submitted!");
-      clearTradeProgress();
-      onBuySubmitSuccess?.();
+      // We don't call onBuySubmitSuccess() here anymore.
+      // The polling effect will take us to Step 4 when status is COMPLETED.
     } catch (err: unknown) {
       toast.dismiss(toastId);
       const error = err as {
@@ -779,6 +676,24 @@ export default function DashboardTradeStep2({
     // Sell loading shown inside SellWalletView
   }
 
+  /* ── MONITORING ── */
+  if (buyView === "upload" && transactionRef) {
+    return (
+      <div className="flex flex-col gap-4">
+        <BackHeader
+          onBack={() => setBuyView("bank")}
+          title="Verifying Payment"
+          sub="Listening for confirmations"
+        />
+        <TradeMonitoringView
+          isBuy={true}
+          selectedToken={selectedToken}
+          status={txStatus}
+        />
+      </div>
+    );
+  }
+
   /* ── SELL ── */
   if (!isBuy) {
     return (
@@ -786,46 +701,22 @@ export default function DashboardTradeStep2({
         <BackHeader
           onBack={onBack}
           title={`Sell ${selectedToken?.symbol ?? "Crypto"}`}
-          sub={
-            sellView === "wallet"
-              ? "Your unique deposit wallet"
-              : "Watching for your transaction"
-          }
+          sub="Watching for your transaction"
         />
 
-        <AnimatePresence mode="wait">
-          {sellView === "wallet" ? (
-            <motion.div
-              key="sell-wallet"
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -10 }}
-              transition={{ duration: 0.2 }}
-            >
-              <SellWalletView
-                selectedToken={selectedToken}
-                walletAddress={walletAddress}
-                network={network}
-                paymentDetailsLoading={paymentDetailsLoading}
-                onStartMonitoring={() => setSellView("monitoring")}
-                payoutBank={payoutBank}
-              />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="sell-monitoring"
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -10 }}
-              transition={{ duration: 0.2 }}
-            >
-              <SellMonitoringView
-                selectedToken={selectedToken}
-                payoutBank={payoutBank}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <motion.div
+          key="sell-monitoring"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <TradeMonitoringView
+            isBuy={false}
+            selectedToken={selectedToken}
+            payoutBank={payoutBank}
+            status={txStatus}
+          />
+        </motion.div>
       </div>
     );
   }

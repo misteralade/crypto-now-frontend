@@ -221,10 +221,10 @@ export default function DashboardTrade() {
     saveTradeProgress({ amountToBuy: amountToBuy ?? undefined });
   }, [amountToBuy, activeTab]);
 
-  // For SELL: after initiateTransaction creates the INITIATED record and sets step=2,
-  // immediately jump to step 4 (success). The deposit wallet is shown inline on Step 1.
+  // No auto-jump — we stay on step 2 to show the monitoring view for SELL trades.
+  // The monitoring view will now poll the backend and move to step 4 only when COMPLETED.
   useEffect(() => {
-    if (step === 2 && activeTab === "sell") setStep(4);
+    // if (step === 2 && activeTab === "sell") setStep(4);
   }, [step, activeTab]);
 
   // Auto-initialize sellPayoutAccountId from default bank
@@ -429,6 +429,7 @@ export default function DashboardTrade() {
                 isGeneratingDepositWallet={isGeneratingDepositWallet}
                 sellNetwork={sellNetwork}
                 onSellNetworkChange={setSellNetwork}
+                onBack={() => setHasChosenMode(false)}
               />
             </motion.div>
           )}
@@ -474,6 +475,7 @@ export default function DashboardTrade() {
                 buyNetwork={buyNetwork}
                 buyRateInfo={isBuy ? buyRateInfo : undefined}
                 onBuySubmitSuccess={() => setStep(4)}
+                setTransactionSessionId={setTransactionSessionId}
                 payoutBank={
                   !isBuy
                     ? userBankAccounts?.find(

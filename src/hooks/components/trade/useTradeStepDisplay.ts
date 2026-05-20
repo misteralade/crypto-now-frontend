@@ -1153,14 +1153,20 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   const makePaymentTransaction = async () => {
     if (activeTab === "buy") {
       // BUY: create transaction at AWAITING_PAYMENT in one shot
-      await createAndSubmitTransactionMutation.mutateAsync();
+      const res = await createAndSubmitTransactionMutation.mutateAsync();
       setIsCountdownLocked(true);
       if (countdownIntervalRef.current) {
         clearInterval(countdownIntervalRef.current);
       }
-      clearTradeProgress();
-      dispatch(clearAnonymousUserEmail());
-      setStep(4);
+      
+      if (res?.success && res.data?.sessionId) {
+        const sessionId = res.data.sessionId;
+        setTransactionSessionId(sessionId);
+        sessionStorage.setItem(SESSION_STORAGE_KEYS.SESSION_ID, sessionId);
+        saveTradeProgress({ transactionSessionId: sessionId, step: 2 });
+        // We stay on step 2 to show the monitoring view
+        setStep(2);
+      }
     } else {
       // SELL: existing flow — update INITIATED → AWAITING_CRYPTO + open bank modal
       await makePaymentTransactionMutation.mutateAsync();
@@ -1177,9 +1183,8 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       console.log('handleConfirmBankDetails', step);
       const { success } = await receivingPaymentAccountConfirmationMutation.mutateAsync();
       if (success) {
-        clearTradeProgress();
-        dispatch(clearAnonymousUserEmail());
-        setStep(4);
+        // We stay on step 2 to show the monitoring view
+        setStep(2);
         setShowPaymentReceivingModal(false);
         setShowConfirmBankDetails(false);
       }
@@ -1438,6 +1443,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
 
     // Functions
     setAmountToBuy,
+    setTransactionSessionId,
     setNumberOfToken,
     setSelectedCurrency,
     setSelectedToken,

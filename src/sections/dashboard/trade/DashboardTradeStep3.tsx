@@ -81,15 +81,22 @@ export default function DashboardTradeStep3({
     return (
       <div className="flex flex-col gap-5">
         {/* Header */}
-        <div className="flex items-center gap-3">
-          <button type="button" onClick={onBack}
-            className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
-            style={{ border: "1px solid #F0F0F0" }}>
-            <ArrowLeft size={14} style={{ color: "#0E0F0C" }} />
+        <div className="flex items-center gap-3 mb-1">
+          <button
+            type="button"
+            onClick={onBack}
+            className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-colors hover:bg-gray-50"
+            style={{ border: "1px solid #E8E8E8", background: "#FAFAFA" }}
+          >
+            <ArrowLeft size={16} style={{ color: "#0E0F0C" }} />
           </button>
           <div>
-            <p className="text-sm font-extrabold" style={{ color: "#0E0F0C" }}>Order Summary</p>
-            <p className="text-[11px]" style={{ color: "#9A9A9A" }}>Review everything before confirming</p>
+            <p className="text-base font-extrabold" style={{ color: "#0E0F0C" }}>
+              Order Summary
+            </p>
+            <p className="text-[11px]" style={{ color: "#9A9A9A" }}>
+              Review everything before confirming
+            </p>
           </div>
         </div>
 
@@ -171,13 +178,18 @@ export default function DashboardTradeStep3({
   if (viewState === "create-bank") {
     return (
       <div className="flex flex-col gap-5">
-        <div className="flex items-center gap-3">
-          <button type="button" onClick={() => setViewState("select-bank")}
-            className="w-8 h-8 rounded-full flex items-center justify-center"
-            style={{ border: "1px solid #F0F0F0" }}>
-            <ArrowLeft size={14} style={{ color: "#0E0F0C" }} />
+        <div className="flex items-center gap-3 mb-1">
+          <button
+            type="button"
+            onClick={() => setViewState("select-bank")}
+            className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
+            style={{ border: "1px solid #E8E8E8", background: "#FAFAFA" }}
+          >
+            <ArrowLeft size={15} style={{ color: "#0E0F0C" }} />
           </button>
-          <p className="text-sm font-extrabold" style={{ color: "#0E0F0C" }}>Add Bank Account</p>
+          <p className="text-base font-extrabold" style={{ color: "#0E0F0C" }}>
+            Add Bank Account
+          </p>
         </div>
         <ChangeBankDetails
           onConfirm={handleSubmitBankDetails}
@@ -191,13 +203,18 @@ export default function DashboardTradeStep3({
   if (viewState === "bank-details" && selectedBank) {
     return (
       <div className="flex flex-col gap-5">
-        <div className="flex items-center gap-3">
-          <button type="button" onClick={() => setViewState("select-bank")}
-            className="w-8 h-8 rounded-full flex items-center justify-center"
-            style={{ border: "1px solid #F0F0F0" }}>
-            <ArrowLeft size={14} style={{ color: "#0E0F0C" }} />
+        <div className="flex items-center gap-3 mb-1">
+          <button
+            type="button"
+            onClick={() => setViewState("select-bank")}
+            className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
+            style={{ border: "1px solid #E8E8E8", background: "#FAFAFA" }}
+          >
+            <ArrowLeft size={15} style={{ color: "#0E0F0C" }} />
           </button>
-          <p className="text-sm font-extrabold" style={{ color: "#0E0F0C" }}>Confirm Bank Account</p>
+          <p className="text-base font-extrabold" style={{ color: "#0E0F0C" }}>
+            Confirm Bank Account
+          </p>
         </div>
 
         <div className="rounded-2xl p-5" style={{ border: "1px solid #EEEEEE" }}>
@@ -236,15 +253,22 @@ export default function DashboardTradeStep3({
   /* Default: bank list */
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex items-center gap-3">
-        <button type="button" onClick={onBack}
-          className="w-8 h-8 rounded-full flex items-center justify-center"
-          style={{ border: "1px solid #F0F0F0" }}>
-          <ArrowLeft size={14} style={{ color: "#0E0F0C" }} />
+      <div className="flex items-center gap-3 mb-1">
+        <button
+          type="button"
+          onClick={onBack}
+          className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
+          style={{ border: "1px solid #E8E8E8", background: "#FAFAFA" }}
+        >
+          <ArrowLeft size={15} style={{ color: "#0E0F0C" }} />
         </button>
         <div>
-          <p className="text-sm font-extrabold" style={{ color: "#0E0F0C" }}>Select Bank Account</p>
-          <p className="text-[11px]" style={{ color: "#9A9A9A" }}>Where should we send your NGN?</p>
+          <p className="text-base font-extrabold" style={{ color: "#0E0F0C" }}>
+            Select Bank Account
+          </p>
+          <p className="text-[11px]" style={{ color: "#9A9A9A" }}>
+            Where should we send your NGN?
+          </p>
         </div>
       </div>
 
