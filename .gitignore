@@ -25,9 +25,6 @@ dist-ssr
 
 .env
 
-.firebase
-firebase.json
-
 # Ignore all pdf files
 *.pdf
 

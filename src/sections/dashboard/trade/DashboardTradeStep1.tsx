@@ -968,10 +968,18 @@ export default function DashboardTradeStep1({
         </button>
         <div>
           <h2 className="text-lg font-extrabold" style={{ color: "#0E0F0C" }}>
-            {isBuy ? "Buy Crypto" : "Sell Crypto"}
+            {selectedToken
+              ? `${isBuy ? "Buy" : "Sell"} ${selectedToken.symbol}`
+              : isBuy
+                ? "Buy Crypto"
+                : "Sell Crypto"}
           </h2>
           <p className="text-xs" style={{ color: "#9A9A9A" }}>
-            {isBuy ? "Choose what to buy" : "Choose what to sell"}
+            {selectedToken
+              ? "Your unique deposit wallet"
+              : isBuy
+                ? "Choose what to buy"
+                : "Choose what to sell"}
           </p>
         </div>
       </div>

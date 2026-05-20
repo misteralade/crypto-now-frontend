@@ -182,10 +182,10 @@ export default function DashboardTradeStep3({
           <button
             type="button"
             onClick={() => setViewState("select-bank")}
-            className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
+            className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-colors hover:bg-gray-50"
             style={{ border: "1px solid #E8E8E8", background: "#FAFAFA" }}
           >
-            <ArrowLeft size={15} style={{ color: "#0E0F0C" }} />
+            <ArrowLeft size={16} style={{ color: "#0E0F0C" }} />
           </button>
           <p className="text-base font-extrabold" style={{ color: "#0E0F0C" }}>
             Add Bank Account
@@ -207,10 +207,10 @@ export default function DashboardTradeStep3({
           <button
             type="button"
             onClick={() => setViewState("select-bank")}
-            className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
+            className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-colors hover:bg-gray-50"
             style={{ border: "1px solid #E8E8E8", background: "#FAFAFA" }}
           >
-            <ArrowLeft size={15} style={{ color: "#0E0F0C" }} />
+            <ArrowLeft size={16} style={{ color: "#0E0F0C" }} />
           </button>
           <p className="text-base font-extrabold" style={{ color: "#0E0F0C" }}>
             Confirm Bank Account
@@ -257,10 +257,10 @@ export default function DashboardTradeStep3({
         <button
           type="button"
           onClick={onBack}
-          className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
+          className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-colors hover:bg-gray-50"
           style={{ border: "1px solid #E8E8E8", background: "#FAFAFA" }}
         >
-          <ArrowLeft size={15} style={{ color: "#0E0F0C" }} />
+          <ArrowLeft size={16} style={{ color: "#0E0F0C" }} />
         </button>
         <div>
           <p className="text-base font-extrabold" style={{ color: "#0E0F0C" }}>
