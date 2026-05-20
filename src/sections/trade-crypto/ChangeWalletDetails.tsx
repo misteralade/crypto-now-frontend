@@ -4,7 +4,6 @@ import { CustomInput } from "../../components/global/CustomInput.tsx"
 import { CustomSelect } from "../../components/global/CustomSelect.tsx"
 import { setUserCreateCrypto } from "../../redux/crypto.slice.ts"
 import {cryptoNetworkTypes} from "../../util/constants.util.ts";
-import { walletAddressRegex } from "../../util/regex.util.ts";
 
 interface CryptoWalletDetailsProps {
   onConfirm: () => void
@@ -33,17 +32,17 @@ const ChangeCryptoWalletDetails = ({ onConfirm, onGoBack, canGoBack = true, avai
   const [isVerified, setIsVerified] = useState(false)
 
   const validateWalletAddress = (address: string) => {
-    if (!address || address.trim() === "") {
+    const trimmedAddress = address.trim();
+    if (!trimmedAddress) {
       setWalletAddressError("Wallet address is required");
       return false;
     }
-    
-    const trimmedAddress = address.trim();
-    if (!walletAddressRegex.test(trimmedAddress)) {
-      setWalletAddressError("Please enter a valid wallet address");
+
+    if (trimmedAddress.length < 10) {
+      setWalletAddressError("Wallet address must be at least 10 characters");
       return false;
     }
-    
+
     setWalletAddressError("");
     return true;
   }

@@ -149,7 +149,10 @@ function BuyFields({
   const handleWalletChange = (val: string) => {
     onWalletAddressChange?.(val);
     dispatch(
-      setInitiateTransactionField({ field: "walletAddress" as any, value: val })
+      setInitiateTransactionField({
+        field: "walletAddress" as any,
+        value: val,
+      }),
     );
   };
 
@@ -157,7 +160,7 @@ function BuyFields({
     setNetworkDropdownOpen(false);
     onNetworkChange?.(net);
     dispatch(
-      setInitiateTransactionField({ field: "network" as any, value: net })
+      setInitiateTransactionField({ field: "network" as any, value: net }),
     );
   };
 
@@ -167,7 +170,7 @@ function BuyFields({
     if (ngn) {
       setSelectedCurrency?.(ngn);
       dispatch(
-        setInitiateTransactionField({ field: "currencyId", value: ngn.id })
+        setInitiateTransactionField({ field: "currencyId", value: ngn.id }),
       );
     }
   }
@@ -175,7 +178,7 @@ function BuyFields({
   // Sync token + first network into redux
   dispatch(setSelectedCryptoId(selectedToken.id));
   dispatch(
-    setInitiateTransactionField({ field: "tokenId", value: selectedToken.id })
+    setInitiateTransactionField({ field: "tokenId", value: selectedToken.id }),
   );
 
   // Determine active currency
@@ -188,7 +191,7 @@ function BuyFields({
     if (target) {
       setSelectedCurrency?.(target);
       dispatch(
-        setInitiateTransactionField({ field: "currencyId", value: target.id })
+        setInitiateTransactionField({ field: "currencyId", value: target.id }),
       );
       setAmountToBuy?.("");
       onRateResolved?.(null);
@@ -209,7 +212,7 @@ function BuyFields({
         await exchangeRateServiceApi.getExchangeRate(
           cryptoId,
           currencyId,
-          "BUY"
+          "BUY",
         );
       if (!rateOk || !rateData) return;
 
@@ -218,7 +221,7 @@ function BuyFields({
         (
           fiatAmount /
           (rateData.coinGeckoRate * Number(rateData.platformRate))
-        ).toFixed(8)
+        ).toFixed(8),
       );
 
       onRateResolved?.({
@@ -263,8 +266,8 @@ function BuyFields({
     buyRateInfo && buyRateInfo.fiatAmount === inputValue
       ? buyRateInfo.cryptoAmount.toFixed(6)
       : inputValue > 0 && Number(selectedToken.buyRate ?? 0) > 0
-      ? (inputValue / Number(selectedToken.buyRate)).toFixed(6)
-      : null;
+        ? (inputValue / Number(selectedToken.buyRate)).toFixed(6)
+        : null;
 
   return (
     <div className="flex flex-col gap-3 mt-1">
@@ -669,10 +672,12 @@ function SellDepositWalletSection({
             <p className="text-[10px] mt-2" style={{ color: "#A07000" }}>
               Only send {selectedToken.symbol} on{" "}
               {NETWORK_LABELS[depositWallet.network] ?? depositWallet.network}.
-              Wrong network = lost funds.
             </p>
             {depositWallet.note && (
-              <p className="mt-2 text-[10px] leading-relaxed" style={{ color: "#9A9A9A" }}>
+              <p
+                className="mt-2 text-[10px] leading-relaxed"
+                style={{ color: "#9A9A9A" }}
+              >
                 {depositWallet.note}
               </p>
             )}
@@ -892,7 +897,7 @@ export default function DashboardTradeStep1({
       !buyRateInfo);
   const activeNetwork =
     !isBuy && selectedToken
-      ? sellNetwork ?? selectedToken.networks?.[0]
+      ? (sellNetwork ?? selectedToken.networks?.[0])
       : undefined;
   const sellWalletLoading =
     !isBuy &&
@@ -908,20 +913,20 @@ export default function DashboardTradeStep1({
   const ctaLabel = isInitiatingTrade
     ? "Processing…"
     : isRateLoading && selectedToken
-    ? "Loading rate…"
-    : sellWalletLoading
-    ? "Getting deposit address…"
-    : noBankAccounts
-    ? "Add a bank account first"
-    : isBuy &&
-      amountToBuy &&
-      Number(amountToBuy) > 0 &&
-      walletAddress?.trim() &&
-      !buyRateInfo
-    ? "Fetching rate…"
-    : selectedToken
-    ? `${isBuy ? "Buy" : "Sell"} ${selectedToken.symbol} — Continue`
-    : "Select a Crypto to Continue";
+      ? "Loading rate…"
+      : sellWalletLoading
+        ? "Getting deposit address…"
+        : noBankAccounts
+          ? "Add a bank account first"
+          : isBuy &&
+              amountToBuy &&
+              Number(amountToBuy) > 0 &&
+              walletAddress?.trim() &&
+              !buyRateInfo
+            ? "Fetching rate…"
+            : selectedToken
+              ? `${isBuy ? "Buy" : "Sell"} ${selectedToken.symbol} — Continue`
+              : "Select a Crypto to Continue";
 
   const ctaDisabled =
     !selectedToken || isCtaBusy || noBankAccounts || buySubmitDisabled;
