@@ -190,16 +190,16 @@ function PayingToRow({ payoutBank }: { payoutBank: UserBankAccountResponse | und
   return (
     <div className="flex items-center gap-3 rounded-2xl border border-[#ECECEC] bg-[#F9FAFB] px-4 py-3">
       <div className="w-10 h-10 rounded-full bg-white border border-[#ECECEC] flex items-center justify-center overflow-hidden">
-        {payoutBank.bank?.logoUrl ? (
-          <img src={payoutBank.bank.logoUrl} alt={payoutBank.bank.name} className="w-6 h-6 object-contain" />
+        {payoutBank.bankLogo ? (
+          <img src={payoutBank.bankLogo} alt={payoutBank.bankName} className="w-6 h-6 object-contain" />
         ) : (
-          <span className="text-xs font-bold text-[#03034D]">{payoutBank.bank?.name?.slice(0, 2)}</span>
+          <span className="text-xs font-bold text-[#03034D]">{payoutBank.bankName?.slice(0, 2)}</span>
         )}
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Paying to</p>
         <p className="text-sm font-bold text-[#0E0F0C] truncate">
-          {payoutBank.accountNumber} • {payoutBank.bank?.name}
+          {payoutBank.accountNumber} • {payoutBank.bankName}
         </p>
       </div>
     </div>

@@ -1,5 +1,5 @@
-import { ChevronDown, Search } from "lucide-react";
-import { useState, useId, useEffect } from "react";
+import { ChevronDown } from "lucide-react";
+import { useState, useEffect } from "react";
 import { useCombobox } from "downshift";
 import type { AllBanksResponse, SupportedCryptoOrCurrencyResponse } from "../../types/response.payload.types.ts";
 
@@ -22,8 +22,7 @@ const BankSelector = ({
   error,
   className = "",
 }: BankSelectorProps) => {
-  const selectId = useId();
-  const [items, setItems] = useState(options);
+  const [items, setItems] = useState<any[]>(options || []);
 
   // Sync items when options prop changes
   useEffect(() => {
@@ -39,25 +38,23 @@ const BankSelector = ({
     highlightedIndex,
     getItemProps,
     selectedItem,
-    setInputValue,
   } = useCombobox({
     items,
     itemToString(item) {
       return item ? item.name : "";
     },
     onInputValueChange({ inputValue }) {
-      setItems(
-        options.filter((item) =>
+      const filtered = (options || []).filter((item: any) =>
           item.name.toLowerCase().includes(inputValue?.toLowerCase() || "")
-        )
       );
+      setItems(filtered);
     },
     onSelectedItemChange({ selectedItem }) {
       if (selectedItem) {
         onValueChange(selectedItem.id);
       }
     },
-    selectedItem: options.find((opt) => opt.id === value) || null,
+    selectedItem: (options as any[]).find((opt: any) => opt.id === value) || null,
   });
 
   const isLabelFloating = isOpen || value || getInputProps().value;
