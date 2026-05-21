@@ -8,7 +8,7 @@ export const Route = createRootRoute({
     <Fragment>
       <SEO />
       <Outlet />
-      <TanStackRouterDevtools />
+      {import.meta.env.DEV ? <TanStackRouterDevtools /> : null}
     </Fragment>
   ),
 });
