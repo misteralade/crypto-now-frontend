@@ -27,7 +27,7 @@ interface LinkProps extends BaseProps {
 
 type CustomButtonProps = ButtonProps | LinkProps;
 
-const MotionLink = motion(Link);
+const MotionLink = motion.create(Link);
 
 const CustomButton = (props: CustomButtonProps) => {
   const { children, className = "", variant = "button", buttonText } = props;
