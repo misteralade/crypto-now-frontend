@@ -174,6 +174,7 @@ export default function DashboardTrade() {
     isInitiatingTrade,
     loadingExchangeRate,
     transactionSessionId,
+    setTransactionSessionId,
     userBankAccounts,
     showUserEnterEmail,
     isLoadingPingUser,

@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Check, CheckCircle, ChevronDown, Copy, X } from "lucide-react";
+import { Check, CheckCircle, ChevronDown, Copy, X, ArrowLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "@tanstack/react-router";
 import type {

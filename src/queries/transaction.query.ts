@@ -98,7 +98,7 @@ export const useTransactionQuery = () => {
   });
 
   // Poll transaction status
-  const getTransactionStatus = (sessionId?: string) => {
+  const useTransactionStatus = (sessionId?: string) => {
     return useQuery({
       queryKey: [QUERY_KEYS.TRANSACTION.USER_TRANSACTION_DETAILS, sessionId, "status"],
       queryFn: async () => {
@@ -458,6 +458,6 @@ export const useTransactionQuery = () => {
     downloadAllTransactionMutation,
 
     // Functions
-    getTransactionStatus,
-  };
-};
+    useTransactionStatus,
+    };
+    };
