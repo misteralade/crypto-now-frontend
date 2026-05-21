@@ -22,7 +22,6 @@ import {
 import { setSelectedCryptoId } from "../../../redux/crypto.slice.ts";
 import {LOCAL_STORAGE_KEYS, SESSION_STORAGE_KEYS} from "../../../util/constants.util.ts";
 import {
-  clearTradeProgress,
   loadTradeProgress,
   saveTradeProgress,
 } from "../../../util/tradeProgress.storage.util.ts";

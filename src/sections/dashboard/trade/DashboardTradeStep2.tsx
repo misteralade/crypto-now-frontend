@@ -24,7 +24,6 @@ import type {
 import { useTradeStepTwo } from "../../../hooks/components/trade/useTradeStepTwo.ts";
 import TradePaymentUpload from "../../trade-crypto/TradePaymentUpload.tsx";
 import { SESSION_STORAGE_KEYS } from "../../../util/constants.util.ts";
-import { clearTradeProgress } from "../../../util/tradeProgress.storage.util.ts";
 import type { BuyRateInfo } from "./DashboardTradeStep1.tsx";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../../store.ts";
@@ -566,7 +565,6 @@ export default function DashboardTradeStep2({
     paymentDetailsLoading,
     submitInvalid,
     bankDetails: hookBankDetails,
-    walletDetails,
   } = useTradeStepTwo({
     tradeType,
     amountToBuy,
@@ -578,10 +576,6 @@ export default function DashboardTradeStep2({
   const [buyView, setBuyView] = useState<BuyView>("bank");
   const [copyToastVisible, setCopyToastVisible] = useState(false);
   const [storedYouPay, setStoredYouPay] = useState<string | null>(null);
-
-  // Wallet address / network from additionalInfo or walletDetails
-  const walletAddress = walletDetails?.walletAddress ?? "";
-  const network = walletDetails?.network ?? "";
 
   // Merge bank details: prefer local fetch for local-first BUY flow
   const bankDetails = isLocalBuyFlow
