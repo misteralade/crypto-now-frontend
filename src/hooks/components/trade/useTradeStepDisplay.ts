@@ -917,22 +917,25 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     
     const tokenSymbol = selectedToken?.symbol;
     const currencyCode = selectedCurrency?.code;
+    const usdRate = Number(exchangeRate.usdRate ?? 0);
+    const fiatRate = Number(exchangeRate.fiatRate ?? 0);
+    const platformRate = Number(exchangeRate.platformRate ?? 0);
     
-    // Build the market rate string
+    // Quote equation:
+    // NGN rate per 1 crypto = USD market rate per 1 crypto × platform rate (NGN per USD)
     let marketRate = "";
     
-    if (exchangeRate.currency === "USD" && exchangeRate.usdRate !== undefined) {
-      // Show both USD and NGN for USD currency
-      marketRate = `1 ${tokenSymbol} = ${convertToMillify(Number(exchangeRate.usdRate))} USD (${convertToMillify(Number(exchangeRate.fiatRate))} NGN)`;
+    if (usdRate > 0 && fiatRate > 0) {
+      marketRate = `1 ${tokenSymbol} = ${convertToMillify(usdRate)} USD (${convertToMillify(fiatRate)} NGN)`;
     } else {
       // Show fiat rate for other currencies
-      marketRate = `1 ${tokenSymbol} = ${convertToMillify(exchangeRate.fiatRate)} ${currencyCode}`;
+      marketRate = `1 ${tokenSymbol} = ${convertToMillify(fiatRate)} ${currencyCode}`;
     }
     
     // Add platform rate if available - return as ReactNode to allow wrapping on mobile
-    if (exchangeRate.platformRate !== undefined) {
+    if (platformRate > 0) {
       const platformCurrency = exchangeRate.currency === "USD" ? "NGN" : currencyCode;
-      const ourRate = `Our rate: ${formatNumber(exchangeRate.platformRate)} ${platformCurrency}/${tokenSymbol}`;
+      const ourRate = `Quote equation: NGN rate = USD rate × platform rate = ${convertToMillify(usdRate)} USD × ${formatNumber(platformRate)} ${platformCurrency}/USD = ${convertToMillify(fiatRate)} ${platformCurrency}`;
       
       return React.createElement(
         'span',

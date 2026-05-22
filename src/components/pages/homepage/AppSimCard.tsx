@@ -344,19 +344,33 @@ const AppSimCard = () => {
   const isBuy = tab === "BUY";
   const currSymbol = currencyObj?.symbol || currencyObj?.code || "₦";
   const cryptoSymbol = cryptoObj?.symbol || cryptoObj?.code || "";
+  const cryptoCode = cryptoObj?.code?.toUpperCase() || cryptoSymbol.toUpperCase();
 
-  // BUY and SELL chips use fiat-friendly presets. SELL chips represent target
-  // payout amounts and are converted back into crypto amounts internally.
+  // BUY chips stay fiat presets. SELL chips use crypto-friendly examples so
+  // guests can pick amounts that are easy to understand for each asset.
   const buyChips =
     buyInputCurrency === "USD"
       ? TRADE_FIAT_AMOUNT_PRESETS.usd
       : TRADE_FIAT_AMOUNT_PRESETS.ngn;
-  const sellChips =
-    sellReceiveCurrency === "USD"
-      ? TRADE_FIAT_AMOUNT_PRESETS.usd
-      : TRADE_FIAT_AMOUNT_PRESETS.ngn;
+  const SELL_COIN_PRESETS: Record<string, number[]> = {
+    BTC: [0.05, 0.5, 1, 2],
+    ETH: [0.05, 0.1, 0.5, 1],
+    SOL: [0.5, 1, 2, 5],
+    USDT: [5, 10, 15, 35],
+    USDC: [5, 10, 15, 35],
+  };
+  const sellChipAmounts = SELL_COIN_PRESETS[cryptoCode] ?? [0.5, 1, 2, 5];
   const formatChip = (n: number, currencyCode: "NGN" | "USD") =>
     formatTradeFiatPreset(n, currencyCode);
+  const formatCryptoChip = (amountValue: number) =>
+    `${amountValue.toLocaleString(undefined, {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: amountValue < 1 ? 2 : 0,
+    })} ${cryptoSymbol}`;
+  const sellChipItems = sellChipAmounts.map((value) => ({
+    value,
+    label: formatCryptoChip(value),
+  }));
 
   // Derive NGN amount when user is typing in USD
   const ngnCurrencyObj = supportedCurrencies?.find((c) => c.code === "NGN");
@@ -482,32 +496,13 @@ const AppSimCard = () => {
     return () => clearTimeout(timeout);
   }, [accountNumber, selectedBankId]);
 
-  const handleSellChipClick = async (targetFiatAmount: number) => {
+  const handleSellChipClick = async (targetCryptoAmount: number) => {
     if (!selectedCrypto || !selectedCurrency) return;
 
-    const targetNgnAmount =
-      sellReceiveCurrency === "USD" && usdToNgnRate
-        ? Math.round(targetFiatAmount * usdToNgnRate)
-        : targetFiatAmount;
-
-    try {
-      const { data, success } = await exchangeRateServiceApi.getExchangeRate(
-        selectedCrypto,
-        selectedCurrency,
-        "SELL",
-      );
-      if (!success || !data || !data.coinGeckoRate || !data.platformRate) return;
-
-      const cryptoAmount =
-        targetNgnAmount / (data.coinGeckoRate * data.platformRate);
-      const roundedCryptoAmount = cryptoAmount.toFixed(8);
-
-      setAmount(roundedCryptoAmount);
-      setReceiveAmount("");
-      await fetchRate(roundedCryptoAmount);
-    } catch (error) {
-      console.error("AppSimCard: failed to resolve sell preset", error);
-    }
+    const roundedCryptoAmount = targetCryptoAmount.toFixed(8);
+    setAmount(roundedCryptoAmount);
+    setReceiveAmount("");
+    await fetchRate(roundedCryptoAmount);
   };
 
   const handleStep1Next = async () => {
@@ -639,7 +634,6 @@ const AppSimCard = () => {
     localStorage.removeItem(LS_KEY);
   };
 
-  const cryptoCode = cryptoObj?.code?.toUpperCase() || "";
   const allowedNetworks = ALL_NETWORKS.filter((n) =>
     (CRYPTO_NETWORKS[cryptoCode] ?? ALL_NETWORKS.map((x) => x.id)).includes(
       n.id
@@ -867,36 +861,37 @@ const AppSimCard = () => {
                 )}
                 {/* Quick chips */}
                 <div className="flex border-t border-gray-100">
-                  {(isBuy ? buyChips : sellChips).map((chip) => (
-                    <button
-                      key={chip}
-                      onClick={() => {
-                        if (isBuy) {
-                          setAmount(String(chip));
-                          setReceiveAmount("");
-                          return;
-                        }
-                        void handleSellChipClick(chip);
-                      }}
-                      className="flex-1 py-2.5 text-xs font-semibold border-r border-gray-100 last:border-r-0 cursor-pointer transition-colors"
-                      data-active={isBuy && amount === String(chip)}
-                      style={{
-                        background:
-                          isBuy && amount === String(chip)
+                  {(isBuy
+                    ? buyChips.map((chip) => ({ value: chip, label: formatChip(chip, buyInputCurrency) }))
+                    : sellChipItems
+                  ).map((chip) => {
+                    const isActive = isBuy
+                      ? amount === String(chip.value)
+                      : Number(amount || 0).toFixed(8) === chip.value.toFixed(8);
+                    return (
+                      <button
+                        key={chip.value}
+                        onClick={() => {
+                          if (isBuy) {
+                            setAmount(String(chip.value));
+                            setReceiveAmount("");
+                            return;
+                          }
+                          void handleSellChipClick(chip.value);
+                        }}
+                        className="flex-1 py-2.5 text-xs font-semibold border-r border-gray-100 last:border-r-0 cursor-pointer transition-colors"
+                        data-active={isActive}
+                        style={{
+                          background: isActive
                             ? "rgba(148,142,238,0.08)"
                             : "transparent",
-                        color:
-                          isBuy && amount === String(chip)
-                            ? "#948EEE"
-                            : "#6B7280",
-                      }}
-                    >
-                      {formatChip(
-                        chip,
-                        isBuy ? buyInputCurrency : sellReceiveCurrency,
-                      )}
-                    </button>
-                  ))}
+                          color: isActive ? "#948EEE" : "#6B7280",
+                        }}
+                      >
+                        {chip.label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 

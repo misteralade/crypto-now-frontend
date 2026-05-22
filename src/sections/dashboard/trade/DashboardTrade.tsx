@@ -81,6 +81,15 @@ export default function DashboardTrade() {
   const pendingAmountRestoreRef = useRef<string | null>(null);
 
   useEffect(() => {
+    const normalizedOption = routeOption?.toLowerCase();
+    if (normalizedOption !== "buy" && normalizedOption !== "sell") return;
+
+    const nextTab = normalizedOption as TradeType;
+    setActiveTab(nextTab);
+    setHasChosenMode(true);
+  }, [routeOption]);
+
+  useEffect(() => {
     if (activeTab === "buy") {
       dispatch(clearAmountToSend());
       dispatch(clearInitiateTransactionField("amountToSend"));

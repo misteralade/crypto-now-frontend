@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, type ReactNode } from "react";
 import { useTransactionDetailsPage } from "../../../hooks/pages/useTransactionDetailsPage.ts";
 import { LoadingSpinner } from "../../../components/global/LoadingSpinner.tsx";
 import {
@@ -60,7 +60,7 @@ const TransactionDetailsPage = () => {
     return `₦${convertToMillify(getAmountFiatNGN(), 3)}`;
   };
 
-  const getExchangeRateDisplay = () => {
+  const getExchangeRateDisplay = (): ReactNode => {
     const amountCrypto = Number(transaction?.amountCrypto ?? 0);
     const symbol = transaction?.cryptocurrency?.symbol || "CRYPTO";
     const rateSnapshot = (transaction?.rateSnapshot ?? null) as Record<
@@ -68,23 +68,55 @@ const TransactionDetailsPage = () => {
       unknown
     > | null;
     const currency = transaction?.currency;
-    const amountFiat = Number(transaction?.amountFiat ?? 0);
-    const amountFiatNGN = getAmountFiatNGN();
     if (amountCrypto <= 0) return "—";
-    const snapshotRateRaw = rateSnapshot?.rate ?? rateSnapshot?.fiatRate;
-    const snapshotRate = Number(snapshotRateRaw ?? 0);
+    const snapshotUsdRate = Number(rateSnapshot?.coinGeckoRate ?? 0);
     const snapshotPlatformRate = Number(rateSnapshot?.platformRate ?? 0);
-    if (snapshotRate > 0) {
-      return currency === "USD"
-        ? `1 ${symbol} = $${convertToMillify(snapshotRate, 2)}`
-        : `1 ${symbol} = ₦${convertToMillify(
-            snapshotRate * snapshotPlatformRate,
-            2
-          )}`;
+    const snapshotFiatRate = Number(rateSnapshot?.fiatRate ?? 0);
+    const derivedFiatRate =
+      snapshotUsdRate > 0 && snapshotPlatformRate > 0
+        ? snapshotUsdRate * snapshotPlatformRate
+        : 0;
+    const finalFiatRate = snapshotFiatRate > 0 ? snapshotFiatRate : derivedFiatRate;
+    const safeUsdRate = snapshotUsdRate > 0 ? snapshotUsdRate : 0;
+
+    if (safeUsdRate > 0 && finalFiatRate > 0) {
+      return (
+        <span className="flex flex-col gap-1 leading-relaxed">
+          <span>
+            1 {symbol} = ${convertToMillify(safeUsdRate, 2)} USD (
+            ₦{convertToMillify(finalFiatRate, 2)} NGN)
+          </span>
+          <span className="text-[11px] text-gray-500">
+            Quote equation: NGN rate = USD rate × platform rate = $
+            {convertToMillify(safeUsdRate, 2)} × ₦
+            {formatNumber(snapshotPlatformRate)}
+            /USD = ₦{convertToMillify(finalFiatRate, 2)}
+          </span>
+        </span>
+      );
     }
+
+    if (finalFiatRate > 0) {
+      return (
+        <span className="flex flex-col gap-1 leading-relaxed">
+          <span>
+            1 {symbol} = ₦{convertToMillify(finalFiatRate, 2)} NGN
+          </span>
+          {snapshotUsdRate > 0 && snapshotPlatformRate > 0 && (
+            <span className="text-[11px] text-gray-500">
+              Quote equation: NGN rate = USD rate × platform rate = $
+              {convertToMillify(snapshotUsdRate, 2)} × ₦
+              {formatNumber(snapshotPlatformRate)}
+              /USD = ₦{convertToMillify(finalFiatRate, 2)}
+            </span>
+          )}
+        </span>
+      );
+    }
+
     return currency === "USD"
-      ? `1 ${symbol} = $${convertToMillify(amountFiat / amountCrypto, 2)}`
-      : `1 ${symbol} = ₦${convertToMillify(amountFiatNGN / amountCrypto, 2)}`;
+      ? `1 ${symbol} = $${convertToMillify(Number(transaction?.amountFiat ?? 0) / amountCrypto, 2)}`
+      : `1 ${symbol} = ₦${convertToMillify(getAmountFiatNGN() / amountCrypto, 2)}`;
   };
 
   const isBuy = transaction?.type?.toUpperCase() === "BUY";
@@ -136,7 +168,7 @@ const TransactionDetailsPage = () => {
   );
 
   /* ── Info row (label + value, no copy) ── */
-  const InfoRow = ({ label, value }: { label: string; value: string }) => (
+  const InfoRow = ({ label, value }: { label: string; value: ReactNode }) => (
     <div>
       <p
         className="text-[10px] font-bold tracking-widest uppercase mb-1"

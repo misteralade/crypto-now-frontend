@@ -286,7 +286,11 @@ function TradeMonitoringView({
   const subHeadline = isBuy ? "Checking your receipt…" : "Listening for Transaction…";
   const showManualRecheck =
     !isBuy &&
-    (status === "PAYMENT_ACCOUNT_CONFIRMED" || status === "AWAITING_CRYPTO");
+    [
+      "INITIATED",
+      "PAYMENT_ACCOUNT_CONFIRMED",
+      "AWAITING_CRYPTO",
+    ].includes(status ?? "");
 
   return (
     <div className="flex flex-col gap-5">
