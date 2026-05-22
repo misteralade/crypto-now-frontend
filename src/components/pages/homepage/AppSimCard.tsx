@@ -51,38 +51,50 @@ const TokenBtn = ({
   item: SupportedCryptoOrCurrencyResponse;
   selected: boolean;
   onSelect: () => void;
-}) => (
-  <button
-    onClick={onSelect}
-    className="flex-1 flex flex-col items-center py-3 px-1 rounded-xl transition-all cursor-pointer gap-1"
-    style={{
-      background: selected ? "rgba(148,142,238,0.1)" : "#F5F5F5",
-      border: selected ? "1.5px solid #948EEE" : "1.5px solid transparent",
-      minWidth: 0,
-    }}
-  >
-    <div className="w-8 h-8 flex items-center justify-center">
-      {item.logoUrl ? (
-        <img
-          src={item.logoUrl}
-          alt={item.code}
-          className="w-7 h-7 object-contain"
-        />
-      ) : (
-        <span className="text-base font-bold text-gray-400">
-          {item.code?.charAt(0)}
-        </span>
-      )}
-    </div>
-    <span
-      className={`text-xs font-bold leading-none ${
-        selected ? "text-[#948EEE]" : "text-[#0E0F0C]"
-      }`}
+}) => {
+  const label = item.symbol || item.code || item.name || "Asset";
+  const initials = label.slice(0, 2).toUpperCase();
+
+  return (
+    <button
+      onClick={onSelect}
+      className="flex-1 flex flex-col items-center py-3 px-1 rounded-xl transition-all cursor-pointer gap-1"
+      style={{
+        background: selected ? "rgba(148,142,238,0.1)" : "#F5F5F5",
+        border: selected ? "1.5px solid #948EEE" : "1.5px solid transparent",
+        minWidth: 0,
+      }}
+      aria-label={`Select ${item.name || label}`}
+      title={item.name || label}
     >
-      {item.code || item.symbol}
-    </span>
-  </button>
-);
+      <div className="w-8 h-8 flex items-center justify-center">
+        {item.logoUrl ? (
+          <img
+            src={item.logoUrl}
+            alt={`${item.name || label} logo`}
+            className="w-7 h-7 object-contain"
+          />
+        ) : (
+          <div className="w-7 h-7 rounded-full bg-white border border-gray-200 flex items-center justify-center">
+            <span className="text-[10px] font-bold text-gray-400">
+              {initials}
+            </span>
+          </div>
+        )}
+      </div>
+      <span
+        className={`text-xs font-bold leading-none ${
+          selected ? "text-[#948EEE]" : "text-[#0E0F0C]"
+        }`}
+      >
+        {label}
+      </span>
+      <span className="text-[10px] text-gray-400 leading-none">
+        {item.name}
+      </span>
+    </button>
+  );
+};
 
 // ── Summary row ───────────────────────────────────────────────────────────────
 const SRow = ({
@@ -165,7 +177,7 @@ function loadLS() {
 // ── Main card ─────────────────────────────────────────────────────────────────
 const AppSimCard = () => {
   const navigate = useNavigate();
-  const { supportedCryptoCurrencies, supportedCurrencies } =
+  const { supportedCryptoCurrencies, loadingSupportedCrypto, supportedCurrencies, loadingSupportedCurrencies } =
     useTradeCryptoCurrenciesButton();
 
   const saved = loadLS();
@@ -583,8 +595,7 @@ const AppSimCard = () => {
               </p>
 
               {/* Crypto picker */}
-              {!supportedCryptoCurrencies ||
-              supportedCryptoCurrencies.length === 0 ? (
+              {loadingSupportedCrypto && !supportedCryptoCurrencies ? (
                 <div className="flex gap-2">
                   {[1, 2, 3].map((i) => (
                     <div
@@ -592,6 +603,11 @@ const AppSimCard = () => {
                       className="flex-1 h-20 rounded-xl bg-gray-100 animate-pulse"
                     />
                   ))}
+                </div>
+              ) : !supportedCryptoCurrencies ||
+                supportedCryptoCurrencies.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-gray-200 bg-white px-4 py-6 text-center text-sm text-gray-400">
+                  Crypto assets are unavailable right now.
                 </div>
               ) : (
                 <div className="flex gap-2">
@@ -626,7 +642,7 @@ const AppSimCard = () => {
                       : `Amount in ${cryptoSymbol || "Crypto"}`}
                   </p>
                   {/* NGN / USD toggle */}
-                  {usdCurrencyObj && (
+                  {(!loadingSupportedCurrencies || supportedCurrencies?.length) && usdCurrencyObj && (
                     <div
                       className="flex rounded-lg overflow-hidden"
                       style={{ border: "1px solid #E8E8E8" }}

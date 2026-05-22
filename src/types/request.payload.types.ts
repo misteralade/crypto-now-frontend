@@ -10,6 +10,7 @@ export type InitiateTransactionRequestPayload = {
   receiptUrl?: string;
   transactionHash?: string;
   accountId?: string;
+  custodialWalletId?: string;
   walletAddress?: string;
   network?: string;
 }

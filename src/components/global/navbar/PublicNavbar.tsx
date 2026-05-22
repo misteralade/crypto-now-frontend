@@ -96,7 +96,7 @@ export default function PublicNavbar({ innerClassName }: { innerClassName?: stri
               transition={{ duration: 0.2 }}
             >
               <div
-                className={`w-full flex items-center justify-between px-4 ${innerClassName ?? ""}`}
+                className={`w-full flex items-center justify-between px-8 md:px-12 xl:px-16 ${innerClassName ?? ""}`}
               >
                 <Link to={ROUTES.HOMEPAGE} className="flex-shrink-0">
                   <img src={Logo} alt="CryptoNow" className="h-8 w-auto" />

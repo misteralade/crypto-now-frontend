@@ -226,6 +226,18 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
 
     if (existing) {
       setSellDepositWallet(existing);
+      dispatch(
+        setInitiateTransactionField({
+          field: "custodialWalletId",
+          value: existing.id,
+        })
+      );
+      dispatch(
+        setInitiateTransactionField({
+          field: "network",
+          value: existing.network,
+        })
+      );
       generationLockRef.current = null; // Clear lock once loaded
     } else {
       const lockKey = `${selectedToken.id}-${network}`;
@@ -243,6 +255,18 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
           onSuccess: ({ success, data }) => {
             if (success && data) {
               setSellDepositWallet(data);
+              dispatch(
+                setInitiateTransactionField({
+                  field: "custodialWalletId",
+                  value: data.id,
+                })
+              );
+              dispatch(
+                setInitiateTransactionField({
+                  field: "network",
+                  value: data.network,
+                })
+              );
             }
           },
           onSettled: () => {
@@ -253,7 +277,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, selectedToken?.id, custodialWallets, sellNetwork]);
+  }, [activeTab, selectedToken?.id, custodialWallets, sellNetwork, dispatch]);
 
   // 🔹 Hydration guard to avoid saving empty defaults on first paint
   const hydratedRef = useRef(false);
@@ -485,19 +509,18 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       saveTradeProgress({ receiptUrl: transaction.adminPaymentReceiptUrl });
     }
 
-    // Determine step based on transaction status
-    // If transaction is INITIATED or PENDING, go to step 2 (payment step)
-    // If AWAITING_CRYPTO or AWAITING_PAYMENT, go to step 2 and open wallet/bank account selection modal
-    // If receipt is uploaded (other statuses), stay on step 2 but with receipt
+    // Determine step based on transaction status.
+    // Ongoing public transactions always resume on step 2, where the UI now
+    // decides between action form vs live monitoring based on current status.
     const status = transaction.status;
     if (['INITIATED', 'PENDING', 'AWAITING_PAYMENT', 'PAYMENT_RECEIVED', 'PAYMENT_CONFIRMED', 'PROCESSING', 'AWAITING_CRYPTO', 'CRYPTO_SENT', 'CRYPTO_RECEIVED', 'CRYPTO_CONFIRMED'].includes(status)) {
-      // For all these statuses, go to step 2 (payment step)
       setStep(2);
       saveTradeProgress({ step: 2 });
       
-      // If AWAITING_CRYPTO or AWAITING_PAYMENT, mark that we should open the modal
-      // The modal will be opened in a separate useEffect when accounts are loaded
-      if (status === 'AWAITING_CRYPTO' || status === 'AWAITING_PAYMENT') {
+      // Only sell transactions in AWAITING_CRYPTO still need the payout-bank
+      // confirmation modal on resume. Buy transactions at AWAITING_PAYMENT are
+      // already submitted and should go straight into monitoring.
+      if (transaction.type === 'SELL' && status === 'AWAITING_CRYPTO') {
         saveTradeProgress({ shouldOpenBankDetailsModal: true });
       }
     }
@@ -512,8 +535,8 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId, restoredTransaction, supportedCryptoCurrencies, supportedCurrencies, dispatch]);
 
-  // Open bank details modal automatically for AWAITING_CRYPTO or AWAITING_PAYMENT statuses
-  // when accounts are loaded and we're on step 2
+  // Open bank details modal automatically only for resumed sell transactions
+  // that are still waiting on payout-account confirmation.
   useEffect(() => {
     if (!sessionId || !restoredTransaction) return;
     
@@ -521,13 +544,9 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     const status = restoredTransaction.status;
     const shouldOpen = saved?.shouldOpenBankDetailsModal;
     
-    // Only open if:
-    // 1. Status is AWAITING_CRYPTO or AWAITING_PAYMENT
-    // 2. Flag is set to open modal
-    // 3. Accounts are loaded (not loading)
-    // 4. We're on step 2
     if (
-      (status === 'AWAITING_CRYPTO' || status === 'AWAITING_PAYMENT') &&
+      restoredTransaction.type === 'SELL' &&
+      status === 'AWAITING_CRYPTO' &&
       shouldOpen &&
       !loadingUserBankAccounts &&
       currentStep === 2

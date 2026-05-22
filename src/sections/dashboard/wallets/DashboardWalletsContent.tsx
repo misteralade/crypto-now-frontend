@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Copy, Check, Wallet } from "lucide-react";
+import { AlertTriangle, Copy, Check, Wallet } from "lucide-react";
 import { useCryptoQuery } from "../../../queries/crypto.query.ts";
 import type { CustodialWalletResponse } from "../../../types/response.payload.types.ts";
 import { useBankQuery } from "../../../queries/bank.query.ts";
@@ -76,6 +76,24 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
+function getEnvironmentMeta(environment: CustodialWalletResponse["blockchainEnvironment"]) {
+  if (environment === "mainnet") {
+    return {
+      label: "Mainnet",
+      border: "#B6E8D0",
+      background: "#E8F8F0",
+      text: "#037847",
+    };
+  }
+
+  return {
+    label: "Testnet",
+    border: "#FFE9A0",
+    background: "#FFFBF0",
+    text: "#A07000",
+  };
+}
+
 // Renders one wallet card with network, address, and copy action.
 function WalletCard({
   wallet,
@@ -96,11 +114,21 @@ function WalletCard({
     BEP20:  { bg: "#FFFBF0", text: "#A07000", border: "#FFE4A0" },
   };
   const nc = networkColors[wallet.network] ?? { bg: "#F7F7F9", text: "#6B6E6B", border: "#EEEEEE" };
+  const env = getEnvironmentMeta(wallet.blockchainEnvironment);
 
   return (
     <div
       className="rounded-3xl p-5 flex flex-col gap-4"
-      style={{ border: "1px solid #F0F0F0", background: "#FAFAFA" }}
+      style={{
+        border:
+          wallet.blockchainEnvironment === "testnet"
+            ? `1px solid ${env.border}`
+            : "1px solid #F0F0F0",
+        background:
+          wallet.blockchainEnvironment === "testnet"
+            ? env.background
+            : "#FAFAFA",
+      }}
     >
       {/* Header row */}
       <div className="flex items-center gap-3">
@@ -124,6 +152,18 @@ function WalletCard({
         >
           {wallet.network}
         </span>
+        {wallet.blockchainEnvironment === "testnet" && (
+          <span
+            className="text-[10px] font-bold px-2 py-1 rounded-full shrink-0"
+            style={{
+              background: env.background,
+              color: env.text,
+              border: `1px solid ${env.border}`,
+            }}
+          >
+            {env.label}
+          </span>
+        )}
       </div>
 
       {/* Address */}
@@ -138,6 +178,7 @@ function WalletCard({
       {/* Info blurb */}
       <p className="text-[11px] leading-relaxed" style={{ color: "#9A9A9A" }}>
         Send <strong>{cryptoSymbol}</strong> to this address ({wallet.network}) and we'll automatically credit your account.
+        {wallet.blockchainEnvironment === "testnet" ? " Test mode only." : ""}
       </p>
     </div>
   );
@@ -157,6 +198,9 @@ export default function DashboardWalletsContent() {
 
   const cryptoMap = new Map(
     (supportedCryptoCurrencies ?? []).map((c) => [c.id, c])
+  );
+  const hasTestnetWallets = (custodialWallets ?? []).some(
+    (wallet) => wallet.blockchainEnvironment === "testnet"
   );
 
   const isGenerating = generateAllCustodialWalletsMutation.isPending;
@@ -186,6 +230,22 @@ export default function DashboardWalletsContent() {
             Send crypto to any address below and receive NGN instantly to your bank account — no extra steps needed.
           </p>
         </div>
+
+        {hasTestnetWallets && (
+          <div
+            className="mb-6 flex items-start gap-2.5 rounded-2xl px-4 py-3"
+            style={{ background: "#FFFBF0", border: "1px solid #FFE9A0" }}
+          >
+            <AlertTriangle
+              size={14}
+              className="mt-0.5 shrink-0"
+              style={{ color: "#A07000" }}
+            />
+            <p className="text-[11px] leading-relaxed" style={{ color: "#7A6000" }}>
+              <strong>Testnet wallets:</strong> addresses in amber are sandbox-only.
+            </p>
+          </div>
+        )}
 
         {/* How it works banner */}
         <div

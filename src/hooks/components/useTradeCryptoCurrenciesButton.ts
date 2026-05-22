@@ -45,7 +45,9 @@ export const useTradeCryptoCurrenciesButton = () => {
   return {
     // Values
     supportedCryptoCurrencies,
+    loadingSupportedCrypto,
     supportedCurrencies,
+    loadingSupportedCurrencies,
     selectedCrypto,
     supportedCurrency,
     selectedAction,

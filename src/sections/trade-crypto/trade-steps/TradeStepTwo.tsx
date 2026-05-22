@@ -10,6 +10,216 @@ import {useState, useEffect} from "react";
 import type React from "react";
 import {transactionServiceApi} from "../../../api/transaction.api.ts";
 import {toast} from "react-toastify";
+import { useTransactionQuery } from "../../../queries/transaction.query.ts";
+import type { TransactionStatus } from "../../../types/request.payload.types.ts";
+
+type MonitoringStep = {
+  label: string;
+  status: "done" | "active" | "pending";
+};
+
+const BUY_MONITORING_STATUSES: TransactionStatus[] = [
+  "AWAITING_PAYMENT",
+  "PAYMENT_RECEIVED",
+  "PAYMENT_CONFIRMED",
+  "PROCESSING",
+  "CRYPTO_SENT",
+  "CRYPTO_RECEIVED",
+  "CRYPTO_CONFIRMED",
+  "COMPLETED",
+  "FAILED",
+  "EXPIRED",
+  "CANCELLED",
+];
+
+const SELL_MONITORING_STATUSES: TransactionStatus[] = [
+  "AWAITING_CRYPTO",
+  "PAYMENT_ACCOUNT_CONFIRMED",
+  "DEPOSIT_DETECTED",
+  "DEPOSIT_PENDING_MINIMUM",
+  "DEPOSIT_CONFIRMED",
+  "PAYOUT_INITIATED",
+  "PAYOUT_FAILED",
+  "COMPLETED",
+  "FAILED",
+  "EXPIRED",
+  "CANCELLED",
+];
+
+function TradeStatusMonitoring({
+  tradeType,
+  status,
+  selectedToken,
+}: {
+  tradeType: TradeType;
+  status?: string;
+  selectedToken?: SupportedCryptoOrCurrencyResponse;
+}) {
+  const isBuy = tradeType === "buy";
+  const steps: MonitoringStep[] = isBuy
+    ? [
+        { label: "Payment Receipt Submitted", status: "done" },
+        {
+          label: "Admin Verifying Payment",
+          status:
+            status === "PAYMENT_CONFIRMED" ||
+            status === "CRYPTO_SENT" ||
+            status === "CRYPTO_RECEIVED" ||
+            status === "CRYPTO_CONFIRMED" ||
+            status === "COMPLETED"
+              ? "done"
+              : "active",
+        },
+        {
+          label: "Releasing Crypto to Wallet",
+          status:
+            status === "PAYMENT_CONFIRMED" ||
+            status === "CRYPTO_SENT" ||
+            status === "CRYPTO_RECEIVED" ||
+            status === "CRYPTO_CONFIRMED"
+              ? "active"
+              : status === "COMPLETED"
+                ? "done"
+                : "pending",
+        },
+        {
+          label: "Transaction Completed",
+          status: status === "COMPLETED" ? "done" : "pending",
+        },
+      ]
+    : [
+        { label: "Blockchain Monitoring Active", status: "done" },
+        {
+          label: "Waiting for Crypto Detection",
+          status:
+            status === "DEPOSIT_DETECTED" ||
+            status === "DEPOSIT_PENDING_MINIMUM" ||
+            status === "DEPOSIT_CONFIRMED" ||
+            status === "PAYOUT_INITIATED" ||
+            status === "COMPLETED"
+              ? "done"
+              : "active",
+        },
+        {
+          label: "Auto-Converting to NGN",
+          status:
+            status === "DEPOSIT_DETECTED" ||
+            status === "DEPOSIT_PENDING_MINIMUM"
+              ? "active"
+              : status === "DEPOSIT_CONFIRMED" ||
+                  status === "PAYOUT_INITIATED" ||
+                  status === "COMPLETED"
+                ? "done"
+                : "pending",
+        },
+        {
+          label: "Bank Transfer",
+          status:
+            status === "DEPOSIT_CONFIRMED" || status === "PAYOUT_INITIATED"
+              ? "active"
+              : status === "COMPLETED"
+                ? "done"
+                : "pending",
+        },
+      ];
+
+  const title = isBuy
+    ? status === "COMPLETED"
+      ? "Transaction Completed"
+      : "Verifying Payment"
+    : status === "COMPLETED"
+      ? "Transaction Completed"
+      : "Monitoring Wallet";
+
+  const subtitle = isBuy
+    ? status === "PAYMENT_CONFIRMED"
+      ? "Payment confirmed. Releasing crypto."
+      : "Checking your payment status."
+    : status === "DEPOSIT_DETECTED"
+      ? "Deposit detected. Waiting for confirmations."
+      : status === "DEPOSIT_PENDING_MINIMUM"
+        ? "Deposit found, but it is still below the minimum."
+        : status === "DEPOSIT_CONFIRMED"
+          ? "Deposit confirmed. Processing payout."
+          : status === "PAYOUT_INITIATED"
+            ? "Payout initiated. Waiting for bank completion."
+            : "Listening for your blockchain transaction.";
+
+  const summary = isBuy
+    ? status === "COMPLETED"
+      ? `Your payment was verified and ${selectedToken?.symbol ?? "crypto"} has been released.`
+      : "Your payment receipt has been submitted. We are polling for updates and will continue automatically."
+    : status === "COMPLETED"
+      ? `Your ${selectedToken?.symbol ?? "crypto"} sale has completed successfully.`
+      : `We are monitoring your ${selectedToken?.symbol ?? "crypto"} deposit and will continue automatically once the network confirms it.`;
+
+  const statusColors = {
+    done: {
+      bg: "bg-emerald-50",
+      border: "border-emerald-200",
+      dot: "bg-emerald-600",
+      text: "text-emerald-700",
+    },
+    active: {
+      bg: "bg-amber-50",
+      border: "border-amber-200",
+      dot: "bg-amber-500",
+      text: "text-amber-800",
+    },
+    pending: {
+      bg: "bg-gray-50",
+      border: "border-gray-200",
+      dot: "bg-gray-300",
+      text: "text-gray-500",
+    },
+  } as const;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col items-center gap-3 rounded-2xl border border-gray-200 bg-gray-50 px-5 py-6 text-center">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-[#948EEE33] bg-[#F0EFFD] text-3xl">
+          {status === "COMPLETED" ? "✅" : isBuy ? "🔍" : "📡"}
+        </div>
+        <div className="space-y-1">
+          <h3 className="text-base font-extrabold text-[#0E0F0C]">{title}</h3>
+          <p className="text-xs text-gray-500">{subtitle}</p>
+        </div>
+        <p className="max-w-md text-sm leading-relaxed text-gray-600">
+          {summary}
+        </p>
+      </div>
+
+      <div className="space-y-2.5">
+        {steps.map((step, index) => {
+          const palette = statusColors[step.status];
+          return (
+            <div
+              key={step.label}
+              className={`flex items-center gap-3 rounded-2xl border px-4 py-3.5 ${palette.bg} ${palette.border}`}
+            >
+              <div
+                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${step.status === "pending" ? "bg-gray-200" : palette.dot}`}
+              >
+                {step.status === "done" ? (
+                  <span className="text-xs font-bold text-white">✓</span>
+                ) : step.status === "active" ? (
+                  <span className="h-2 w-2 animate-pulse rounded-full bg-white" />
+                ) : (
+                  <span className="text-[11px] font-bold text-gray-500">
+                    {index + 1}
+                  </span>
+                )}
+              </div>
+              <span className={`text-xs font-semibold ${palette.text}`}>
+                {step.label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 interface TradeStepTwoProps {
   amountToBuy: number;
@@ -28,6 +238,9 @@ interface TradeStepTwoProps {
 }
 
 const TradeStepTwo = ({ amountToBuy, tradeType, numberOfToken, additionalInfo, handleReceiptUrl, selectedToken, selectedCurrency, transactionRef, handleTransactionHash, handleSubmitPaymentProof, formatReceiveAmount, formatSendAmount, sellDepositWallet }: TradeStepTwoProps) => {
+  const { useTransactionStatus } = useTransactionQuery();
+  const { data: transactionDetails } = useTransactionStatus(transactionRef);
+  const transactionStatus = transactionDetails?.status as TransactionStatus | undefined;
   const {
     // Values
     // files,
@@ -42,6 +255,15 @@ const TradeStepTwo = ({ amountToBuy, tradeType, numberOfToken, additionalInfo, h
     setTransactionHash,
     setUploadedFileUrl,
   } = useTradeStepTwo({tradeType, amountToBuy, numberOfToken, selectedToken, selectedCurrency, sellDepositWallet });
+
+  const showMonitoringView =
+    !!transactionRef &&
+    !!transactionStatus &&
+    (
+      tradeType === "buy"
+        ? BUY_MONITORING_STATUSES.includes(transactionStatus)
+        : SELL_MONITORING_STATUSES.includes(transactionStatus)
+    );
   
   // Retrieve stored values from session storage (if receipt was uploaded)
   // Only use stored values if they exist and are not empty
@@ -86,6 +308,16 @@ const TradeStepTwo = ({ amountToBuy, tradeType, numberOfToken, additionalInfo, h
           className="bg-red-600 hover:bg-red-700"
         />
       </div>
+    );
+  }
+
+  if (showMonitoringView) {
+    return (
+      <TradeStatusMonitoring
+        tradeType={tradeType}
+        status={transactionStatus}
+        selectedToken={selectedToken}
+      />
     );
   }
 

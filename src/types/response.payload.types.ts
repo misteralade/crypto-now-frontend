@@ -33,6 +33,20 @@ export type BaseApiResponse<T> = {
   data: T;
 };
 
+export type ManualSellDepositRecheckResponse = {
+  outcome:
+    | "COOLDOWN_ACTIVE"
+    | "NO_BALANCE_CHANGE"
+    | "DEPOSIT_FOUND"
+    | "BALANCE_INCREASED_UNRESOLVED"
+    | "RECHECK_UNAVAILABLE";
+  status: string;
+  baselineBalance: number;
+  liveBalance: number | null;
+  dispatchedDeposits: number;
+  cooldownMsRemaining: number;
+};
+
 // Start Auth
 export type AuthResponse = {
   message: string;
@@ -114,6 +128,7 @@ export type CustodialWalletResponse = {
   userId: string;
   cryptocurrencyId: string;
   network: string;
+  blockchainEnvironment: "testnet" | "mainnet";
   walletAddress: string;
   derivationIndex: number;
   isActive: boolean;

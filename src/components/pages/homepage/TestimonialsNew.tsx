@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
-import { Star, X, Play } from "@phosphor-icons/react";
+import { X, Play } from "@phosphor-icons/react";
 import { usePublishedTestimonialsQuery } from "../../../queries/testimonial.query.ts";
 import { TESTIMONIAL_CONTENT_TYPES } from "../../../util/constants.util.ts";
 import type { TestimonialResponse } from "../../../types/response.payload.types.ts";
@@ -11,21 +11,21 @@ const FALLBACK_TESTIMONIALS: TestimonialResponse[] = [
     id: "f1", creatorId: "", isPublished: true,
     contentType: TESTIMONIAL_CONTENT_TYPES.TEXT, contentLink: "",
     name: "Chukwuemeka A.",
-    description: "Sent BTC and had Naira in my account in under 4 minutes. I've tried three other platforms — none come close to this speed. CryptoNow is the real deal.",
+    description: "I sent BTC and the naira came through a few minutes later. It was straightforward and did what I needed.",
     createdAt: "", updatedAt: "",
   },
   {
     id: "f2", creatorId: "", isPublished: true,
     contentType: TESTIMONIAL_CONTENT_TYPES.TEXT, contentLink: "",
     name: "Amara O.",
-    description: "What I love most is the locked rate. I know exactly what I'm getting before I send anything. No more logging back in to find the rate changed.",
+    description: "The rate stayed the same from start to finish, which was the main thing I was looking for.",
     createdAt: "", updatedAt: "",
   },
   {
     id: "f3", creatorId: "", isPublished: true,
     contentType: TESTIMONIAL_CONTENT_TYPES.TEXT, contentLink: "",
     name: "Tunde B.",
-    description: "I raised a dispute once and they resolved it in 2 hours. The support team actually responds. Rare for a crypto platform. Will never use anything else.",
+    description: "I had a question on one transaction and support replied without dragging it out.",
     createdAt: "", updatedAt: "",
   },
 ];
@@ -47,19 +47,18 @@ const toEmbedUrl = (url: string, autoplay = false) => {
   return url;
 };
 
-/* ── Stars ── */
-const Stars = () => (
-  <div className="flex gap-0.5">
-    {Array.from({ length: 5 }).map((_, i) => (
-      <Star key={i} size={13} weight="fill" color="#F7A600" />
-    ))}
+/* ── Review label ── */
+const ReviewLabel = () => (
+  <div className="inline-flex items-center gap-2 rounded-full border border-[#E9E9F2] bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#6B6E6B]">
+    <span className="h-1.5 w-1.5 rounded-full bg-[#948EEE]" />
+    Customer note
   </div>
 );
 
 /* ── Skeleton ── */
 const SkeletonCard = () => (
-  <div className="rounded-2xl p-6 animate-pulse" style={{ background: "#fff", border: "1px solid rgba(148,142,238,0.1)" }}>
-    <div className="flex gap-1 mb-4">{[...Array(5)].map((_, i) => <div key={i} className="w-3 h-3 rounded-full bg-gray-200" />)}</div>
+  <div className="rounded-[24px] p-6 animate-pulse" style={{ background: "#fff", border: "1px solid rgba(15,23,42,0.06)" }}>
+    <div className="inline-flex h-7 w-28 rounded-full bg-gray-100 mb-5" />
     <div className="space-y-2 mb-6">
       <div className="h-3 bg-gray-100 rounded w-full" /><div className="h-3 bg-gray-100 rounded w-4/5" /><div className="h-3 bg-gray-100 rounded w-3/5" />
     </div>
@@ -223,7 +222,7 @@ const TestimonialCard = ({
       }}
       className="p-6 flex flex-col gap-4"
     >
-      <Stars />
+      <ReviewLabel />
 
       {/* Video thumbnail — desktop: clickable to expand; mobile: inline iframe */}
       {testimonial.contentType === TESTIMONIAL_CONTENT_TYPES.VIDEO && (
@@ -285,22 +284,27 @@ const TestimonialCard = ({
       )}
 
       <p
-        className="text-sm leading-relaxed italic flex-1"
-        style={{ color: "rgba(14,15,12,0.75)", fontFamily: "'DM Sans', sans-serif" }}
+        className="text-[15px] leading-7 flex-1"
+        style={{ color: "#3F4340", fontFamily: "'DM Sans', sans-serif" }}
       >
-        "{testimonial.description}"
+        {testimonial.description}
       </p>
 
-      <div className="flex items-center gap-2 pt-2" style={{ borderTop: "1px solid rgba(148,142,238,0.1)" }}>
+      <div className="flex items-center gap-2 pt-2" style={{ borderTop: "1px solid rgba(15,23,42,0.06)" }}>
         <div
           className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
-          style={{ background: "#948EEE" }}
+          style={{ background: "linear-gradient(135deg,#948EEE,#6F63E8)" }}
         >
           {(testimonial.name || "?").split(" ").slice(0, 2).map((w) => w[0] || "").join("").toUpperCase() || "?"}
         </div>
-        <span className="text-sm font-semibold" style={{ color: "#0E0F0C", fontFamily: "'DM Sans', sans-serif" }}>
-          {testimonial.name}
-        </span>
+        <div>
+          <span className="block text-sm font-semibold" style={{ color: "#0E0F0C", fontFamily: "'DM Sans', sans-serif" }}>
+            {testimonial.name}
+          </span>
+          <span className="block text-[12px] text-[#6B6E6B]" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+            Customer review
+          </span>
+        </div>
       </div>
     </motion.div>
   );
@@ -316,7 +320,7 @@ const TestimonialsNew = () => {
   const displayList = !isLoading && testimonials.length === 0 ? FALLBACK_TESTIMONIALS : testimonials;
 
   return (
-    <section className="relative py-20 px-4" style={{ background: "#FFFFFF" }}>
+    <section className="relative py-20 px-4" style={{ background: "linear-gradient(180deg, #FFFFFF 0%, #FBFBFE 100%)" }}>
       {/* Subtle noise grain */}
       <div
         className="pointer-events-none absolute inset-0 z-0"
@@ -335,14 +339,14 @@ const TestimonialsNew = () => {
           transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
           className="mb-12"
         >
-          <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#948EEE", fontFamily: "'Delius', cursive" }}>
-            From our users ✦
+          <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "#948EEE", fontFamily: "'DM Sans', sans-serif" }}>
+            Customer feedback
           </p>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight" style={{ color: "#0E0F0C", fontFamily: "'DM Sans', sans-serif" }}>
-            Real people,<br />real trades.
+            What people say<br />after using it.
           </h2>
           <p className="mt-3 text-base" style={{ color: "#6B6E6B", fontFamily: "'DM Sans', sans-serif" }}>
-            Thousands of Nigerians trust CryptoNow every week.
+            A few short notes from recent customers.
           </p>
         </motion.div>
 

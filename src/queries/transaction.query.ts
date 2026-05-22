@@ -237,6 +237,39 @@ export const useTransactionQuery = () => {
       toast.error(message);
     },
   });
+
+  const manualSellDepositRecheckMutation = useMutation({
+    mutationKey: [QUERY_KEYS.TRANSACTION.MANUAL_SELL_DEPOSIT_RECHECK],
+    mutationFn: async (sessionId: string) => {
+      return await transactionServiceApi.manualRecheckSellDeposit(sessionId);
+    },
+    onSuccess: async ({ success, message }, sessionId) => {
+      if (success) {
+        toast.success(message);
+      } else {
+        toast.error(message);
+      }
+
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.TRANSACTION.USER_TRANSACTION_DETAILS, sessionId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [
+            QUERY_KEYS.TRANSACTION.USER_TRANSACTION_DETAILS,
+            sessionId,
+            "status",
+          ],
+        }),
+      ]);
+    },
+    onError: (error: AxiosServerError) => {
+      const message =
+        extractErrorMessage(error) ||
+        "Failed to recheck this deposit. Please try again.";
+      toast.error(message);
+    },
+  });
   
   // Confirm Receiving Payment Account Mutation
   const receivingPaymentAccountConfirmationMutation = useMutation({
@@ -450,6 +483,7 @@ export const useTransactionQuery = () => {
     // Mutations
     initiateTransactionMutation,
     makePaymentTransactionMutation,
+    manualSellDepositRecheckMutation,
     receivingPaymentAccountConfirmationMutation,
     createAndSubmitTransactionMutation,
     disputeTransactionInitiationMutation,
@@ -459,5 +493,5 @@ export const useTransactionQuery = () => {
 
     // Functions
     useTransactionStatus,
-    };
-    };
+  };
+};

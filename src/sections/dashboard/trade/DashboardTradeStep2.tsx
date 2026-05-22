@@ -210,11 +210,15 @@ function TradeMonitoringView({
   payoutBank,
   status,
   isBuy,
+  onManualRecheck,
+  manualRecheckPending,
 }: {
   selectedToken?: SupportedCryptoOrCurrencyResponse;
   payoutBank?: UserBankAccountResponse;
   status?: string;
   isBuy?: boolean;
+  onManualRecheck?: () => void;
+  manualRecheckPending?: boolean;
 }) {
   const statusColors = {
     done: {
@@ -280,6 +284,9 @@ function TradeMonitoringView({
 
   const headline = isBuy ? "Verifying Payment" : "Monitoring Wallet";
   const subHeadline = isBuy ? "Checking your receipt…" : "Listening for Transaction…";
+  const showManualRecheck =
+    !isBuy &&
+    (status === "PAYMENT_ACCOUNT_CONFIRMED" || status === "AWAITING_CRYPTO");
 
   return (
     <div className="flex flex-col gap-5">
@@ -320,6 +327,31 @@ function TradeMonitoringView({
 
       {/* Paying to bank (only for SELL) */}
       {!isBuy && <PayingToRow payoutBank={payoutBank} />}
+
+      {showManualRecheck && (
+        <div
+          className="rounded-2xl px-4 py-3.5 flex flex-col gap-3"
+          style={{ background: "#F9FAFB", border: "1px solid #ECECEC" }}
+        >
+          <div className="flex flex-col gap-1">
+            <p className="text-sm font-bold" style={{ color: "#0E0F0C" }}>
+              Already sent your {selectedToken?.symbol ?? "crypto"}?
+            </p>
+            <p className="text-xs leading-relaxed" style={{ color: "#6B6E6B" }}>
+              If network detection is delayed, trigger an immediate wallet recheck for this transaction.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onManualRecheck}
+            disabled={!onManualRecheck || manualRecheckPending}
+            className="w-full rounded-2xl px-4 py-3 text-sm font-bold transition-opacity disabled:opacity-60"
+            style={{ background: "#0E0F0C", color: "#FFFFFF" }}
+          >
+            {manualRecheckPending ? "Rechecking Deposit..." : "I've Sent It"}
+          </button>
+        </div>
+      )}
 
       {/* 4-step progress */}
       <div className="flex flex-col gap-2.5">
@@ -531,7 +563,7 @@ export default function DashboardTradeStep2({
   setTransactionSessionId,
 }: DashboardTradeStep2Props) {
   const isBuy = tradeType === "buy";
-  const { useTransactionStatus } = useTransactionQuery();
+  const { useTransactionStatus, manualSellDepositRecheckMutation } = useTransactionQuery();
   const { data: txData } = useTransactionStatus(transactionRef);
   const txStatus = txData?.status;
 
@@ -732,6 +764,12 @@ export default function DashboardTradeStep2({
             selectedToken={selectedToken}
             payoutBank={payoutBank}
             status={txStatus}
+            onManualRecheck={
+              transactionRef
+                ? () => manualSellDepositRecheckMutation.mutate(transactionRef)
+                : undefined
+            }
+            manualRecheckPending={manualSellDepositRecheckMutation.isPending}
           />
         </motion.div>
       </div>

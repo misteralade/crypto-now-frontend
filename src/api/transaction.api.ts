@@ -9,6 +9,7 @@ import type {
   BaseApiResponse,
   GetTransactionDetailsAPIResponse,
   InitiateTransactionAPIResponse,
+  ManualSellDepositRecheckResponse,
   TransactionSummaryResponse,
   UserTransactionsHistoryResponse
 } from "../types/response.payload.types.ts";
@@ -177,6 +178,13 @@ class TransactionServiceApi {
   
   async getTransactionDetails(sessionId: string) {
     return await axiosGetRequestHandler(`/transaction/details/${sessionId}`) as GetTransactionDetailsAPIResponse
+  }
+
+  async manualRecheckSellDeposit(sessionId: string) {
+    return await axiosPostRequestHandler(
+      `/transaction/manual-recheck-sell-deposit/${sessionId}`,
+      {},
+    ) as BaseApiResponse<ManualSellDepositRecheckResponse>;
   }
 
   async downloadSingleTransactionDetails(sessionId: string) {

@@ -11,7 +11,7 @@ const AuthLayout = ({ children, layoutType }: { children: any; layoutType: numbe
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className="absolute top-8 left-8 z-50 pointer-events-auto"
+        className="absolute top-8 left-8 md:left-12 xl:left-16 z-50 pointer-events-auto"
       >
         <Link to="/">
           <img src={Logo} alt="CryptoNow Logo" className="h-8 w-auto" />
