@@ -56,12 +56,25 @@ export default function PublicNavbar({ innerClassName }: { innerClassName?: stri
   useEffect(() => {
     const check = async () => {
       const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
-      if (!token) { setIsLoggedIn(false); return; }
+      if (!token) {
+        setIsLoggedIn(false);
+        return;
+      }
+
       try {
-        const { success } = await userServiceApi.pingUser();
+        // Add a 5s timeout to the ping check to ensure buttons eventually show
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Timeout")), 5000)
+        );
+        const { success } = (await Promise.race([
+          userServiceApi.pingUser(),
+          timeoutPromise,
+        ])) as any;
+
         setIsLoggedIn(success);
         if (!success) localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
-      } catch {
+      } catch (err) {
+        console.error("Ping failed or timed out:", err);
         setIsLoggedIn(false);
         localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
       }

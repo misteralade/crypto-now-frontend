@@ -32,8 +32,10 @@ export const useSignInPage = () => {
     const { success, data } = await userSignInMutation.mutateAsync(payload);
 
     if (success) {
+      const target = data?.twoFactorRequired ? ROUTES.TWO_FACTOR_VERIFY : ROUTES.DASHBOARD;
+      console.log(`Login successful, navigating to: ${target}`);
       navigate({
-        to: data?.twoFactorRequired ? ROUTES.TWO_FACTOR_VERIFY : ROUTES.DASHBOARD,
+        to: target,
         replace: true,
       });
     }

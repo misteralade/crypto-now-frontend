@@ -25,16 +25,33 @@ class UserServiceApi {
   
   private pingCache: { lastChecked: number; result: any } | null = null;
   private readonly PING_CACHE_DURATION = 1000 * 60; // 1 minute
+  private pingPromise: Promise<BaseApiResponse<null>> | null = null;
 
   async pingUser() {
     const now = Date.now();
+    
+    // 1. Check cache
     if (this.pingCache && (now - this.pingCache.lastChecked < this.PING_CACHE_DURATION)) {
       return this.pingCache.result;
     }
-    
-    const result = await axiosGetRequestHandler('/user/ping-user') as BaseApiResponse<null>;
-    this.pingCache = { lastChecked: now, result };
-    return result;
+
+    // 2. Coalesce inflight requests
+    if (this.pingPromise) {
+      return this.pingPromise;
+    }
+
+    // 3. Initiate request
+    this.pingPromise = (async () => {
+      try {
+        const result = await axiosGetRequestHandler('/user/ping-user') as BaseApiResponse<null>;
+        this.pingCache = { lastChecked: Date.now(), result };
+        return result;
+      } finally {
+        this.pingPromise = null;
+      }
+    })();
+
+    return this.pingPromise;
   }
   
   async uploadProfilePicture(formData: FormData) {
