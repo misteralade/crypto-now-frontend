@@ -94,7 +94,7 @@ const HeroSectionNew = () => {
             className="text-sm sm:text-base text-gray-400 font-normal max-w-xs"
             style={{ fontFamily: "'DM Sans', sans-serif" }}
           >
-            Fast, simple, no account needed. Try a guest trade right now.
+            Fast, simple, secure. Try a guest trade right now.
           </p>
         </motion.div>
 
@@ -109,10 +109,10 @@ const HeroSectionNew = () => {
 
         {/* Fast • Simple • Secure */}
         <p
-          className="text-sm sm:text-base text-gray-500 whitespace-nowrap relative z-40"
-          style={{ fontFamily: "'Delius', cursive" }}
+          className="text-sm sm:text-base text-[#6B6E6B] relative z-40"
+          style={{ fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.02em" }}
         >
-          Fast &bull; Simple &bull; Secure
+          Fast, simple, and clear.
         </p>
       </div>
     </section>

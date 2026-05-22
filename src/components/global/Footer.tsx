@@ -84,11 +84,11 @@ const Footer = () => {
             <h3 className="font-semibold text-gray-900 mb-4">Contact info</h3>
             <div className="space-y-3 gap-0.5 flex flex-col">
               <a
-                  href="mailto:cryptonownaijahelpdesk@gmail.com"
+                  href="mailto:Support@cryptonow.ng"
                   target="_blank"
                   className="text-gray-600 hover:text-gray-900"
               >
-                cryptonownaijahelpdesk@gmail.com
+                Support@cryptonow.ng
               </a>
 
               <a

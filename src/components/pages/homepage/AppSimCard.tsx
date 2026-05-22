@@ -13,6 +13,7 @@ import {
   ArrowRight,
 } from "@phosphor-icons/react";
 import { useTradeCryptoCurrenciesButton } from "../../../hooks/components/useTradeCryptoCurrenciesButton.ts";
+import { useBankQuery } from "../../../queries/bank.query.ts";
 import { transactionServiceApi } from "../../../api/transaction.api.ts";
 import { bankServiceApi } from "../../../api/bank.api.ts";
 import { cryptoServiceApi } from "../../../api/crypto.api.ts";
@@ -20,6 +21,11 @@ import { exchangeRateServiceApi } from "../../../api/rate.api.ts";
 import type { SupportedCryptoOrCurrencyResponse } from "../../../types/response.payload.types.ts";
 import { ROUTES } from "../../../util/constants.util.ts";
 import { useNavigate } from "@tanstack/react-router";
+import BankSelector from "../../global/BankSelector.tsx";
+import {
+  TRADE_FIAT_AMOUNT_PRESETS,
+  formatTradeFiatPreset,
+} from "../../../constants/tradeAmounts.ts";
 
 const ALL_NETWORKS = [
   { id: "TRC20", label: "TRC20 (Tron)" },
@@ -126,6 +132,7 @@ const FloatInput = ({
   maxLength,
   mono,
   inputMode,
+  readOnly = false,
 }: {
   label: string;
   value: string;
@@ -135,6 +142,7 @@ const FloatInput = ({
   maxLength?: number;
   mono?: boolean;
   inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
+  readOnly?: boolean;
 }) => (
   <div
     className="flex flex-col rounded-xl px-4 pt-2 pb-3"
@@ -150,6 +158,7 @@ const FloatInput = ({
       placeholder={placeholder}
       maxLength={maxLength}
       inputMode={inputMode}
+      readOnly={readOnly}
       className={`bg-transparent outline-none text-sm text-[#0E0F0C] font-medium placeholder:text-gray-300 ${
         mono ? "font-mono" : ""
       }`}
@@ -179,6 +188,7 @@ const AppSimCard = () => {
   const navigate = useNavigate();
   const { supportedCryptoCurrencies, loadingSupportedCrypto, supportedCurrencies, loadingSupportedCurrencies } =
     useTradeCryptoCurrenciesButton();
+  const { allBanks, loadingAllBanks } = useBankQuery();
 
   const saved = loadLS();
 
@@ -208,6 +218,7 @@ const AppSimCard = () => {
 
   const [email, setEmail] = useState(saved.email || "");
   const [walletAddress, setWalletAddress] = useState(saved.walletAddress || "");
+  const [selectedBankId, setSelectedBankId] = useState(saved.selectedBankId || "");
   const [network, setNetwork] = useState(saved.network || "TRC20");
   const [showNetworkPicker, setShowNetworkPicker] = useState(false);
   const networkPickerRef = useRef<HTMLDivElement>(null);
@@ -229,6 +240,8 @@ const AppSimCard = () => {
   const [bankName, setBankName] = useState(saved.bankName || "");
   const [accountNumber, setAccountNumber] = useState(saved.accountNumber || "");
   const [accountName, setAccountName] = useState(saved.accountName || "");
+  const [bankLookupError, setBankLookupError] = useState<string | null>(null);
+  const [isLookingUpBankName, setIsLookingUpBankName] = useState(false);
 
   const [platformBank, setPlatformBank] = useState<any>(
     saved.platformBank || null
@@ -246,6 +259,7 @@ const AppSimCard = () => {
   const currencyObj = supportedCurrencies?.find(
     (c) => c.id === selectedCurrency
   );
+  const selectedBank = allBanks?.find((bank) => bank.id === selectedBankId);
 
   // Init defaults once loaded (only if not already restored from localStorage)
   useEffect(() => {
@@ -257,6 +271,23 @@ const AppSimCard = () => {
     if (!selectedCurrency && supportedCurrencies?.length)
       setSelectedCurrency(supportedCurrencies[0].id);
   }, [supportedCurrencies]);
+
+  useEffect(() => {
+    if (!selectedBankId && bankName && allBanks?.length) {
+      const matchedBank = allBanks.find(
+        (bank) => bank.name.toLowerCase() === bankName.toLowerCase(),
+      );
+      if (matchedBank) {
+        setSelectedBankId(matchedBank.id);
+      }
+    }
+  }, [allBanks, bankName, selectedBankId]);
+
+  useEffect(() => {
+    if (selectedBank?.name) {
+      setBankName(selectedBank.name);
+    }
+  }, [selectedBank?.name]);
 
   // Auto-set network to the correct default whenever the selected crypto changes
   useEffect(() => {
@@ -279,6 +310,7 @@ const AppSimCard = () => {
         receiveAmount,
         email,
         walletAddress,
+        selectedBankId,
         network,
         bankName,
         accountNumber,
@@ -298,6 +330,7 @@ const AppSimCard = () => {
     receiveAmount,
     email,
     walletAddress,
+    selectedBankId,
     network,
     bankName,
     accountNumber,
@@ -312,19 +345,18 @@ const AppSimCard = () => {
   const currSymbol = currencyObj?.symbol || currencyObj?.code || "₦";
   const cryptoSymbol = cryptoObj?.symbol || cryptoObj?.code || "";
 
-  // BUY chips based on active input currency. SELL chips are always crypto amounts.
-  const isUsdInput = isBuy && buyInputCurrency === "USD";
-  const chips = isUsdInput
-    ? [10, 50, 100, 500]
-    : isBuy
-    ? [5000, 20000, 50000, 100000]
-    : [0.001, 0.01, 0.1, 1];
-  const formatChip = (n: number) =>
-    isUsdInput
-      ? `$${n}`
-      : isBuy
-      ? `₦${n >= 1000 ? n / 1000 + "k" : n}`
-      : `${n} ${cryptoSymbol}`;
+  // BUY and SELL chips use fiat-friendly presets. SELL chips represent target
+  // payout amounts and are converted back into crypto amounts internally.
+  const buyChips =
+    buyInputCurrency === "USD"
+      ? TRADE_FIAT_AMOUNT_PRESETS.usd
+      : TRADE_FIAT_AMOUNT_PRESETS.ngn;
+  const sellChips =
+    sellReceiveCurrency === "USD"
+      ? TRADE_FIAT_AMOUNT_PRESETS.usd
+      : TRADE_FIAT_AMOUNT_PRESETS.ngn;
+  const formatChip = (n: number, currencyCode: "NGN" | "USD") =>
+    formatTradeFiatPreset(n, currencyCode);
 
   // Derive NGN amount when user is typing in USD
   const ngnCurrencyObj = supportedCurrencies?.find((c) => c.code === "NGN");
@@ -338,35 +370,24 @@ const AppSimCard = () => {
     }
     setUsdRateLoading(true);
     try {
-      const [ngnRes, usdRes] = await Promise.all([
-        exchangeRateServiceApi.getExchangeRate(
-          cryptoId,
-          ngnCurrencyObj.id,
-          "BUY"
-        ),
-        exchangeRateServiceApi.getExchangeRate(
-          cryptoId,
-          usdCurrencyObj.id,
-          "BUY"
-        ),
-      ]);
-      if (
-        ngnRes.success &&
-        usdRes.success &&
-        ngnRes.data &&
-        usdRes.data &&
-        usdRes.data.fiatRate > 0
-      ) {
-        setUsdToNgnRate(ngnRes.data.fiatRate / usdRes.data.fiatRate);
+      const { data, success } = await exchangeRateServiceApi.getExchangeRate(
+        cryptoId,
+        usdCurrencyObj.id,
+        "BUY"
+      );
+      if (success && data?.fiatRate > 0 && data?.usdRate && data.usdRate > 0) {
+        setUsdToNgnRate(data.fiatRate / data.usdRate);
       } else {
-        toast.error("Could not fetch USD rate. Please use NGN.");
+        toast.error("Could not fetch live USD rate. Please use NGN.");
         setBuyInputCurrency("NGN");
       }
-    } catch {
-      toast.error("Could not fetch USD rate. Please use NGN.");
+    } catch (error) {
+      console.error("AppSimCard: failed to fetch USD conversion rate", error);
+      toast.error("Could not fetch live USD rate. Please use NGN.");
       setBuyInputCurrency("NGN");
+    } finally {
+      setUsdRateLoading(false);
     }
-    setUsdRateLoading(false);
   };
 
   // The NGN amount actually used for transactions
@@ -396,7 +417,97 @@ const AppSimCard = () => {
         }
         setReceiveAmount(computed > 0 ? String(computed) : "");
       }
-    } catch {}
+    } catch (error) {
+      console.error("AppSimCard: failed to compute trade preview", error);
+    }
+  };
+
+  const lookupAccountName = async (
+    accountNumberValue: string,
+    bankId: string,
+  ) => {
+    if (!bankId || accountNumberValue.length !== 10) return;
+
+    setIsLookingUpBankName(true);
+    setBankLookupError(null);
+    try {
+      const { data, success, message } = await bankServiceApi.lookupAccountName(
+        accountNumberValue,
+        bankId,
+      );
+      if (success && data?.accountName) {
+        setAccountName(data.accountName);
+        return;
+      }
+
+      setAccountName("");
+      setBankLookupError(
+        message || "We could not verify this account. Check the bank and account number.",
+      );
+    } catch (error) {
+      console.error("AppSimCard: failed to look up guest bank account", error);
+      setAccountName("");
+      setBankLookupError(
+        "We could not verify this account. Check the bank and account number.",
+      );
+    } finally {
+      setIsLookingUpBankName(false);
+    }
+  };
+
+  const handleBankSelect = (bankId: string) => {
+    setSelectedBankId(bankId);
+    setBankLookupError(null);
+    setAccountName("");
+  };
+
+  const handleAccountNumberChange = (value: string) => {
+    const digitsOnly = value.replace(/\D/g, "").slice(0, 10);
+    setAccountNumber(digitsOnly);
+    setAccountName("");
+    setBankLookupError(null);
+  };
+
+  useEffect(() => {
+    if (!selectedBankId || accountNumber.length !== 10) {
+      setAccountName("");
+      setBankLookupError(null);
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      void lookupAccountName(accountNumber, selectedBankId);
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [accountNumber, selectedBankId]);
+
+  const handleSellChipClick = async (targetFiatAmount: number) => {
+    if (!selectedCrypto || !selectedCurrency) return;
+
+    const targetNgnAmount =
+      sellReceiveCurrency === "USD" && usdToNgnRate
+        ? Math.round(targetFiatAmount * usdToNgnRate)
+        : targetFiatAmount;
+
+    try {
+      const { data, success } = await exchangeRateServiceApi.getExchangeRate(
+        selectedCrypto,
+        selectedCurrency,
+        "SELL",
+      );
+      if (!success || !data || !data.coinGeckoRate || !data.platformRate) return;
+
+      const cryptoAmount =
+        targetNgnAmount / (data.coinGeckoRate * data.platformRate);
+      const roundedCryptoAmount = cryptoAmount.toFixed(8);
+
+      setAmount(roundedCryptoAmount);
+      setReceiveAmount("");
+      await fetchRate(roundedCryptoAmount);
+    } catch (error) {
+      console.error("AppSimCard: failed to resolve sell preset", error);
+    }
   };
 
   const handleStep1Next = async () => {
@@ -451,7 +562,7 @@ const AppSimCard = () => {
   };
 
   const handleSellStep2Next = async () => {
-    if (!email || !bankName || !accountNumber || !accountName) return;
+    if (!email || !selectedBankId || !accountNumber || !accountName) return;
     setLoading(true);
     try {
       const res = await transactionServiceApi.initiateTransactionAnonymousUser({
@@ -460,7 +571,7 @@ const AppSimCard = () => {
         amountToSend: parseFloat(amount),
         amountToReceive: parseFloat(receiveAmount) || 0,
         email,
-        bankName,
+        bankName: selectedBank?.name || bankName,
         accountNumber,
         accountName,
       });
@@ -498,7 +609,9 @@ const AppSimCard = () => {
         await transactionServiceApi.uploadTransactionReceipt(fd);
       }
       setDone(true);
-    } catch {}
+    } catch (error) {
+      console.error("AppSimCard: failed to upload receipt", error);
+    }
     setLoading(false);
   };
 
@@ -511,9 +624,11 @@ const AppSimCard = () => {
     setReceiveAmount("");
     setEmail("");
     setWalletAddress("");
+    setSelectedBankId("");
     setBankName("");
     setAccountNumber("");
     setAccountName("");
+    setBankLookupError(null);
     setReceiptFile(null);
     setPlatformBank(null);
     setDepositWallet("");
@@ -752,23 +867,34 @@ const AppSimCard = () => {
                 )}
                 {/* Quick chips */}
                 <div className="flex border-t border-gray-100">
-                  {chips.map((chip) => (
+                  {(isBuy ? buyChips : sellChips).map((chip) => (
                     <button
                       key={chip}
                       onClick={() => {
-                        setAmount(String(chip));
-                        setReceiveAmount("");
+                        if (isBuy) {
+                          setAmount(String(chip));
+                          setReceiveAmount("");
+                          return;
+                        }
+                        void handleSellChipClick(chip);
                       }}
                       className="flex-1 py-2.5 text-xs font-semibold border-r border-gray-100 last:border-r-0 cursor-pointer transition-colors"
+                      data-active={isBuy && amount === String(chip)}
                       style={{
                         background:
-                          amount === String(chip)
+                          isBuy && amount === String(chip)
                             ? "rgba(148,142,238,0.08)"
                             : "transparent",
-                        color: amount === String(chip) ? "#948EEE" : "#6B7280",
+                        color:
+                          isBuy && amount === String(chip)
+                            ? "#948EEE"
+                            : "#6B7280",
                       }}
                     >
-                      {formatChip(chip)}
+                      {formatChip(
+                        chip,
+                        isBuy ? buyInputCurrency : sellReceiveCurrency,
+                      )}
                     </button>
                   ))}
                 </div>
@@ -1021,7 +1147,7 @@ const AppSimCard = () => {
               className="flex flex-col gap-3"
             >
               <p className="text-center text-sm text-gray-400">
-                Step 2 of 2 · Your payout bank
+                Step 2 of 2 · Payment details
               </p>
 
               <div
@@ -1048,16 +1174,17 @@ const AppSimCard = () => {
                 placeholder="you@email.com — for payout updates"
                 type="email"
               />
-              <FloatInput
-                label="Your Bank Name"
-                value={bankName}
-                onChange={setBankName}
-                placeholder="e.g. First Bank of Nigeria"
+              <BankSelector
+                label="Your Bank"
+                placeholder="Select bank"
+                options={!loadingAllBanks ? allBanks : []}
+                value={selectedBankId}
+                onValueChange={handleBankSelect}
               />
               <FloatInput
                 label="Account Number"
                 value={accountNumber}
-                onChange={setAccountNumber}
+                onChange={handleAccountNumberChange}
                 placeholder="0000000000"
                 maxLength={10}
                 mono
@@ -1067,8 +1194,12 @@ const AppSimCard = () => {
                 label="Account Name"
                 value={accountName}
                 onChange={setAccountName}
-                placeholder="Your full name on account"
+                placeholder={isLookingUpBankName ? "Looking up account name..." : "Will auto-fill after verification"}
+                readOnly
               />
+              {bankLookupError && (
+                <p className="text-xs text-red-500 -mt-1">{bankLookupError}</p>
+              )}
 
               <div className="flex gap-2">
                 <button
@@ -1084,7 +1215,7 @@ const AppSimCard = () => {
                   onClick={handleSellStep2Next}
                   disabled={
                     !email ||
-                    !bankName ||
+                    !selectedBankId ||
                     !accountNumber ||
                     !accountName ||
                     loading

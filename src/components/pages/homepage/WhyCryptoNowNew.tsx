@@ -5,23 +5,23 @@ import { ShieldCheck, LockSimple, Lightning } from "@phosphor-icons/react";
 const features = [
   {
     icon: ShieldCheck,
-    label: "Human-verified",
-    title: "Every trade, checked by our team.",
-    body: "No bots making judgment calls on your money. Our team reviews every transaction before funds move — accuracy and speed without shortcuts.",
+    label: "Reviewed",
+    title: "Trades are checked by a person.",
+    body: "We review each trade before funds move, so nothing feels rushed or automated.",
     align: "left" as const,
   },
   {
     icon: LockSimple,
     label: "Rate locked",
-    title: "Your rate, frozen for 5 minutes.",
-    body: "CoinGecko-sourced rates lock the moment you start. No slippage, no surprises — the price you see is the price you pay, every time.",
+    title: "Your rate stays fixed for 5 minutes.",
+    body: "The price is locked when you start, so you know what you’re paying before you proceed.",
     align: "right" as const,
   },
   {
     icon: Lightning,
-    label: "Fast settlement",
-    title: "Money moves before you blink.",
-    body: "Automated settlement kicks off the moment your payment confirms. Most trades complete in under 3 minutes, day or night.",
+    label: "Quick payout",
+    title: "Naira usually lands fast.",
+    body: "Once the trade clears, we send the payout without extra steps or back-and-forth.",
     align: "left" as const,
   },
 ];
@@ -56,14 +56,11 @@ const FeatureRow = ({
 
       {/* Text */}
       <div className="flex-1">
-        <p
-          className="text-xs font-semibold uppercase tracking-widest mb-1"
-          style={{ color: "#948EEE", fontFamily: "'DM Sans', sans-serif" }}
-        >
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] mb-1.5" style={{ color: "#8C87E6", fontFamily: "'DM Sans', sans-serif" }}>
           {feature.label}
         </p>
         <h3
-          className="text-lg font-semibold mb-1.5 leading-snug"
+          className="text-[19px] sm:text-lg font-semibold mb-1.5 leading-snug"
           style={{ color: "#0E0F0C", fontFamily: "'DM Sans', sans-serif" }}
         >
           {feature.title}
@@ -90,7 +87,7 @@ const WhyCryptoNowNew = () => {
     >
       {/* Faint arc decoration — bottom-left */}
       <div
-        className="pointer-events-none absolute left-0 bottom-0 z-0"
+        className="pointer-events-none absolute left-0 bottom-0 z-0 hidden sm:block"
         style={{ width: "320px", height: "320px", transform: "translate(-40%, 40%)" }}
       >
         <div className="absolute inset-0 rounded-full" style={{ border: "1px solid rgba(148,142,238,0.10)" }} />
@@ -106,11 +103,8 @@ const WhyCryptoNowNew = () => {
           transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
           className="mb-14"
         >
-          <p
-            className="text-xs font-semibold uppercase tracking-widest mb-3"
-            style={{ color: "#948EEE", fontFamily: "'Delius', cursive" }}
-          >
-            Why us ✦
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] mb-3" style={{ color: "#8C87E6", fontFamily: "'DM Sans', sans-serif" }}>
+            Why us
           </p>
           <h2
             className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight"
@@ -120,11 +114,8 @@ const WhyCryptoNowNew = () => {
             <br />
             for a reason.
           </h2>
-          <p
-            className="mt-3 text-base max-w-md"
-            style={{ color: "#6B6E6B", fontFamily: "'DM Sans', sans-serif" }}
-          >
-            Every design decision at CryptoNow was made to protect you and move fast.
+          <p className="mt-3 text-base max-w-md" style={{ color: "#6B6E6B", fontFamily: "'DM Sans', sans-serif" }}>
+            A few small things that make the flow feel more direct and less noisy.
           </p>
         </motion.div>
 

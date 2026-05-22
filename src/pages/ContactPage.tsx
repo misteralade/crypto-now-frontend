@@ -96,11 +96,11 @@ const ContactPage = () => {
             >
               <p className="text-xs font-semibold tracking-widest uppercase mb-4" style={{ color: "rgba(14,15,12,0.35)" }}>Email</p>
               <a
-                href="mailto:cryptonownaijahelpdesk@gmail.com?subject=Contact%20Us%20Inquiry"
+                href="mailto:Support@cryptonow.ng?subject=Contact%20Us%20Inquiry"
                 className="text-base font-medium hover:opacity-70 transition-opacity break-all"
                 style={{ color: "#0E0F0C" }}
               >
-                cryptonownaijahelpdesk@gmail.com
+                Support@cryptonow.ng
               </a>
             </div>
 

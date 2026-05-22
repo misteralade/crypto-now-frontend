@@ -3,14 +3,13 @@ import { useNavigate } from "@tanstack/react-router";
 import { useTradeCryptoCurrenciesButton } from "../../../hooks/components/useTradeCryptoCurrenciesButton.ts";
 import { ROUTES } from "../../../util/constants.util.ts";
 import type { SupportedCryptoOrCurrencyResponse } from "../../../types/response.payload.types.ts";
+import {
+  TRADE_FIAT_AMOUNT_PRESETS,
+  formatTradeFiatPreset,
+} from "../../../constants/tradeAmounts.ts";
 
-const QUICK_AMOUNTS_USD = [5, 10, 50, 100];
-const QUICK_AMOUNTS_NGN = [1000, 5000, 20000, 100000];
-
-const formatChipLabel = (amount: number, symbol: string) => {
-  if (amount >= 1000) return `${symbol}${(amount / 1000).toFixed(0)}k`;
-  return `${symbol}${amount}`;
-};
+const QUICK_AMOUNTS_USD = TRADE_FIAT_AMOUNT_PRESETS.usd;
+const QUICK_AMOUNTS_NGN = TRADE_FIAT_AMOUNT_PRESETS.ngn;
 
 interface PickerProps {
   items: SupportedCryptoOrCurrencyResponse[] | undefined;
@@ -215,7 +214,6 @@ const TradeModal = ({ onClose }: TradeModalProps) => {
           {!isSell && (
             <div className="flex gap-2">
               {(selectedCurrencyObj?.code === "NGN" ? QUICK_AMOUNTS_NGN : QUICK_AMOUNTS_USD).map((chip) => {
-                const sym = selectedCurrencyObj?.symbol || selectedCurrencyObj?.code || "$";
                 return (
                   <button
                     key={chip}
@@ -226,7 +224,10 @@ const TradeModal = ({ onClose }: TradeModalProps) => {
                         : "bg-white border-gray-200 text-gray-500 hover:border-[#948EEE] hover:text-[#948EEE]"
                     }`}
                   >
-                    {formatChipLabel(chip, sym)}
+                    {formatTradeFiatPreset(
+                      chip,
+                      selectedCurrencyObj?.code === "USD" ? "USD" : "NGN",
+                    )}
                   </button>
                 );
               })}

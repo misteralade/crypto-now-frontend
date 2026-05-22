@@ -16,6 +16,10 @@ import { setInitiateTransactionField } from "../../../redux/transaction.slice.ts
 import { setSelectedCryptoId } from "../../../redux/crypto.slice.ts";
 import { ROUTES } from "../../../util/constants.util.ts";
 import { exchangeRateServiceApi } from "../../../api/rate.api.ts";
+import {
+  TRADE_FIAT_AMOUNT_PRESETS,
+  formatTradeFiatPreset,
+} from "../../../constants/tradeAmounts.ts";
 
 export interface BuyRateInfo {
   rate: number; // NGN per 1 crypto (fiatRate from API)
@@ -30,8 +34,8 @@ export interface BuyRateInfo {
 }
 
 // ── Quick amount chips ────────────────────────────────────────────────────────
-const QUICK_AMOUNTS_NGN = [20000, 50000, 100000, 200000];
-const QUICK_AMOUNTS_USD = [20, 50, 100, 200];
+const QUICK_AMOUNTS_NGN = TRADE_FIAT_AMOUNT_PRESETS.ngn;
+const QUICK_AMOUNTS_USD = TRADE_FIAT_AMOUNT_PRESETS.usd;
 
 // ── Network labels ────────────────────────────────────────────────────────────
 const NETWORK_LABELS: Record<string, string> = {
@@ -183,7 +187,6 @@ function BuyFields({
 
   // Determine active currency
   const isUSD = selectedCurrency?.code === "USD";
-  const currencySymbol = isUSD ? "$" : "₦";
   const quickAmounts = isUSD ? QUICK_AMOUNTS_USD : QUICK_AMOUNTS_NGN;
 
   const handleCurrencySwitch = (targetCode: "NGN" | "USD") => {
@@ -353,10 +356,7 @@ function BuyFields({
         <div className="flex border-t" style={{ borderColor: "#EEEEEE" }}>
           {quickAmounts.map((a) => {
             const isActive = String(amountToBuy) === String(a);
-            const label =
-              a >= 1000
-                ? `${currencySymbol}${a / 1000}k`
-                : `${currencySymbol}${a}`;
+            const label = formatTradeFiatPreset(a, isUSD ? "USD" : "NGN");
             return (
               <button
                 key={a}

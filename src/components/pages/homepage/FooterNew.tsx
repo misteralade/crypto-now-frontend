@@ -7,9 +7,9 @@ const currentYear = new Date().getFullYear();
 const colHead = {
   color: "rgba(255,255,255,0.3)",
   fontFamily: "'DM Sans', sans-serif",
-  fontSize: "10px",
+  fontSize: "11px",
   fontWeight: 600,
-  letterSpacing: "0.12em",
+  letterSpacing: "0.16em",
   textTransform: "uppercase" as const,
   marginBottom: "16px",
 };
@@ -32,7 +32,7 @@ const FooterLink = ({
   children: React.ReactNode;
 }) => {
   const cls =
-    "block mb-3 text-sm transition-colors hover:text-[#948EEE]";
+    "block mb-3 text-[14px] transition-colors hover:text-[#948EEE]";
   if (to) {
     return (
       <Link to={to} className={cls} style={linkStyle}>
@@ -56,10 +56,10 @@ const FooterNew = () => (
     <div
       className="pointer-events-none absolute bottom-0 left-1/2 -translate-x-1/2 select-none whitespace-nowrap"
       style={{
-        fontSize: "clamp(72px, 14vw, 160px)",
+        fontSize: "clamp(64px, 13vw, 150px)",
         fontWeight: 800,
         fontFamily: "'DM Sans', sans-serif",
-        color: "rgba(255,255,255,0.04)",
+        color: "rgba(255,255,255,0.03)",
         lineHeight: 1,
         letterSpacing: "-0.03em",
         zIndex: 0,
@@ -74,17 +74,17 @@ const FooterNew = () => (
     <div style={{ height: "1px", background: "rgba(255,255,255,0.07)" }} />
 
     {/* Main footer content */}
-    <div className="relative z-10 max-w-6xl mx-auto px-4 pt-14 pb-8">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+      <div className="relative z-10 max-w-6xl mx-auto px-4 pt-12 pb-8 md:pt-14">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 md:gap-10 mb-10 md:mb-12">
 
         {/* Brand */}
-        <div className="col-span-2 md:col-span-1">
+        <div className="sm:col-span-2 md:col-span-1">
           <img src="/logo.svg" alt="CryptoNow" className="h-7 w-auto mb-4 brightness-0 invert" />
           <p
-            className="text-sm leading-relaxed mb-5 max-w-[200px]"
+            className="text-sm leading-relaxed mb-5 max-w-[260px]"
             style={{ color: "rgba(255,255,255,0.45)", fontFamily: "'DM Sans', sans-serif" }}
           >
-            Buy &amp; sell crypto with Naira. Fast, simple, no account needed.
+            Buy and sell crypto with Naira. Clear rates, quick payout, and no unnecessary steps.
           </p>
 
           {/* Social icons */}
@@ -154,19 +154,13 @@ const FooterNew = () => (
 
       {/* Bottom bar */}
       <div
-        className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-6"
+        className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-6"
         style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}
       >
-        <p
-          className="text-xs"
-          style={{ color: "rgba(255,255,255,0.3)", fontFamily: "'DM Sans', sans-serif" }}
-        >
+        <p className="text-[11px] sm:text-xs" style={{ color: "rgba(255,255,255,0.3)", fontFamily: "'DM Sans', sans-serif" }}>
           © {currentYear} CryptoNow. All rights reserved.
         </p>
-        <p
-          className="text-xs"
-          style={{ color: "rgba(255,255,255,0.3)", fontFamily: "'DM Sans', sans-serif" }}
-        >
+        <p className="text-[11px] sm:text-xs" style={{ color: "rgba(255,255,255,0.3)", fontFamily: "'DM Sans', sans-serif" }}>
           Built in Nigeria 🇳🇬
         </p>
       </div>

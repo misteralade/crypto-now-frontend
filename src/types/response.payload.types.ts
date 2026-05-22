@@ -75,7 +75,7 @@ export type SupportedExchangeRateResponse = {
   coinGeckoRate: number;
   currency: string; // "NGN" or "USD"
   platformRate: number;
-  usdRate?: number; // Only present when currency is "USD"
+  usdRate: number; // Always present so the frontend can derive USD/NGN from one response
 };
 
 export type SupportedPlatformBankAccountResponse = {

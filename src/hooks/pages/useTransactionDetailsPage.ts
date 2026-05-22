@@ -108,7 +108,7 @@ export const useTransactionDetailsPage = () => {
   };
 
   const openDisputeMailTo = () => {
-    const email = "cryptonownaijahelpdesk@gmail.com";
+    const email = "Support@cryptonow.ng";
     const subject = `Dispute Transaction - ${transactionDetails?.sessionId || ""}`;
     const body = `Hello,\n\nI would like to dispute a transaction with the following details:\n\nTransaction ID: ${transactionDetails?.sessionId || ""}\nAmount: ${convertToMillify(Number(transactionDetails?.amountFiat)) || ""} ${transactionDetails?.currency || ""}\nDate: ${transactionDetails?.createdAt || ""}\n\nReason for Dispute:\n\n[Please provide your reason here]\n\nThank you.`;
 
