@@ -1068,7 +1068,7 @@ const AppSimCard = () => {
     )
   );
   const networkLabel =
-    ALL_NETWORKS.find((n) => n.id === network)?.label || network;
+    ALL_NETWORKS.find((n) => n.id === network)?.label || network || "Select network";
 
   return (
     <div
@@ -1862,7 +1862,7 @@ const AppSimCard = () => {
                 style={{ background: "#F5F5F5", border: "1.5px solid #E8E8E8" }}
               >
                 <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">
-                  Your unique {cryptoSymbol} deposit wallet ({network})
+                  Your unique {cryptoSymbol} deposit wallet ({networkLabel})
                 </p>
                 <p className="text-sm font-mono text-[#22c55e] break-all leading-relaxed">
                   {depositWallet}
