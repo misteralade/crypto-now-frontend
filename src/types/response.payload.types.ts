@@ -261,6 +261,7 @@ export type InitiateTransactionAPIResponse = BaseApiResponse<{
 }>;
 
 export type TransactionResponseEntity = {
+  adminPaymentReceiptUrl?: string | null;
   id: string;
   userId: string;
   sessionId: string;

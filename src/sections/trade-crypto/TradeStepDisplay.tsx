@@ -311,7 +311,7 @@ const TradeStepDisplay = ({
                 formatReceiveAmount={formatReceiveAmount}
                 formatSendAmount={formatSendAmount}
                 sellDepositWallet={sellDepositWallet}
-                sellNetwork={sellNetwork}
+                sellNetwork={sellDepositWallet?.network}
               />
             )}
           </div>

@@ -260,7 +260,8 @@ function TradeStatusMonitoring({
             status === "PAYMENT_CONFIRMED" ||
             status === "CRYPTO_SENT" ||
             status === "CRYPTO_RECEIVED" ||
-            status === "CRYPTO_CONFIRMED"
+            status === "CRYPTO_CONFIRMED" ||
+            status === "PENDING_PAYOUT"
               ? "active"
               : status === "COMPLETED"
                 ? "done"
@@ -280,6 +281,7 @@ function TradeStatusMonitoring({
             status === "DEPOSIT_PENDING_MINIMUM" ||
             status === "DEPOSIT_CONFIRMED" ||
             status === "PAYOUT_INITIATED" ||
+            status === "PENDING_PAYOUT" ||
             status === "COMPLETED"
               ? "done"
               : "active",
@@ -290,8 +292,9 @@ function TradeStatusMonitoring({
             status === "DEPOSIT_DETECTED" ||
             status === "DEPOSIT_PENDING_MINIMUM"
               ? "active"
-              : status === "DEPOSIT_CONFIRMED" ||
+            : status === "DEPOSIT_CONFIRMED" ||
                   status === "PAYOUT_INITIATED" ||
+                  status === "PENDING_PAYOUT" ||
                   status === "COMPLETED"
                 ? "done"
                 : "pending",
@@ -299,7 +302,9 @@ function TradeStatusMonitoring({
         {
           label: "Bank Transfer",
           status:
-            status === "DEPOSIT_CONFIRMED" || status === "PAYOUT_INITIATED"
+            status === "DEPOSIT_CONFIRMED" ||
+            status === "PAYOUT_INITIATED" ||
+            status === "PENDING_PAYOUT"
               ? "active"
               : status === "COMPLETED"
                 ? "done"

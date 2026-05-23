@@ -365,8 +365,6 @@ function BuyUploadView({
   onFileSelected,
   onFileCleared,
   onSubmit,
-  rateLockCountdown,
-  isRateExpired,
 }: {
   selectedToken?: SupportedCryptoOrCurrencyResponse;
   numberOfToken: number;
@@ -377,8 +375,6 @@ function BuyUploadView({
   onFileSelected: (file: File) => void;
   onFileCleared: () => void;
   onSubmit: () => void;
-  rateLockCountdown?: string;
-  isRateExpired: boolean;
 }) {
   const tableRows = [
     { label: "Crypto", value: selectedToken?.symbol ?? "—" },
@@ -510,7 +506,6 @@ export default function DashboardTradeStep2({
   buyWalletAddress,
   buyNetwork,
   payoutBank,
-  rateLockCountdown = "",
   buyRateInfo,
   onBuySubmitSuccess,
   setTransactionSessionId,
@@ -605,7 +600,7 @@ export default function DashboardTradeStep2({
     formData.append("walletAddress", buyWalletAddress ?? "");
     formData.append("network", buyNetwork ?? "");
     if (userEmail) formData.append("email", userEmail);
-    if (transactionForm?.action) formData.append("action", transactionForm.action);
+    if (initiateForm?.action) formData.append("action", initiateForm.action);
 
     const toastId = "buy-submit";
     toast.loading("Submitting transaction…", { toastId });
@@ -757,8 +752,6 @@ export default function DashboardTradeStep2({
           onSubmit={
             useLocalFlow ? handleLocalBuySubmit : handleSubmitPaymentProof
           }
-          rateLockCountdown={useLocalFlow ? undefined : rateLockCountdown}
-          isRateExpired={false}
         />
       </div>
     );

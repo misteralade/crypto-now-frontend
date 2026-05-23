@@ -649,7 +649,7 @@ const TransactionDetailsPage = () => {
                         style={{ color: "#0E0F0C" }}
                       >
                         {momentClient.formatToTransactionInitiationDate(
-                          transaction.processedAt
+                          new Date(transaction.processedAt)
                         )}
                       </p>
                     </div>

@@ -633,7 +633,7 @@ const AppSimCard = () => {
         usdCurrencyObj.id,
         action,
       );
-      if (data?.fiatRate > 0 && data?.usdRate && data.usdRate > 0) {
+      if (data && data.fiatRate > 0 && data.usdRate > 0) {
         const resolvedRate = data.fiatRate / data.usdRate;
         setUsdToNgnRate(resolvedRate);
         return resolvedRate;
@@ -681,7 +681,7 @@ const AppSimCard = () => {
       );
       if (requestId !== quoteRequestIdRef.current) return;
 
-      if (data?.fiatRate > 0) {
+      if (data && data.fiatRate > 0) {
         const computed = isBuy
           ? numericAmount / data.fiatRate
           : numericAmount * data.fiatRate;
@@ -1047,8 +1047,6 @@ const AppSimCard = () => {
     setDepositWallet("");
     setSessionId("");
     setGuestTransactionStatus(null);
-    setResumableGuestSellSuggestion(null);
-    setDismissedResumableSessionId(null);
     stopGuestTransactionPolling();
     setBuyInputCurrency("NGN");
     setSellReceiveCurrency("NGN");
