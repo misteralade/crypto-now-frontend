@@ -49,6 +49,13 @@ class CryptoServiceApi {
   async generateAllCustodialWallets() {
     return await axiosPostRequestHandler(`/custodial-wallet/generate/all`, {}) as BaseApiResponse<CustodialWalletResponse[]>;
   }
+
+  async allocateGuestSellWallet(payload: { sessionId: string; cryptoId: string; network: string }) {
+    return await axiosPostRequestHandler(
+      `/custodial-wallet/guest/allocate`,
+      payload,
+    ) as BaseApiResponse<CustodialWalletResponse>;
+  }
 }
 
 export const cryptoServiceApi = CryptoServiceApi.getInstance();

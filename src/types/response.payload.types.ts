@@ -125,7 +125,7 @@ export type UserCryptoWalletAPIResponse = BaseApiResponse<
 
 export type CustodialWalletResponse = {
   id: string;
-  userId: string;
+  userId: string | null;
   cryptocurrencyId: string;
   network: string;
   blockchainEnvironment: "testnet" | "mainnet";
@@ -133,6 +133,10 @@ export type CustodialWalletResponse = {
   derivationIndex: number;
   isActive: boolean;
   createdAt: Date;
+  walletPurpose?: "USER" | "GUEST";
+  leasedTransactionId?: string | null;
+  leaseStartedAt?: Date | null;
+  leaseExpiresAt?: Date | null;
   note?: string;
 };
 

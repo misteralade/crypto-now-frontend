@@ -269,6 +269,7 @@ const TradeStepDisplay = ({ activeTab,setActiveTab, step, currency, token, setSt
                 formatReceiveAmount={formatReceiveAmount}
                 formatSendAmount={formatSendAmount}
                 sellDepositWallet={sellDepositWallet}
+                sellNetwork={sellNetwork}
               />
             )}
           </div>

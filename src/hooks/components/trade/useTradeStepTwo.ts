@@ -15,6 +15,7 @@ import {
   loadTradeProgress,
   saveTradeProgress,
 } from "../../../util/tradeProgress.storage.util.ts";
+import { LOCAL_STORAGE_KEYS, SESSION_STORAGE_KEYS } from "../../../util/constants.util.ts";
 import {type RootState, store} from "../../../store.ts";
 import {toast} from "react-toastify";
 import { useRateQuery } from "../../../queries/rate.query.ts";
@@ -26,6 +27,8 @@ interface UseTradeStepTwoProps {
   selectedToken?: SupportedCryptoOrCurrencyResponse;
   selectedCurrency?: SupportedCryptoOrCurrencyResponse;
   sellDepositWallet?: CustodialWalletResponse | null;
+  sellNetwork?: string;
+  transactionRef?: string;
 }
 
 export const useTradeStepTwo = ({
@@ -35,6 +38,8 @@ export const useTradeStepTwo = ({
   selectedToken,
   selectedCurrency,
   sellDepositWallet,
+  sellNetwork,
+  transactionRef,
 }: UseTradeStepTwoProps) => {
   const [files, setFiles] = useState<File[]>([]);
   const [uploadedFileUrl, setUploadedFileUrl] = useState<string | undefined>();
@@ -50,6 +55,7 @@ export const useTradeStepTwo = ({
   const rootState = store.getState() as RootState;
   const cryptoId = rootState.crypto.tradeCrypto.selectedCryptoId;
   const currencyId = selectedCurrency?.id;
+  const isAuthenticated = !!localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
 
   // Fetch exchange rate to convert USD to NGN
   const { exchangeRate } = useRateQuery(
@@ -96,14 +102,42 @@ export const useTradeStepTwo = ({
           setBankDetails(data);
           return data;
         } else {
-          // Authenticated users have a custodial wallet injected via sellDepositWallet
-          // Fall back to platform wallet for anonymous users
-          const rootState = store.getState() as RootState;
-          const cryptoId = rootState.crypto.tradeCrypto.selectedCryptoId;
+          if (sellDepositWallet) {
+            const wallet = {
+              id: sellDepositWallet.id,
+              walletAddress: sellDepositWallet.walletAddress,
+              network: sellDepositWallet.network,
+            };
+            setWalletDetails(wallet);
+            return wallet;
+          }
 
-          if (!cryptoId) {
-            toast.error("Please select a crypto");
-            throw new Error("No crypto selected");
+          const cryptoId =
+            selectedToken?.id || (store.getState() as RootState).crypto.tradeCrypto.selectedCryptoId;
+          const network = sellNetwork || selectedToken?.networks?.[0];
+
+          if (!cryptoId || !network) {
+            toast.error("Please select a crypto and network");
+            throw new Error("Missing crypto or network");
+          }
+
+            if (!isAuthenticated) {
+            const sessionId =
+              transactionRef ||
+              sessionStorage.getItem(SESSION_STORAGE_KEYS.SESSION_ID);
+
+            if (!sessionId) {
+              toast.error("Please restart the transaction and try again.");
+              throw new Error("Missing transaction session");
+            }
+
+            const { data } = await cryptoServiceApi.allocateGuestSellWallet({
+              sessionId,
+              cryptoId,
+              network,
+            });
+            setWalletDetails(data);
+            return data;
           }
 
           const { data } = await cryptoServiceApi.getPlatformWallet(cryptoId);
@@ -112,7 +146,7 @@ export const useTradeStepTwo = ({
         }
       },
       // For sell: only fetch platform wallet if no custodial wallet is available
-      enabled: tradeType === "buy" ? true : !sellDepositWallet,
+      enabled: tradeType === "buy" ? true : !sellDepositWallet || !isAuthenticated,
     });
 
   // Validation based on trade type - only require uploaded file for BUY transactions

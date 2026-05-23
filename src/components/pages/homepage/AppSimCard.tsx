@@ -371,6 +371,14 @@ const AppSimCard = () => {
     value,
     label: formatCryptoChip(value),
   }));
+  const formatCryptoAmountForDisplay = (value: string) => {
+    if (!value) return "";
+    if (!value.includes(".")) return value;
+    return value
+      .replace(/(\.\d*?[1-9])0+$/u, "$1")
+      .replace(/\.0+$/u, "")
+      .replace(/\.$/u, "");
+  };
 
   // Derive NGN amount when user is typing in USD
   const ngnCurrencyObj = supportedCurrencies?.find((c) => c.code === "NGN");
@@ -499,7 +507,9 @@ const AppSimCard = () => {
   const handleSellChipClick = async (targetCryptoAmount: number) => {
     if (!selectedCrypto || !selectedCurrency) return;
 
-    const roundedCryptoAmount = targetCryptoAmount.toFixed(8);
+    const roundedCryptoAmount = formatCryptoAmountForDisplay(
+      targetCryptoAmount.toFixed(8),
+    );
     setAmount(roundedCryptoAmount);
     setReceiveAmount("");
     await fetchRate(roundedCryptoAmount);
@@ -575,8 +585,13 @@ const AppSimCard = () => {
         return;
       }
       if (res?.data) {
-        setSessionId((res.data as any).sessionId || "");
-        const wallet = await cryptoServiceApi.getPlatformWallet(selectedCrypto);
+        const session = (res.data as any).sessionId || "";
+        setSessionId(session);
+        const wallet = await cryptoServiceApi.allocateGuestSellWallet({
+          sessionId: session,
+          cryptoId: selectedCrypto,
+          network,
+        });
         if (!wallet?.success) {
           toast.error(wallet?.message || "Failed to fetch deposit wallet");
           return;
@@ -807,7 +822,7 @@ const AppSimCard = () => {
                   <input
                     type="number"
                     min={0}
-                    value={amount}
+                    value={isBuy ? amount : formatCryptoAmountForDisplay(amount)}
                     onChange={(e) => {
                       setAmount(e.target.value);
                       setReceiveAmount("");

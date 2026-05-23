@@ -235,9 +235,10 @@ interface TradeStepTwoProps {
   formatReceiveAmount: (amount: number | string, currencyCode: string | undefined) => string | React.ReactNode;
   formatSendAmount: (amount: number | string, currencyCode: string | undefined) => string | React.ReactNode;
   sellDepositWallet?: CustodialWalletResponse | null;
+  sellNetwork?: string;
 }
 
-const TradeStepTwo = ({ amountToBuy, tradeType, numberOfToken, additionalInfo, handleReceiptUrl, selectedToken, selectedCurrency, transactionRef, handleTransactionHash, handleSubmitPaymentProof, formatReceiveAmount, formatSendAmount, sellDepositWallet }: TradeStepTwoProps) => {
+const TradeStepTwo = ({ amountToBuy, tradeType, numberOfToken, additionalInfo, handleReceiptUrl, selectedToken, selectedCurrency, transactionRef, handleTransactionHash, handleSubmitPaymentProof, formatReceiveAmount, formatSendAmount, sellDepositWallet, sellNetwork }: TradeStepTwoProps) => {
   const { useTransactionStatus } = useTransactionQuery();
   const { data: transactionDetails } = useTransactionStatus(transactionRef);
   const transactionStatus = transactionDetails?.status as TransactionStatus | undefined;
@@ -254,7 +255,7 @@ const TradeStepTwo = ({ amountToBuy, tradeType, numberOfToken, additionalInfo, h
     // Functions
     setTransactionHash,
     setUploadedFileUrl,
-  } = useTradeStepTwo({tradeType, amountToBuy, numberOfToken, selectedToken, selectedCurrency, sellDepositWallet });
+  } = useTradeStepTwo({tradeType, amountToBuy, numberOfToken, selectedToken, selectedCurrency, sellDepositWallet, sellNetwork, transactionRef });
 
   const showMonitoringView =
     !!transactionRef &&
