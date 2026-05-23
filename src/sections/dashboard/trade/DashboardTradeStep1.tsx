@@ -314,7 +314,7 @@ function BuyFields({
         </div>
         <div className="flex items-center gap-3 px-4 pb-3">
           <input
-            type="number"
+            type="text"
             inputMode="decimal"
             value={String(amountToBuy ?? "")}
             onChange={(e) => handleAmountChange(e.target.value)}

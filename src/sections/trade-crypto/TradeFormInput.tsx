@@ -15,31 +15,13 @@ interface TradeFormInputProps {
 
 export default function TradeFormInput({ label, name, value, onInputChange, onFocus, onBlur, children, isReadOnly, }: TradeFormInputProps) {
     const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-        let {value} = e.target
+        const rawValue = e.target.value;
+        const sanitizedValue = rawValue.replace(/,/g, "").replace(/^-/, "");
 
-        // Prevent negative numbers
-        // Remove minus sign if present
-        value = value.replace(/^-/, '');
-        
-        // If value is empty or just a decimal point, allow it
-        if (value === '' || value === '.') {
-            if(onInputChange){
-                onInputChange(value);
-            }
-            return;
-        }
-
-        // Parse the value and ensure it's not negative
-        const numValue = Number(value);
-        if (!isNaN(numValue) && numValue >= 0) {
-            if(onInputChange){
-                onInputChange(value);
-            }
-        } else if (value === '') {
-            // Allow empty string
-            if(onInputChange){
-                onInputChange(value);
-            }
+        // Allow intermediate decimal states like "0.", ".5", and trailing zeros.
+        // Reject any other non-numeric input while keeping the user's exact string.
+        if (sanitizedValue === "" || sanitizedValue === "." || /^\d*\.?\d*$/.test(sanitizedValue)) {
+            onInputChange?.(sanitizedValue);
         }
     }
     
@@ -74,7 +56,8 @@ export default function TradeFormInput({ label, name, value, onInputChange, onFo
                         </div>
                     ) : (
                         <input
-                            type="number"
+                            type="text"
+                            inputMode="decimal"
                             name={name}
                             id={name}
                             value={typeof value === 'string' ? value : ''}

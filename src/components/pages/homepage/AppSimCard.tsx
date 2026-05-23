@@ -1052,6 +1052,11 @@ const AppSimCard = () => {
     setSellReceiveCurrency("NGN");
     setUsdToNgnRate(null);
     setActiveSellPreset(null);
+    setNetwork(
+      CRYPTO_DEFAULT_NETWORK[
+        (cryptoObj?.code || cryptoObj?.symbol || "").toUpperCase()
+      ] || "TRC20",
+    );
     localStorage.removeItem(LS_KEY);
   };
 
@@ -1142,16 +1147,21 @@ const AppSimCard = () => {
               ) : (
                 <div className="flex gap-2">
                   {supportedCryptoCurrencies.map((item) => (
-                    <TokenBtn
-                      key={item.id}
-                      item={item}
-                      selected={item.id === selectedCrypto}
-                      onSelect={() => {
-                        setSelectedCrypto(item.id);
-                        setReceiveAmount("");
-                        setActiveSellPreset(null);
-                      }}
-                    />
+                  <TokenBtn
+                    key={item.id}
+                    item={item}
+                    selected={item.id === selectedCrypto}
+                    onSelect={() => {
+                      setSelectedCrypto(item.id);
+                      setReceiveAmount("");
+                      setActiveSellPreset(null);
+                      const code = (item.code || item.symbol || "").toUpperCase();
+                      const defaultNet = CRYPTO_DEFAULT_NETWORK[code];
+                      if (defaultNet) {
+                        setNetwork(defaultNet);
+                      }
+                    }}
+                  />
                   ))}
                 </div>
               )}

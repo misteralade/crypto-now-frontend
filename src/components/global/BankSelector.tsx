@@ -103,7 +103,7 @@ const BankSelector = ({
                  }
                }
             })}
-            placeholder={isLabelFloating ? "" : placeholder}
+            placeholder={isLabelFloating ? placeholder : ""}
             className="flex-1 h-full bg-transparent text-sm text-[#0E0F0C] focus:outline-none placeholder-[#9A9A9A]"
           />
 
