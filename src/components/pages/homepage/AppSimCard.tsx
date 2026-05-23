@@ -201,6 +201,15 @@ const getGuestStatusMeta = (status?: string | null) =>
         emoji: "📡",
       };
 
+const getGuestPayoutFailureCopy = (failureReason?: string | null) => ({
+  title: "Payout issue detected",
+  subtitle:
+    "We detected your crypto deposit, but the NGN payout could not be completed automatically.",
+  body:
+    failureReason ||
+    "Our support team is already reviewing this payout and will notify you once it is resolved.",
+});
+
 // ── Crypto token button ───────────────────────────────────────────────────────
 const TokenBtn = ({
   item,
@@ -422,6 +431,7 @@ const AppSimCard = () => {
   const rateLimitNoticeShownRef = useRef(false);
   const skipNextAutoQuoteRef = useRef(false);
   const isBuy = tab === "BUY";
+  const guestPayoutFailed = guestTransactionStatus?.status === "PAYOUT_FAILED";
 
   const cryptoObj = supportedCryptoCurrencies?.find(
     (c) => c.id === selectedCrypto
@@ -1936,30 +1946,65 @@ const AppSimCard = () => {
               transition={{ duration: 0.2 }}
               className="flex flex-col items-center gap-4 py-4"
             >
-              <div
-                className="w-16 h-16 rounded-full flex items-center justify-center"
-                style={{ background: "#22c55e" }}
-              >
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M5 13l4 4L19 7"
-                    stroke="white"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
-              <div className="text-center">
-                <p className="font-bold text-xl text-[#0E0F0C]">
-                  {isBuy ? "Payment Submitted!" : "NGN Credited!"}
-                </p>
-                <p className="text-xs text-gray-400 mt-1">
-                  {isBuy
-                    ? "We'll confirm your transfer and send your crypto."
-                    : "Crypto received & auto-converted. Your bank account has been credited."}
-                </p>
-              </div>
+              {guestPayoutFailed ? (
+                <>
+                  <div
+                    className="w-16 h-16 rounded-full flex items-center justify-center"
+                    style={{ background: "#FEE2E2" }}
+                  >
+                    <Warning size={30} weight="fill" className="text-rose-600" />
+                  </div>
+                  <div className="text-center">
+                    <p className="font-bold text-xl text-[#0E0F0C]">
+                      {getGuestPayoutFailureCopy(guestTransactionStatus?.payoutFailureReason).title}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1 px-3 leading-relaxed">
+                      {getGuestPayoutFailureCopy(guestTransactionStatus?.payoutFailureReason).subtitle}
+                    </p>
+                  </div>
+                  <div
+                    className="w-full rounded-xl p-4 text-left"
+                    style={{ background: "#FFF1F2", border: "1px solid #FECDD3" }}
+                  >
+                    <p className="text-sm font-bold text-rose-700">
+                      Support is already working on it
+                    </p>
+                    <p className="text-xs mt-1 leading-relaxed text-rose-700/90">
+                      We’ll notify you as soon as this is resolved. Sorry for the delay.
+                    </p>
+                    <p className="text-[11px] mt-2 leading-relaxed text-rose-600/80 break-words">
+                      {getGuestPayoutFailureCopy(guestTransactionStatus?.payoutFailureReason).body}
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div
+                    className="w-16 h-16 rounded-full flex items-center justify-center"
+                    style={{ background: "#22c55e" }}
+                  >
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M5 13l4 4L19 7"
+                        stroke="white"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
+                  <div className="text-center">
+                    <p className="font-bold text-xl text-[#0E0F0C]">
+                      {isBuy ? "Payment Submitted!" : "NGN Credited!"}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {isBuy
+                        ? "We'll confirm your transfer and send your crypto."
+                        : "Crypto received & auto-converted. Your bank account has been credited."}
+                    </p>
+                  </div>
+                </>
+              )}
 
               <div
                 className="w-full rounded-xl p-3"
