@@ -133,12 +133,12 @@ const RatePage = () => {
                       </td>
                       <td className="px-6 py-5 text-right">
                         <div className="text-gray-600">
-                          {convertToMillify(isRegistered ? Number(crypto.minTransactionLimit) : Number(crypto.minTradeAmountForAnonymous), 10)}
+                          {convertToMillify(isRegistered ? Number(crypto.minTransactionLimit) : Number(crypto.minTradeAmountForAnonymous), 10)} {crypto.symbol}
                         </div>
                       </td>
                       <td className="px-6 py-5 text-right">
                         <div className="text-gray-600">
-                          {convertToMillify(isRegistered ? Number(crypto.maxTransactionLimit) : Number(crypto.maxTradeAmountForAnonymous), 10)}
+                          {convertToMillify(isRegistered ? Number(crypto.maxTransactionLimit) : Number(crypto.maxTradeAmountForAnonymous), 10)} {crypto.symbol}
                         </div>
                       </td>
                     </tr>
@@ -175,15 +175,15 @@ const RatePage = () => {
                         <div className="font-semibold text-gray-900">{formatCurrency(Number(crypto.sellRate))}</div>
                       </div>
                       <div>
-                        <div className="text-xs text-gray-500 mb-1">Min Trade</div>
+                        <div className="text-xs text-gray-500 mb-1">Min Trade (token)</div>
                         <div className="text-gray-600">
-                          {convertToMillify(isRegistered ? Number(crypto.minTransactionLimit) : Number(crypto.minTradeAmountForAnonymous), 10)}
+                          {convertToMillify(isRegistered ? Number(crypto.minTransactionLimit) : Number(crypto.minTradeAmountForAnonymous), 10)} {crypto.symbol}
                         </div>
                       </div>
                       <div>
-                        <div className="text-xs text-gray-500 mb-1">Max Trade</div>
+                        <div className="text-xs text-gray-500 mb-1">Max Trade (token)</div>
                         <div className="text-gray-600">
-                          {convertToMillify(isRegistered ? Number(crypto.maxTransactionLimit) : Number(crypto.maxTradeAmountForAnonymous), 10)}
+                          {convertToMillify(isRegistered ? Number(crypto.maxTransactionLimit) : Number(crypto.maxTradeAmountForAnonymous), 10)} {crypto.symbol}
                         </div>
                       </div>
                     </div>
