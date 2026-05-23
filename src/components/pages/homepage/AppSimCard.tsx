@@ -1229,9 +1229,9 @@ const AppSimCard = () => {
                       : cryptoSymbol}
                   </span>
                   <input
-                    type="number"
-                    min={0}
-                    value={isBuy ? amount : formatCryptoAmountForDisplay(amount)}
+                    type="text"
+                    inputMode="decimal"
+                    value={amount}
                     onChange={(e) => {
                       setAmount(e.target.value);
                       setReceiveAmount("");

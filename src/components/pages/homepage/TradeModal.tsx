@@ -200,8 +200,8 @@ const TradeModal = ({ onClose }: TradeModalProps) => {
           <div className="flex items-center gap-2 border-2 border-gray-200 rounded-xl px-3 py-2 bg-gray-50 focus-within:border-[#948EEE] transition-colors">
             <span className="text-gray-500 text-sm font-semibold shrink-0">{inputSymbol}</span>
             <input
-              type="number"
-              min={0}
+              type="text"
+              inputMode="decimal"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder={inputPlaceholder}
