@@ -133,10 +133,6 @@ export const transactionStatusMessages: Record<string, { title: string, message:
     title: 'Refund Completed',
     message: 'Your refund has been successfully processed. Please check your account for the refunded amount.'
   },
-  PAYMENT_ACCOUNT_CONFIRMED: {
-    title: 'Payment Account Confirmed',
-    message: 'Your payment account has been confirmed. You can now proceed with your transactions.'
-  },
   DEPOSIT_DETECTED: {
     title: 'Deposit Detected',
     message: 'We have detected your deposit on the blockchain. Waiting for network confirmations.'
@@ -316,13 +312,6 @@ export const transactionStatusStyles: Record<
     dot: 'bg-green-400',
     textColor: 'text-green-600',
     message: `Your refund has been successfully processed. Please check your account for the refunded amount.`
-  },
-  PAYMENT_ACCOUNT_CONFIRMED: {
-    text: 'Pending',
-    bg: 'bg-blue-50',
-    dot: 'bg-blue-400',
-    textColor: 'text-blue-600',
-    message: `Your payment account has been confirmed. You can now proceed with your transactions.`
   },
 }
 

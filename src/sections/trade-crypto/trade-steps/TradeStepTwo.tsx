@@ -43,7 +43,6 @@ const BUY_MONITORING_STATUSES: TransactionStatus[] = [
 
 const SELL_MONITORING_STATUSES: TransactionStatus[] = [
   "AWAITING_CRYPTO",
-  "PAYMENT_ACCOUNT_CONFIRMED",
   "DEPOSIT_DETECTED",
   "DEPOSIT_PENDING_MINIMUM",
   "DEPOSIT_CONFIRMED",
@@ -103,12 +102,6 @@ const STATUS_META: Partial<Record<TransactionStatus, StatusMeta>> = {
     tone: "warning",
     emoji: "📡",
     note: "Send the crypto to your unique deposit wallet.",
-  },
-  PAYMENT_ACCOUNT_CONFIRMED: {
-    label: "Payment Details Confirmed",
-    tone: "info",
-    emoji: "🧾",
-    note: "Your payout details are confirmed. We are waiting for the deposit.",
   },
   DEPOSIT_DETECTED: {
     label: "Deposit Detected",

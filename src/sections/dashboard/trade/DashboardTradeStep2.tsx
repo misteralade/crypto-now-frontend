@@ -204,10 +204,10 @@ function TradeMonitoringView({
         case 0: return "done"; // Receipt submitted
         case 1: // Admin Verifying
           if (status === "PAYMENT_RECEIVED") return "active";
-          if (status === "PAYMENT_CONFIRMED" || status === "CRYPTO_SENT" || status === "COMPLETED") return "done";
+          if (status === "CRYPTO_SENT" || status === "COMPLETED") return "done";
           return "active"; // Default active after submission
         case 2: // Releasing
-          if (status === "PAYMENT_CONFIRMED" || status === "CRYPTO_SENT") return "active";
+          if (status === "CRYPTO_SENT") return "active";
           if (status === "COMPLETED") return "done";
           return "pending";
         case 3: // Completed
@@ -245,7 +245,6 @@ function TradeMonitoringView({
     !isBuy &&
     [
       "INITIATED",
-      "PAYMENT_ACCOUNT_CONFIRMED",
       "AWAITING_CRYPTO",
     ].includes(status ?? "");
 
@@ -268,7 +267,7 @@ function TradeMonitoringView({
           </p>
           <p className="text-xs mt-1" style={{ color: "#9A9A9A" }}>
             {status === "COMPLETED" ? "Success!" : 
-             isBuy ? (status === "PAYMENT_CONFIRMED" ? "Payment Confirmed - Releasing Crypto..." : subHeadline) :
+             isBuy ? subHeadline :
              (status === "DEPOSIT_DETECTED" ? "Deposit Detected - Confirming..." : 
               status === "DEPOSIT_CONFIRMED" ? "Deposit Confirmed - Processing Payout..." :
               status === "PAYOUT_INITIATED" ? "Payout Initiated - Checking Bank..." : subHeadline)}

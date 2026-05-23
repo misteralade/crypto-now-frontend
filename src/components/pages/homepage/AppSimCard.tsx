@@ -68,7 +68,6 @@ const CRYPTO_DEFAULT_NETWORK: Record<string, string> = {
 
 const ACTIVE_GUEST_SELL_STATUSES = new Set([
   "INITIATED",
-  "PAYMENT_ACCOUNT_CONFIRMED",
   "AWAITING_CRYPTO",
   "DEPOSIT_DETECTED",
   "DEPOSIT_PENDING_MINIMUM",
@@ -92,11 +91,6 @@ const GUEST_STATUS_META: Record<
     label: "Initiated",
     tone: "info",
     emoji: "⏳",
-  },
-  PAYMENT_ACCOUNT_CONFIRMED: {
-    label: "Wallet Ready",
-    tone: "info",
-    emoji: "🧾",
   },
   AWAITING_CRYPTO: {
     label: "Waiting for Deposit",

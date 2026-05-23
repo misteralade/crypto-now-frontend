@@ -52,8 +52,6 @@ export const TransactionStatus = ({ status }: { status: string }) => {
         return <RefreshCw className={`w-5 h-5 ${color}`} />;
       case "REFUNDED":
         return <CheckCircle className={`w-5 h-5 ${color}`} />;
-      case "PAYMENT_ACCOUNT_CONFIRMED":
-        return <CheckCircle className={`w-5 h-5 ${color}`} />;
       default:
         return <AlertCircle className={`w-5 h-5 ${color}`} />;
     }
