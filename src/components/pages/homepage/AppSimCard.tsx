@@ -66,6 +66,13 @@ const CRYPTO_DEFAULT_NETWORK: Record<string, string> = {
   SOL: "SOLANA",
 };
 
+const getDefaultNetworkForCrypto = (
+  crypto?: { code?: string | null; symbol?: string | null } | null,
+) => {
+  const code = (crypto?.code || crypto?.symbol || "").toUpperCase();
+  return code ? CRYPTO_DEFAULT_NETWORK[code] || "" : "";
+};
+
 const ACTIVE_GUEST_SELL_STATUSES = new Set([
   "INITIATED",
   "AWAITING_CRYPTO",
@@ -371,7 +378,7 @@ const AppSimCard = () => {
   const [email, setEmail] = useState(saved.email || "");
   const [walletAddress, setWalletAddress] = useState(saved.walletAddress || "");
   const [selectedBankId, setSelectedBankId] = useState(saved.selectedBankId || "");
-  const [network, setNetwork] = useState(saved.network || "TRC20");
+  const [network, setNetwork] = useState(saved.network || "");
   const [showNetworkPicker, setShowNetworkPicker] = useState(false);
   const networkPickerRef = useRef<HTMLDivElement>(null);
   const stopGuestTransactionPolling = () => {
@@ -449,13 +456,12 @@ const AppSimCard = () => {
     }
   }, [selectedBank?.name]);
 
-  // Auto-set network to the correct default whenever the selected crypto changes
+  // Auto-set network to the correct default when no saved network exists.
   useEffect(() => {
-    if (!cryptoObj?.code) return;
-    const code = cryptoObj.code.toUpperCase();
-    const defaultNet = CRYPTO_DEFAULT_NETWORK[code];
+    if (saved.network) return;
+    const defaultNet = getDefaultNetworkForCrypto(cryptoObj);
     if (defaultNet) setNetwork(defaultNet);
-  }, [cryptoObj?.code]);
+  }, [cryptoObj?.code, cryptoObj?.symbol, saved.network]);
 
   // Persist all state to localStorage on every change
   useEffect(() => {
@@ -1052,11 +1058,7 @@ const AppSimCard = () => {
     setSellReceiveCurrency("NGN");
     setUsdToNgnRate(null);
     setActiveSellPreset(null);
-    setNetwork(
-      CRYPTO_DEFAULT_NETWORK[
-        (cryptoObj?.code || cryptoObj?.symbol || "").toUpperCase()
-      ] || "TRC20",
-    );
+    setNetwork(getDefaultNetworkForCrypto(cryptoObj));
     localStorage.removeItem(LS_KEY);
   };
 
@@ -1155,11 +1157,7 @@ const AppSimCard = () => {
                       setSelectedCrypto(item.id);
                       setReceiveAmount("");
                       setActiveSellPreset(null);
-                      const code = (item.code || item.symbol || "").toUpperCase();
-                      const defaultNet = CRYPTO_DEFAULT_NETWORK[code];
-                      if (defaultNet) {
-                        setNetwork(defaultNet);
-                      }
+                      setNetwork(getDefaultNetworkForCrypto(item));
                     }}
                   />
                   ))}
