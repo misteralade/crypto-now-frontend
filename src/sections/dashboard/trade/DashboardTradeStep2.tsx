@@ -32,6 +32,7 @@ import { QUERY_KEYS } from "../../../queries/query.keys.ts";
 import { bankServiceApi } from "../../../api/bank.api.ts";
 import { transactionServiceApi } from "../../../api/transaction.api.ts";
 import { useTransactionQuery } from "../../../queries/transaction.query.ts";
+import { isExchangeRateExpiryError } from "../../../util/index.util.ts";
 
 interface DashboardTradeStep2Props {
   tradeType: TradeType;
@@ -84,50 +85,6 @@ function CopyToast({ visible }: { visible: boolean }) {
         </motion.div>
       )}
     </AnimatePresence>
-  );
-}
-
-// Shows how long the locked exchange rate remains valid (backend uses a 3-minute window).
-function RateLockBanner({
-  countdown,
-  variant,
-}: {
-  countdown: string;
-  variant: "ok" | "expired";
-}) {
-  if (!countdown || countdown === "Rate Locked") return null;
-  const expired = variant === "expired" || countdown === "Expired";
-  return (
-    <div
-      className="flex items-start gap-2.5 rounded-2xl px-4 py-3"
-      style={{
-        background: expired ? "#FEECEC" : "#F0EFFD",
-        border: `1px solid ${expired ? "#F5C4C4" : "#C7CAFF"}`,
-      }}
-    >
-      <span className="text-sm shrink-0 mt-0.5" aria-hidden>
-        {expired ? "⏱️" : "🔒"}
-      </span>
-      <p
-        className="text-[11px] leading-relaxed"
-        style={{ color: expired ? "#8B2E2E" : "#3D3A7A" }}
-      >
-        {expired ? (
-          <>
-            <strong>Rate expired.</strong> Locked quotes last 3 minutes. Go back
-            one step and confirm your amount again to get a fresh rate before
-            paying or uploading a receipt.
-          </>
-        ) : (
-          <>
-            <strong>Rate locked 3 minutes.</strong> Complete transfer and
-            receipt within{" "}
-            <span className="font-extrabold tabular-nums">{countdown}</span> or
-            start over from the previous step for a new quote.
-          </>
-        )}
-      </p>
-    </div>
   );
 }
 
@@ -440,7 +397,7 @@ function BuyUploadView({
     { label: "Network", value: network || "—" },
   ];
 
-  const ctaDisabled = submitInvalid || isRateExpired;
+  const ctaDisabled = submitInvalid;
 
   return (
     <div className="flex flex-col gap-4">
@@ -452,13 +409,6 @@ function BuyUploadView({
           Of your transfer receipt
         </p>
       </div>
-
-      {rateLockCountdown ? (
-        <RateLockBanner
-          countdown={rateLockCountdown}
-          variant={isRateExpired ? "expired" : "ok"}
-        />
-      ) : null}
 
       {/* YOUR ORDER table */}
       <div
@@ -632,8 +582,6 @@ export default function DashboardTradeStep2({
     ? storedYouPay
     : formatSendAmount(amountToBuy.toLocaleString(), selectedCurrency?.code);
 
-  const isRateExpired = rateLockCountdown === "Expired";
-
   // Local-first BUY: track selected receipt File for multipart createAndSubmit
   const [localReceiptFile, setLocalReceiptFile] = useState<File | undefined>();
 
@@ -650,6 +598,7 @@ export default function DashboardTradeStep2({
     formData.append("file", localReceiptFile);
     formData.append("coinId", initiateForm?.tokenId ?? "");
     formData.append("currencyId", buyRateInfo.currencyId);
+    formData.append("action", "BUY");
     const exchangeRateId = buyRateInfo.rateId;
     if (exchangeRateId) formData.append("exchangeRateId", exchangeRateId);
     formData.append("amountToSend", String(buyRateInfo.fiatAmount));
@@ -657,6 +606,7 @@ export default function DashboardTradeStep2({
     formData.append("walletAddress", buyWalletAddress ?? "");
     formData.append("network", buyNetwork ?? "");
     if (userEmail) formData.append("email", userEmail);
+    if (transactionForm?.action) formData.append("action", transactionForm.action);
 
     const toastId = "buy-submit";
     toast.loading("Submitting transaction…", { toastId });
@@ -681,6 +631,9 @@ export default function DashboardTradeStep2({
       // The polling effect will take us to Step 4 when status is COMPLETED.
     } catch (err: unknown) {
       toast.dismiss(toastId);
+      if (isExchangeRateExpiryError(err)) {
+        return;
+      }
       const error = err as {
         response?: {
           data?: {
@@ -806,7 +759,7 @@ export default function DashboardTradeStep2({
             useLocalFlow ? handleLocalBuySubmit : handleSubmitPaymentProof
           }
           rateLockCountdown={useLocalFlow ? undefined : rateLockCountdown}
-          isRateExpired={useLocalFlow ? false : isRateExpired}
+          isRateExpired={false}
         />
       </div>
     );
@@ -826,13 +779,6 @@ export default function DashboardTradeStep2({
           title="Make Payment"
           sub="Transfer exact amount to bank"
         />
-
-        {rateLockCountdown ? (
-          <RateLockBanner
-            countdown={rateLockCountdown}
-            variant={isRateExpired ? "expired" : "ok"}
-          />
-        ) : null}
 
         {/* Purple amount hero */}
         <div
@@ -963,14 +909,12 @@ export default function DashboardTradeStep2({
         <button
           type="button"
           onClick={() => setBuyView("upload")}
-          disabled={isRateExpired}
+          disabled={false}
           className="w-full py-4 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           style={{
-            background: isRateExpired
-              ? "#D8D8D8"
-              : "linear-gradient(135deg,#948EEE,#6B45D0)",
+            background: "linear-gradient(135deg,#948EEE,#6B45D0)",
             color: "#FFFFFF",
-            boxShadow: isRateExpired ? "none" : "0 6px 20px #948EEE44",
+            boxShadow: "0 6px 20px #948EEE44",
           }}
         >
           <Upload size={16} />

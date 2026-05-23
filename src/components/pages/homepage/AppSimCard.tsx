@@ -18,7 +18,10 @@ import { transactionServiceApi } from "../../../api/transaction.api.ts";
 import { bankServiceApi } from "../../../api/bank.api.ts";
 import { cryptoServiceApi } from "../../../api/crypto.api.ts";
 import { exchangeRateServiceApi } from "../../../api/rate.api.ts";
-import type { SupportedCryptoOrCurrencyResponse } from "../../../types/response.payload.types.ts";
+import type {
+  SupportedCryptoOrCurrencyResponse,
+  TransactionResponseEntity,
+} from "../../../types/response.payload.types.ts";
 import { ROUTES } from "../../../util/constants.util.ts";
 import { useNavigate } from "@tanstack/react-router";
 import BankSelector from "../../global/BankSelector.tsx";
@@ -26,6 +29,21 @@ import {
   TRADE_FIAT_AMOUNT_PRESETS,
   formatTradeFiatPreset,
 } from "../../../constants/tradeAmounts.ts";
+import type { SupportedExchangeRateResponse } from "../../../types/response.payload.types.ts";
+import { isExchangeRateExpiryError } from "../../../util/index.util.ts";
+
+const GUEST_QUOTE_CACHE_TTL_MS = 60_000;
+
+type QuoteCacheEntry = {
+  data: SupportedExchangeRateResponse;
+  cachedAt: number;
+};
+
+const buildGuestQuoteCacheKey = (
+  cryptoId: string,
+  currencyId: string,
+  action: "BUY" | "SELL",
+) => `${cryptoId}:${currencyId}:${action}`;
 
 const ALL_NETWORKS = [
   { id: "TRC20", label: "TRC20 (Tron)" },
@@ -47,6 +65,140 @@ const CRYPTO_DEFAULT_NETWORK: Record<string, string> = {
   USDT: "TRC20",
   SOL: "SOLANA",
 };
+
+const ACTIVE_GUEST_SELL_STATUSES = new Set([
+  "INITIATED",
+  "PAYMENT_ACCOUNT_CONFIRMED",
+  "AWAITING_CRYPTO",
+  "DEPOSIT_DETECTED",
+  "DEPOSIT_PENDING_MINIMUM",
+  "DEPOSIT_CONFIRMED",
+  "PAYOUT_INITIATED",
+  "PROCESSING",
+  "PENDING_PAYOUT",
+  "PAYOUT_FAILED",
+]);
+
+const isGuestSellTransactionActive = (status?: string | null) =>
+  !!status && ACTIVE_GUEST_SELL_STATUSES.has(status);
+
+type GuestStatusTone = "info" | "warning" | "success" | "danger";
+
+const GUEST_STATUS_META: Record<
+  string,
+  { label: string; tone: GuestStatusTone; emoji: string }
+> = {
+  INITIATED: {
+    label: "Initiated",
+    tone: "info",
+    emoji: "⏳",
+  },
+  PAYMENT_ACCOUNT_CONFIRMED: {
+    label: "Wallet Ready",
+    tone: "info",
+    emoji: "🧾",
+  },
+  AWAITING_CRYPTO: {
+    label: "Waiting for Deposit",
+    tone: "warning",
+    emoji: "📡",
+  },
+  DEPOSIT_DETECTED: {
+    label: "Deposit Detected",
+    tone: "info",
+    emoji: "⚡",
+  },
+  DEPOSIT_PENDING_MINIMUM: {
+    label: "Below Minimum",
+    tone: "warning",
+    emoji: "⚠️",
+  },
+  DEPOSIT_CONFIRMED: {
+    label: "Deposit Confirmed",
+    tone: "success",
+    emoji: "✅",
+  },
+  PAYOUT_INITIATED: {
+    label: "Payout Initiated",
+    tone: "info",
+    emoji: "🏦",
+  },
+  PROCESSING: {
+    label: "Processing",
+    tone: "info",
+    emoji: "🔄",
+  },
+  PENDING_PAYOUT: {
+    label: "Pending Payout",
+    tone: "warning",
+    emoji: "🕒",
+  },
+  PAYOUT_FAILED: {
+    label: "Payout Failed",
+    tone: "danger",
+    emoji: "❌",
+  },
+  COMPLETED: {
+    label: "Completed",
+    tone: "success",
+    emoji: "✅",
+  },
+  FAILED: {
+    label: "Failed",
+    tone: "danger",
+    emoji: "❌",
+  },
+  EXPIRED: {
+    label: "Expired",
+    tone: "danger",
+    emoji: "⌛",
+  },
+  CANCELLED: {
+    label: "Cancelled",
+    tone: "danger",
+    emoji: "🚫",
+  },
+};
+
+const GUEST_STATUS_TONE_STYLES: Record<GuestStatusTone, { bg: string; border: string; text: string; badge: string; dot: string }> = {
+  info: {
+    bg: "bg-sky-50",
+    border: "border-sky-200",
+    text: "text-sky-800",
+    badge: "bg-sky-100 text-sky-800 border-sky-200",
+    dot: "bg-sky-500",
+  },
+  warning: {
+    bg: "bg-amber-50",
+    border: "border-amber-200",
+    text: "text-amber-900",
+    badge: "bg-amber-100 text-amber-900 border-amber-200",
+    dot: "bg-amber-500",
+  },
+  success: {
+    bg: "bg-emerald-50",
+    border: "border-emerald-200",
+    text: "text-emerald-800",
+    badge: "bg-emerald-100 text-emerald-800 border-emerald-200",
+    dot: "bg-emerald-500",
+  },
+  danger: {
+    bg: "bg-rose-50",
+    border: "border-rose-200",
+    text: "text-rose-800",
+    badge: "bg-rose-100 text-rose-800 border-rose-200",
+    dot: "bg-rose-500",
+  },
+};
+
+const getGuestStatusMeta = (status?: string | null) =>
+  status && GUEST_STATUS_META[status]
+    ? GUEST_STATUS_META[status]
+    : {
+        label: "Monitoring",
+        tone: "info" as GuestStatusTone,
+        emoji: "📡",
+      };
 
 // ── Crypto token button ───────────────────────────────────────────────────────
 const TokenBtn = ({
@@ -195,6 +347,7 @@ const AppSimCard = () => {
   const [tab, setTab] = useState<"BUY" | "SELL">(saved.tab || "BUY");
   const [step, setStep] = useState<number>(saved.step || 1);
   const [loading, setLoading] = useState(false);
+  const [quoteLoading, setQuoteLoading] = useState(false);
 
   const [selectedCrypto, setSelectedCrypto] = useState(
     saved.selectedCrypto || ""
@@ -215,6 +368,28 @@ const AppSimCard = () => {
   );
   const [usdToNgnRate, setUsdToNgnRate] = useState<number | null>(null);
   const [usdRateLoading, setUsdRateLoading] = useState(false);
+  const [activeSellPreset, setActiveSellPreset] = useState<number | null>(null);
+  const guestTransactionStatusPollRef =
+    useRef<ReturnType<typeof setInterval> | null>(null);
+  const [guestTransactionStatus, setGuestTransactionStatus] =
+    useState<TransactionResponseEntity | null>(null);
+  type GuestSellResumeSuggestion =
+    | {
+        mode: "OPEN_TRANSACTION";
+        transaction: TransactionResponseEntity;
+      }
+    | {
+        mode: "REUSABLE_WALLET";
+        walletAddress: string;
+        walletNetwork: string;
+      };
+  const [resumableGuestSellSuggestion, setResumableGuestSellSuggestion] =
+    useState<GuestSellResumeSuggestion | null>(null);
+  const [resumableSellLookupLoading, setResumableSellLookupLoading] =
+    useState(false);
+  const [dismissedResumableSessionId, setDismissedResumableSessionId] =
+    useState<string | null>(null);
+  const resumableSellLookupRequestIdRef = useRef(0);
 
   const [email, setEmail] = useState(saved.email || "");
   const [walletAddress, setWalletAddress] = useState(saved.walletAddress || "");
@@ -222,6 +397,12 @@ const AppSimCard = () => {
   const [network, setNetwork] = useState(saved.network || "TRC20");
   const [showNetworkPicker, setShowNetworkPicker] = useState(false);
   const networkPickerRef = useRef<HTMLDivElement>(null);
+  const stopGuestTransactionPolling = () => {
+    if (guestTransactionStatusPollRef.current) {
+      clearInterval(guestTransactionStatusPollRef.current);
+      guestTransactionStatusPollRef.current = null;
+    }
+  };
 
   useEffect(() => {
     if (!showNetworkPicker) return;
@@ -249,15 +430,17 @@ const AppSimCard = () => {
   const [sessionId, setSessionId] = useState(saved.sessionId || "");
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const quoteRequestIdRef = useRef(0);
 
   const [depositWallet, setDepositWallet] = useState(saved.depositWallet || "");
   const [done, setDone] = useState(saved.done || false);
+  const quoteCacheRef = useRef<Record<string, QuoteCacheEntry>>({});
+  const rateLimitNoticeShownRef = useRef(false);
+  const skipNextAutoQuoteRef = useRef(false);
+  const isBuy = tab === "BUY";
 
   const cryptoObj = supportedCryptoCurrencies?.find(
     (c) => c.id === selectedCrypto
-  );
-  const currencyObj = supportedCurrencies?.find(
-    (c) => c.id === selectedCurrency
   );
   const selectedBank = allBanks?.find((bank) => bank.id === selectedBankId);
 
@@ -341,35 +524,100 @@ const AppSimCard = () => {
     done,
   ]);
 
-  const isBuy = tab === "BUY";
-  const currSymbol = currencyObj?.symbol || currencyObj?.code || "₦";
-  const cryptoSymbol = cryptoObj?.symbol || cryptoObj?.code || "";
-  const cryptoCode = cryptoObj?.code?.toUpperCase() || cryptoSymbol.toUpperCase();
+  useEffect(() => {
+    if (step !== 2 || isBuy || !email || !selectedCrypto || !network) {
+      setResumableGuestSellSuggestion(null);
+      setResumableSellLookupLoading(false);
+      return;
+    }
 
-  // BUY chips stay fiat presets. SELL chips use crypto-friendly examples so
-  // guests can pick amounts that are easy to understand for each asset.
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail.includes("@")) {
+      setResumableGuestSellSuggestion(null);
+      setResumableSellLookupLoading(false);
+      return;
+    }
+
+    const requestId = ++resumableSellLookupRequestIdRef.current;
+    setResumableSellLookupLoading(true);
+
+    const timeoutId = window.setTimeout(async () => {
+      try {
+        const res =
+          await transactionServiceApi.getResumableAnonymousSellTransaction({
+            email: trimmedEmail,
+            coinId: selectedCrypto,
+            network,
+          });
+
+        if (resumableSellLookupRequestIdRef.current !== requestId) {
+          return;
+        }
+
+        const data = res?.data as
+          | {
+              mode?: "OPEN_TRANSACTION" | "REUSABLE_WALLET";
+              transaction?: TransactionResponseEntity;
+              walletAddress?: string;
+              walletNetwork?: string;
+            }
+          | null;
+
+        if (data?.mode === "OPEN_TRANSACTION" && data.transaction?.sessionId) {
+          if (data.transaction.sessionId !== dismissedResumableSessionId) {
+            setResumableGuestSellSuggestion({
+              mode: "OPEN_TRANSACTION",
+              transaction: data.transaction,
+            });
+          } else {
+            setResumableGuestSellSuggestion(null);
+          }
+        } else if (data?.mode === "REUSABLE_WALLET" && data.walletAddress) {
+          setResumableGuestSellSuggestion({
+            mode: "REUSABLE_WALLET",
+            walletAddress: data.walletAddress,
+            walletNetwork: data.walletNetwork || network,
+          });
+        } else {
+          setResumableGuestSellSuggestion(null);
+        }
+      } catch {
+        if (resumableSellLookupRequestIdRef.current !== requestId) {
+          return;
+        }
+        setResumableGuestSellSuggestion(null);
+      } finally {
+        if (resumableSellLookupRequestIdRef.current === requestId) {
+          setResumableSellLookupLoading(false);
+        }
+      }
+    }, 350);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [
+    dismissedResumableSessionId,
+    email,
+    isBuy,
+    network,
+    selectedCrypto,
+    step,
+  ]);
+
   const buyChips =
     buyInputCurrency === "USD"
       ? TRADE_FIAT_AMOUNT_PRESETS.usd
       : TRADE_FIAT_AMOUNT_PRESETS.ngn;
-  const SELL_COIN_PRESETS: Record<string, number[]> = {
-    BTC: [0.05, 0.5, 1, 2],
-    ETH: [0.05, 0.1, 0.5, 1],
-    SOL: [0.5, 1, 2, 5],
-    USDT: [5, 10, 15, 35],
-    USDC: [5, 10, 15, 35],
-  };
-  const sellChipAmounts = SELL_COIN_PRESETS[cryptoCode] ?? [0.5, 1, 2, 5];
+  const sellChipAmounts =
+    sellReceiveCurrency === "USD"
+      ? TRADE_FIAT_AMOUNT_PRESETS.usd
+      : TRADE_FIAT_AMOUNT_PRESETS.ngn;
   const formatChip = (n: number, currencyCode: "NGN" | "USD") =>
     formatTradeFiatPreset(n, currencyCode);
-  const formatCryptoChip = (amountValue: number) =>
-    `${amountValue.toLocaleString(undefined, {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: amountValue < 1 ? 2 : 0,
-    })} ${cryptoSymbol}`;
   const sellChipItems = sellChipAmounts.map((value) => ({
     value,
-    label: formatCryptoChip(value),
+    label: formatChip(value, sellReceiveCurrency),
   }));
   const formatCryptoAmountForDisplay = (value: string) => {
     if (!value) return "";
@@ -379,34 +627,133 @@ const AppSimCard = () => {
       .replace(/\.0+$/u, "")
       .replace(/\.$/u, "");
   };
+  const formatTrimmedDecimal = (value: number, maximumFractionDigits: number) =>
+    value.toLocaleString(undefined, {
+      minimumFractionDigits: 0,
+      maximumFractionDigits,
+    });
+  const formatReceiveCryptoDisplay = (value: string) => {
+    const amountValue = Number(value);
+    if (!amountValue || Number.isNaN(amountValue)) return value;
+    return formatTrimmedDecimal(amountValue, 4);
+  };
+  const formatReceiveNgnDisplay = (value: string) => {
+    const amountValue = Number(value);
+    if (!amountValue || Number.isNaN(amountValue)) return `${ngnDisplayCode}0`;
+    return `${ngnDisplayCode}${Math.round(amountValue).toLocaleString()}`;
+  };
+  const formatUsdEquivalentDisplay = (value: number) =>
+    `$${formatTrimmedDecimal(value, 2)} USD equivalent`;
+  const getCachedQuote = (
+    cryptoId: string,
+    currencyId: string,
+    action: "BUY" | "SELL",
+  ) => {
+    const cacheKey = buildGuestQuoteCacheKey(cryptoId, currencyId, action);
+    const cachedEntry = quoteCacheRef.current[cacheKey];
+    if (!cachedEntry) return null;
+    if (Date.now() - cachedEntry.cachedAt > GUEST_QUOTE_CACHE_TTL_MS) {
+      delete quoteCacheRef.current[cacheKey];
+      return null;
+    }
+    return cachedEntry.data;
+  };
+  const setCachedQuote = (
+    cryptoId: string,
+    currencyId: string,
+    action: "BUY" | "SELL",
+    data: SupportedExchangeRateResponse,
+  ) => {
+    quoteCacheRef.current[buildGuestQuoteCacheKey(cryptoId, currencyId, action)] =
+      {
+        data,
+        cachedAt: Date.now(),
+      };
+  };
+  const isRateLimitedError = (error: unknown) =>
+    typeof error === "object" &&
+    error !== null &&
+    "response" in error &&
+    typeof (error as { response?: { status?: number } }).response?.status ===
+      "number" &&
+    (error as { response?: { status?: number } }).response?.status === 429;
+  const getExchangeRateWithCache = async (
+    cryptoId: string,
+    currencyId: string,
+    action: "BUY" | "SELL",
+    forceRefresh = false,
+  ) => {
+    const cachedQuote = forceRefresh
+      ? null
+      : getCachedQuote(cryptoId, currencyId, action);
+    if (cachedQuote) return { data: cachedQuote, fromCache: true };
+
+    try {
+      const { data, success } = await exchangeRateServiceApi.getExchangeRate(
+        cryptoId,
+        currencyId,
+        action,
+      );
+      if (success && data?.fiatRate > 0) {
+        setCachedQuote(cryptoId, currencyId, action, data);
+        rateLimitNoticeShownRef.current = false;
+        return { data, fromCache: false };
+      }
+      return { data: null, fromCache: false };
+    } catch (error) {
+      if (!forceRefresh && cachedQuote && isRateLimitedError(error)) {
+        rateLimitNoticeShownRef.current = true;
+        return { data: cachedQuote, fromCache: true };
+      }
+      throw error;
+    }
+  };
 
   // Derive NGN amount when user is typing in USD
   const ngnCurrencyObj = supportedCurrencies?.find((c) => c.code === "NGN");
   const usdCurrencyObj = supportedCurrencies?.find((c) => c.code === "USD");
+  const ngnDisplayCode = ngnCurrencyObj?.code || "NGN";
+  const transactionCurrencyObj = ngnCurrencyObj;
+  const quoteCurrencyObj = ngnCurrencyObj ?? supportedCurrencies?.find(
+    (c) => c.id === selectedCurrency,
+  );
+  const currSymbol = transactionCurrencyObj?.symbol || transactionCurrencyObj?.code || "₦";
+  const cryptoSymbol = cryptoObj?.symbol || cryptoObj?.code || "";
+  const cryptoCode = cryptoObj?.code?.toUpperCase() || cryptoSymbol.toUpperCase();
 
-  const fetchUsdToNgnRate = async (cryptoId: string) => {
+  const fetchUsdToNgnRate = async (
+    cryptoId: string,
+    action: "BUY" | "SELL",
+  ) => {
     if (!ngnCurrencyObj || !usdCurrencyObj) {
       toast.error("USD input is not supported at this time.");
       setBuyInputCurrency("NGN");
-      return;
+      return null;
     }
     setUsdRateLoading(true);
     try {
-      const { data, success } = await exchangeRateServiceApi.getExchangeRate(
+      const { data } = await getExchangeRateWithCache(
         cryptoId,
         usdCurrencyObj.id,
-        "BUY"
+        action,
       );
-      if (success && data?.fiatRate > 0 && data?.usdRate && data.usdRate > 0) {
-        setUsdToNgnRate(data.fiatRate / data.usdRate);
+      if (data?.fiatRate > 0 && data?.usdRate && data.usdRate > 0) {
+        const resolvedRate = data.fiatRate / data.usdRate;
+        setUsdToNgnRate(resolvedRate);
+        return resolvedRate;
       } else {
-        toast.error("Could not fetch live USD rate. Please use NGN.");
-        setBuyInputCurrency("NGN");
+        if (action === "BUY") setBuyInputCurrency("NGN");
+        if (action === "SELL") setSellReceiveCurrency("NGN");
+        return null;
       }
     } catch (error) {
       console.error("AppSimCard: failed to fetch USD conversion rate", error);
-      toast.error("Could not fetch live USD rate. Please use NGN.");
-      setBuyInputCurrency("NGN");
+      if (usdToNgnRate) {
+        return usdToNgnRate;
+      }
+      if (action === "BUY") setBuyInputCurrency("NGN");
+      if (action === "SELL") setSellReceiveCurrency("NGN");
+      return null;
     } finally {
       setUsdRateLoading(false);
     }
@@ -418,29 +765,43 @@ const AppSimCard = () => {
       ? String(Math.round(parseFloat(amount) * usdToNgnRate))
       : amount;
 
-  const fetchRate = async (overrideNgnAmount?: string) => {
-    const effectiveAmount = overrideNgnAmount ?? ngnAmount;
-    if (!selectedCrypto || !selectedCurrency || !effectiveAmount) return;
+  const fetchRate = async (overrideAmount?: string, forceRefresh = false) => {
+    const effectiveAmount = isBuy ? overrideAmount ?? ngnAmount : overrideAmount ?? amount;
+    if (!selectedCrypto || !quoteCurrencyObj?.id || !effectiveAmount) return;
+    const numericAmount = parseFloat(effectiveAmount);
+    if (Number.isNaN(numericAmount) || numericAmount <= 0) {
+      setReceiveAmount("");
+      return;
+    }
+
+    const requestId = ++quoteRequestIdRef.current;
+    setQuoteLoading(true);
     try {
-      const { data, success } = await exchangeRateServiceApi.getExchangeRate(
+      const { data } = await getExchangeRateWithCache(
         selectedCrypto,
-        selectedCurrency,
-        isBuy ? "BUY" : "SELL"
+        quoteCurrencyObj.id,
+        isBuy ? "BUY" : "SELL",
+        forceRefresh,
       );
-      if (success && data) {
-        const fiatAmt = parseFloat(effectiveAmount);
-        let computed: number;
-        if (isBuy) {
-          // BUY: user sends fiat, receives crypto
-          computed = fiatAmt / (data.coinGeckoRate * data.platformRate);
-        } else {
-          // SELL: user sends crypto, receives fiat
-          computed = fiatAmt * data.coinGeckoRate * data.platformRate;
-        }
+      if (requestId !== quoteRequestIdRef.current) return;
+
+      if (data?.fiatRate > 0) {
+        const computed = isBuy
+          ? numericAmount / data.fiatRate
+          : numericAmount * data.fiatRate;
         setReceiveAmount(computed > 0 ? String(computed) : "");
+      } else {
+        setReceiveAmount("");
       }
     } catch (error) {
       console.error("AppSimCard: failed to compute trade preview", error);
+      if (requestId === quoteRequestIdRef.current) {
+        setReceiveAmount("");
+      }
+    } finally {
+      if (requestId === quoteRequestIdRef.current) {
+        setQuoteLoading(false);
+      }
     }
   };
 
@@ -504,19 +865,150 @@ const AppSimCard = () => {
     return () => clearTimeout(timeout);
   }, [accountNumber, selectedBankId]);
 
-  const handleSellChipClick = async (targetCryptoAmount: number) => {
-    if (!selectedCrypto || !selectedCurrency) return;
+  useEffect(() => {
+    if (!selectedCrypto) return;
+    if (isBuy && buyInputCurrency === "USD") {
+      void fetchUsdToNgnRate(selectedCrypto, "BUY");
+    }
+    if (!isBuy && sellReceiveCurrency === "USD") {
+      void fetchUsdToNgnRate(selectedCrypto, "SELL");
+    }
+  }, [buyInputCurrency, isBuy, selectedCrypto, sellReceiveCurrency]);
+
+  useEffect(() => {
+    if (!selectedCrypto || !quoteCurrencyObj?.id || !amount) {
+      setReceiveAmount("");
+      setQuoteLoading(false);
+      return;
+    }
+
+    if (skipNextAutoQuoteRef.current) {
+      skipNextAutoQuoteRef.current = false;
+      return;
+    }
+
+    if (isBuy && buyInputCurrency === "USD" && !usdToNgnRate) {
+      setReceiveAmount("");
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      void fetchRate();
+    }, 250);
+
+    return () => clearTimeout(timeout);
+  }, [
+    amount,
+    buyInputCurrency,
+    isBuy,
+    quoteCurrencyObj?.id,
+    selectedCrypto,
+    sellReceiveCurrency,
+    usdToNgnRate,
+  ]);
+
+  useEffect(() => {
+    if (!sessionId || step !== 3 || done || isBuy) {
+      stopGuestTransactionPolling();
+      return;
+    }
+
+    const terminalStatuses = new Set([
+      "COMPLETED",
+      "FAILED",
+      "CANCELLED",
+      "EXPIRED",
+      "PAYOUT_FAILED",
+    ]);
+
+    const pollGuestTransaction = async () => {
+      try {
+        const { data, success } = await transactionServiceApi.getTransactionDetails(
+          sessionId,
+        );
+        if (!success || !data) return;
+
+        const transaction = data as TransactionResponseEntity | null;
+        if (!transaction) return;
+
+        setGuestTransactionStatus(transaction);
+
+        if (terminalStatuses.has(transaction.status)) {
+          stopGuestTransactionPolling();
+          setDone(true);
+        }
+      } catch (error) {
+        console.error("AppSimCard: failed to poll guest transaction status", error);
+      }
+    };
+
+    void pollGuestTransaction();
+    guestTransactionStatusPollRef.current = setInterval(
+      pollGuestTransaction,
+      5000,
+    );
+
+    return () => stopGuestTransactionPolling();
+  }, [done, isBuy, sessionId, step]);
+
+  const handleSellChipClick = async (targetFiatAmount: number) => {
+    if (!selectedCrypto || !quoteCurrencyObj?.id) return;
+
+    let resolvedUsdToNgnRate = usdToNgnRate;
+    if (sellReceiveCurrency === "USD" && !resolvedUsdToNgnRate) {
+      resolvedUsdToNgnRate = await fetchUsdToNgnRate(selectedCrypto, "SELL");
+    }
+
+    const targetNgnAmount =
+      sellReceiveCurrency === "USD"
+        ? targetFiatAmount * (resolvedUsdToNgnRate || 0)
+        : targetFiatAmount;
+    if (!targetNgnAmount || Number.isNaN(targetNgnAmount)) return;
+
+    const { data } = await getExchangeRateWithCache(
+      selectedCrypto,
+      quoteCurrencyObj.id,
+      "SELL",
+    );
+    if (!data?.fiatRate) return;
 
     const roundedCryptoAmount = formatCryptoAmountForDisplay(
-      targetCryptoAmount.toFixed(8),
+      (targetNgnAmount / data.fiatRate).toFixed(8),
     );
+    const computedReceiveAmount = targetNgnAmount.toFixed(2);
+    skipNextAutoQuoteRef.current = true;
     setAmount(roundedCryptoAmount);
-    setReceiveAmount("");
-    await fetchRate(roundedCryptoAmount);
+    setReceiveAmount(computedReceiveAmount);
+    setActiveSellPreset(targetFiatAmount);
+  };
+
+  const hydrateGuestSellFromTransaction = (transaction: TransactionResponseEntity) => {
+    const tx = transaction as TransactionResponseEntity & {
+      email?: string | null;
+      depositAddress?: string | null;
+      custodialWallet?: { network?: string | null; walletAddress?: string | null } | null;
+    };
+
+    setSessionId(tx.sessionId || "");
+    setEmail(tx.email || email);
+    setAmount(formatCryptoAmountForDisplay(String(tx.amountCrypto || amount)));
+    setReceiveAmount(String(tx.amountFiatNGN || tx.amountFiat || receiveAmount));
+    setDepositWallet(
+      tx.depositAddress || tx.custodialWallet?.walletAddress || "",
+    );
+    if (tx.custodialWallet?.network) {
+      setNetwork(tx.custodialWallet.network);
+    }
+    setGuestTransactionStatus(transaction);
+    setResumableGuestSellSuggestion({
+      mode: "OPEN_TRANSACTION",
+      transaction,
+    });
+    setStep(3);
   };
 
   const handleStep1Next = async () => {
-    if (!selectedCrypto || !selectedCurrency || !amount) return;
+    if (!selectedCrypto || !quoteCurrencyObj?.id || !amount) return;
     // Commit NGN amount so downstream steps always use NGN
     if (isBuy && buyInputCurrency === "USD" && usdToNgnRate) {
       const committed = String(Math.round(parseFloat(amount) * usdToNgnRate));
@@ -524,18 +1016,19 @@ const AppSimCard = () => {
       setBuyInputCurrency("NGN");
       await fetchRate(committed);
     } else {
-      await fetchRate();
+      await fetchRate(undefined, true).catch(() => undefined);
     }
     setStep(2);
   };
 
-  const handleBuyStep2Next = async () => {
-    if (!email || !walletAddress) return;
+  const handleBuyStep2Next = async (retrying = false) => {
+    if (!email || !walletAddress || !transactionCurrencyObj?.id) return;
     setLoading(true);
     try {
       const res = await transactionServiceApi.initiateTransactionAnonymousUser({
+        action: "BUY",
         coinId: selectedCrypto,
-        currencyId: selectedCurrency,
+        currencyId: transactionCurrencyObj?.id,
         amountToSend: parseFloat(amount),
         amountToReceive: parseFloat(receiveAmount) || 0,
         email,
@@ -543,11 +1036,16 @@ const AppSimCard = () => {
         network,
       });
       if (!res?.success) {
+        if (isExchangeRateExpiryError(res?.message) && !retrying) {
+          await fetchRate(undefined, true).catch(() => undefined);
+          return await handleBuyStep2Next(true);
+        }
         toast.error(res?.message || "Failed to initiate transaction");
         return;
       }
       if (res?.data) {
         setSessionId((res.data as any).sessionId || "");
+        setGuestTransactionStatus(null);
         const bank = await bankServiceApi.getPlatformBankDetails();
         if (!bank?.success) {
           toast.error(bank?.message || "Failed to fetch payment details");
@@ -557,36 +1055,123 @@ const AppSimCard = () => {
         setStep(3);
       }
     } catch (err: any) {
+      if (isExchangeRateExpiryError(err) && !retrying) {
+        await fetchRate(undefined, true).catch(() => undefined);
+        return await handleBuyStep2Next(true);
+      }
       const msg =
         err?.response?.data?.message ||
         err?.message ||
         "Something went wrong. Please try again.";
-      toast.error(msg);
+      if (!isExchangeRateExpiryError(err)) {
+        toast.error(msg);
+      }
     }
     setLoading(false);
   };
 
-  const handleSellStep2Next = async () => {
-    if (!email || !selectedBankId || !accountNumber || !accountName) return;
+  const handleSellStep2Next = async (retrying = false) => {
+    if (!email || !selectedBankId || !accountNumber || !accountName || !transactionCurrencyObj?.id) return;
     setLoading(true);
     try {
+      if (
+        !retrying &&
+        resumableGuestSellSuggestion?.mode === "OPEN_TRANSACTION"
+      ) {
+        hydrateGuestSellFromTransaction(
+          resumableGuestSellSuggestion.transaction,
+        );
+        return;
+      }
+
+      if (!retrying && sessionId && depositWallet) {
+        const existingTransaction =
+          await transactionServiceApi.getTransactionDetails(sessionId);
+        const existingData = existingTransaction?.data as
+          | TransactionResponseEntity
+          | undefined;
+
+        if (
+          existingTransaction?.success &&
+          existingData?.type === "SELL" &&
+          existingData?.email?.toLowerCase() === email.toLowerCase() &&
+          existingData?.cryptocurrencyId === selectedCrypto &&
+          existingData?.depositAddress === depositWallet &&
+          isGuestSellTransactionActive(existingData?.status)
+        ) {
+          if (!existingData?.userBankAccountId) {
+            const bankAccount = await bankServiceApi.createAnonymousUserBankAccount({
+              email,
+              bankId: selectedBankId,
+              accountHolderName: accountName,
+              accountNumber,
+              isDefault: false,
+            });
+
+            if (bankAccount?.success && bankAccount?.data?.id) {
+              await transactionServiceApi.confirmAnonymousUserReceivingPaymentAccount(
+                sessionId,
+                {
+                  accountId: bankAccount.data.id,
+                  email,
+                },
+              );
+            }
+          }
+
+          setAmount(String(existingData.amountCrypto ?? amount));
+          setReceiveAmount(
+            String(
+              existingData.amountFiatNGN ??
+                existingData.amountFiat ??
+                receiveAmount,
+            ),
+          );
+          setGuestTransactionStatus(existingData);
+          setStep(3);
+          return;
+        }
+      }
+
+      const bankAccount = await bankServiceApi.createAnonymousUserBankAccount({
+        email,
+        bankId: selectedBankId,
+        accountHolderName: accountName,
+        accountNumber,
+        isDefault: false,
+      });
+
+      if (!bankAccount?.success || !bankAccount?.data?.id) {
+        if (isExchangeRateExpiryError(bankAccount?.message) && !retrying) {
+          await fetchRate(undefined, true).catch(() => undefined);
+          return await handleSellStep2Next(true);
+        }
+        toast.error(bankAccount?.message || "Failed to save bank account");
+        return;
+      }
+
       const res = await transactionServiceApi.initiateTransactionAnonymousUser({
+        action: "SELL",
         coinId: selectedCrypto,
-        currencyId: selectedCurrency,
+        currencyId: transactionCurrencyObj?.id,
         amountToSend: parseFloat(amount),
         amountToReceive: parseFloat(receiveAmount) || 0,
         email,
-        bankName: selectedBank?.name || bankName,
-        accountNumber,
-        accountName,
+        accountId: bankAccount.data.id,
+        network,
       });
       if (!res?.success) {
+        if (isExchangeRateExpiryError(res?.message) && !retrying) {
+          await fetchRate(undefined, true).catch(() => undefined);
+          return await handleSellStep2Next(true);
+        }
         toast.error(res?.message || "Failed to initiate transaction");
         return;
       }
       if (res?.data) {
         const session = (res.data as any).sessionId || "";
         setSessionId(session);
+        setGuestTransactionStatus(null);
         const wallet = await cryptoServiceApi.allocateGuestSellWallet({
           sessionId: session,
           cryptoId: selectedCrypto,
@@ -600,13 +1185,46 @@ const AppSimCard = () => {
         setStep(3);
       }
     } catch (err: any) {
+      if (isExchangeRateExpiryError(err) && !retrying) {
+        await fetchRate(undefined, true).catch(() => undefined);
+        return await handleSellStep2Next(true);
+      }
       const msg =
         err?.response?.data?.message ||
         err?.message ||
         "Something went wrong. Please try again.";
-      toast.error(msg);
+      if (!isExchangeRateExpiryError(err)) {
+        toast.error(msg);
+      }
     }
     setLoading(false);
+  };
+
+  const handleResumeGuestSellTransaction = async () => {
+    if (resumableGuestSellSuggestion?.mode !== "OPEN_TRANSACTION") return;
+    setLoading(true);
+    try {
+      const details = await transactionServiceApi.getTransactionDetails(
+        resumableGuestSellSuggestion.transaction.sessionId,
+      );
+      const transaction =
+        (details?.data as TransactionResponseEntity | null) ||
+        resumableGuestSellSuggestion.transaction;
+      if (transaction?.sessionId) {
+        hydrateGuestSellFromTransaction(transaction);
+      }
+    } catch (error) {
+      console.error(
+        "AppSimCard: failed to resume guest sell transaction",
+        error,
+      );
+    }
+    setLoading(false);
+  };
+
+  const handleReuseGuestWallet = async () => {
+    if (resumableGuestSellSuggestion?.mode !== "REUSABLE_WALLET") return;
+    await handleSellStep2Next();
   };
 
   const handleBuySubmit = async () => {
@@ -643,9 +1261,14 @@ const AppSimCard = () => {
     setPlatformBank(null);
     setDepositWallet("");
     setSessionId("");
+    setGuestTransactionStatus(null);
+    setResumableGuestSellSuggestion(null);
+    setDismissedResumableSessionId(null);
+    stopGuestTransactionPolling();
     setBuyInputCurrency("NGN");
     setSellReceiveCurrency("NGN");
     setUsdToNgnRate(null);
+    setActiveSellPreset(null);
     localStorage.removeItem(LS_KEY);
   };
 
@@ -743,11 +1366,7 @@ const AppSimCard = () => {
                       onSelect={() => {
                         setSelectedCrypto(item.id);
                         setReceiveAmount("");
-                        if (
-                          (isBuy && buyInputCurrency === "USD") ||
-                          (!isBuy && sellReceiveCurrency === "USD")
-                        )
-                          fetchUsdToNgnRate(item.id);
+                        setActiveSellPreset(null);
                       }}
                     />
                   ))}
@@ -784,13 +1403,12 @@ const AppSimCard = () => {
                                 setBuyInputCurrency(cur);
                                 setAmount("");
                                 setReceiveAmount("");
-                                if (cur === "USD" && selectedCrypto)
-                                  fetchUsdToNgnRate(selectedCrypto);
+                                setActiveSellPreset(null);
                               } else {
                                 setSellReceiveCurrency(cur);
+                                setAmount("");
                                 setReceiveAmount("");
-                                if (cur === "USD" && selectedCrypto)
-                                  fetchUsdToNgnRate(selectedCrypto);
+                                setActiveSellPreset(null);
                               }
                             }}
                             className="px-2.5 py-1 text-[10px] font-bold cursor-pointer transition-colors"
@@ -826,8 +1444,8 @@ const AppSimCard = () => {
                     onChange={(e) => {
                       setAmount(e.target.value);
                       setReceiveAmount("");
+                      if (!isBuy) setActiveSellPreset(null);
                     }}
-                    onBlur={() => fetchRate()}
                     placeholder="0"
                     className="flex-1 bg-transparent outline-none text-2xl font-bold text-[#0E0F0C] placeholder:text-gray-200"
                   />
@@ -854,7 +1472,7 @@ const AppSimCard = () => {
                   </div>
                 )}
                 {/* SELL: USD receive preview */}
-                {!isBuy && sellReceiveCurrency === "USD" && receiveAmount && (
+                {!isBuy && receiveAmount && usdToNgnRate && (
                   <div className="px-4 pb-2 -mt-1">
                     {usdRateLoading ? (
                       <span className="text-xs text-gray-400">
@@ -864,12 +1482,10 @@ const AppSimCard = () => {
                       <span className="text-xs text-gray-400">
                         ≈{" "}
                         <span className="font-semibold text-[#0E0F0C]">
-                          $
-                          {(parseFloat(receiveAmount) / usdToNgnRate).toFixed(
-                            2
+                          {formatUsdEquivalentDisplay(
+                            parseFloat(receiveAmount) / usdToNgnRate,
                           )}
                         </span>{" "}
-                        USD equivalent
                       </span>
                     ) : null}
                   </div>
@@ -882,7 +1498,7 @@ const AppSimCard = () => {
                   ).map((chip) => {
                     const isActive = isBuy
                       ? amount === String(chip.value)
-                      : Number(amount || 0).toFixed(8) === chip.value.toFixed(8);
+                      : activeSellPreset === chip.value;
                     return (
                       <button
                         key={chip.value}
@@ -911,26 +1527,28 @@ const AppSimCard = () => {
               </div>
 
               {/* Rate / receive preview */}
-              {receiveAmount && (
+              {(quoteLoading || receiveAmount) && (
                 <p className="text-center text-sm text-gray-400">
-                  You receive:{" "}
-                  <span className="font-bold text-[#22c55e]">
-                    {isBuy
-                      ? `${receiveAmount} ${cryptoSymbol}`
-                      : !isBuy && sellReceiveCurrency === "USD" && usdToNgnRate
-                      ? `$${(parseFloat(receiveAmount) / usdToNgnRate).toFixed(
-                          2
-                        )} USD`
-                      : `${currSymbol}${parseFloat(
-                          receiveAmount
-                        ).toLocaleString()}`}
-                  </span>
+                  {quoteLoading ? (
+                    "Calculating preview..."
+                  ) : (
+                    <>
+                      You receive:{" "}
+                      <span className="font-bold text-[#22c55e]">
+                        {isBuy
+                          ? `${formatReceiveCryptoDisplay(receiveAmount)} ${cryptoSymbol}`
+                          : formatReceiveNgnDisplay(receiveAmount)}
+                      </span>
+                    </>
+                  )}
                 </p>
               )}
 
               <button
                 onClick={handleStep1Next}
-                disabled={!amount || !selectedCrypto || !selectedCurrency}
+                disabled={
+                  !amount || !selectedCrypto || !quoteCurrencyObj?.id || quoteLoading
+                }
                 className="w-full py-3.5 rounded-xl font-bold text-sm text-white border-none transition-opacity disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 style={{ background: isBuy ? "#948EEE" : "#22c55e" }}
               >
@@ -997,17 +1615,15 @@ const AppSimCard = () => {
                 className="rounded-xl p-3"
                 style={{ background: "white", border: "1.5px solid #E8E8E8" }}
               >
-                <SRow label="Buying" value={cryptoSymbol} />
+                <SRow label="Buying" value={`${cryptoSymbol} with Naira`} />
                 <SRow
-                  label="You Pay"
+                  label="Amount to Pay"
                   value={`${currSymbol}${parseFloat(amount).toLocaleString()}`}
                 />
                 {receiveAmount && (
                   <SRow
-                    label="You Receive"
-                    value={`${parseFloat(receiveAmount).toFixed(
-                      4
-                    )} ${cryptoSymbol}`}
+                    label="You'll Receive"
+                    value={`${formatReceiveCryptoDisplay(receiveAmount)} ${cryptoSymbol}`}
                     green
                   />
                 )}
@@ -1131,7 +1747,9 @@ const AppSimCard = () => {
                   </span>
                 </button>
                 <button
-                  onClick={handleBuyStep2Next}
+                  onClick={() => {
+                    void handleBuyStep2Next();
+                  }}
                   disabled={!email || !walletAddress || loading}
                   className="flex-1 py-3 rounded-xl font-bold text-sm text-white border-none transition-opacity disabled:opacity-40 cursor-pointer"
                   style={{ background: "#948EEE" }}
@@ -1169,13 +1787,113 @@ const AppSimCard = () => {
                 {receiveAmount && (
                   <SRow
                     label="You Receive"
-                    value={`${currSymbol}${parseFloat(
-                      receiveAmount
-                    ).toLocaleString()}`}
+                    value={formatReceiveNgnDisplay(receiveAmount)}
                     green
                   />
                 )}
               </div>
+
+              {(resumableSellLookupLoading ||
+                resumableGuestSellSuggestion) && (
+                <div
+                  className="rounded-xl p-3"
+                  style={{
+                    background: "white",
+                    border: "1.5px solid #E8E8E8",
+                  }}
+                >
+                  <p className="text-sm font-bold text-[#0E0F0C] mb-1">
+                    {resumableSellLookupLoading
+                      ? "Checking for an existing wallet"
+                      : resumableGuestSellSuggestion?.mode === "OPEN_TRANSACTION"
+                        ? "An existing deposit wallet is already open"
+                        : "A previous wallet is available for this sell"}
+                  </p>
+                  <p className="text-xs text-gray-400 leading-relaxed mb-3">
+                    {resumableSellLookupLoading
+                      ? "If you already started this sell before, we’ll reuse that same wallet instead of creating another one."
+                      : resumableGuestSellSuggestion?.mode === "OPEN_TRANSACTION"
+                        ? "A guest sell transaction already exists for this email, asset, and network. Resume it to keep using the same deposit wallet."
+                        : "You have used this email, asset, and network before. Reuse the same wallet to keep the flow consistent."}
+                  </p>
+                  {resumableGuestSellSuggestion?.mode === "OPEN_TRANSACTION" && (
+                    <>
+                      <SRow
+                        label="Open Session"
+                        value={resumableGuestSellSuggestion.transaction.sessionId.slice(
+                          0,
+                          12,
+                        )}
+                      />
+                      <SRow
+                        label="Amount"
+                        value={`${formatCryptoAmountForDisplay(
+                          String(resumableGuestSellSuggestion.transaction.amountCrypto),
+                        )} ${cryptoSymbol}`}
+                      />
+                      <div className="flex gap-2 mt-3">
+                        <button
+                          onClick={handleResumeGuestSellTransaction}
+                          disabled={loading}
+                          className="flex-1 py-3 rounded-xl font-bold text-sm text-white border-none transition-opacity disabled:opacity-40 cursor-pointer"
+                          style={{ background: "#22c55e" }}
+                        >
+                          Resume Wallet
+                        </button>
+                        <button
+                          onClick={() =>
+                            setDismissedResumableSessionId(
+                              resumableGuestSellSuggestion.transaction.sessionId,
+                            )
+                          }
+                          className="px-4 py-3 rounded-xl text-sm text-gray-400 cursor-pointer"
+                          style={{
+                            background: "white",
+                            border: "1.5px solid #E8E8E8",
+                          }}
+                          >
+                          Ignore
+                        </button>
+                      </div>
+                    </>
+                  )}
+                  {resumableGuestSellSuggestion?.mode === "REUSABLE_WALLET" && (
+                    <>
+                      <SRow
+                        label="Wallet"
+                        value={resumableGuestSellSuggestion.walletAddress.slice(
+                          0,
+                          12,
+                        )}
+                      />
+                      <SRow
+                        label="Network"
+                        value={resumableGuestSellSuggestion.walletNetwork}
+                      />
+                      <div className="flex gap-2 mt-3">
+                        <button
+                          onClick={handleReuseGuestWallet}
+                          disabled={loading}
+                          className="flex-1 py-3 rounded-xl font-bold text-sm text-white border-none transition-opacity disabled:opacity-40 cursor-pointer"
+                          style={{ background: "#22c55e" }}
+                        >
+                          Reuse Wallet
+                        </button>
+                        <button
+                          onClick={() => setResumableGuestSellSuggestion(null)}
+                          className="px-4 py-3 rounded-xl text-sm text-gray-400 cursor-pointer"
+                          style={{
+                            background: "white",
+                            border: "1.5px solid #E8E8E8",
+                          }}
+                        >
+                          Dismiss
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
 
               <FloatInput
                 label="Your Email Address"
@@ -1222,7 +1940,9 @@ const AppSimCard = () => {
                   </span>
                 </button>
                 <button
-                  onClick={handleSellStep2Next}
+                  onClick={() => {
+                    void handleSellStep2Next();
+                  }}
                   disabled={
                     !email ||
                     !selectedBankId ||
@@ -1255,7 +1975,7 @@ const AppSimCard = () => {
               className="flex flex-col gap-3"
             >
               <p className="text-center text-sm text-gray-400">
-                Step 3 of 3 · Make payment
+                Step 3 of 3 · Buy crypto with Naira
               </p>
 
               {/* Dark bank box */}
@@ -1311,7 +2031,11 @@ const AppSimCard = () => {
                 className="rounded-xl p-3"
                 style={{ background: "white", border: "1.5px solid #E8E8E8" }}
               >
-                <SRow label="Buying" value={cryptoSymbol} />
+                <SRow label="Buying" value={`${cryptoSymbol} with Naira`} />
+                <SRow
+                  label="Amount to Pay"
+                  value={`${currSymbol}${parseFloat(amount).toLocaleString()}`}
+                />
                 {receiveAmount && (
                   <SRow
                     label="You'll Get"
@@ -1408,10 +2132,39 @@ const AppSimCard = () => {
                 <p className="text-sm font-semibold text-[#0E0F0C]">
                   Send to this wallet
                 </p>
-                <span className="flex items-center gap-1.5 text-xs font-bold text-red-500">
-                  <span className="w-2 h-2 rounded-full bg-red-500 inline-block" />
-                  Monitoring
-                </span>
+                {(() => {
+                  const status = guestTransactionStatus?.status;
+                  const meta = getGuestStatusMeta(status);
+                  const tone = GUEST_STATUS_TONE_STYLES[meta.tone];
+                  const isActive = isGuestSellTransactionActive(status);
+
+                  return (
+                    <span
+                      className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold ${tone.badge}`}
+                    >
+                      {isActive ? (
+                        <span className="inline-flex h-3.5 w-3.5 items-center justify-center">
+                          <span className={`h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent ${tone.text}`} />
+                        </span>
+                      ) : (
+                        <span className={`w-2 h-2 rounded-full inline-block ${tone.dot}`} />
+                      )}
+                      <span className="flex items-center gap-1">
+                        <span>{meta.emoji}</span>
+                        <span>{meta.label}</span>
+                      </span>
+                    </span>
+                  );
+                })()}
+              </div>
+
+              <div
+                className="rounded-xl p-3"
+                style={{ background: "white", border: "1.5px solid #E8E8E8" }}
+              >
+                <SRow label="Amount to Send" value={`${amount} ${cryptoSymbol}`} />
+                <SRow label="Asset" value={cryptoSymbol} />
+                <SRow label="Network" value={networkLabel} />
               </div>
 
               {/* Wallet box */}
@@ -1462,12 +2215,13 @@ const AppSimCard = () => {
               >
                 <SRow label="Payout Bank" value={bankName} />
                 <SRow label="Account" value={accountNumber} />
+                {guestTransactionStatus?.status && (
+                  <SRow label="Status" value={guestTransactionStatus.status} />
+                )}
                 {receiveAmount && (
                   <SRow
                     label="NGN to Credit"
-                    value={`${currSymbol}${parseFloat(
-                      receiveAmount
-                    ).toLocaleString()}`}
+                    value={formatReceiveNgnDisplay(receiveAmount)}
                     green
                   />
                 )}
@@ -1528,9 +2282,7 @@ const AppSimCard = () => {
                     {receiveAmount && (
                       <SRow
                         label="You'll Get"
-                        value={`${parseFloat(receiveAmount).toFixed(
-                          4
-                        )} ${cryptoSymbol}`}
+                        value={`${formatReceiveCryptoDisplay(receiveAmount)} ${cryptoSymbol}`}
                         green
                       />
                     )}
@@ -1545,9 +2297,7 @@ const AppSimCard = () => {
                     {receiveAmount && (
                       <SRow
                         label="NGN Sent"
-                        value={`${currSymbol}${parseFloat(
-                          receiveAmount
-                        ).toLocaleString()}`}
+                        value={formatReceiveNgnDisplay(receiveAmount)}
                         green
                       />
                     )}

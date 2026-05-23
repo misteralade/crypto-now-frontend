@@ -8,8 +8,9 @@ import {ROUTES, SESSION_STORAGE_KEYS, TIME_IN_MILLISECONDS} from "../util/consta
 import type {AxiosServerError} from "../types/response.payload.types.ts";
 import {disputeServiceApi} from "../api/dispute.api.ts";
 import type {MessageAttachment} from "../types/transaction.types.ts";
-import {extractErrorMessage} from "../util/index.util.ts";
+import {extractErrorMessage, isExchangeRateExpiryError} from "../util/index.util.ts";
 import { useSelector } from "react-redux";
+import { setInitiateTransactionField } from "../redux/transaction.slice.ts";
 
 export const useTransactionQuery = () => {
   const queryClient = useQueryClient();
@@ -20,6 +21,12 @@ export const useTransactionQuery = () => {
     location.pathname === ROUTES.DASHBOARD ||
     location.pathname.startsWith(`${ROUTES.DASHBOARD}/`);
   const searchTransactionPayload = useSelector((state: RootState) => state.transaction.dashboard.searchUserTransactions);
+
+  const silentlyRefreshExchangeRates = async () => {
+    await queryClient.invalidateQueries({
+      queryKey: [QUERY_KEYS.EXCHANGE_RATE.GET_CRYPTO_TO_CURRENCY_EXCHANGE_RATE],
+    });
+  };
 
   const {
     data: userTransactionHistory,
@@ -172,11 +179,25 @@ export const useTransactionQuery = () => {
       const rootState = store.getState() as RootState;
       const transactionForm = rootState.transaction.initiate.initiateTransaction;
       const userEmail = rootState.user.trade.anonymous.email;
+      const selectedTradeBankAccountId = rootState.bank.tradeCrypto.selectedBankAccountId;
+      const accountId = transactionForm?.accountId ?? selectedTradeBankAccountId ?? undefined;
+
+      if (transactionForm?.action === "SELL" && !accountId) {
+        throw new Error("A payout bank account is required before starting a sell transaction.");
+      }
+
+      if (accountId && transactionForm?.accountId !== accountId) {
+        store.dispatch(setInitiateTransactionField({
+          field: "accountId",
+          value: accountId,
+        }));
+      }
 
       const payload = {
         ...transactionForm,
+        action: transactionForm?.action,
         coinId: transactionForm?.tokenId,
-        ...(transactionForm?.accountId ? { accountId: transactionForm.accountId } : {}),
+        ...(accountId ? { accountId } : {}),
       }
       
       if (userEmail) {
@@ -196,6 +217,10 @@ export const useTransactionQuery = () => {
     },
     onError: ( error: AxiosServerError ) => {
       toast.dismiss(QUERY_KEYS.TRANSACTION.INITIATE_TRANSACTION);
+      if (isExchangeRateExpiryError(error)) {
+        void silentlyRefreshExchangeRates();
+        return;
+      }
       const message = extractErrorMessage(error) || "Failed to initiate transaction. Please try again."
       console.log({
         message
@@ -233,6 +258,10 @@ export const useTransactionQuery = () => {
     },
     onError: ( error: AxiosServerError ) => {
       toast.dismiss();
+      if (isExchangeRateExpiryError(error)) {
+        void silentlyRefreshExchangeRates();
+        return;
+      }
       const message = extractErrorMessage(error) || "Failed to update transaction payment. Please try again."
       toast.error(message);
     },
@@ -389,6 +418,7 @@ export const useTransactionQuery = () => {
       const payload = {
         coinId: transactionForm.tokenId,
         currencyId: transactionForm.currencyId,
+        action: transactionForm.action,
         amountToSend: transactionForm.amountToSend ?? 0,
         amountToReceive: transactionForm.amountToReceive ?? 0,
         receiptUrl: transactionForm.receiptUrl,
@@ -409,6 +439,10 @@ export const useTransactionQuery = () => {
     },
     onError: (error: AxiosServerError) => {
       toast.dismiss(QUERY_KEYS.TRANSACTION.CREATE_AND_SUBMIT_TRANSACTION);
+      if (isExchangeRateExpiryError(error)) {
+        void silentlyRefreshExchangeRates();
+        return;
+      }
       const message = extractErrorMessage(error) || "Failed to submit transaction. Please try again.";
       toast.error(message);
     },

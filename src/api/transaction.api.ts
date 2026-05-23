@@ -180,6 +180,17 @@ class TransactionServiceApi {
     return await axiosGetRequestHandler(`/transaction/details/${sessionId}`) as GetTransactionDetailsAPIResponse
   }
 
+  async getResumableAnonymousSellTransaction(payload: {
+    email: string;
+    coinId: string;
+    network: string;
+  }) {
+    return await axiosPostRequestHandler(
+      "/transaction/anonymous/resumable-sell",
+      payload,
+    ) as BaseApiResponse<any>;
+  }
+
   async manualRecheckSellDeposit(sessionId: string) {
     return await axiosPostRequestHandler(
       `/transaction/manual-recheck-sell-deposit/${sessionId}`,

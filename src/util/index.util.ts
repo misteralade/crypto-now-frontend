@@ -161,6 +161,14 @@ export const extractErrorMessage = (error: AxiosServerError | ZodError | Error |
   return 'An unexpected error occurred';
 }
 
+export const isExchangeRateExpiryError = (error: unknown): boolean => {
+  const message = extractErrorMessage(error)?.toLowerCase() ?? "";
+  return (
+    message.includes("exchange rate has expired") ||
+    message.includes("please refresh the rate and try again")
+  );
+};
+
 export const formatCurrency = (amount: number, currency?: string) => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',

@@ -4,6 +4,7 @@ import type {UserBankAccountResponse} from "../../../../types/response.payload.t
 import type {TradeType} from "../../../../types/trade.types.ts";
 import {useDispatch} from "react-redux";
 import {clearSelectedBankAccountId, setSelectedBankAccountId} from "../../../../redux/bank.slice.ts";
+import {setInitiateTransactionField} from "../../../../redux/transaction.slice.ts";
 
 type ViewState =
   | "select-bank"
@@ -50,6 +51,10 @@ export const useConfirmBankDetailsModal = (
       setSelectedBank(firstBank);
       dispatch(clearSelectedBankAccountId());
       dispatch(setSelectedBankAccountId(firstBank.id));
+      dispatch(setInitiateTransactionField({
+        field: "accountId",
+        value: firstBank.id,
+      }));
     }
   }, [tradeType, bankAccounts, selectedBankId, dispatch]);
 
@@ -60,6 +65,10 @@ export const useConfirmBankDetailsModal = (
       (bank) => bank.id === bankId
     ) : null);
     dispatch(setSelectedBankAccountId(bankId))
+    dispatch(setInitiateTransactionField({
+      field: "accountId",
+      value: bankId,
+    }));
   };
 
   const handleSubmitBankDetails = async () => {

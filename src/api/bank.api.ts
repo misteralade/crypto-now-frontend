@@ -45,7 +45,7 @@ class BankServiceApi {
   }
   
   async createAnonymousUserBankAccount(payload: Record<string, any>) {
-    return await axiosPostRequestHandler("/bank/anonymous-user/create", payload) as BaseApiResponse<null>;
+    return await axiosPostRequestHandler("/bank/anonymous-user/create", payload) as BaseApiResponse<{ id: string }>;
   }
   
   async makeBankAccountDefault(id: string) {

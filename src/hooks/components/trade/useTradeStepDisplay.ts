@@ -26,8 +26,8 @@ import {
   saveTradeProgress,
 } from "../../../util/tradeProgress.storage.util.ts";
 import {type RootState, store} from "../../../store.ts";
-import {setAnonymousUserEmail, clearAnonymousUserEmail, setIsAnonymousUser} from "../../../redux/user.slice.ts";
-import { convertToMillify, formatNumber } from "../../../util/index.util.ts";
+import {clearAnonymousUserEmail, setAnonymousUserEmail, setIsAnonymousUser} from "../../../redux/user.slice.ts";
+import { convertToMillify, formatNumber, isExchangeRateExpiryError } from "../../../util/index.util.ts";
 import { toast } from "react-toastify";
 import { userServiceApi } from "../../../api/user.api.ts";
 
@@ -87,6 +87,11 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   // When continuing a transaction, allow rate to fetch once but prevent refetching
   const shouldFetchRate = !shouldDisableRateQuery && !isBuyLocalFlow;
   const shouldDisableRefetch = isContinuingTransaction && currentStep === 2;
+  const refreshExchangeRateSilently = async () => {
+    await queryClient.invalidateQueries({
+      queryKey: [QUERY_KEYS.EXCHANGE_RATE.GET_CRYPTO_TO_CURRENCY_EXCHANGE_RATE],
+    });
+  };
   const { exchangeRate, loadingExchangeRate } = useRateQuery(
     selectedToken?.id || "",
     selectedCurrency?.id || "",
@@ -577,7 +582,6 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       const diff = target - now;
 
       if (diff <= 0) {
-        setCountdown("Expired");
         if (countdownIntervalRef.current)
           clearInterval(countdownIntervalRef.current);
         
@@ -587,19 +591,10 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
         
         if (!hasReceipt) {
           setIsCountdownLocked(false);
-          if (selectedToken?.id && selectedCurrency?.id) {
-            queryClient.invalidateQueries({
-              queryKey: [
-                QUERY_KEYS.EXCHANGE_RATE.GET_CRYPTO_TO_CURRENCY_EXCHANGE_RATE,
-                selectedToken.id,
-                selectedCurrency.id,
-              ],
-            });
-          }
-        } else {
-          // Keep locked and show "Rate Locked" instead of "Expired"
-          setCountdown("Rate Locked");
+          void refreshExchangeRateSilently();
+          rateReceivedAtRef.current = Date.now();
         }
+        setCountdown("");
         return;
       }
 
@@ -856,6 +851,10 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
         transactionFormRef.current = currencyMerged;
         setTransactionForm(currencyMerged);
       }
+    }
+
+    if (saved.anonymousEmail) {
+      dispatch(setAnonymousUserEmail(saved.anonymousEmail));
     }
   }, [supportedCryptoCurrencies, supportedCurrencies, dispatch]);
 
@@ -1166,7 +1165,11 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
         saveTradeProgress({ transactionSessionId: sessionId, step: 2 });
         setStep(2);
       }
-    } catch {
+    } catch (error) {
+      if (isExchangeRateExpiryError(error)) {
+        void refreshExchangeRateSilently();
+        return;
+      }
       // Error already handled by mutation's onError (toast shown); just let button re-enable
     }
   };
@@ -1174,28 +1177,44 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   const makePaymentTransaction = async () => {
     if (activeTab === "buy") {
       // BUY: create transaction at AWAITING_PAYMENT in one shot
-      const res = await createAndSubmitTransactionMutation.mutateAsync();
-      setIsCountdownLocked(true);
-      if (countdownIntervalRef.current) {
-        clearInterval(countdownIntervalRef.current);
-      }
-      
-      if (res?.success && res.data?.sessionId) {
-        const sessionId = res.data.sessionId;
-        setTransactionSessionId(sessionId);
-        sessionStorage.setItem(SESSION_STORAGE_KEYS.SESSION_ID, sessionId);
-        saveTradeProgress({ transactionSessionId: sessionId, step: 2 });
-        // We stay on step 2 to show the monitoring view
-        setStep(2);
+      try {
+        const res = await createAndSubmitTransactionMutation.mutateAsync();
+        setIsCountdownLocked(true);
+        if (countdownIntervalRef.current) {
+          clearInterval(countdownIntervalRef.current);
+        }
+        
+        if (res?.success && res.data?.sessionId) {
+          const sessionId = res.data.sessionId;
+          setTransactionSessionId(sessionId);
+          sessionStorage.setItem(SESSION_STORAGE_KEYS.SESSION_ID, sessionId);
+          saveTradeProgress({ transactionSessionId: sessionId, step: 2 });
+          // We stay on step 2 to show the monitoring view
+          setStep(2);
+        }
+      } catch (error) {
+        if (isExchangeRateExpiryError(error)) {
+          void refreshExchangeRateSilently();
+          return;
+        }
+        return;
       }
     } else {
       // SELL: existing flow — update INITIATED → AWAITING_CRYPTO + open bank modal
-      await makePaymentTransactionMutation.mutateAsync();
-      setIsCountdownLocked(true);
-      if (countdownIntervalRef.current) {
-        clearInterval(countdownIntervalRef.current);
+      try {
+        await makePaymentTransactionMutation.mutateAsync();
+        setIsCountdownLocked(true);
+        if (countdownIntervalRef.current) {
+          clearInterval(countdownIntervalRef.current);
+        }
+        togglePaymentReceivingModal();
+      } catch (error) {
+        if (isExchangeRateExpiryError(error)) {
+          void refreshExchangeRateSilently();
+          return;
+        }
+        return;
       }
-      togglePaymentReceivingModal();
     }
   };
 
@@ -1217,6 +1236,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   
   const handleAnonymousUserEmailInput = (value: string) => {
     dispatch(setAnonymousUserEmail(value));
+    saveTradeProgress({ anonymousEmail: value });
     toggleShowUserEnterEmail();
   }
 
@@ -1235,13 +1255,6 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     // The restoration logic will filter out invalid values
     saveTradeProgress({ numberOfToken, amountToBuy, isCountdownLocked });
   }, [numberOfToken, amountToBuy, isCountdownLocked]);
-
-  // Clear guest user email when reaching Step 3
-  useEffect(() => {
-    if (currentStep === 3) {
-      dispatch(clearAnonymousUserEmail());
-    }
-  }, [currentStep, dispatch]);
 
   // Reset countdown locked state when starting a new transaction (step 1 with no saved progress)
   useEffect(() => {

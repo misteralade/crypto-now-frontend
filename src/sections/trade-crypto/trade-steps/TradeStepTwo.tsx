@@ -18,6 +18,15 @@ type MonitoringStep = {
   status: "done" | "active" | "pending";
 };
 
+type StatusTone = "neutral" | "info" | "warning" | "success" | "danger";
+
+type StatusMeta = {
+  label: string;
+  tone: StatusTone;
+  emoji: string;
+  note: string;
+};
+
 const BUY_MONITORING_STATUSES: TransactionStatus[] = [
   "AWAITING_PAYMENT",
   "PAYMENT_RECEIVED",
@@ -46,6 +55,185 @@ const SELL_MONITORING_STATUSES: TransactionStatus[] = [
   "CANCELLED",
 ];
 
+const STATUS_META: Partial<Record<TransactionStatus, StatusMeta>> = {
+  AWAITING_PAYMENT: {
+    label: "Awaiting Payment",
+    tone: "info",
+    emoji: "⏳",
+    note: "We are waiting for the payment receipt to be submitted.",
+  },
+  PAYMENT_RECEIVED: {
+    label: "Payment Received",
+    tone: "info",
+    emoji: "📥",
+    note: "Your receipt has landed. We are verifying it now.",
+  },
+  PAYMENT_CONFIRMED: {
+    label: "Payment Confirmed",
+    tone: "success",
+    emoji: "✅",
+    note: "The payment is confirmed and crypto is being released.",
+  },
+  PROCESSING: {
+    label: "Processing",
+    tone: "info",
+    emoji: "🔄",
+    note: "The transaction is being processed right now.",
+  },
+  CRYPTO_SENT: {
+    label: "Crypto Sent",
+    tone: "success",
+    emoji: "🚀",
+    note: "Crypto has been released and is on the way.",
+  },
+  CRYPTO_RECEIVED: {
+    label: "Crypto Received",
+    tone: "success",
+    emoji: "✅",
+    note: "Your wallet has received the crypto.",
+  },
+  CRYPTO_CONFIRMED: {
+    label: "Crypto Confirmed",
+    tone: "success",
+    emoji: "✅",
+    note: "Blockchain confirmation is complete.",
+  },
+  AWAITING_CRYPTO: {
+    label: "Waiting for Deposit",
+    tone: "warning",
+    emoji: "📡",
+    note: "Send the crypto to your unique deposit wallet.",
+  },
+  PAYMENT_ACCOUNT_CONFIRMED: {
+    label: "Payment Details Confirmed",
+    tone: "info",
+    emoji: "🧾",
+    note: "Your payout details are confirmed. We are waiting for the deposit.",
+  },
+  DEPOSIT_DETECTED: {
+    label: "Deposit Detected",
+    tone: "info",
+    emoji: "⚡",
+    note: "We detected the deposit and are waiting for confirmations.",
+  },
+  DEPOSIT_PENDING_MINIMUM: {
+    label: "Below Minimum",
+    tone: "warning",
+    emoji: "⚠️",
+    note: "A deposit was found, but the total is still below the minimum.",
+  },
+  DEPOSIT_CONFIRMED: {
+    label: "Deposit Confirmed",
+    tone: "success",
+    emoji: "✅",
+    note: "Deposit confirmed. NGN payout is being prepared.",
+  },
+  PAYOUT_INITIATED: {
+    label: "Payout Initiated",
+    tone: "info",
+    emoji: "🏦",
+    note: "Your bank transfer has been initiated.",
+  },
+  PENDING_PAYOUT: {
+    label: "Pending Payout",
+    tone: "warning",
+    emoji: "🕒",
+    note: "Payout is queued and waiting for the next attempt.",
+  },
+  PAYOUT_FAILED: {
+    label: "Payout Failed",
+    tone: "danger",
+    emoji: "❌",
+    note: "The payout did not complete. We will retry or review it.",
+  },
+  COMPLETED: {
+    label: "Completed",
+    tone: "success",
+    emoji: "✅",
+    note: "The transaction has been completed successfully.",
+  },
+  FAILED: {
+    label: "Failed",
+    tone: "danger",
+    emoji: "❌",
+    note: "The transaction failed and needs attention.",
+  },
+  EXPIRED: {
+    label: "Expired",
+    tone: "danger",
+    emoji: "⌛",
+    note: "The transaction expired before it could complete.",
+  },
+  CANCELLED: {
+    label: "Cancelled",
+    tone: "danger",
+    emoji: "🚫",
+    note: "The transaction was cancelled.",
+  },
+};
+
+const TONE_STYLES: Record<StatusTone, { bg: string; border: string; text: string; badge: string; accent: string }> = {
+  neutral: {
+    bg: "bg-gray-50",
+    border: "border-gray-200",
+    text: "text-gray-700",
+    badge: "bg-gray-100 text-gray-700 border-gray-200",
+    accent: "bg-gray-400",
+  },
+  info: {
+    bg: "bg-sky-50",
+    border: "border-sky-200",
+    text: "text-sky-800",
+    badge: "bg-sky-100 text-sky-800 border-sky-200",
+    accent: "bg-sky-500",
+  },
+  warning: {
+    bg: "bg-amber-50",
+    border: "border-amber-200",
+    text: "text-amber-900",
+    badge: "bg-amber-100 text-amber-900 border-amber-200",
+    accent: "bg-amber-500",
+  },
+  success: {
+    bg: "bg-emerald-50",
+    border: "border-emerald-200",
+    text: "text-emerald-800",
+    badge: "bg-emerald-100 text-emerald-800 border-emerald-200",
+    accent: "bg-emerald-500",
+  },
+  danger: {
+    bg: "bg-rose-50",
+    border: "border-rose-200",
+    text: "text-rose-800",
+    badge: "bg-rose-100 text-rose-800 border-rose-200",
+    accent: "bg-rose-500",
+  },
+};
+
+function getStatusMeta(status?: string, tradeType?: TradeType): StatusMeta {
+  if (status && status in STATUS_META) {
+    return STATUS_META[status as TransactionStatus]!;
+  }
+
+  return tradeType === "buy"
+    ? {
+        label: "Monitoring Payment",
+        tone: "info",
+        emoji: "🔍",
+        note: "We are checking for changes to your transaction.",
+      }
+    : {
+        label: "Waiting for Deposit",
+        tone: "warning",
+        emoji: "📡",
+        note: "We are waiting for your crypto deposit.",
+      };
+}
+
+function isActiveStatus(status?: string): boolean {
+  return !!status && !["COMPLETED", "FAILED", "EXPIRED", "CANCELLED"].includes(status);
+}
+
 function TradeStatusMonitoring({
   tradeType,
   status,
@@ -56,6 +244,9 @@ function TradeStatusMonitoring({
   selectedToken?: SupportedCryptoOrCurrencyResponse;
 }) {
   const isBuy = tradeType === "buy";
+  const statusMeta = getStatusMeta(status, tradeType);
+  const tone = TONE_STYLES[statusMeta.tone];
+  const isActive = isActiveStatus(status);
   const steps: MonitoringStep[] = isBuy
     ? [
         { label: "Payment Receipt Submitted", status: "done" },
@@ -176,17 +367,40 @@ function TradeStatusMonitoring({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col items-center gap-3 rounded-2xl border border-gray-200 bg-gray-50 px-5 py-6 text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-[#948EEE33] bg-[#F0EFFD] text-3xl">
-          {status === "COMPLETED" ? "✅" : isBuy ? "🔍" : "📡"}
+      <div className={`flex flex-col items-center gap-3 rounded-2xl border px-5 py-6 text-center ${tone.bg} ${tone.border}`}>
+        <div className={`flex h-16 w-16 items-center justify-center rounded-full border-2 ${tone.border} bg-white text-3xl shadow-sm`}>
+          {isActive ? (
+            <span className="inline-flex h-7 w-7 items-center justify-center">
+              <span className={`h-7 w-7 animate-spin rounded-full border-2 border-current border-t-transparent ${tone.text}`} />
+            </span>
+          ) : (
+            <span>{statusMeta.emoji}</span>
+          )}
         </div>
         <div className="space-y-1">
-          <h3 className="text-base font-extrabold text-[#0E0F0C]">{title}</h3>
+          <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] ${tone.badge}`}>
+            <span className={`h-2.5 w-2.5 rounded-full ${isActive ? `${tone.accent} animate-pulse` : tone.accent}`} />
+            {statusMeta.label}
+          </div>
+          <h3 className="text-base font-extrabold text-[#0E0F0C]">
+            {title}
+          </h3>
           <p className="text-xs text-gray-500">{subtitle}</p>
         </div>
         <p className="max-w-md text-sm leading-relaxed text-gray-600">
           {summary}
         </p>
+        <div className={`w-full max-w-md rounded-2xl border px-4 py-3 text-left ${tone.badge}`}>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] opacity-80">
+            Latest status
+          </p>
+          <p className="mt-1 text-sm font-bold text-inherit">
+            {statusMeta.emoji} {statusMeta.label}
+          </p>
+          <p className="mt-1 text-xs leading-relaxed opacity-90">
+            {statusMeta.note}
+          </p>
+        </div>
       </div>
 
       <div className="space-y-2.5">

@@ -9,6 +9,7 @@ export interface TradeProgress {
   // Identity/context
   selectedTokenId?: string;
   selectedCurrencyId?: string;
+  anonymousEmail?: string;
 
   // Amounts
   numberOfToken?: string | number;

@@ -314,7 +314,7 @@ export type UserTransactionsHistoryResponse = {
 
 // Stat Transaction
 export type GetTransactionDetailsAPIResponse =
-  BaseApiResponse<SearchTransactionsResponse>;
+  BaseApiResponse<TransactionResponseEntity>;
 
 export type GetDisputeMessagesAPIResponse = BaseApiResponse<
   Array<DisputeMessageResponse>
