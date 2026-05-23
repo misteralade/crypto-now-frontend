@@ -373,23 +373,6 @@ const AppSimCard = () => {
     useRef<ReturnType<typeof setInterval> | null>(null);
   const [guestTransactionStatus, setGuestTransactionStatus] =
     useState<TransactionResponseEntity | null>(null);
-  type GuestSellResumeSuggestion =
-    | {
-        mode: "OPEN_TRANSACTION";
-        transaction: TransactionResponseEntity;
-      }
-    | {
-        mode: "REUSABLE_WALLET";
-        walletAddress: string;
-        walletNetwork: string;
-      };
-  const [resumableGuestSellSuggestion, setResumableGuestSellSuggestion] =
-    useState<GuestSellResumeSuggestion | null>(null);
-  const [resumableSellLookupLoading, setResumableSellLookupLoading] =
-    useState(false);
-  const [dismissedResumableSessionId, setDismissedResumableSessionId] =
-    useState<string | null>(null);
-  const resumableSellLookupRequestIdRef = useRef(0);
 
   const [email, setEmail] = useState(saved.email || "");
   const [walletAddress, setWalletAddress] = useState(saved.walletAddress || "");
@@ -522,87 +505,6 @@ const AppSimCard = () => {
     sessionId,
     depositWallet,
     done,
-  ]);
-
-  useEffect(() => {
-    if (step !== 2 || isBuy || !email || !selectedCrypto || !network) {
-      setResumableGuestSellSuggestion(null);
-      setResumableSellLookupLoading(false);
-      return;
-    }
-
-    const trimmedEmail = email.trim();
-    if (!trimmedEmail.includes("@")) {
-      setResumableGuestSellSuggestion(null);
-      setResumableSellLookupLoading(false);
-      return;
-    }
-
-    const requestId = ++resumableSellLookupRequestIdRef.current;
-    setResumableSellLookupLoading(true);
-
-    const timeoutId = window.setTimeout(async () => {
-      try {
-        const res =
-          await transactionServiceApi.getResumableAnonymousSellTransaction({
-            email: trimmedEmail,
-            coinId: selectedCrypto,
-            network,
-          });
-
-        if (resumableSellLookupRequestIdRef.current !== requestId) {
-          return;
-        }
-
-        const data = res?.data as
-          | {
-              mode?: "OPEN_TRANSACTION" | "REUSABLE_WALLET";
-              transaction?: TransactionResponseEntity;
-              walletAddress?: string;
-              walletNetwork?: string;
-            }
-          | null;
-
-        if (data?.mode === "OPEN_TRANSACTION" && data.transaction?.sessionId) {
-          if (data.transaction.sessionId !== dismissedResumableSessionId) {
-            setResumableGuestSellSuggestion({
-              mode: "OPEN_TRANSACTION",
-              transaction: data.transaction,
-            });
-          } else {
-            setResumableGuestSellSuggestion(null);
-          }
-        } else if (data?.mode === "REUSABLE_WALLET" && data.walletAddress) {
-          setResumableGuestSellSuggestion({
-            mode: "REUSABLE_WALLET",
-            walletAddress: data.walletAddress,
-            walletNetwork: data.walletNetwork || network,
-          });
-        } else {
-          setResumableGuestSellSuggestion(null);
-        }
-      } catch {
-        if (resumableSellLookupRequestIdRef.current !== requestId) {
-          return;
-        }
-        setResumableGuestSellSuggestion(null);
-      } finally {
-        if (resumableSellLookupRequestIdRef.current === requestId) {
-          setResumableSellLookupLoading(false);
-        }
-      }
-    }, 350);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [
-    dismissedResumableSessionId,
-    email,
-    isBuy,
-    network,
-    selectedCrypto,
-    step,
   ]);
 
   const buyChips =
@@ -982,31 +884,6 @@ const AppSimCard = () => {
     setActiveSellPreset(targetFiatAmount);
   };
 
-  const hydrateGuestSellFromTransaction = (transaction: TransactionResponseEntity) => {
-    const tx = transaction as TransactionResponseEntity & {
-      email?: string | null;
-      depositAddress?: string | null;
-      custodialWallet?: { network?: string | null; walletAddress?: string | null } | null;
-    };
-
-    setSessionId(tx.sessionId || "");
-    setEmail(tx.email || email);
-    setAmount(formatCryptoAmountForDisplay(String(tx.amountCrypto || amount)));
-    setReceiveAmount(String(tx.amountFiatNGN || tx.amountFiat || receiveAmount));
-    setDepositWallet(
-      tx.depositAddress || tx.custodialWallet?.walletAddress || "",
-    );
-    if (tx.custodialWallet?.network) {
-      setNetwork(tx.custodialWallet.network);
-    }
-    setGuestTransactionStatus(transaction);
-    setResumableGuestSellSuggestion({
-      mode: "OPEN_TRANSACTION",
-      transaction,
-    });
-    setStep(3);
-  };
-
   const handleStep1Next = async () => {
     if (!selectedCrypto || !quoteCurrencyObj?.id || !amount) return;
     // Commit NGN amount so downstream steps always use NGN
@@ -1074,65 +951,6 @@ const AppSimCard = () => {
     if (!email || !selectedBankId || !accountNumber || !accountName || !transactionCurrencyObj?.id) return;
     setLoading(true);
     try {
-      if (
-        !retrying &&
-        resumableGuestSellSuggestion?.mode === "OPEN_TRANSACTION"
-      ) {
-        hydrateGuestSellFromTransaction(
-          resumableGuestSellSuggestion.transaction,
-        );
-        return;
-      }
-
-      if (!retrying && sessionId && depositWallet) {
-        const existingTransaction =
-          await transactionServiceApi.getTransactionDetails(sessionId);
-        const existingData = existingTransaction?.data as
-          | TransactionResponseEntity
-          | undefined;
-
-        if (
-          existingTransaction?.success &&
-          existingData?.type === "SELL" &&
-          existingData?.email?.toLowerCase() === email.toLowerCase() &&
-          existingData?.cryptocurrencyId === selectedCrypto &&
-          existingData?.depositAddress === depositWallet &&
-          isGuestSellTransactionActive(existingData?.status)
-        ) {
-          if (!existingData?.userBankAccountId) {
-            const bankAccount = await bankServiceApi.createAnonymousUserBankAccount({
-              email,
-              bankId: selectedBankId,
-              accountHolderName: accountName,
-              accountNumber,
-              isDefault: false,
-            });
-
-            if (bankAccount?.success && bankAccount?.data?.id) {
-              await transactionServiceApi.confirmAnonymousUserReceivingPaymentAccount(
-                sessionId,
-                {
-                  accountId: bankAccount.data.id,
-                  email,
-                },
-              );
-            }
-          }
-
-          setAmount(String(existingData.amountCrypto ?? amount));
-          setReceiveAmount(
-            String(
-              existingData.amountFiatNGN ??
-                existingData.amountFiat ??
-                receiveAmount,
-            ),
-          );
-          setGuestTransactionStatus(existingData);
-          setStep(3);
-          return;
-        }
-      }
-
       const bankAccount = await bankServiceApi.createAnonymousUserBankAccount({
         email,
         bankId: selectedBankId,
@@ -1198,33 +1016,6 @@ const AppSimCard = () => {
       }
     }
     setLoading(false);
-  };
-
-  const handleResumeGuestSellTransaction = async () => {
-    if (resumableGuestSellSuggestion?.mode !== "OPEN_TRANSACTION") return;
-    setLoading(true);
-    try {
-      const details = await transactionServiceApi.getTransactionDetails(
-        resumableGuestSellSuggestion.transaction.sessionId,
-      );
-      const transaction =
-        (details?.data as TransactionResponseEntity | null) ||
-        resumableGuestSellSuggestion.transaction;
-      if (transaction?.sessionId) {
-        hydrateGuestSellFromTransaction(transaction);
-      }
-    } catch (error) {
-      console.error(
-        "AppSimCard: failed to resume guest sell transaction",
-        error,
-      );
-    }
-    setLoading(false);
-  };
-
-  const handleReuseGuestWallet = async () => {
-    if (resumableGuestSellSuggestion?.mode !== "REUSABLE_WALLET") return;
-    await handleSellStep2Next();
   };
 
   const handleBuySubmit = async () => {
@@ -1792,108 +1583,6 @@ const AppSimCard = () => {
                   />
                 )}
               </div>
-
-              {(resumableSellLookupLoading ||
-                resumableGuestSellSuggestion) && (
-                <div
-                  className="rounded-xl p-3"
-                  style={{
-                    background: "white",
-                    border: "1.5px solid #E8E8E8",
-                  }}
-                >
-                  <p className="text-sm font-bold text-[#0E0F0C] mb-1">
-                    {resumableSellLookupLoading
-                      ? "Checking for an existing wallet"
-                      : resumableGuestSellSuggestion?.mode === "OPEN_TRANSACTION"
-                        ? "An existing deposit wallet is already open"
-                        : "A previous wallet is available for this sell"}
-                  </p>
-                  <p className="text-xs text-gray-400 leading-relaxed mb-3">
-                    {resumableSellLookupLoading
-                      ? "If you already started this sell before, we’ll reuse that same wallet instead of creating another one."
-                      : resumableGuestSellSuggestion?.mode === "OPEN_TRANSACTION"
-                        ? "A guest sell transaction already exists for this email, asset, and network. Resume it to keep using the same deposit wallet."
-                        : "You have used this email, asset, and network before. Reuse the same wallet to keep the flow consistent."}
-                  </p>
-                  {resumableGuestSellSuggestion?.mode === "OPEN_TRANSACTION" && (
-                    <>
-                      <SRow
-                        label="Open Session"
-                        value={resumableGuestSellSuggestion.transaction.sessionId.slice(
-                          0,
-                          12,
-                        )}
-                      />
-                      <SRow
-                        label="Amount"
-                        value={`${formatCryptoAmountForDisplay(
-                          String(resumableGuestSellSuggestion.transaction.amountCrypto),
-                        )} ${cryptoSymbol}`}
-                      />
-                      <div className="flex gap-2 mt-3">
-                        <button
-                          onClick={handleResumeGuestSellTransaction}
-                          disabled={loading}
-                          className="flex-1 py-3 rounded-xl font-bold text-sm text-white border-none transition-opacity disabled:opacity-40 cursor-pointer"
-                          style={{ background: "#22c55e" }}
-                        >
-                          Resume Wallet
-                        </button>
-                        <button
-                          onClick={() =>
-                            setDismissedResumableSessionId(
-                              resumableGuestSellSuggestion.transaction.sessionId,
-                            )
-                          }
-                          className="px-4 py-3 rounded-xl text-sm text-gray-400 cursor-pointer"
-                          style={{
-                            background: "white",
-                            border: "1.5px solid #E8E8E8",
-                          }}
-                          >
-                          Ignore
-                        </button>
-                      </div>
-                    </>
-                  )}
-                  {resumableGuestSellSuggestion?.mode === "REUSABLE_WALLET" && (
-                    <>
-                      <SRow
-                        label="Wallet"
-                        value={resumableGuestSellSuggestion.walletAddress.slice(
-                          0,
-                          12,
-                        )}
-                      />
-                      <SRow
-                        label="Network"
-                        value={resumableGuestSellSuggestion.walletNetwork}
-                      />
-                      <div className="flex gap-2 mt-3">
-                        <button
-                          onClick={handleReuseGuestWallet}
-                          disabled={loading}
-                          className="flex-1 py-3 rounded-xl font-bold text-sm text-white border-none transition-opacity disabled:opacity-40 cursor-pointer"
-                          style={{ background: "#22c55e" }}
-                        >
-                          Reuse Wallet
-                        </button>
-                        <button
-                          onClick={() => setResumableGuestSellSuggestion(null)}
-                          className="px-4 py-3 rounded-xl text-sm text-gray-400 cursor-pointer"
-                          style={{
-                            background: "white",
-                            border: "1.5px solid #E8E8E8",
-                          }}
-                        >
-                          Dismiss
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
 
               <FloatInput
                 label="Your Email Address"
