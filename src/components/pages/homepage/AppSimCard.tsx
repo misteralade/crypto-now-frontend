@@ -201,13 +201,10 @@ const getGuestStatusMeta = (status?: string | null) =>
         emoji: "📡",
       };
 
-const getGuestPayoutFailureCopy = (failureReason?: string | null) => ({
+const getGuestPayoutFailureCopy = () => ({
   title: "Payout issue detected",
   subtitle:
     "We detected your crypto deposit, but the NGN payout could not be completed automatically.",
-  body:
-    failureReason ||
-    "Our support team is already reviewing this payout and will notify you once it is resolved.",
 });
 
 // ── Crypto token button ───────────────────────────────────────────────────────
@@ -1956,10 +1953,10 @@ const AppSimCard = () => {
                   </div>
                   <div className="text-center">
                     <p className="font-bold text-xl text-[#0E0F0C]">
-                      {getGuestPayoutFailureCopy(guestTransactionStatus?.payoutFailureReason).title}
+                      {getGuestPayoutFailureCopy().title}
                     </p>
                     <p className="text-xs text-gray-500 mt-1 px-3 leading-relaxed">
-                      {getGuestPayoutFailureCopy(guestTransactionStatus?.payoutFailureReason).subtitle}
+                      {getGuestPayoutFailureCopy().subtitle}
                     </p>
                   </div>
                   <div
@@ -1971,9 +1968,6 @@ const AppSimCard = () => {
                     </p>
                     <p className="text-xs mt-1 leading-relaxed text-rose-700/90">
                       We’ll notify you as soon as this is resolved. Sorry for the delay.
-                    </p>
-                    <p className="text-[11px] mt-2 leading-relaxed text-rose-600/80 break-words">
-                      {getGuestPayoutFailureCopy(guestTransactionStatus?.payoutFailureReason).body}
                     </p>
                   </div>
                 </>
