@@ -40,6 +40,7 @@ const BUY_MONITORING_STATUSES: TransactionStatus[] = [
   "FAILED",
   "EXPIRED",
   "CANCELLED",
+  "DISPUTED",
 ];
 
 const SELL_MONITORING_STATUSES: TransactionStatus[] = [
@@ -54,6 +55,7 @@ const SELL_MONITORING_STATUSES: TransactionStatus[] = [
   "FAILED",
   "EXPIRED",
   "CANCELLED",
+  "DISPUTED",
 ];
 
 const STATUS_META: Partial<Record<TransactionStatus, StatusMeta>> = {
@@ -165,6 +167,12 @@ const STATUS_META: Partial<Record<TransactionStatus, StatusMeta>> = {
     emoji: "🚫",
     note: "The transaction was cancelled.",
   },
+  DISPUTED: {
+    label: "Disputed",
+    tone: "danger",
+    emoji: "⚖️",
+    note: "This transaction is under dispute. Please check your email or contact support.",
+  },
 };
 
 const TONE_STYLES: Record<StatusTone, { bg: string; border: string; text: string; badge: string; accent: string }> = {
@@ -226,7 +234,7 @@ function getStatusMeta(status?: string, tradeType?: TradeType): StatusMeta {
 }
 
 function isActiveStatus(status?: string): boolean {
-  return !!status && !["COMPLETED", "FAILED", "EXPIRED", "CANCELLED"].includes(status);
+  return !!status && !["COMPLETED", "FAILED", "EXPIRED", "CANCELLED", "DISPUTED"].includes(status);
 }
 
 function TradeStatusMonitoring({
@@ -321,15 +329,21 @@ function TradeStatusMonitoring({
   const title = isBuy
     ? status === "COMPLETED"
       ? "Transaction Completed"
-      : "Verifying Payment"
+      : status === "DISPUTED"
+        ? "Transaction Disputed"
+        : "Verifying Payment"
     : status === "COMPLETED"
       ? "Transaction Completed"
-      : "Monitoring Wallet";
+      : status === "DISPUTED"
+        ? "Transaction Disputed"
+        : "Monitoring Wallet";
 
   const subtitle = isBuy
     ? status === "PAYMENT_CONFIRMED"
       ? "Payment confirmed. Releasing crypto."
-      : "Checking your payment status."
+      : status === "DISPUTED"
+        ? "This transaction has been flagged for review."
+        : "Checking your payment status."
     : status === "DEPOSIT_DETECTED"
       ? "Deposit detected. Waiting for confirmations."
       : status === "DEPOSIT_PENDING_MINIMUM"
@@ -338,15 +352,21 @@ function TradeStatusMonitoring({
           ? "Deposit confirmed. Processing payout."
           : status === "PAYOUT_INITIATED"
             ? "Payout initiated. Waiting for bank completion."
-            : "Listening for your blockchain transaction.";
+            : status === "DISPUTED"
+              ? "This transaction has been flagged for review."
+              : "Listening for your blockchain transaction.";
 
   const summary = isBuy
     ? status === "COMPLETED"
       ? `Your payment was verified and ${selectedToken?.symbol ?? "crypto"} has been released.`
-      : "Your payment receipt has been submitted. We are polling for updates and will continue automatically."
+      : status === "DISPUTED"
+        ? "Your transaction is currently under dispute. Our support team is reviewing the case."
+        : "Your payment receipt has been submitted. We are polling for updates and will continue automatically."
     : status === "COMPLETED"
       ? `Your ${selectedToken?.symbol ?? "crypto"} sale has completed successfully.`
-      : `We are monitoring your ${selectedToken?.symbol ?? "crypto"} deposit and will continue automatically once the network confirms it.`;
+      : status === "DISPUTED"
+        ? "Your transaction is currently under dispute. Our support team is reviewing the case."
+        : `We are monitoring your ${selectedToken?.symbol ?? "crypto"} deposit and will continue automatically once the network confirms it.`;
 
   const showManualRecheck =
     !isBuy &&

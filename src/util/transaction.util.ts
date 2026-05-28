@@ -66,7 +66,7 @@ const statusConfig: Record<string, typeof PENDING_CONFIG> = {
   FAILED: { ...FAILED_CONFIG, displayName: "Failed" },
   EXPIRED: { ...FAILED_CONFIG, displayName: "Failed" },
   CANCELLED: { ...FAILED_CONFIG, displayName: "Failed" },
-  DISPUTED: { ...FAILED_CONFIG, displayName: "Failed" },
+  DISPUTED: { ...FAILED_CONFIG, displayName: "Disputed" },
   PAYOUT_FAILED: { ...FAILED_CONFIG, displayName: "Failed" },
 };
 

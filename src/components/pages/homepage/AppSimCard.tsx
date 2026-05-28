@@ -222,6 +222,13 @@ const GUEST_SELL_TERMINAL_STATUSES = new Set([
   "PAYOUT_FAILED",
 ]);
 
+const GUEST_SELL_FAILED_STATUSES = new Set([
+  "FAILED",
+  "CANCELLED",
+  "EXPIRED",
+  "PAYOUT_FAILED",
+]);
+
 // ── Crypto token button ───────────────────────────────────────────────────────
 const TokenBtn = ({
   item,
@@ -452,7 +459,11 @@ const AppSimCard = () => {
   const rateLimitNoticeShownRef = useRef(false);
   const skipNextAutoQuoteRef = useRef(false);
   const isBuy = tab === "BUY";
-  const guestPayoutFailed = guestTransactionStatus?.status === "PAYOUT_FAILED";
+  const guestTransactionTerminalStatus = guestTransactionStatus?.status ?? null;
+  const guestPayoutFailed = guestTransactionTerminalStatus === "PAYOUT_FAILED";
+  const guestTransactionFailed =
+    !!guestTransactionTerminalStatus &&
+    GUEST_SELL_FAILED_STATUSES.has(guestTransactionTerminalStatus);
   const normalizedEmail = email.trim();
   const isEmailValid = normalizedEmail ? emailValidation.test(normalizedEmail) : false;
   const emailError =
@@ -2130,7 +2141,7 @@ const AppSimCard = () => {
               transition={{ duration: 0.2 }}
               className="flex flex-col items-center gap-4 py-4"
             >
-              {guestPayoutFailed ? (
+              {guestTransactionFailed ? (
                 <>
                   <div
                     className="w-16 h-16 rounded-full flex items-center justify-center"
@@ -2140,22 +2151,39 @@ const AppSimCard = () => {
                   </div>
                   <div className="text-center">
                     <p className="font-bold text-xl text-[#0E0F0C]">
-                      {getGuestPayoutFailureCopy().title}
+                      {guestPayoutFailed
+                        ? getGuestPayoutFailureCopy().title
+                        : "Transaction failed"}
                     </p>
                     <p className="text-xs text-gray-500 mt-1 px-3 leading-relaxed">
-                      {getGuestPayoutFailureCopy().subtitle}
+                      {guestPayoutFailed
+                        ? getGuestPayoutFailureCopy().subtitle
+                        : "We could not complete this sell transaction, so no NGN was credited to your bank account."}
                     </p>
                   </div>
                   <div
                     className="w-full rounded-xl p-4 text-left"
                     style={{ background: "#FFF1F2", border: "1px solid #FECDD3" }}
                   >
-                    <p className="text-sm font-bold text-rose-700">
-                      Support is already working on it
-                    </p>
-                    <p className="text-xs mt-1 leading-relaxed text-rose-700/90">
-                      We’ll notify you as soon as this is resolved. Sorry for the delay.
-                    </p>
+                    {guestPayoutFailed ? (
+                      <>
+                        <p className="text-sm font-bold text-rose-700">
+                          Support is already working on it
+                        </p>
+                        <p className="text-xs mt-1 leading-relaxed text-rose-700/90">
+                          We’ll notify you as soon as this is resolved. Sorry for the delay.
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-sm font-bold text-rose-700">
+                          No credit was issued
+                        </p>
+                        <p className="text-xs mt-1 leading-relaxed text-rose-700/90">
+                          Check the transaction status above or contact support if you expected a payout.
+                        </p>
+                      </>
+                    )}
                   </div>
                 </>
               ) : (

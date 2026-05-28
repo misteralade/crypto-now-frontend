@@ -35,6 +35,7 @@ dist-ssr
 /tests/test-results/
 /tests/playwright-report/
 /tests/playwright/.cache/
+/agents/auth/
 
 # Debug screenshots
 debug-*.png
