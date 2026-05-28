@@ -148,13 +148,6 @@ export const SEO_CONFIGS: Record<string, SEOData> = {
     keywords:
       'CryptoNow, CryptoNow NG, crypto rates Nigeria, bitcoin rate, ethereum rate, cryptocurrency prices Nigeria',
   },
-  '/trade-crypto': {
-    title: 'Trade Cryptocurrency - Buy & Sell Crypto in Nigeria | CryptoNow',
-    description:
-      'Trade cryptocurrencies instantly on CryptoNow. Buy and sell Bitcoin, Ethereum, and other cryptocurrencies with Naira. Fast, secure, and reliable.',
-    keywords:
-      'CryptoNow, CryptoNow NG, trade cryptocurrency, buy crypto Nigeria, sell crypto Nigeria, crypto trading platform',
-  },
   '/contact': {
     title: 'Contact Us - CryptoNow',
     description:
@@ -186,4 +179,3 @@ export const SEO_CONFIGS: Record<string, SEOData> = {
     noindex: true,
   },
 };
-

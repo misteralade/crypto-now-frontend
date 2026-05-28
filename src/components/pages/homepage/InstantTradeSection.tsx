@@ -23,7 +23,7 @@ const  InstantTradeSection = ({ cryptoCurrencies, currencies, selectedCryptoId, 
 
   
   const handleSubmit = () => {
-    navigate({ to: `${ROUTES.TRADE_CRYPTO}?option=${selectedAction.toLowerCase()}&currency=${selectedCurrencyId}&token=${selectedCryptoId}&amount=${fiatAmount}` });
+    navigate({ to: `${ROUTES.DASHBOARD_TRADE}?option=${selectedAction.toLowerCase()}&currency=${selectedCurrencyId}&token=${selectedCryptoId}&amount=${fiatAmount}` });
   }
 
   
@@ -32,11 +32,11 @@ const  InstantTradeSection = ({ cryptoCurrencies, currencies, selectedCryptoId, 
       <div className="max-w-6xl mx-auto mt-24">
         {/* Header Section */}
         <div className="text-center mb-8 md:mb-12">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-normal md:tracking-[1px] text-[#0E0F0C] mb-3">
-            Instant trade as a Guest
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-normal md:tracking-[1px] text-[#0E0F0C] mb-3">
+            Start a trade from your dashboard
           </h2>
           <p className="text-gray-600 text-base sm:text-lg md:text-xl max-w-xl mx-auto leading-relaxed">
-            Buy and sell crypto instantly without signing up. Fast, secure, and hassle-free.
+            Buy and sell crypto from the authenticated dashboard flow. Fast, secure, and hassle-free.
           </p>
         </div>
 

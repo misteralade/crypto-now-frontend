@@ -198,6 +198,13 @@ class TransactionServiceApi {
     ) as BaseApiResponse<ManualSellDepositRecheckResponse>;
   }
 
+  async manualRecheckAnonymousSellDeposit(sessionId: string) {
+    return await axiosPostRequestHandler(
+      `/transaction/manual-recheck-sell-deposit/anonymous/${sessionId}`,
+      {},
+    ) as BaseApiResponse<ManualSellDepositRecheckResponse>;
+  }
+
   async downloadSingleTransactionDetails(sessionId: string) {
     return await axiosGetRequestHandler(`/transaction/user/csv-download/${sessionId}`) as BaseApiResponse<BlobPart>
   }

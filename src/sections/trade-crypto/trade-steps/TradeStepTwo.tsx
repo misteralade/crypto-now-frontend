@@ -5,7 +5,8 @@ import {useTradeStepTwo} from "../../../hooks/components/trade/useTradeStepTwo.t
 import type {CustodialWalletResponse, SupportedCryptoOrCurrencyResponse} from "../../../types/response.payload.types.ts";
 import TradePaymentUpload from "../TradePaymentUpload.tsx";
 import CopyAccountDetails from "../CopyAccountDetails.tsx";
-import {SESSION_STORAGE_KEYS} from "../../../util/constants.util.ts";
+import ManualDepositRecheckAction from "../../../components/global/ManualDepositRecheckAction.tsx";
+import {LOCAL_STORAGE_KEYS, SESSION_STORAGE_KEYS} from "../../../util/constants.util.ts";
 import {useState, useEffect} from "react";
 import type React from "react";
 import {transactionServiceApi} from "../../../api/transaction.api.ts";
@@ -42,6 +43,7 @@ const BUY_MONITORING_STATUSES: TransactionStatus[] = [
 ];
 
 const SELL_MONITORING_STATUSES: TransactionStatus[] = [
+  "INITIATED",
   "AWAITING_CRYPTO",
   "DEPOSIT_DETECTED",
   "DEPOSIT_PENDING_MINIMUM",
@@ -231,10 +233,14 @@ function TradeStatusMonitoring({
   tradeType,
   status,
   selectedToken,
+  onManualRecheck,
+  manualRecheckPending,
 }: {
   tradeType: TradeType;
   status?: string;
   selectedToken?: SupportedCryptoOrCurrencyResponse;
+  onManualRecheck?: () => void;
+  manualRecheckPending?: boolean;
 }) {
   const isBuy = tradeType === "buy";
   const statusMeta = getStatusMeta(status, tradeType);
@@ -342,6 +348,10 @@ function TradeStatusMonitoring({
       ? `Your ${selectedToken?.symbol ?? "crypto"} sale has completed successfully.`
       : `We are monitoring your ${selectedToken?.symbol ?? "crypto"} deposit and will continue automatically once the network confirms it.`;
 
+  const showManualRecheck =
+    !isBuy &&
+    ["INITIATED", "AWAITING_CRYPTO"].includes(status ?? "");
+
   const statusColors = {
     done: {
       bg: "bg-emerald-50",
@@ -401,6 +411,20 @@ function TradeStatusMonitoring({
         </div>
       </div>
 
+      {showManualRecheck && (
+        <ManualDepositRecheckAction
+          title={`Already sent your ${selectedToken?.symbol ?? "crypto"}?`}
+          description="If network detection is delayed, confirm the wallet state and let us recheck the deposit immediately."
+          isPending={manualRecheckPending}
+          disabled={!onManualRecheck}
+          onConfirm={() => onManualRecheck?.()}
+          confirmTitle="Confirm manual deposit check"
+          confirmDescription="We will read the live wallet balance and compare it against the cached wallet state before any payout can proceed."
+          confirmLabel="Yes, check now"
+          pendingText="Rechecking deposit..."
+        />
+      )}
+
       <div className="space-y-2.5">
         {steps.map((step, index) => {
           const palette = statusColors[step.status];
@@ -451,9 +475,10 @@ interface TradeStepTwoProps {
 }
 
 const TradeStepTwo = ({ amountToBuy, tradeType, numberOfToken, additionalInfo, handleReceiptUrl, selectedToken, selectedCurrency, transactionRef, handleTransactionHash, handleSubmitPaymentProof, formatReceiveAmount, formatSendAmount, sellDepositWallet, sellNetwork }: TradeStepTwoProps) => {
-  const { useTransactionStatus } = useTransactionQuery();
+  const { useTransactionStatus, manualSellDepositRecheckMutation } = useTransactionQuery();
   const { data: transactionDetails } = useTransactionStatus(transactionRef);
   const transactionStatus = transactionDetails?.status as TransactionStatus | undefined;
+  const isAuthenticated = !!localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
   const {
     // Values
     // files,
@@ -530,6 +555,16 @@ const TradeStepTwo = ({ amountToBuy, tradeType, numberOfToken, additionalInfo, h
         tradeType={tradeType}
         status={transactionStatus}
         selectedToken={selectedToken}
+        onManualRecheck={
+          transactionRef && tradeType === "sell"
+            ? () =>
+                manualSellDepositRecheckMutation.mutate({
+                  sessionId: transactionRef,
+                  isAnonymous: !isAuthenticated,
+                })
+            : undefined
+        }
+        manualRecheckPending={manualSellDepositRecheckMutation.isPending}
       />
     );
   }

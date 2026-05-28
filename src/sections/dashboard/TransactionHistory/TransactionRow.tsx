@@ -41,7 +41,7 @@ const TransactionRow = ({ transaction: tx, isLast, isMobileCard = false }: Trans
   const handleDispute  = () => tx.dispute?.id && navigate({ to: "/dispute/$id", params: { id: tx.dispute.id } });
   const handleContinue = () =>
     navigate({
-      to: ROUTES.TRADE_CRYPTO,
+      to: ROUTES.DASHBOARD_TRADE,
       search: {
         sessionId: tx.sessionId,
         option: isBuy ? "buy" : "sell",

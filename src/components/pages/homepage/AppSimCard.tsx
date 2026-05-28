@@ -18,6 +18,7 @@ import { transactionServiceApi } from "../../../api/transaction.api.ts";
 import { bankServiceApi } from "../../../api/bank.api.ts";
 import { cryptoServiceApi } from "../../../api/crypto.api.ts";
 import { exchangeRateServiceApi } from "../../../api/rate.api.ts";
+import ManualDepositRecheckAction from "../../global/ManualDepositRecheckAction.tsx";
 import type {
   SupportedCryptoOrCurrencyResponse,
   TransactionResponseEntity,
@@ -30,7 +31,8 @@ import {
   formatTradeFiatPreset,
 } from "../../../constants/tradeAmounts.ts";
 import type { SupportedExchangeRateResponse } from "../../../types/response.payload.types.ts";
-import { isExchangeRateExpiryError } from "../../../util/index.util.ts";
+import { extractErrorMessage, isExchangeRateExpiryError } from "../../../util/index.util.ts";
+import { emailValidation } from "../../../util/constants.regex.util.ts";
 
 const GUEST_QUOTE_CACHE_TTL_MS = 60_000;
 
@@ -207,6 +209,19 @@ const getGuestPayoutFailureCopy = () => ({
     "We detected your crypto deposit, but the NGN payout could not be completed automatically.",
 });
 
+const GUEST_SELL_RECHECK_STATUSES = new Set([
+  "INITIATED",
+  "AWAITING_CRYPTO",
+]);
+
+const GUEST_SELL_TERMINAL_STATUSES = new Set([
+  "COMPLETED",
+  "FAILED",
+  "CANCELLED",
+  "EXPIRED",
+  "PAYOUT_FAILED",
+]);
+
 // ── Crypto token button ───────────────────────────────────────────────────────
 const TokenBtn = ({
   item,
@@ -292,6 +307,7 @@ const FloatInput = ({
   mono,
   inputMode,
   readOnly = false,
+  error,
 }: {
   label: string;
   value: string;
@@ -302,6 +318,7 @@ const FloatInput = ({
   mono?: boolean;
   inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
   readOnly?: boolean;
+  error?: string | null;
 }) => (
   <div
     className="flex flex-col rounded-xl px-4 pt-2 pb-3"
@@ -318,10 +335,14 @@ const FloatInput = ({
       maxLength={maxLength}
       inputMode={inputMode}
       readOnly={readOnly}
+      aria-invalid={!!error}
       className={`bg-transparent outline-none text-sm text-[#0E0F0C] font-medium placeholder:text-gray-300 ${
         mono ? "font-mono" : ""
       }`}
     />
+    {error ? (
+      <p className="mt-1 text-[11px] font-medium text-rose-500">{error}</p>
+    ) : null}
   </div>
 );
 
@@ -380,8 +401,9 @@ const AppSimCard = () => {
     useRef<ReturnType<typeof setInterval> | null>(null);
   const [guestTransactionStatus, setGuestTransactionStatus] =
     useState<TransactionResponseEntity | null>(null);
+  const [guestError, setGuestError] = useState<string | null>(null);
 
-  const [email, setEmail] = useState(saved.email || "");
+  const [email, setEmail] = useState((saved.email || "").trim());
   const [walletAddress, setWalletAddress] = useState(saved.walletAddress || "");
   const [selectedBankId, setSelectedBankId] = useState(saved.selectedBankId || "");
   const [network, setNetwork] = useState(saved.network || "");
@@ -421,6 +443,8 @@ const AppSimCard = () => {
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const quoteRequestIdRef = useRef(0);
+  const [guestManualRecheckPending, setGuestManualRecheckPending] =
+    useState(false);
 
   const [depositWallet, setDepositWallet] = useState(saved.depositWallet || "");
   const [done, setDone] = useState(saved.done || false);
@@ -429,6 +453,19 @@ const AppSimCard = () => {
   const skipNextAutoQuoteRef = useRef(false);
   const isBuy = tab === "BUY";
   const guestPayoutFailed = guestTransactionStatus?.status === "PAYOUT_FAILED";
+  const normalizedEmail = email.trim();
+  const isEmailValid = normalizedEmail ? emailValidation.test(normalizedEmail) : false;
+  const emailError =
+    normalizedEmail && !isEmailValid ? "Please enter a valid email address." : null;
+  const showGuestManualRecheck =
+    !isBuy &&
+    step === 3 &&
+    !!sessionId &&
+    !done &&
+    !guestPayoutFailed &&
+    ((guestTransactionStatus?.status &&
+      GUEST_SELL_RECHECK_STATUSES.has(guestTransactionStatus.status)) ||
+      !guestTransactionStatus?.status);
 
   const cryptoObj = supportedCryptoCurrencies?.find(
     (c) => c.id === selectedCrypto
@@ -822,27 +859,10 @@ const AppSimCard = () => {
       return;
     }
 
-    const terminalStatuses = new Set([
-      "COMPLETED",
-      "FAILED",
-      "CANCELLED",
-      "EXPIRED",
-      "PAYOUT_FAILED",
-    ]);
-
     const pollGuestTransaction = async () => {
       try {
-        const { data, success } = await transactionServiceApi.getTransactionDetails(
-          sessionId,
-        );
-        if (!success || !data) return;
-
-        const transaction = data as TransactionResponseEntity | null;
-        if (!transaction) return;
-
-        setGuestTransactionStatus(transaction);
-
-        if (terminalStatuses.has(transaction.status)) {
+        const transaction = await syncGuestTransactionStatus();
+        if (transaction && GUEST_SELL_TERMINAL_STATUSES.has(transaction.status)) {
           stopGuestTransactionPolling();
           setDone(true);
         }
@@ -859,6 +879,85 @@ const AppSimCard = () => {
 
     return () => stopGuestTransactionPolling();
   }, [done, isBuy, sessionId, step]);
+
+  const syncGuestTransactionStatus = async () => {
+    if (!sessionId) return null;
+
+    const { data, success } = await transactionServiceApi.getTransactionDetails(
+      sessionId,
+    );
+    if (!success || !data) return null;
+
+    const transaction = data as TransactionResponseEntity | null;
+    if (!transaction) return null;
+
+    setGuestTransactionStatus(transaction);
+
+    if (GUEST_SELL_TERMINAL_STATUSES.has(transaction.status)) {
+      stopGuestTransactionPolling();
+      setDone(true);
+    }
+
+    return transaction;
+  };
+
+  const handleGuestManualRecheck = async () => {
+    if (!sessionId) return;
+
+    setGuestManualRecheckPending(true);
+    setGuestError(null);
+    const toastId = "guest-manual-sell-recheck";
+
+    console.info("AppSimCard: manual sell deposit recheck requested", {
+      sessionId,
+      status: guestTransactionStatus?.status ?? "unknown",
+    });
+    toast.loading("Rechecking deposit…", { toastId });
+
+    try {
+      const { success, message, data } =
+        await transactionServiceApi.manualRecheckAnonymousSellDeposit(sessionId);
+
+      toast.dismiss(toastId);
+
+      if (!success) {
+        const errorMessage =
+          message || "Failed to recheck this deposit. Please try again.";
+        setGuestError(errorMessage);
+        toast.error(errorMessage);
+        console.error("AppSimCard: manual sell deposit recheck failed", {
+          sessionId,
+          status: guestTransactionStatus?.status ?? "unknown",
+          message: errorMessage,
+          response: data,
+        });
+        return;
+      }
+
+      toast.success(message || "Deposit recheck submitted.");
+      console.info("AppSimCard: manual sell deposit recheck completed", {
+        sessionId,
+        status: data?.status ?? "unknown",
+        outcome: data?.outcome ?? "unknown",
+      });
+
+      await syncGuestTransactionStatus();
+    } catch (error) {
+      toast.dismiss(toastId);
+      const message =
+        extractErrorMessage(error) ||
+        "Failed to recheck this deposit. Please try again.";
+      setGuestError(message);
+      toast.error(message);
+      console.error("AppSimCard: manual sell deposit recheck errored", {
+        sessionId,
+        status: guestTransactionStatus?.status ?? "unknown",
+        error,
+      });
+    } finally {
+      setGuestManualRecheckPending(false);
+    }
+  };
 
   const handleSellChipClick = async (targetFiatAmount: number) => {
     if (!selectedCrypto || !quoteCurrencyObj?.id) return;
@@ -906,16 +1005,25 @@ const AppSimCard = () => {
   };
 
   const handleBuyStep2Next = async (retrying = false) => {
-    if (!email || !walletAddress || !transactionCurrencyObj?.id) return;
+    const guestEmail = normalizedEmail;
+    if (!guestEmail || !isEmailValid || !walletAddress || !transactionCurrencyObj?.id) {
+      setGuestError(
+        !guestEmail || !isEmailValid
+          ? "Please enter a valid email address."
+          : "Please complete the required fields before continuing.",
+      );
+      return;
+    }
     setLoading(true);
     try {
+      setGuestError(null);
       const res = await transactionServiceApi.initiateTransactionAnonymousUser({
         action: "BUY",
         coinId: selectedCrypto,
         currencyId: transactionCurrencyObj?.id,
         amountToSend: parseFloat(amount),
         amountToReceive: parseFloat(receiveAmount) || 0,
-        email,
+        email: guestEmail,
         walletAddress,
         network,
       });
@@ -924,7 +1032,9 @@ const AppSimCard = () => {
           await fetchRate(undefined, true).catch(() => undefined);
           return await handleBuyStep2Next(true);
         }
-        toast.error(res?.message || "Failed to initiate transaction");
+        const message = res?.message || "Failed to initiate transaction";
+        setGuestError(message);
+        toast.error(message);
         return;
       }
       if (res?.data) {
@@ -932,10 +1042,13 @@ const AppSimCard = () => {
         setGuestTransactionStatus(null);
         const bank = await bankServiceApi.getPlatformBankDetails();
         if (!bank?.success) {
-          toast.error(bank?.message || "Failed to fetch payment details");
+          const message = bank?.message || "Failed to fetch payment details";
+          setGuestError(message);
+          toast.error(message);
           return;
         }
         setPlatformBank(bank.data);
+        setGuestError(null);
         setStep(3);
       }
     } catch (err: any) {
@@ -943,23 +1056,31 @@ const AppSimCard = () => {
         await fetchRate(undefined, true).catch(() => undefined);
         return await handleBuyStep2Next(true);
       }
-      const msg =
-        err?.response?.data?.message ||
-        err?.message ||
-        "Something went wrong. Please try again.";
+      const msg = extractErrorMessage(err) || "Something went wrong. Please try again.";
       if (!isExchangeRateExpiryError(err)) {
+        setGuestError(msg);
         toast.error(msg);
       }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleSellStep2Next = async (retrying = false) => {
-    if (!email || !selectedBankId || !accountNumber || !accountName || !transactionCurrencyObj?.id) return;
+    const guestEmail = normalizedEmail;
+    if (!guestEmail || !isEmailValid || !selectedBankId || !accountNumber || !accountName || !transactionCurrencyObj?.id) {
+      setGuestError(
+        !guestEmail || !isEmailValid
+          ? "Please enter a valid email address."
+          : "Please complete the required fields before continuing.",
+      );
+      return;
+    }
     setLoading(true);
     try {
+      setGuestError(null);
       const bankAccount = await bankServiceApi.createAnonymousUserBankAccount({
-        email,
+        email: guestEmail,
         bankId: selectedBankId,
         accountHolderName: accountName,
         accountNumber,
@@ -971,7 +1092,9 @@ const AppSimCard = () => {
           await fetchRate(undefined, true).catch(() => undefined);
           return await handleSellStep2Next(true);
         }
-        toast.error(bankAccount?.message || "Failed to save bank account");
+        const message = bankAccount?.message || "Failed to save bank account";
+        setGuestError(message);
+        toast.error(message);
         return;
       }
 
@@ -981,7 +1104,7 @@ const AppSimCard = () => {
         currencyId: transactionCurrencyObj?.id,
         amountToSend: parseFloat(amount),
         amountToReceive: parseFloat(receiveAmount) || 0,
-        email,
+        email: guestEmail,
         accountId: bankAccount.data.id,
         network,
       });
@@ -990,7 +1113,9 @@ const AppSimCard = () => {
           await fetchRate(undefined, true).catch(() => undefined);
           return await handleSellStep2Next(true);
         }
-        toast.error(res?.message || "Failed to initiate transaction");
+        const message = res?.message || "Failed to initiate transaction";
+        setGuestError(message);
+        toast.error(message);
         return;
       }
       if (res?.data) {
@@ -1003,10 +1128,13 @@ const AppSimCard = () => {
           network,
         });
         if (!wallet?.success) {
-          toast.error(wallet?.message || "Failed to fetch deposit wallet");
+          const message = wallet?.message || "Failed to fetch deposit wallet";
+          setGuestError(message);
+          toast.error(message);
           return;
         }
         setDepositWallet((wallet.data as any)?.walletAddress || "");
+        setGuestError(null);
         setStep(3);
       }
     } catch (err: any) {
@@ -1014,20 +1142,20 @@ const AppSimCard = () => {
         await fetchRate(undefined, true).catch(() => undefined);
         return await handleSellStep2Next(true);
       }
-      const msg =
-        err?.response?.data?.message ||
-        err?.message ||
-        "Something went wrong. Please try again.";
+      const msg = extractErrorMessage(err) || "Something went wrong. Please try again.";
       if (!isExchangeRateExpiryError(err)) {
+        setGuestError(msg);
         toast.error(msg);
       }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleBuySubmit = async () => {
     setLoading(true);
     try {
+      setGuestError(null);
       if (receiptFile) {
         const fd = new FormData();
         fd.append("file", receiptFile);
@@ -1036,14 +1164,19 @@ const AppSimCard = () => {
       }
       setDone(true);
     } catch (error) {
+      const message = extractErrorMessage(error) || "Failed to upload receipt. Please try again.";
+      setGuestError(message);
+      toast.error(message);
       console.error("AppSimCard: failed to upload receipt", error);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const copyToClipboard = (text: string) => navigator.clipboard.writeText(text);
 
   const reset = () => {
+    setGuestError(null);
     setStep(1);
     setDone(false);
     setAmount("");
@@ -1060,6 +1193,7 @@ const AppSimCard = () => {
     setDepositWallet("");
     setSessionId("");
     setGuestTransactionStatus(null);
+    setGuestManualRecheckPending(false);
     stopGuestTransactionPolling();
     setBuyInputCurrency("NGN");
     setSellReceiveCurrency("NGN");
@@ -1427,12 +1561,22 @@ const AppSimCard = () => {
                 )}
               </div>
 
+              {guestError ? (
+                <div
+                  className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700"
+                  role="alert"
+                >
+                  {guestError}
+                </div>
+              ) : null}
+
               <FloatInput
                 label="Your Email Address"
                 value={email}
                 onChange={setEmail}
                 placeholder="you@email.com"
                 type="email"
+                error={emailError}
               />
               <FloatInput
                 label="Your Wallet Address"
@@ -1548,7 +1692,7 @@ const AppSimCard = () => {
                   onClick={() => {
                     void handleBuyStep2Next();
                   }}
-                  disabled={!email || !walletAddress || loading}
+                  disabled={!normalizedEmail || !isEmailValid || !walletAddress || loading}
                   className="flex-1 py-3 rounded-xl font-bold text-sm text-white border-none transition-opacity disabled:opacity-40 cursor-pointer"
                   style={{ background: "#948EEE" }}
                 >
@@ -1591,12 +1735,22 @@ const AppSimCard = () => {
                 )}
               </div>
 
+              {guestError ? (
+                <div
+                  className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700"
+                  role="alert"
+                >
+                  {guestError}
+                </div>
+              ) : null}
+
               <FloatInput
                 label="Your Email Address"
                 value={email}
                 onChange={setEmail}
                 placeholder="you@email.com — for payout updates"
                 type="email"
+                error={emailError}
               />
               <BankSelector
                 label="Your Bank"
@@ -1640,7 +1794,8 @@ const AppSimCard = () => {
                     void handleSellStep2Next();
                   }}
                   disabled={
-                    !email ||
+                    !normalizedEmail ||
+                    !isEmailValid ||
                     !selectedBankId ||
                     !accountNumber ||
                     !accountName ||
@@ -1749,6 +1904,15 @@ const AppSimCard = () => {
                 />
                 <SRow label="Network" value={networkLabel} />
               </div>
+
+              {guestError ? (
+                <div
+                  className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700"
+                  role="alert"
+                >
+                  {guestError}
+                </div>
+              ) : null}
 
               {/* Warning */}
               <div
@@ -1904,6 +2068,20 @@ const AppSimCard = () => {
                 </p>
               </div>
 
+              {showGuestManualRecheck ? (
+                <ManualDepositRecheckAction
+                  title={`Already sent your ${cryptoSymbol}?`}
+                  description="If network detection is delayed, confirm the wallet state and let us recheck the deposit immediately."
+                  isPending={guestManualRecheckPending}
+                  disabled={!sessionId}
+                  onConfirm={handleGuestManualRecheck}
+                  confirmTitle="Confirm manual deposit check"
+                  confirmDescription="We will read the live wallet balance and compare it against the cached wallet state before any payout can proceed."
+                  confirmLabel="Yes, check now"
+                  pendingText="Rechecking deposit..."
+                />
+              ) : null}
+
               {/* Summary */}
               <div
                 className="rounded-xl p-3"
@@ -1922,6 +2100,15 @@ const AppSimCard = () => {
                   />
                 )}
               </div>
+
+              {guestError ? (
+                <div
+                  className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700"
+                  role="alert"
+                >
+                  {guestError}
+                </div>
+              ) : null}
 
               <button
                 onClick={() => setStep(2)}

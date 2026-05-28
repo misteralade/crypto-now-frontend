@@ -13,6 +13,7 @@ import { useState, useEffect, type ReactNode } from "react";
 import { Copy, Check, ArrowLeft, ArrowRight, Upload } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-toastify";
+import ManualDepositRecheckAction from "../../../components/global/ManualDepositRecheckAction.tsx";
 import type {
   SupportedCryptoOrCurrencyResponse,
   UserBankAccountResponse,
@@ -289,28 +290,17 @@ function TradeMonitoringView({
       {!isBuy && <PayingToRow payoutBank={payoutBank} />}
 
       {showManualRecheck && (
-        <div
-          className="rounded-2xl px-4 py-3.5 flex flex-col gap-3"
-          style={{ background: "#F9FAFB", border: "1px solid #ECECEC" }}
-        >
-          <div className="flex flex-col gap-1">
-            <p className="text-sm font-bold" style={{ color: "#0E0F0C" }}>
-              Already sent your {selectedToken?.symbol ?? "crypto"}?
-            </p>
-            <p className="text-xs leading-relaxed" style={{ color: "#6B6E6B" }}>
-              If network detection is delayed, trigger an immediate wallet recheck for this transaction.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onManualRecheck}
-            disabled={!onManualRecheck || manualRecheckPending}
-            className="w-full rounded-2xl px-4 py-3 text-sm font-bold transition-opacity disabled:opacity-60"
-            style={{ background: "#0E0F0C", color: "#FFFFFF" }}
-          >
-            {manualRecheckPending ? "Rechecking Deposit..." : "I've Sent It"}
-          </button>
-        </div>
+        <ManualDepositRecheckAction
+          title={`Already sent your ${selectedToken?.symbol ?? "crypto"}?`}
+          description="If network detection is delayed, confirm the wallet state and let us recheck the deposit immediately."
+          isPending={manualRecheckPending}
+          disabled={!onManualRecheck}
+          onConfirm={() => onManualRecheck?.()}
+          confirmTitle="Confirm manual deposit check"
+          confirmDescription="We will read the live wallet balance and compare it against the cached wallet state before any payout can proceed."
+          confirmLabel="Yes, check now"
+          pendingText="Rechecking deposit..."
+        />
       )}
 
       {/* 4-step progress */}
@@ -717,7 +707,10 @@ export default function DashboardTradeStep2({
             status={txStatus}
             onManualRecheck={
               transactionRef
-                ? () => manualSellDepositRecheckMutation.mutate(transactionRef)
+                ? () =>
+                    manualSellDepositRecheckMutation.mutate({
+                      sessionId: transactionRef,
+                    })
                 : undefined
             }
             manualRecheckPending={manualSellDepositRecheckMutation.isPending}

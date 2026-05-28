@@ -10,7 +10,6 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VerifyAccountRouteImport } from './routes/verify-account'
-import { Route as TradeCryptoRouteImport } from './routes/trade-crypto'
 import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
 import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as SecurityPolicyRouteImport } from './routes/security-policy'
@@ -42,11 +41,6 @@ import { Route as DashboardTransactionsIdRouteImport } from './routes/dashboard/
 const VerifyAccountRoute = VerifyAccountRouteImport.update({
   id: '/verify-account',
   path: '/verify-account',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TradeCryptoRoute = TradeCryptoRouteImport.update({
-  id: '/trade-crypto',
-  path: '/trade-crypto',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsOfServiceRoute = TermsOfServiceRouteImport.update({
@@ -212,7 +206,6 @@ export interface FileRoutesByFullPath {
   '/security-policy': typeof SecurityPolicyRoute
   '/sign-up': typeof SignUpRoute
   '/terms-of-service': typeof TermsOfServiceRoute
-  '/trade-crypto': typeof TradeCryptoRoute
   '/verify-account': typeof VerifyAccountRoute
   '/dashboard/kyc': typeof DashboardKycRoute
   '/dashboard/profile': typeof DashboardProfileRoute
@@ -242,7 +235,6 @@ export interface FileRoutesByTo {
   '/security-policy': typeof SecurityPolicyRoute
   '/sign-up': typeof SignUpRoute
   '/terms-of-service': typeof TermsOfServiceRoute
-  '/trade-crypto': typeof TradeCryptoRoute
   '/verify-account': typeof VerifyAccountRoute
   '/dashboard/kyc': typeof DashboardKycRoute
   '/dashboard/profile': typeof DashboardProfileRoute
@@ -274,7 +266,6 @@ export interface FileRoutesById {
   '/security-policy': typeof SecurityPolicyRoute
   '/sign-up': typeof SignUpRoute
   '/terms-of-service': typeof TermsOfServiceRoute
-  '/trade-crypto': typeof TradeCryptoRoute
   '/verify-account': typeof VerifyAccountRoute
   '/dashboard/kyc': typeof DashboardKycRoute
   '/dashboard/profile': typeof DashboardProfileRoute
@@ -307,7 +298,6 @@ export interface FileRouteTypes {
     | '/security-policy'
     | '/sign-up'
     | '/terms-of-service'
-    | '/trade-crypto'
     | '/verify-account'
     | '/dashboard/kyc'
     | '/dashboard/profile'
@@ -337,7 +327,6 @@ export interface FileRouteTypes {
     | '/security-policy'
     | '/sign-up'
     | '/terms-of-service'
-    | '/trade-crypto'
     | '/verify-account'
     | '/dashboard/kyc'
     | '/dashboard/profile'
@@ -368,7 +357,6 @@ export interface FileRouteTypes {
     | '/security-policy'
     | '/sign-up'
     | '/terms-of-service'
-    | '/trade-crypto'
     | '/verify-account'
     | '/dashboard/kyc'
     | '/dashboard/profile'
@@ -400,7 +388,6 @@ export interface RootRouteChildren {
   SecurityPolicyRoute: typeof SecurityPolicyRoute
   SignUpRoute: typeof SignUpRoute
   TermsOfServiceRoute: typeof TermsOfServiceRoute
-  TradeCryptoRoute: typeof TradeCryptoRoute
   VerifyAccountRoute: typeof VerifyAccountRoute
   DisputeIdRoute: typeof DisputeIdRoute
   OauthErrorRoute: typeof OauthErrorRoute
@@ -416,13 +403,6 @@ declare module '@tanstack/react-router' {
       path: '/verify-account'
       fullPath: '/verify-account'
       preLoaderRoute: typeof VerifyAccountRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/trade-crypto': {
-      id: '/trade-crypto'
-      path: '/trade-crypto'
-      fullPath: '/trade-crypto'
-      preLoaderRoute: typeof TradeCryptoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms-of-service': {
@@ -657,7 +637,6 @@ const rootRouteChildren: RootRouteChildren = {
   SecurityPolicyRoute: SecurityPolicyRoute,
   SignUpRoute: SignUpRoute,
   TermsOfServiceRoute: TermsOfServiceRoute,
-  TradeCryptoRoute: TradeCryptoRoute,
   VerifyAccountRoute: VerifyAccountRoute,
   DisputeIdRoute: DisputeIdRoute,
   OauthErrorRoute: OauthErrorRoute,

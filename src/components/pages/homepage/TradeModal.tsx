@@ -123,7 +123,7 @@ const TradeModal = ({ onClose }: TradeModalProps) => {
 
   const handleStartTrading = () => {
     navigate({
-      to: `${ROUTES.TRADE_CRYPTO}?option=${activeTab.toLowerCase()}&currency=${supportedCurrency}&token=${selectedCrypto}&amount=${amount}`,
+      to: `${ROUTES.DASHBOARD_TRADE}?option=${activeTab.toLowerCase()}&currency=${supportedCurrency}&token=${selectedCrypto}&amount=${amount}`,
     });
     onClose();
   };

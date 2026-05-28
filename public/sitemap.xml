@@ -28,14 +28,6 @@
     <priority>0.9</priority>
   </url>
   
-  <!-- Trade Crypto Page -->
-  <url>
-    <loc>https://cryptonow.ng/trade-crypto</loc>
-    <lastmod>2024-01-01</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-  
   <!-- Contact Page -->
   <url>
     <loc>https://cryptonow.ng/contact</loc>
@@ -77,4 +69,3 @@
   </url>
   
 </urlset>
-

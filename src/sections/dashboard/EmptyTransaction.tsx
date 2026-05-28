@@ -1,5 +1,6 @@
 import WalletIcon from "../../assets/icons/Wallet_04.svg"
 import {Link} from "@tanstack/react-router";
+import { ROUTES } from "../../util/constants.util.ts";
 
 export default function EmptyTransaction() {
     return(
@@ -11,7 +12,7 @@ export default function EmptyTransaction() {
                     <h2 className={`text-primary text-[40px] font-semibold w-4/5 leading-12`}>No transaction had been performed yet</h2>
 
                     <Link
-                        to={`/trade-crypto`}
+                        to={ROUTES.DASHBOARD_TRADE}
                         type="button"
                         className={`py-4 md:py-2 rounded-full block md:order-2 w-full md:w-1/2 text-lg text-center font-semibold bg-primary text-white disabled:bg-gray-300 disabled:text-gray-500`}
                     >

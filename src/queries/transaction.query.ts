@@ -269,10 +269,18 @@ export const useTransactionQuery = () => {
 
   const manualSellDepositRecheckMutation = useMutation({
     mutationKey: [QUERY_KEYS.TRANSACTION.MANUAL_SELL_DEPOSIT_RECHECK],
-    mutationFn: async (sessionId: string) => {
-      return await transactionServiceApi.manualRecheckSellDeposit(sessionId);
+    mutationFn: async (params: { sessionId: string; isAnonymous?: boolean }) => {
+      if (params.isAnonymous) {
+        return await transactionServiceApi.manualRecheckAnonymousSellDeposit(
+          params.sessionId,
+        );
+      }
+
+      return await transactionServiceApi.manualRecheckSellDeposit(
+        params.sessionId,
+      );
     },
-    onSuccess: async ({ success, message }, sessionId) => {
+    onSuccess: async ({ success, message }, variables) => {
       if (success) {
         toast.success(message);
       } else {
@@ -281,12 +289,15 @@ export const useTransactionQuery = () => {
 
       await Promise.all([
         queryClient.invalidateQueries({
-          queryKey: [QUERY_KEYS.TRANSACTION.USER_TRANSACTION_DETAILS, sessionId],
+          queryKey: [
+            QUERY_KEYS.TRANSACTION.USER_TRANSACTION_DETAILS,
+            variables.sessionId,
+          ],
         }),
         queryClient.invalidateQueries({
           queryKey: [
             QUERY_KEYS.TRANSACTION.USER_TRANSACTION_DETAILS,
-            sessionId,
+            variables.sessionId,
             "status",
           ],
         }),

@@ -18,6 +18,7 @@ export interface TradeProgress {
   // BUY wallet details
   buyWalletAddress?: string;
   buyNetwork?: string;
+  sellNetwork?: string;
 
   // Session
   transactionSessionId?: string;

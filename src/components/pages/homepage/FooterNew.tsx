@@ -127,7 +127,7 @@ const FooterNew = () => (
         {/* Product */}
         <div>
           <p style={colHead}>Product</p>
-          <FooterLink to={ROUTES.TRADE_CRYPTO}>Trade</FooterLink>
+          <FooterLink to={ROUTES.DASHBOARD_TRADE}>Trade</FooterLink>
           <FooterLink to={ROUTES.RATES}>Rates</FooterLink>
           <FooterLink to={ROUTES.SIGNUP}>Sign Up</FooterLink>
           <FooterLink to={ROUTES.SIGNIN}>Login</FooterLink>

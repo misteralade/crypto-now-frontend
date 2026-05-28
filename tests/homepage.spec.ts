@@ -117,7 +117,7 @@ test.describe('Homepage - Complete Test Suite', () => {
         await page.waitForTimeout(1000);
         // Check if URL changed or modal opened
         const currentUrl = page.url();
-        expect(currentUrl).toMatch(/\/(sign-up|trade-crypto)/);
+        expect(currentUrl).toMatch(/\/(sign-up|dashboard\/trade)/);
       }
     });
   });
@@ -1202,4 +1202,3 @@ test.describe('Homepage - Complete Test Suite', () => {
     });
   });
 });
-

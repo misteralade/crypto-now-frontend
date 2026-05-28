@@ -78,6 +78,9 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   // On Step 1, always allow rate to load
   // When continuing a transaction, we allow the rate to fetch once, then lock it
   const saved = useMemo(() => loadTradeProgress(), []);
+  const [resolvedSellNetwork, setResolvedSellNetwork] = useState<string | undefined>(
+    saved?.sellNetwork,
+  );
   const isContinuingTransaction = !!sessionId;
   const shouldDisableRateQuery = currentStep === 2 && isCountdownLocked && saved?.receiptUrl;
 
@@ -219,18 +222,29 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       return;
     }
 
-    // Use the caller-selected network if provided, else fall back to first configured network
-    const network = (sellNetwork && selectedToken.networks.includes(sellNetwork))
-      ? sellNetwork
-      : selectedToken.networks[0];
+    const preferredNetwork = sellNetwork || resolvedSellNetwork;
+    if (!preferredNetwork) {
+      setSellDepositWallet(null);
+      return;
+    }
+
+    if (!selectedToken.networks.includes(preferredNetwork)) {
+      toast.error(
+        `The selected network does not match ${selectedToken.symbol}. Please choose a valid network.`,
+      );
+      setSellDepositWallet(null);
+      return;
+    }
 
     // Try to find an existing custodial wallet for this crypto + network
     const existing = custodialWallets?.find(
-      (w) => w.cryptocurrencyId === selectedToken.id && w.network === network && w.isActive
+      (w) => w.cryptocurrencyId === selectedToken.id && w.network === preferredNetwork && w.isActive
     );
 
     if (existing) {
       setSellDepositWallet(existing);
+      setResolvedSellNetwork(existing.network);
+      saveTradeProgress({ sellNetwork: existing.network });
       dispatch(
         setInitiateTransactionField({
           field: "custodialWalletId",
@@ -245,7 +259,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       );
       generationLockRef.current = null; // Clear lock once loaded
     } else {
-      const lockKey = `${selectedToken.id}-${network}`;
+      const lockKey = `${selectedToken.id}-${preferredNetwork}`;
       if (generationLockRef.current === lockKey || generateCustodialWalletMutation.isPending) {
          return; // Already generating this specific wallet, skip duplicate call
       }
@@ -255,11 +269,13 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       // Clear stale address and generate for the selected network via the HD wallet service
       setSellDepositWallet(null);
       generateCustodialWalletMutation.mutate(
-        { cryptoId: selectedToken.id, network },
+        { cryptoId: selectedToken.id, network: preferredNetwork },
         {
           onSuccess: ({ success, data }) => {
             if (success && data) {
               setSellDepositWallet(data);
+              setResolvedSellNetwork(data.network);
+              saveTradeProgress({ sellNetwork: data.network });
               dispatch(
                 setInitiateTransactionField({
                   field: "custodialWalletId",
@@ -282,7 +298,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, selectedToken?.id, custodialWallets, sellNetwork, dispatch]);
+  }, [activeTab, selectedToken?.id, custodialWallets, sellNetwork, resolvedSellNetwork, dispatch]);
 
   // 🔹 Hydration guard to avoid saving empty defaults on first paint
   const hydratedRef = useRef(false);
@@ -376,6 +392,16 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       }));
     }
 
+    if (saved.sellNetwork) {
+      setResolvedSellNetwork(saved.sellNetwork);
+      dispatch(
+        setInitiateTransactionField({
+          field: "network",
+          value: saved.sellNetwork,
+        }),
+      );
+    }
+
     // mark hydrated after we push restored state
     // small timeout ensures our "save" effects don't run with pre-hydrate empties
     setTimeout(() => {
@@ -448,6 +474,12 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     setTransactionSessionId(sessionId);
     sessionStorage.setItem(SESSION_STORAGE_KEYS.SESSION_ID, sessionId);
     saveTradeProgress({ transactionSessionId: sessionId });
+
+    const isAuthenticated = !!localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+    if (!isAuthenticated && transaction.user?.email) {
+      dispatch(setAnonymousUserEmail(transaction.user.email));
+      saveTradeProgress({ anonymousEmail: transaction.user.email });
+    }
 
     // Restore token using cryptocurrencyId
     if (transaction.cryptocurrencyId && supportedCryptoCurrencies) {
@@ -855,6 +887,13 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
 
     if (saved.anonymousEmail) {
       dispatch(setAnonymousUserEmail(saved.anonymousEmail));
+    }
+    if (saved.sellNetwork) {
+      setResolvedSellNetwork(saved.sellNetwork);
+      dispatch(setInitiateTransactionField({
+        field: "network",
+        value: saved.sellNetwork,
+      }));
     }
   }, [supportedCryptoCurrencies, supportedCurrencies, dispatch]);
 
@@ -1347,6 +1386,18 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     if (transactionSessionId) saveTradeProgress({ transactionSessionId });
   }, [transactionSessionId]);
 
+  useEffect(() => {
+    if (!hydratedRef.current || !resolvedSellNetwork) return;
+
+    saveTradeProgress({ sellNetwork: resolvedSellNetwork });
+    dispatch(
+      setInitiateTransactionField({
+        field: "network",
+        value: resolvedSellNetwork,
+      }),
+    );
+  }, [resolvedSellNetwork, dispatch]);
+
   const formatReceiveAmount = (amount: number | string, currencyCode: string | undefined): string | React.ReactNode => {
     if (!exchangeRate || !currencyCode) return String(amount);
     
@@ -1473,6 +1524,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     loadingUserBankAccounts,
     hasAnonymousUserEmail,
     sellDepositWallet,
+    resolvedSellNetwork,
     isGeneratingDepositWallet: generateCustodialWalletMutation.isPending,
 
     // Functions

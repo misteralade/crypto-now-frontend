@@ -41,6 +41,7 @@ export const useTradeStepTwo = ({
   sellNetwork,
   transactionRef,
 }: UseTradeStepTwoProps) => {
+  const savedTradeProgress = loadTradeProgress();
   const [files, setFiles] = useState<File[]>([]);
   const [uploadedFileUrl, setUploadedFileUrl] = useState<string | undefined>();
   const [transactionHash, setTransactionHash] = useState<string>("");
@@ -80,6 +81,7 @@ export const useTradeStepTwo = ({
   // For authenticated sell: use custodial wallet passed from parent; skip the platform wallet fetch
   useEffect(() => {
     if (tradeType === "sell" && sellDepositWallet) {
+      saveTradeProgress({ sellNetwork: sellDepositWallet.network });
       setWalletDetails({
         id: sellDepositWallet.id,
         walletAddress: sellDepositWallet.walletAddress,
@@ -114,14 +116,20 @@ export const useTradeStepTwo = ({
 
           const cryptoId =
             selectedToken?.id || (store.getState() as RootState).crypto.tradeCrypto.selectedCryptoId;
-          const network = sellNetwork || selectedToken?.networks?.[0];
+          const supportedNetworks = selectedToken?.networks ?? [];
+          const network = sellNetwork || savedTradeProgress?.sellNetwork;
 
           if (!cryptoId || !network) {
             toast.error("Please select a crypto and network");
             throw new Error("Missing crypto or network");
           }
 
-            if (!isAuthenticated) {
+          if (supportedNetworks.length > 0 && !supportedNetworks.includes(network)) {
+            toast.error("The selected network does not match the chosen crypto.");
+            throw new Error("Invalid network for selected crypto");
+          }
+
+          if (!isAuthenticated) {
             const sessionId =
               transactionRef ||
               sessionStorage.getItem(SESSION_STORAGE_KEYS.SESSION_ID);
@@ -136,6 +144,7 @@ export const useTradeStepTwo = ({
               cryptoId,
               network,
             });
+            saveTradeProgress({ sellNetwork: data.network });
             setWalletDetails(data);
             return data;
           }

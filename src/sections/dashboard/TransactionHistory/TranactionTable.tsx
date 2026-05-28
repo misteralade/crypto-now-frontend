@@ -80,7 +80,7 @@ const TransactionTable = ({
   const goTrade = () => {
     if (selectedCrypto && supportedCurrency)
       navigate({
-        to: `${ROUTES.TRADE_CRYPTO}?option=buy&currency=${supportedCurrency}&token=${selectedCrypto}`,
+        to: `${ROUTES.DASHBOARD_TRADE}?option=buy&currency=${supportedCurrency}&token=${selectedCrypto}`,
       });
   };
 

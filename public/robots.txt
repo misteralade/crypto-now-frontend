@@ -18,7 +18,6 @@ Allow: /
 Allow: /about
 Allow: /contact
 Allow: /rates
-Allow: /trade-crypto
 Allow: /privacy-policy
 Allow: /terms-of-service
 Allow: /security-policy
@@ -26,4 +25,3 @@ Allow: /aml-policy
 
 # Sitemap location
 Sitemap: https://cryptonow.ng/sitemap.xml
-
