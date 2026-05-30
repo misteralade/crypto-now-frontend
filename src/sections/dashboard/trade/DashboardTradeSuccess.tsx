@@ -8,12 +8,15 @@ import { ArrowLeft, BarChart3, Rocket, Timer, Wallet } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { ROUTES } from "../../../util/constants.util.ts";
 import type { TradeType } from "../../../types/trade.types.ts";
+import { useTransactionQuery } from "../../../queries/transaction.query.ts";
 
 interface DashboardTradeSuccessProps {
   tradeType: TradeType;
   selectedTokenSymbol?: string;
   amount?: number | string;
   ngnAmount?: number | string;
+  walletAddress?: string;
+  walletNetwork?: string;
   bankName?: string;
   accountNumber?: string;
   transactionRef?: string;
@@ -25,12 +28,39 @@ export default function DashboardTradeSuccess({
   selectedTokenSymbol,
   amount,
   ngnAmount,
+  walletAddress,
+  walletNetwork,
   bankName,
   accountNumber,
   transactionRef,
   onReset,
 }: DashboardTradeSuccessProps) {
   const isBuy = tradeType === "buy";
+  const { useTransactionStatus } = useTransactionQuery();
+  const { data: txData } = useTransactionStatus(transactionRef);
+  const resolvedAmount = isBuy
+    ? amount
+    : txData?.amountCrypto && Number(txData.amountCrypto) > 0
+      ? Number(txData.amountCrypto)
+      : amount;
+  const resolvedNgnAmount =
+    !isBuy && txData?.amountFiatNGN && Number(txData.amountFiatNGN) > 0
+      ? Number(txData.amountFiatNGN)
+      : ngnAmount;
+  const resolvedWalletAddress =
+    !isBuy && txData?.userCryptoWallet?.walletAddress
+      ? txData.userCryptoWallet.walletAddress
+      : walletAddress;
+  const resolvedWalletNetwork =
+    !isBuy && txData?.userCryptoWallet?.network
+      ? txData.userCryptoWallet.network
+      : walletNetwork;
+  const resolvedBankName =
+    !isBuy && txData?.userBankAccount?.bankName ? txData.userBankAccount.bankName : bankName;
+  const resolvedAccountNumber =
+    !isBuy && txData?.userBankAccount?.accountNumber
+      ? txData.userBankAccount.accountNumber
+      : accountNumber;
 
   /* ── BUY success ── */
   if (isBuy) {
@@ -163,17 +193,29 @@ export default function DashboardTradeSuccess({
   /* ── SELL success ── */
   const tableRows = [
     {
-      label: "Crypto Received",
-      value: `${amount ?? "—"} ${selectedTokenSymbol ?? ""}`,
+      label: "Crypto Sent",
+      value: `${resolvedAmount ?? "—"} ${selectedTokenSymbol ?? ""}`,
     },
-    ngnAmount
+    resolvedWalletAddress
       ? {
-          label: "NGN Credited",
-          value: `₦${Number(ngnAmount).toLocaleString()}`,
+          label: "Deposit Wallet",
+          value: resolvedWalletAddress,
         }
       : null,
-    bankName ? { label: "To Bank", value: bankName } : null,
-    accountNumber ? { label: "Account", value: accountNumber } : null,
+    resolvedWalletNetwork
+      ? {
+          label: "Network",
+          value: resolvedWalletNetwork,
+        }
+      : null,
+    resolvedNgnAmount
+      ? {
+          label: "NGN Credited",
+          value: `₦${Number(resolvedNgnAmount).toLocaleString()}`,
+        }
+      : null,
+    resolvedBankName ? { label: "To Bank", value: resolvedBankName } : null,
+    resolvedAccountNumber ? { label: "Account", value: resolvedAccountNumber } : null,
     { label: "Status", value: "✓ Completed" },
   ].filter(Boolean) as { label: string; value: string }[];
 
@@ -236,7 +278,9 @@ export default function DashboardTradeSuccess({
               {label}
             </span>
             <span
-              className="text-xs font-semibold"
+              className={`text-xs font-semibold ${
+                label === "Deposit Wallet" ? "max-w-[62%] break-all text-right" : ""
+              }`}
               style={{ color: label === "Status" ? "#037847" : "#0E0F0C" }}
             >
               {value}

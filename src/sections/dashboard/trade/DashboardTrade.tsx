@@ -538,6 +538,21 @@ export default function DashboardTrade() {
                 tradeType={activeTab}
                 selectedTokenSymbol={selectedToken?.symbol}
                 amount={activeTab === "sell" ? numberOfToken : undefined}
+                ngnAmount={activeTab === "sell" ? amountToBuy : undefined}
+                walletAddress={activeTab === "sell" ? sellDepositWallet?.walletAddress : undefined}
+                walletNetwork={activeTab === "sell" ? sellDepositWallet?.network : undefined}
+                bankName={
+                  activeTab === "sell"
+                    ? userBankAccounts?.find((b) => b.id === sellPayoutAccountId)?.bankName ??
+                      userBankAccounts?.[0]?.bankName
+                    : undefined
+                }
+                accountNumber={
+                  activeTab === "sell"
+                    ? userBankAccounts?.find((b) => b.id === sellPayoutAccountId)?.accountNumber ??
+                      userBankAccounts?.[0]?.accountNumber
+                    : undefined
+                }
                 transactionRef={transactionSessionId}
                 onReset={handleReset}
               />

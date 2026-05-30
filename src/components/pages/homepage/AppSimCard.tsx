@@ -23,6 +23,7 @@ import type {
   SupportedCryptoOrCurrencyResponse,
   TransactionResponseEntity,
 } from "../../../types/response.payload.types.ts";
+import type { TransactionStatus } from "../../../types/request.payload.types.ts";
 import { ROUTES } from "../../../util/constants.util.ts";
 import { useNavigate } from "@tanstack/react-router";
 import BankSelector from "../../global/BankSelector.tsx";
@@ -482,6 +483,9 @@ const AppSimCard = () => {
     (c) => c.id === selectedCrypto
   );
   const selectedBank = allBanks?.find((bank) => bank.id === selectedBankId);
+  const anonymousMinimumCryptoAmount = Number(
+    cryptoObj?.minTradeAmountForAnonymous || 0,
+  );
 
   // Init defaults once loaded (only if not already restored from localStorage)
   useEffect(() => {
@@ -952,7 +956,23 @@ const AppSimCard = () => {
         outcome: data?.outcome ?? "unknown",
       });
 
-      await syncGuestTransactionStatus();
+      if (data?.status) {
+        setGuestTransactionStatus((current) => {
+          if (!current) {
+            return current;
+          }
+
+          return {
+            ...current,
+            status: data.status as TransactionStatus,
+          };
+        });
+
+        if (GUEST_SELL_TERMINAL_STATUSES.has(data.status)) {
+          stopGuestTransactionPolling();
+          setDone(true);
+        }
+      }
     } catch (error) {
       toast.dismiss(toastId);
       const message =
@@ -1003,6 +1023,26 @@ const AppSimCard = () => {
 
   const handleStep1Next = async () => {
     if (!selectedCrypto || !quoteCurrencyObj?.id || !amount) return;
+
+    if (anonymousMinimumCryptoAmount > 0) {
+      const submittedCryptoAmount = isBuy
+        ? Number(receiveAmount)
+        : Number(amount);
+      if (
+        !submittedCryptoAmount ||
+        Number.isNaN(submittedCryptoAmount) ||
+        submittedCryptoAmount < anonymousMinimumCryptoAmount
+      ) {
+        const minimumLabel = `${formatCryptoAmountForDisplay(
+          anonymousMinimumCryptoAmount.toFixed(8),
+        )} ${cryptoSymbol}`;
+        const errorMessage = `Anonymous trades must be at least ${minimumLabel}.`;
+        setGuestError(errorMessage);
+        toast.error(errorMessage);
+        return;
+      }
+    }
+
     // Commit NGN amount so downstream steps always use NGN
     if (isBuy && buyInputCurrency === "USD" && usdToNgnRate) {
       const committed = String(Math.round(parseFloat(amount) * usdToNgnRate));
@@ -1308,6 +1348,7 @@ const AppSimCard = () => {
                     onSelect={() => {
                       setSelectedCrypto(item.id);
                       setReceiveAmount("");
+                      setGuestError(null);
                       setActiveSellPreset(null);
                       setNetwork(getDefaultNetworkForCrypto(item));
                     }}
@@ -1340,20 +1381,22 @@ const AppSimCard = () => {
                         return (
                           <button
                             key={cur}
-                            onClick={() => {
-                              if (cur === activeCur) return;
-                              if (isBuy) {
-                                setBuyInputCurrency(cur);
-                                setAmount("");
-                                setReceiveAmount("");
-                                setActiveSellPreset(null);
-                              } else {
-                                setSellReceiveCurrency(cur);
-                                setAmount("");
-                                setReceiveAmount("");
-                                setActiveSellPreset(null);
-                              }
-                            }}
+                        onClick={() => {
+                          if (cur === activeCur) return;
+                          if (isBuy) {
+                            setBuyInputCurrency(cur);
+                            setAmount("");
+                            setReceiveAmount("");
+                            setGuestError(null);
+                            setActiveSellPreset(null);
+                          } else {
+                            setSellReceiveCurrency(cur);
+                            setAmount("");
+                            setReceiveAmount("");
+                            setGuestError(null);
+                            setActiveSellPreset(null);
+                          }
+                        }}
                             className="px-2.5 py-1 text-[10px] font-bold cursor-pointer transition-colors"
                             style={{
                               background:
@@ -1387,12 +1430,26 @@ const AppSimCard = () => {
                     onChange={(e) => {
                       setAmount(e.target.value);
                       setReceiveAmount("");
+                      setGuestError(null);
                       if (!isBuy) setActiveSellPreset(null);
                     }}
                     placeholder="0"
                     className="flex-1 bg-transparent outline-none text-2xl font-bold text-[#0E0F0C] placeholder:text-gray-200"
                   />
                 </div>
+                {selectedCrypto && anonymousMinimumCryptoAmount > 0 && (
+                  <div className="px-4 pb-2 -mt-1">
+                    <span className="text-xs text-gray-400">
+                      Anonymous minimum:{" "}
+                      <span className="font-semibold text-[#0E0F0C]">
+                        {formatCryptoAmountForDisplay(
+                          anonymousMinimumCryptoAmount.toFixed(8),
+                        )}{" "}
+                        {cryptoSymbol}
+                      </span>
+                    </span>
+                  </div>
+                )}
                 {/* BUY: NGN equivalent preview when typing in USD */}
                 {isBuy && buyInputCurrency === "USD" && amount && (
                   <div className="px-4 pb-2 -mt-1">
@@ -1490,7 +1547,17 @@ const AppSimCard = () => {
               <button
                 onClick={handleStep1Next}
                 disabled={
-                  !amount || !selectedCrypto || !quoteCurrencyObj?.id || quoteLoading
+                  !amount ||
+                  !selectedCrypto ||
+                  !quoteCurrencyObj?.id ||
+                  quoteLoading ||
+                  (anonymousMinimumCryptoAmount > 0 &&
+                    ((isBuy
+                      ? Number(receiveAmount)
+                      : Number(amount)) < anonymousMinimumCryptoAmount ||
+                      Number.isNaN(
+                        isBuy ? Number(receiveAmount) : Number(amount),
+                      )))
                 }
                 className="w-full py-3.5 rounded-xl font-bold text-sm text-white border-none transition-opacity disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 style={{ background: isBuy ? "#948EEE" : "#22c55e" }}
@@ -1658,6 +1725,7 @@ const AppSimCard = () => {
                           key={n.id}
                           onClick={() => {
                             setNetwork(n.id);
+                            setGuestError(null);
                             setShowNetworkPicker(false);
                           }}
                           className="flex items-center gap-3 py-3 border-b border-white/10 cursor-pointer bg-transparent last:border-0"
@@ -2082,12 +2150,12 @@ const AppSimCard = () => {
               {showGuestManualRecheck ? (
                 <ManualDepositRecheckAction
                   title={`Already sent your ${cryptoSymbol}?`}
-                  description="If network detection is delayed, confirm the wallet state and let us recheck the deposit immediately."
+                  description="This triggers an immediate backend wallet recheck. If the deposit is found, the status updates as soon as the backend confirms it."
                   isPending={guestManualRecheckPending}
                   disabled={!sessionId}
                   onConfirm={handleGuestManualRecheck}
                   confirmTitle="Confirm manual deposit check"
-                  confirmDescription="We will read the live wallet balance and compare it against the cached wallet state before any payout can proceed."
+                  confirmDescription="We will read the live wallet balance and compare it against the cached wallet state. If a deposit is found, the transaction status is updated right away."
                   confirmLabel="Yes, check now"
                   pendingText="Rechecking deposit..."
                 />

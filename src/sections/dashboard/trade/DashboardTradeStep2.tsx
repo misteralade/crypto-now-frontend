@@ -16,6 +16,7 @@ import { toast } from "react-toastify";
 import ManualDepositRecheckAction from "../../../components/global/ManualDepositRecheckAction.tsx";
 import type {
   SupportedCryptoOrCurrencyResponse,
+  CustodialWalletResponse,
   UserBankAccountResponse,
 } from "../../../types/response.payload.types.ts";
 import type {
@@ -61,6 +62,8 @@ interface DashboardTradeStep2Props {
   buyNetwork?: string;
   /** Payout bank account for sell flow */
   payoutBank?: UserBankAccountResponse;
+  /** Deposit wallet for sell flow */
+  sellDepositWallet?: CustodialWalletResponse | null;
   /** Live label from useTradeStepDisplay (e.g. "2m 15s", "Expired") — quotes expire after ~3 minutes server-side */
   rateLockCountdown?: string;
   /** Rate info from local-first BUY flow (fetched at Step 1) */
@@ -128,6 +131,11 @@ type MonitoringStep = {
   status: "done" | "active" | "pending";
 };
 
+type WalletSummary = {
+  walletAddress: string;
+  network: string;
+};
+
 const MONITORING_STEPS_SELL: MonitoringStep[] = [
   { label: "Blockchain Monitoring Active", status: "done" },
   { label: "Waiting for Crypto Detection", status: "active" },
@@ -163,9 +171,61 @@ function PayingToRow({ payoutBank }: { payoutBank: UserBankAccountResponse | und
   );
 }
 
+function DepositWalletRow({
+  wallet,
+  selectedToken,
+}: {
+  wallet?: WalletSummary | null;
+  selectedToken?: SupportedCryptoOrCurrencyResponse;
+}) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    if (!wallet?.walletAddress) return;
+    navigator.clipboard.writeText(wallet.walletAddress).then(() => {
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  if (!wallet) return null;
+
+  return (
+    <div className="rounded-2xl border border-[#ECECEC] bg-[#F9FAFB] px-4 py-4">
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+            Your unique {selectedToken?.symbol ?? "crypto"} deposit wallet
+          </p>
+          <p className="mt-1 text-xs font-semibold text-[#A07000]">
+            {wallet.network}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={handleCopy}
+          className="shrink-0 rounded-xl border border-[#E8E8E8] bg-white px-3 py-1.5 text-[10px] font-bold"
+          style={{ color: "#948EEE" }}
+        >
+          {copied ? "Copied" : "Copy"}
+        </button>
+      </div>
+      <p className="break-all font-mono text-sm leading-relaxed text-[#0E0F0C]">
+        {wallet.walletAddress}
+      </p>
+      <p className="mt-2 text-xs text-gray-500">
+        Send only {selectedToken?.symbol ?? "crypto"} on {wallet.network}.
+      </p>
+    </div>
+  );
+}
+
 function TradeMonitoringView({
   selectedToken,
   payoutBank,
+  sellDepositWallet,
+  amountToBuy,
+  numberOfToken,
   status,
   isBuy,
   onManualRecheck,
@@ -173,6 +233,9 @@ function TradeMonitoringView({
 }: {
   selectedToken?: SupportedCryptoOrCurrencyResponse;
   payoutBank?: UserBankAccountResponse;
+  sellDepositWallet?: WalletSummary | null;
+  amountToBuy?: number;
+  numberOfToken?: number;
   status?: string;
   isBuy?: boolean;
   onManualRecheck?: () => void;
@@ -248,6 +311,14 @@ function TradeMonitoringView({
       "INITIATED",
       "AWAITING_CRYPTO",
     ].includes(status ?? "");
+  const amountToSendLabel =
+    typeof numberOfToken === "number" && numberOfToken > 0
+      ? `${numberOfToken} ${selectedToken?.symbol ?? "crypto"}`
+      : `— ${selectedToken?.symbol ?? "crypto"}`;
+  const expectedNgnLabel =
+    typeof amountToBuy === "number" && amountToBuy > 0
+      ? `₦${amountToBuy.toLocaleString()}`
+      : "—";
 
   return (
     <div className="flex flex-col gap-5">
@@ -286,18 +357,52 @@ function TradeMonitoringView({
         </p>
       </div>
 
-      {/* Paying to bank (only for SELL) */}
-      {!isBuy && <PayingToRow payoutBank={payoutBank} />}
+      {!isBuy && (
+        <div className="space-y-2 rounded-2xl border border-[#EEEEEE] bg-white px-4 py-4">
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-400">
+            Transaction details
+          </p>
+          <div className="grid gap-2 text-sm">
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-gray-400">Amount to send</span>
+              <span className="font-semibold text-[#0E0F0C]">
+                {amountToSendLabel}
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-gray-400">Expected NGN</span>
+              <span className="font-semibold text-[#0E0F0C]">{expectedNgnLabel}</span>
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-gray-400">Network</span>
+              <span className="font-semibold text-[#0E0F0C]">
+                {sellDepositWallet?.network ?? "—"}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SELL: deposit wallet + payout bank summary */}
+      {!isBuy && (
+        <div className="space-y-2.5">
+          <DepositWalletRow
+            wallet={sellDepositWallet}
+            selectedToken={selectedToken}
+          />
+          <PayingToRow payoutBank={payoutBank} />
+        </div>
+      )}
 
       {showManualRecheck && (
         <ManualDepositRecheckAction
           title={`Already sent your ${selectedToken?.symbol ?? "crypto"}?`}
-          description="If network detection is delayed, confirm the wallet state and let us recheck the deposit immediately."
+          description="This triggers an immediate backend wallet recheck. If the deposit is found, the status updates as soon as the backend confirms it."
           isPending={manualRecheckPending}
           disabled={!onManualRecheck}
           onConfirm={() => onManualRecheck?.()}
           confirmTitle="Confirm manual deposit check"
-          confirmDescription="We will read the live wallet balance and compare it against the cached wallet state before any payout can proceed."
+          confirmDescription="We will read the live wallet balance and compare it against the cached wallet state. If a deposit is found, the transaction status is updated right away."
           confirmLabel="Yes, check now"
           pendingText="Rechecking deposit..."
         />
@@ -496,6 +601,7 @@ export default function DashboardTradeStep2({
   buyWalletAddress,
   buyNetwork,
   payoutBank,
+  sellDepositWallet,
   buyRateInfo,
   onBuySubmitSuccess,
   setTransactionSessionId,
@@ -504,6 +610,16 @@ export default function DashboardTradeStep2({
   const { useTransactionStatus, manualSellDepositRecheckMutation } = useTransactionQuery();
   const { data: txData } = useTransactionStatus(transactionRef);
   const txStatus = txData?.status;
+  const sellTxWallet =
+    txData?.userCryptoWallet ?? sellDepositWallet ?? null;
+  const sellTxAmountCrypto =
+    txData?.amountCrypto && Number(txData.amountCrypto) > 0
+      ? Number(txData.amountCrypto)
+      : numberOfToken;
+  const sellTxAmountFiat =
+    txData?.amountFiatNGN && Number(txData.amountFiatNGN) > 0
+      ? Number(txData.amountFiatNGN)
+      : amountToBuy;
 
   const initiateForm = useSelector(
     (s: RootState) => s.transaction.initiate.initiateTransaction
@@ -704,6 +820,9 @@ export default function DashboardTradeStep2({
             isBuy={false}
             selectedToken={selectedToken}
             payoutBank={payoutBank}
+            sellDepositWallet={sellTxWallet}
+            amountToBuy={sellTxAmountFiat}
+            numberOfToken={sellTxAmountCrypto}
             status={txStatus}
             onManualRecheck={
               transactionRef

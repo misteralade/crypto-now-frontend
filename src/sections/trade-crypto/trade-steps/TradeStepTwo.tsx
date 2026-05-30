@@ -2,7 +2,11 @@ import type {TradeAdditionalInfoInterface, TradeType} from "../../../types/trade
 import TradeAdditionalInfo from "../TradeAdditionalInfo.tsx";
 import CustomButton from "../../../components/global/Button.tsx";
 import {useTradeStepTwo} from "../../../hooks/components/trade/useTradeStepTwo.ts";
-import type {CustodialWalletResponse, SupportedCryptoOrCurrencyResponse} from "../../../types/response.payload.types.ts";
+import type {
+  CustodialWalletResponse,
+  SupportedCryptoOrCurrencyResponse,
+  SupportedPlatformCryptoWalletResponse,
+} from "../../../types/response.payload.types.ts";
 import TradePaymentUpload from "../TradePaymentUpload.tsx";
 import CopyAccountDetails from "../CopyAccountDetails.tsx";
 import ManualDepositRecheckAction from "../../../components/global/ManualDepositRecheckAction.tsx";
@@ -241,12 +245,14 @@ function TradeStatusMonitoring({
   tradeType,
   status,
   selectedToken,
+  walletDetails,
   onManualRecheck,
   manualRecheckPending,
 }: {
   tradeType: TradeType;
   status?: string;
   selectedToken?: SupportedCryptoOrCurrencyResponse;
+  walletDetails?: SupportedPlatformCryptoWalletResponse | null;
   onManualRecheck?: () => void;
   manualRecheckPending?: boolean;
 }) {
@@ -431,15 +437,46 @@ function TradeStatusMonitoring({
         </div>
       </div>
 
+      {!isBuy && walletDetails && (
+        <div className="rounded-2xl border border-[#ECECEC] bg-[#F9FAFB] px-4 py-4">
+          <div className="mb-2 flex items-start justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                Your unique {selectedToken?.symbol ?? "crypto"} deposit wallet
+              </p>
+              <p className="mt-1 text-xs font-semibold text-[#A07000]">
+                {walletDetails.network}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() =>
+                navigator.clipboard.writeText(walletDetails.walletAddress)
+              }
+              className="shrink-0 rounded-xl border border-[#E8E8E8] bg-white px-3 py-1.5 text-[10px] font-bold"
+              style={{ color: "#948EEE" }}
+            >
+              Copy
+            </button>
+          </div>
+          <p className="break-all font-mono text-sm leading-relaxed text-[#0E0F0C]">
+            {walletDetails.walletAddress}
+          </p>
+          <p className="mt-2 text-xs text-gray-500">
+            Send only {selectedToken?.symbol ?? "crypto"} on {walletDetails.network}.
+          </p>
+        </div>
+      )}
+
       {showManualRecheck && (
         <ManualDepositRecheckAction
           title={`Already sent your ${selectedToken?.symbol ?? "crypto"}?`}
-          description="If network detection is delayed, confirm the wallet state and let us recheck the deposit immediately."
+          description="This triggers an immediate backend wallet recheck. If the deposit is found, the status updates as soon as the backend confirms it."
           isPending={manualRecheckPending}
           disabled={!onManualRecheck}
           onConfirm={() => onManualRecheck?.()}
           confirmTitle="Confirm manual deposit check"
-          confirmDescription="We will read the live wallet balance and compare it against the cached wallet state before any payout can proceed."
+          confirmDescription="We will read the live wallet balance and compare it against the cached wallet state. If a deposit is found, the transaction status is updated right away."
           confirmLabel="Yes, check now"
           pendingText="Rechecking deposit..."
         />
@@ -571,10 +608,11 @@ const TradeStepTwo = ({ amountToBuy, tradeType, numberOfToken, additionalInfo, h
 
   if (showMonitoringView) {
     return (
-      <TradeStatusMonitoring
+        <TradeStatusMonitoring
         tradeType={tradeType}
         status={transactionStatus}
         selectedToken={selectedToken}
+        walletDetails={walletDetails}
         onManualRecheck={
           transactionRef && tradeType === "sell"
             ? () =>

@@ -5,7 +5,10 @@ import {QUERY_KEYS} from "./query.keys.ts";
 import {transactionServiceApi} from "../api/transaction.api.ts";
 import {type RootState, store} from "../store.ts";
 import {ROUTES, SESSION_STORAGE_KEYS, TIME_IN_MILLISECONDS} from "../util/constants.util.ts";
-import type {AxiosServerError} from "../types/response.payload.types.ts";
+import type {
+  AxiosServerError,
+  TransactionResponseEntity,
+} from "../types/response.payload.types.ts";
 import {disputeServiceApi} from "../api/dispute.api.ts";
 import type {MessageAttachment} from "../types/transaction.types.ts";
 import {extractErrorMessage, isExchangeRateExpiryError} from "../util/index.util.ts";
@@ -280,11 +283,40 @@ export const useTransactionQuery = () => {
         params.sessionId,
       );
     },
-    onSuccess: async ({ success, message }, variables) => {
+    onSuccess: async ({ success, message, data }, variables) => {
       if (success) {
         toast.success(message);
       } else {
         toast.error(message);
+      }
+
+      const status = data?.status as TransactionResponseEntity["status"] | undefined;
+      if (status) {
+        const patchTransactionStatus = (
+          current: TransactionResponseEntity | null | undefined,
+        ) => {
+          if (!current) {
+            return current ?? null;
+          }
+
+          return {
+            ...current,
+            status,
+          };
+        };
+
+        queryClient.setQueryData<TransactionResponseEntity | null>(
+          [QUERY_KEYS.TRANSACTION.USER_TRANSACTION_DETAILS, variables.sessionId],
+          patchTransactionStatus,
+        );
+        queryClient.setQueryData<TransactionResponseEntity | null>(
+          [
+            QUERY_KEYS.TRANSACTION.USER_TRANSACTION_DETAILS,
+            variables.sessionId,
+            "status",
+          ],
+          patchTransactionStatus,
+        );
       }
 
       await Promise.all([
