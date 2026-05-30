@@ -37,6 +37,7 @@ import { Route as DashboardProfileRouteImport } from './routes/dashboard/profile
 import { Route as DashboardKycRouteImport } from './routes/dashboard/kyc'
 import { Route as DashboardTransactionsIndexRouteImport } from './routes/dashboard/transactions/index'
 import { Route as DashboardTransactionsIdRouteImport } from './routes/dashboard/transactions/$id'
+import { Route as DashboardTradeSessionIdRouteImport } from './routes/dashboard/trade/$sessionId'
 
 const VerifyAccountRoute = VerifyAccountRouteImport.update({
   id: '/verify-account',
@@ -189,6 +190,13 @@ const DashboardTransactionsIdRoute = DashboardTransactionsIdRouteImport.update({
   path: '/transactions/$id',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardTradeSessionIdRoute = DashboardTradeSessionIdRouteImport.update({
+  id: '/$sessionId',
+  path: '/$sessionId',
+  getParentRoute: () => DashboardTradeRoute,
+} as any).lazy(() =>
+  import('./routes/dashboard/trade/$sessionId.lazy').then((d) => d.Route),
+)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -209,7 +217,7 @@ export interface FileRoutesByFullPath {
   '/verify-account': typeof VerifyAccountRoute
   '/dashboard/kyc': typeof DashboardKycRoute
   '/dashboard/profile': typeof DashboardProfileRoute
-  '/dashboard/trade': typeof DashboardTradeRoute
+  '/dashboard/trade': typeof DashboardTradeRouteWithChildren
   '/dashboard/wallets': typeof DashboardWalletsRoute
   '/dispute/$id': typeof DisputeIdRoute
   '/oauth/error': typeof OauthErrorRoute
@@ -217,6 +225,7 @@ export interface FileRoutesByFullPath {
   '/sign-in/verify': typeof SignInVerifyRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/sign-in/': typeof SignInIndexRoute
+  '/dashboard/trade/$sessionId': typeof DashboardTradeSessionIdRoute
   '/dashboard/transactions/$id': typeof DashboardTransactionsIdRoute
   '/dashboard/transactions/': typeof DashboardTransactionsIndexRoute
 }
@@ -238,7 +247,7 @@ export interface FileRoutesByTo {
   '/verify-account': typeof VerifyAccountRoute
   '/dashboard/kyc': typeof DashboardKycRoute
   '/dashboard/profile': typeof DashboardProfileRoute
-  '/dashboard/trade': typeof DashboardTradeRoute
+  '/dashboard/trade': typeof DashboardTradeRouteWithChildren
   '/dashboard/wallets': typeof DashboardWalletsRoute
   '/dispute/$id': typeof DisputeIdRoute
   '/oauth/error': typeof OauthErrorRoute
@@ -246,6 +255,7 @@ export interface FileRoutesByTo {
   '/sign-in/verify': typeof SignInVerifyRoute
   '/dashboard': typeof DashboardIndexRoute
   '/sign-in': typeof SignInIndexRoute
+  '/dashboard/trade/$sessionId': typeof DashboardTradeSessionIdRoute
   '/dashboard/transactions/$id': typeof DashboardTransactionsIdRoute
   '/dashboard/transactions': typeof DashboardTransactionsIndexRoute
 }
@@ -269,7 +279,7 @@ export interface FileRoutesById {
   '/verify-account': typeof VerifyAccountRoute
   '/dashboard/kyc': typeof DashboardKycRoute
   '/dashboard/profile': typeof DashboardProfileRoute
-  '/dashboard/trade': typeof DashboardTradeRoute
+  '/dashboard/trade': typeof DashboardTradeRouteWithChildren
   '/dashboard/wallets': typeof DashboardWalletsRoute
   '/dispute/$id': typeof DisputeIdRoute
   '/oauth/error': typeof OauthErrorRoute
@@ -277,6 +287,7 @@ export interface FileRoutesById {
   '/sign-in/verify': typeof SignInVerifyRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/sign-in/': typeof SignInIndexRoute
+  '/dashboard/trade/$sessionId': typeof DashboardTradeSessionIdRoute
   '/dashboard/transactions/$id': typeof DashboardTransactionsIdRoute
   '/dashboard/transactions/': typeof DashboardTransactionsIndexRoute
 }
@@ -309,6 +320,7 @@ export interface FileRouteTypes {
     | '/sign-in/verify'
     | '/dashboard/'
     | '/sign-in/'
+    | '/dashboard/trade/$sessionId'
     | '/dashboard/transactions/$id'
     | '/dashboard/transactions/'
   fileRoutesByTo: FileRoutesByTo
@@ -338,6 +350,7 @@ export interface FileRouteTypes {
     | '/sign-in/verify'
     | '/dashboard'
     | '/sign-in'
+    | '/dashboard/trade/$sessionId'
     | '/dashboard/transactions/$id'
     | '/dashboard/transactions'
   id:
@@ -368,6 +381,7 @@ export interface FileRouteTypes {
     | '/sign-in/verify'
     | '/dashboard/'
     | '/sign-in/'
+    | '/dashboard/trade/$sessionId'
     | '/dashboard/transactions/$id'
     | '/dashboard/transactions/'
   fileRoutesById: FileRoutesById
@@ -594,13 +608,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardTransactionsIdRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/trade/$sessionId': {
+      id: '/dashboard/trade/$sessionId'
+      path: '/$sessionId'
+      fullPath: '/dashboard/trade/$sessionId'
+      preLoaderRoute: typeof DashboardTradeSessionIdRouteImport
+      parentRoute: typeof DashboardTradeRoute
+    }
   }
 }
+
+interface DashboardTradeRouteChildren {
+  DashboardTradeSessionIdRoute: typeof DashboardTradeSessionIdRoute
+}
+
+const DashboardTradeRouteChildren: DashboardTradeRouteChildren = {
+  DashboardTradeSessionIdRoute: DashboardTradeSessionIdRoute,
+}
+
+const DashboardTradeRouteWithChildren = DashboardTradeRoute._addFileChildren(
+  DashboardTradeRouteChildren,
+)
 
 interface DashboardRouteChildren {
   DashboardKycRoute: typeof DashboardKycRoute
   DashboardProfileRoute: typeof DashboardProfileRoute
-  DashboardTradeRoute: typeof DashboardTradeRoute
+  DashboardTradeRoute: typeof DashboardTradeRouteWithChildren
   DashboardWalletsRoute: typeof DashboardWalletsRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardTransactionsIdRoute: typeof DashboardTransactionsIdRoute
@@ -610,7 +643,7 @@ interface DashboardRouteChildren {
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardKycRoute: DashboardKycRoute,
   DashboardProfileRoute: DashboardProfileRoute,
-  DashboardTradeRoute: DashboardTradeRoute,
+  DashboardTradeRoute: DashboardTradeRouteWithChildren,
   DashboardWalletsRoute: DashboardWalletsRoute,
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardTransactionsIdRoute: DashboardTransactionsIdRoute,

@@ -8,6 +8,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSearch, useNavigate } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
 import type { TradeType } from "../../../types/trade.types.ts";
+import type { TransactionResponseEntity } from "../../../types/response.payload.types.ts";
 import { useTradeStepDisplay } from "../../../hooks/components/trade/useTradeStepDisplay.ts";
 import {
   clearTradeProgress,
@@ -28,26 +29,41 @@ import {
   setInitiateTransactionField,
 } from "../../../redux/transaction.slice.ts";
 import { useDispatch } from "react-redux";
-import { LOCAL_STORAGE_KEYS } from "../../../util/constants.util.ts";
+import { LOCAL_STORAGE_KEYS, ROUTES } from "../../../util/constants.util.ts";
 
-export default function DashboardTrade() {
+type DashboardTradeProps = {
+  sessionId?: string;
+  initialTradeType?: TradeType;
+  initialStep?: number;
+  prefetchedTransaction?: TransactionResponseEntity | null;
+};
+
+export default function DashboardTrade({
+  sessionId,
+  initialTradeType,
+  initialStep,
+  prefetchedTransaction,
+}: DashboardTradeProps = {}) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const searchParams: { option?: string; sessionId?: string; resume?: string | boolean } =
     useSearch({ strict: false });
 
   const routeOption = searchParams.option;
-  const sessionId = searchParams.sessionId;
+  const searchSessionId = searchParams.sessionId;
+  const activeSessionId = sessionId ?? searchSessionId;
   const isResume =
     searchParams.resume === true ||
     searchParams.resume === "true" ||
     searchParams.resume === '"true"';
 
-  const [step, setStep] = useState<number>(1);
+  const [step, setStep] = useState<number>(initialStep ?? (activeSessionId ? 2 : 1));
   const [activeTab, setActiveTab] = useState<TradeType>(
-    routeOption?.toLowerCase() === "sell" ? "sell" : "buy"
+    initialTradeType ?? (routeOption?.toLowerCase() === "sell" ? "sell" : "buy")
   );
-  const [hasChosenMode, setHasChosenMode] = useState<boolean>(!!routeOption);
+  const [hasChosenMode, setHasChosenMode] = useState<boolean>(
+    !!routeOption || !!initialTradeType || !!activeSessionId
+  );
 
   // Local pending token for sell flow (hook's useEffect resets selectedToken so we track locally)
   const [pendingSellToken, setPendingSellToken] = useState<
@@ -98,12 +114,12 @@ export default function DashboardTrade() {
 
   // Restore / clear progress on mount
   useEffect(() => {
-    if (sessionId && hasRestoredRef.current !== sessionId) {
-      hasRestoredRef.current = sessionId;
+    if (activeSessionId && hasRestoredRef.current !== activeSessionId) {
+      hasRestoredRef.current = activeSessionId;
       hasInitializedRef.current = true;
       return;
     }
-    if (sessionId && hasRestoredRef.current === sessionId) {
+    if (activeSessionId && hasRestoredRef.current === activeSessionId) {
       hasInitializedRef.current = true;
       return;
     }
@@ -153,7 +169,7 @@ export default function DashboardTrade() {
     clearTradeProgress();
     setStep(1);
     hasInitializedRef.current = true;
-  }, [sessionId, isResume]);
+  }, [activeSessionId, isResume]);
 
   useEffect(() => {
     if (step === 3) {
@@ -184,6 +200,7 @@ export default function DashboardTrade() {
     loadingExchangeRate,
     transactionSessionId,
     setTransactionSessionId,
+    isRestoringTransaction,
     userBankAccounts,
     showUserEnterEmail,
     isLoadingPingUser,
@@ -213,9 +230,10 @@ export default function DashboardTrade() {
     setActiveTab,
     undefined,
     step,
-    sessionId,
+    activeSessionId,
     sellNetwork,
-    true
+    true,
+    prefetchedTransaction ?? null
   );
 
   // Apply deferred amount restore once setAmountToBuy is available
@@ -249,18 +267,28 @@ export default function DashboardTrade() {
   const handleReset = () => {
     clearTradeProgress();
     setStep(1);
-    navigate({ to: "/dashboard/trade", search: {}, replace: true });
+    navigate({ to: ROUTES.DASHBOARD_TRADE, search: {}, replace: true });
   };
 
   const handleChooseMode = (mode: TradeType) => {
     setActiveTab(mode);
     setHasChosenMode(true);
     navigate({
-      to: "/dashboard/trade",
-      search: { option: mode },
+      to: ROUTES.DASHBOARD_TRADE,
+      search: { option: mode } as any,
       replace: true,
     });
   };
+
+  useEffect(() => {
+    if (!transactionSessionId || activeSessionId) return;
+
+    navigate({
+      to: ROUTES.DASHBOARD_TRADE_SESSION,
+      params: { sessionId: transactionSessionId },
+      replace: true,
+    });
+  }, [activeSessionId, navigate, transactionSessionId]);
 
   // Restore the last-used token from localStorage when the supported list loads
   useEffect(() => {
@@ -285,6 +313,14 @@ export default function DashboardTrade() {
     return (
       <div className="flex items-center justify-center py-16">
         <LoadingSpinner fullScreen={false} message="Checking authentication…" />
+      </div>
+    );
+  }
+
+  if (activeSessionId && isRestoringTransaction) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <LoadingSpinner fullScreen={false} message="Restoring transaction…" />
       </div>
     );
   }

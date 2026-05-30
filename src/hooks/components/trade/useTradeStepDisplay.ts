@@ -8,6 +8,7 @@ import type {
 } from "../../../types/trade.types.ts";
 import { useCurrencyQuery } from "../../../queries/currency.query.ts";
 import type { CustodialWalletResponse, SupportedCryptoOrCurrencyResponse } from "../../../types/response.payload.types.ts";
+import type { TransactionResponseEntity } from "../../../types/response.payload.types.ts";
 import { useCryptoQuery } from "../../../queries/crypto.query.ts";
 import { useRateQuery } from "../../../queries/rate.query.ts";
 import { useTransactionQuery } from "../../../queries/transaction.query.ts";
@@ -54,7 +55,7 @@ const shallowEqual = (a: any, b: any) => {
   return true;
 };
 
-export const useTradeStepDisplay = ( token: string, activeTab: TradeType, currency: string, setStep: (value: number) => void, _setActiveTab: (value: TradeType) => void, initialAmount?: string, currentStep?: number, sessionId?: string, sellNetwork?: string, skipBuyRateFetch?: boolean ) => {
+export const useTradeStepDisplay = ( token: string, activeTab: TradeType, currency: string, setStep: (value: number) => void, _setActiveTab: (value: TradeType) => void, initialAmount?: string, currentStep?: number, sessionId?: string, sellNetwork?: string, skipBuyRateFetch?: boolean, restoredTransactionOverride?: TransactionResponseEntity | null ) => {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-expect-error
   const countdownIntervalRef = useRef<any>();
@@ -65,7 +66,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   const { supportedCryptoCurrencies, loadingSupportedCryptocurrencies, custodialWallets, generateCustodialWalletMutation } = useCryptoQuery();
   const { initiateTransactionMutation, makePaymentTransactionMutation, receivingPaymentAccountConfirmationMutation, createAndSubmitTransactionMutation } = useTransactionQuery();
   
-  const [transactionSessionId, setTransactionSessionId] = useState<string>();
+  const [transactionSessionId, setTransactionSessionId] = useState<string>(sessionId ?? "");
   const [selectedToken, setSelectedToken] = useState<SupportedCryptoOrCurrencyResponse>();
   const [selectedCurrency, setSelectedCurrency] = useState<SupportedCryptoOrCurrencyResponse>();
   const [countdown, setCountdown] = useState<string>("");
@@ -442,7 +443,10 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   }, []);
 
   // Fetch and restore transaction when sessionId is provided
-  const { data: restoredTransaction } = useQuery({
+  const {
+    data: restoredTransaction,
+    isLoading: isRestoringTransaction,
+  } = useQuery({
     queryKey: [QUERY_KEYS.TRANSACTION.USER_TRANSACTION_DETAILS, sessionId],
     queryFn: async () => {
       if (!sessionId) return null;
@@ -452,20 +456,22 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       }
       return null;
     },
-    enabled: !!sessionId,
+    enabled: !!sessionId && !restoredTransactionOverride,
   });
+  const resolvedRestoredTransaction = restoredTransactionOverride ?? restoredTransaction ?? null;
+  const resolvedIsRestoringTransaction = restoredTransactionOverride ? false : isRestoringTransaction;
 
   // Track if restoration has already happened for current sessionId to prevent re-restoration
   const hasRestoredRef = useRef<string | null>(null);
 
   // Restore transaction state when sessionId is provided (only once per sessionId)
   useEffect(() => {
-    if (!sessionId || !restoredTransaction) return;
+    if (!sessionId || !resolvedRestoredTransaction) return;
     
     // If already restored for this sessionId, skip
     if (hasRestoredRef.current === sessionId) return;
 
-    const transaction = restoredTransaction;
+    const transaction = resolvedRestoredTransaction;
     
     // Mark as restored for this sessionId to prevent re-restoration
     hasRestoredRef.current = sessionId;
@@ -570,7 +576,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionId, restoredTransaction, supportedCryptoCurrencies, supportedCurrencies, dispatch]);
+  }, [sessionId, resolvedRestoredTransaction, supportedCryptoCurrencies, supportedCurrencies, dispatch]);
 
   // Open bank details modal automatically only for resumed sell transactions
   // that are still waiting on payout-account confirmation.
@@ -1530,6 +1536,8 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     // Functions
     setAmountToBuy,
     setTransactionSessionId,
+    restoredTransaction: resolvedRestoredTransaction,
+    isRestoringTransaction: resolvedIsRestoringTransaction,
     setNumberOfToken,
     setSelectedCurrency,
     setSelectedToken,
