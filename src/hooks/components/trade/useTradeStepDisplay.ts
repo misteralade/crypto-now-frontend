@@ -55,7 +55,7 @@ const shallowEqual = (a: any, b: any) => {
   return true;
 };
 
-export const useTradeStepDisplay = ( token: string, activeTab: TradeType, currency: string, setStep: (value: number) => void, _setActiveTab: (value: TradeType) => void, initialAmount?: string, currentStep?: number, sessionId?: string, sellNetwork?: string, skipBuyRateFetch?: boolean, restoredTransactionOverride?: TransactionResponseEntity | null ) => {
+export const useTradeStepDisplay = ( token: string, activeTab: TradeType, currency: string, setStep: (value: number) => void, _setActiveTab: (value: TradeType) => void, initialAmount?: string, currentStep?: number, sessionId?: string, sellNetwork?: string, skipBuyRateFetch?: boolean, restoredTransactionOverride?: TransactionResponseEntity | null, restoreSavedProgress: boolean = false ) => {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-expect-error
   const countdownIntervalRef = useRef<any>();
@@ -78,7 +78,10 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   // Only disable rate query on Step 2 when receipt is uploaded
   // On Step 1, always allow rate to load
   // When continuing a transaction, we allow the rate to fetch once, then lock it
-  const saved = useMemo(() => loadTradeProgress(), []);
+  const saved = useMemo(() => {
+    if (!restoreSavedProgress) return null;
+    return loadTradeProgress();
+  }, [restoreSavedProgress]);
   const [resolvedSellNetwork, setResolvedSellNetwork] = useState<string | undefined>(
     saved?.sellNetwork,
   );
@@ -208,6 +211,8 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   useEffect(() => {
     if (activeTab !== "sell" || !selectedToken) {
       setSellDepositWallet(null);
+      dispatch(setInitiateTransactionField({ field: "custodialWalletId", value: undefined }));
+      dispatch(setInitiateTransactionField({ field: "network", value: undefined }));
       return;
     }
 
@@ -226,6 +231,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     const preferredNetwork = sellNetwork || resolvedSellNetwork;
     if (!preferredNetwork) {
       setSellDepositWallet(null);
+      dispatch(setInitiateTransactionField({ field: "custodialWalletId", value: undefined }));
       return;
     }
 
@@ -234,6 +240,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
         `The selected network does not match ${selectedToken.symbol}. Please choose a valid network.`,
       );
       setSellDepositWallet(null);
+      dispatch(setInitiateTransactionField({ field: "custodialWalletId", value: undefined }));
       return;
     }
 
@@ -269,6 +276,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       
       // Clear stale address and generate for the selected network via the HD wallet service
       setSellDepositWallet(null);
+      dispatch(setInitiateTransactionField({ field: "custodialWalletId", value: undefined }));
       generateCustodialWalletMutation.mutate(
         { cryptoId: selectedToken.id, network: preferredNetwork },
         {
@@ -307,6 +315,12 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
 
   // ---------- Restore persisted progress ----------
   useEffect(() => {
+    if (!restoreSavedProgress) {
+      setIsCountdownLocked(false);
+      hydratedRef.current = true;
+      return;
+    }
+
     const saved = loadTradeProgress();
     if (!saved) {
       // If there's no saved progress, reset locked state (new transaction)
@@ -409,11 +423,11 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       hydratedRef.current = true;
       setIsHydrated(true);
     }, 0);
-  }, []);
+  }, [restoreSavedProgress]);
   
   // Set the fields on the redux store (only if not already set from saved progress)
   useEffect(() => {
-    const saved = loadTradeProgress();
+    const saved = restoreSavedProgress ? loadTradeProgress() : null;
     // Only set from URL params if not restored from saved progress
     if (!saved?.selectedCurrencyId && currency) {
       dispatch(setInitiateTransactionField({
@@ -432,7 +446,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       field: "action",
       value: activeTab,
     }));
-  }, [currency, token, activeTab, dispatch]);
+  }, [currency, token, activeTab, dispatch, restoreSavedProgress]);
 
   // If user has anonymous user email, show enter email modal
   useEffect(() => {
@@ -466,7 +480,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
 
   // Restore transaction state when sessionId is provided (only once per sessionId)
   useEffect(() => {
-    if (!sessionId || !resolvedRestoredTransaction) return;
+    if (!restoreSavedProgress || !sessionId || !resolvedRestoredTransaction) return;
     
     // If already restored for this sessionId, skip
     if (hasRestoredRef.current === sessionId) return;
@@ -475,6 +489,11 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     
     // Mark as restored for this sessionId to prevent re-restoration
     hasRestoredRef.current = sessionId;
+    console.info("[trade] restored transaction session", {
+      sessionId,
+      status: transaction.status,
+      type: transaction.type,
+    });
     
     // Set session ID
     setTransactionSessionId(sessionId);
@@ -576,12 +595,12 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionId, resolvedRestoredTransaction, supportedCryptoCurrencies, supportedCurrencies, dispatch]);
+  }, [sessionId, resolvedRestoredTransaction, supportedCryptoCurrencies, supportedCurrencies, dispatch, restoreSavedProgress]);
 
   // Open bank details modal automatically only for resumed sell transactions
   // that are still waiting on payout-account confirmation.
   useEffect(() => {
-    if (!sessionId || !restoredTransaction) return;
+    if (!restoreSavedProgress || !sessionId || !restoredTransaction) return;
     
     const saved = loadTradeProgress();
     const status = restoredTransaction.status;
@@ -599,7 +618,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       saveTradeProgress({ shouldOpenBankDetailsModal: false });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionId, restoredTransaction, loadingUserBankAccounts, currentStep, setShowPaymentReceivingModal]);
+  }, [sessionId, restoredTransaction, loadingUserBankAccounts, currentStep, setShowPaymentReceivingModal, restoreSavedProgress]);
 
   // Track when the current exchange rate was received so we can drive a 3-min countdown
   const rateReceivedAtRef = useRef<number | null>(null);
@@ -843,6 +862,8 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
 
   // Restore selections by saved IDs once lists are ready
   useEffect(() => {
+    if (!restoreSavedProgress) return;
+
     const saved = loadTradeProgress();
     if (!saved) return;
 
@@ -901,7 +922,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
         value: saved.sellNetwork,
       }));
     }
-  }, [supportedCryptoCurrencies, supportedCurrencies, dispatch]);
+  }, [supportedCryptoCurrencies, supportedCurrencies, dispatch, restoreSavedProgress]);
 
   // Exchange rate updates (guarded)
   useEffect(() => {
@@ -1187,6 +1208,24 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
         saveTradeProgress({ step: 2 });
         setStep(2);
       } else {
+        if (!sellDepositWallet?.id || !sellDepositWallet?.network) {
+          toast.error("Please wait for the deposit wallet to finish loading.");
+          return;
+        }
+
+        dispatch(setInitiateTransactionField({
+          field: "custodialWalletId",
+          value: sellDepositWallet.id,
+        }));
+        dispatch(setInitiateTransactionField({
+          field: "network",
+          value: sellDepositWallet.network,
+        }));
+        transactionFormRef.current = {
+          ...(transactionFormRef.current || {}),
+          custodialWalletId: sellDepositWallet.id,
+          network: sellDepositWallet.network,
+        };
         // SELL: keep existing flow — create INITIATED transaction to lock the rate
         const { data: { sessionId }} = await initiateTransactionMutation.mutateAsync();
         setTransactionSessionId(sessionId);
@@ -1287,6 +1326,14 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
 
   // Reset countdown locked state when starting a new transaction (step 1 with no saved progress)
   useEffect(() => {
+    if (!restoreSavedProgress) {
+      if (currentStep === 1) {
+        setIsCountdownLocked(false);
+        setCountdown("");
+      }
+      return;
+    }
+
     if (currentStep === 1) {
       const saved = loadTradeProgress();
       // If we're on step 1 and there's no saved progress (or saved step is 1), reset locked state
@@ -1295,11 +1342,13 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
         setCountdown("");
       }
     }
-  }, [currentStep]);
+  }, [currentStep, restoreSavedProgress]);
 
   // Restore amounts to transaction form after restoration
   // This should run even when countdown is locked to ensure amounts are set correctly
   useEffect(() => {
+    if (!restoreSavedProgress) return;
+
     if (!isHydrated) return;
     
     const saved = loadTradeProgress();
@@ -1369,7 +1418,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
         }));
       }
     }
-  }, [isHydrated, numberOfToken, amountToBuy, selectedToken, selectedCurrency, activeTab, dispatch, isCountdownLocked, currentStep]);
+  }, [isHydrated, numberOfToken, amountToBuy, selectedToken, selectedCurrency, activeTab, dispatch, isCountdownLocked, currentStep, restoreSavedProgress]);
 
   useEffect(() => {
     if (!hydratedRef.current) return;

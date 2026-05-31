@@ -25,11 +25,14 @@ import DashboardTradeStep3 from "./DashboardTradeStep3.tsx";
 import DashboardTradeSuccess from "./DashboardTradeSuccess.tsx";
 import {
   clearAmountToSend,
-  clearInitiateTransactionField,
   setInitiateTransactionField,
 } from "../../../redux/transaction.slice.ts";
 import { useDispatch } from "react-redux";
-import { LOCAL_STORAGE_KEYS, ROUTES } from "../../../util/constants.util.ts";
+import {
+  LOCAL_STORAGE_KEYS,
+  ROUTES,
+  SESSION_STORAGE_KEYS,
+} from "../../../util/constants.util.ts";
 
 type DashboardTradeProps = {
   sessionId?: string;
@@ -56,6 +59,15 @@ export default function DashboardTrade({
     searchParams.resume === true ||
     searchParams.resume === "true" ||
     searchParams.resume === '"true"';
+  const shouldRestoreSavedProgress =
+    !!activeSessionId ||
+    isResume ||
+    (() => {
+      const nav = performance?.getEntriesByType?.("navigation")?.[0] as
+        | PerformanceNavigationTiming
+        | undefined;
+      return nav?.type === "reload";
+    })();
 
   const [step, setStep] = useState<number>(initialStep ?? (activeSessionId ? 2 : 1));
   const [activeTab, setActiveTab] = useState<TradeType>(
@@ -108,7 +120,7 @@ export default function DashboardTrade({
   useEffect(() => {
     if (activeTab === "buy") {
       dispatch(clearAmountToSend());
-      dispatch(clearInitiateTransactionField("amountToSend"));
+      dispatch(setInitiateTransactionField({ field: "amountToSend", value: undefined }));
     }
   }, [activeTab]);
 
@@ -156,7 +168,7 @@ export default function DashboardTrade({
         if (saved?.buyNetwork) setBuyNetwork(saved.buyNetwork);
         // Defer amount restore — setAmountToBuy comes from useTradeStepDisplay below
         if (saved?.amountToBuy) pendingAmountRestoreRef.current = String(saved.amountToBuy);
-        dispatch(clearInitiateTransactionField("amountToSend"));
+        dispatch(setInitiateTransactionField({ field: "amountToSend", value: undefined }));
       } else {
         if (saved && typeof saved.step === "number" && saved.step !== 3)
           setStep(saved.step);
@@ -233,7 +245,8 @@ export default function DashboardTrade({
     activeSessionId,
     sellNetwork,
     true,
-    prefetchedTransaction ?? null
+    prefetchedTransaction ?? null,
+    shouldRestoreSavedProgress
   );
 
   // Apply deferred amount restore once setAmountToBuy is available
@@ -266,11 +279,16 @@ export default function DashboardTrade({
 
   const handleReset = () => {
     clearTradeProgress();
+    sessionStorage.removeItem(SESSION_STORAGE_KEYS.SESSION_ID);
     setStep(1);
     navigate({ to: ROUTES.DASHBOARD_TRADE, search: {}, replace: true });
   };
 
   const handleChooseMode = (mode: TradeType) => {
+    if (mode === "sell") {
+      dispatch(setInitiateTransactionField({ field: "custodialWalletId", value: undefined }));
+      dispatch(setInitiateTransactionField({ field: "network", value: undefined }));
+    }
     setActiveTab(mode);
     setHasChosenMode(true);
     navigate({

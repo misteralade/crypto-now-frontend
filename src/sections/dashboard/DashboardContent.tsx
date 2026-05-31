@@ -281,6 +281,13 @@ export default function DashboardContent() {
 
   const handleContinueTrade = () => {
     if (!pendingTrade) return;
+    if (pendingTrade.transactionSessionId) {
+      navigate({
+        to: ROUTES.DASHBOARD_TRADE_SESSION,
+        params: { sessionId: pendingTrade.transactionSessionId },
+      });
+      return;
+    }
     navigate({
       to: ROUTES.DASHBOARD_TRADE,
       search: { option: pendingTrade.activeTab, resume: true } as any,

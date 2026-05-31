@@ -289,6 +289,10 @@ export type TransactionResponseEntity = {
   internalNotes: string | null;
   failureReason: string | null;
   payoutFailureReason?: string | null;
+  custodialWalletId?: string | null;
+  depositAddress?: string | null;
+  depositBalanceBaseline?: number | null;
+  walletNetwork?: string | null;
   confirmationCount?: number;
   requiredConfirmations?: number;
   processedBy: string | null;

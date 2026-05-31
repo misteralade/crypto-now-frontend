@@ -125,6 +125,29 @@ function BackHeader({
   );
 }
 
+function SummaryRow({
+  label,
+  value,
+  green,
+}: {
+  label: string;
+  value: ReactNode;
+  green?: boolean;
+}) {
+  return (
+    <div className="flex justify-between items-center text-sm py-0.5">
+      <span className="text-gray-400">{label}</span>
+      <span
+        className={`font-semibold text-right break-words max-w-[60%] ${
+          green ? "text-[#22c55e]" : "text-[#0E0F0C]"
+        }`}
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
+
 /* ── SELL: Monitoring screen ── */
 type MonitoringStep = {
   label: string;
@@ -311,14 +334,13 @@ function TradeMonitoringView({
       "INITIATED",
       "AWAITING_CRYPTO",
     ].includes(status ?? "");
-  const amountToSendLabel =
-    typeof numberOfToken === "number" && numberOfToken > 0
-      ? `${numberOfToken} ${selectedToken?.symbol ?? "crypto"}`
-      : `— ${selectedToken?.symbol ?? "crypto"}`;
-  const expectedNgnLabel =
-    typeof amountToBuy === "number" && amountToBuy > 0
-      ? `₦${amountToBuy.toLocaleString()}`
-      : "—";
+  const walletNetwork = sellDepositWallet?.network ?? "";
+  const walletAddress = sellDepositWallet?.walletAddress ?? "";
+  const showExpectedNgnRow =
+    !isBuy &&
+    ["DEPOSIT_CONFIRMED", "PAYOUT_INITIATED", "COMPLETED"].includes(status ?? "") &&
+    typeof amountToBuy === "number" &&
+    amountToBuy > 0;
 
   return (
     <div className="flex flex-col gap-5">
@@ -358,38 +380,51 @@ function TradeMonitoringView({
       </div>
 
       {!isBuy && (
-        <div className="space-y-2 rounded-2xl border border-[#EEEEEE] bg-white px-4 py-4">
-          <p className="text-xs font-bold uppercase tracking-widest text-gray-400">
-            Transaction details
-          </p>
-          <div className="grid gap-2 text-sm">
-            <div className="flex items-center justify-between gap-4">
-              <span className="text-gray-400">Amount to send</span>
-              <span className="font-semibold text-[#0E0F0C]">
-                {amountToSendLabel}
-              </span>
-            </div>
-            <div className="flex items-center justify-between gap-4">
-              <span className="text-gray-400">Expected NGN</span>
-              <span className="font-semibold text-[#0E0F0C]">{expectedNgnLabel}</span>
-            </div>
-            <div className="flex items-center justify-between gap-4">
-              <span className="text-gray-400">Network</span>
-              <span className="font-semibold text-[#0E0F0C]">
-                {sellDepositWallet?.network ?? "—"}
-              </span>
-            </div>
-          </div>
+        <div
+          className="rounded-xl p-3"
+          style={{ background: "white", border: "1.5px solid #E8E8E8" }}
+        >
+          <SummaryRow label="Network" value={walletNetwork || "Loading..."} />
+          {showExpectedNgnRow && (
+            <SummaryRow label="Expected NGN" value={`₦${amountToBuy!.toLocaleString()}`} />
+          )}
         </div>
       )}
 
       {/* SELL: deposit wallet + payout bank summary */}
       {!isBuy && (
         <div className="space-y-2.5">
-          <DepositWalletRow
-            wallet={sellDepositWallet}
-            selectedToken={selectedToken}
-          />
+          <div
+            className="rounded-xl p-4 relative"
+            style={{ background: "#F5F5F5", border: "1.5px solid #E8E8E8" }}
+          >
+            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">
+              Your unique {selectedToken?.symbol ?? "crypto"} deposit wallet
+              {walletNetwork ? ` (${walletNetwork})` : ""}
+            </p>
+            <p className="text-sm font-mono text-[#22c55e] break-all leading-relaxed">
+              {walletAddress || "Loading deposit address..."}
+            </p>
+            <button
+              onClick={() =>
+                walletAddress &&
+                navigator.clipboard.writeText(walletAddress)
+              }
+              className="absolute top-3 right-3 text-[10px] font-semibold px-3 py-1.5 rounded-lg cursor-pointer"
+              style={{
+                background: "white",
+                border: "1.5px solid #E8E8E8",
+                color: "#948EEE",
+              }}
+            >
+              Copy
+            </button>
+            <p className="mt-2 text-xs text-gray-500 leading-relaxed">
+              {walletNetwork
+                ? `Send only ${selectedToken?.symbol ?? "crypto"} on ${walletNetwork}.`
+                : `Waiting for the ${selectedToken?.symbol ?? "crypto"} deposit network.`}
+            </p>
+          </div>
           <PayingToRow payoutBank={payoutBank} />
         </div>
       )}
@@ -610,16 +645,36 @@ export default function DashboardTradeStep2({
   const { useTransactionStatus, manualSellDepositRecheckMutation } = useTransactionQuery();
   const { data: txData } = useTransactionStatus(transactionRef);
   const txStatus = txData?.status;
-  const sellTxWallet =
-    txData?.userCryptoWallet ?? sellDepositWallet ?? null;
   const sellTxAmountCrypto =
     txData?.amountCrypto && Number(txData.amountCrypto) > 0
       ? Number(txData.amountCrypto)
-      : numberOfToken;
+      : txData?.rateSnapshot?.expectedCryptoAmount &&
+          Number(txData.rateSnapshot.expectedCryptoAmount) > 0
+        ? Number(txData.rateSnapshot.expectedCryptoAmount)
+        : numberOfToken;
   const sellTxAmountFiat =
     txData?.amountFiatNGN && Number(txData.amountFiatNGN) > 0
       ? Number(txData.amountFiatNGN)
-      : amountToBuy;
+      : txData?.amountFiat && Number(txData.amountFiat) > 0
+        ? Number(txData.amountFiat)
+        : amountToBuy;
+  const sellNetworkLabel =
+    txData?.walletNetwork ??
+    txData?.userCryptoWallet?.network ??
+    sellDepositWallet?.network ??
+    selectedToken?.networks?.[0] ??
+    "—";
+  const sellDepositAddress =
+    txData?.depositAddress ??
+    txData?.userCryptoWallet?.walletAddress ??
+    sellDepositWallet?.walletAddress ??
+    "—";
+  const sellMonitoringWallet = txData
+    ? {
+        walletAddress: sellDepositAddress,
+        network: sellNetworkLabel,
+      }
+    : sellDepositWallet;
 
   const initiateForm = useSelector(
     (s: RootState) => s.transaction.initiate.initiateTransaction
@@ -820,7 +875,7 @@ export default function DashboardTradeStep2({
             isBuy={false}
             selectedToken={selectedToken}
             payoutBank={payoutBank}
-            sellDepositWallet={sellTxWallet}
+            sellDepositWallet={sellMonitoringWallet}
             amountToBuy={sellTxAmountFiat}
             numberOfToken={sellTxAmountCrypto}
             status={txStatus}
