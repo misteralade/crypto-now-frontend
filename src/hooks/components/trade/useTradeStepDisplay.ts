@@ -28,7 +28,7 @@ import {
 } from "../../../util/tradeProgress.storage.util.ts";
 import {type RootState, store} from "../../../store.ts";
 import {clearAnonymousUserEmail, setAnonymousUserEmail, setIsAnonymousUser} from "../../../redux/user.slice.ts";
-import { convertToMillify, formatNumber, isExchangeRateExpiryError } from "../../../util/index.util.ts";
+import { convertToMillify, isExchangeRateExpiryError } from "../../../util/index.util.ts";
 import { toast } from "react-toastify";
 import { userServiceApi } from "../../../api/user.api.ts";
 
@@ -954,7 +954,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     numberOfToken,
   ]);
 
-  // Format rate display - show NGN rate in parentheses when currency is USD
+  // Format rate display for the order summary.
   const formatRateDisplay = (): string | React.ReactNode => {
     if (loadingExchangeRate) return "Loading...";
     if (!exchangeRate) return "0";
@@ -963,10 +963,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     const currencyCode = selectedCurrency?.code;
     const usdRate = Number(exchangeRate.usdRate ?? 0);
     const fiatRate = Number(exchangeRate.fiatRate ?? 0);
-    const platformRate = Number(exchangeRate.platformRate ?? 0);
     
-    // Quote equation:
-    // NGN rate per 1 crypto = USD market rate per 1 crypto × platform rate (NGN per USD)
     let marketRate = "";
     
     if (usdRate > 0 && fiatRate > 0) {
@@ -974,19 +971,6 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     } else {
       // Show fiat rate for other currencies
       marketRate = `1 ${tokenSymbol} = ${convertToMillify(fiatRate)} ${currencyCode}`;
-    }
-    
-    // Add platform rate if available - return as ReactNode to allow wrapping on mobile
-    if (platformRate > 0) {
-      const platformCurrency = exchangeRate.currency === "USD" ? "NGN" : currencyCode;
-      const ourRate = `Quote equation: NGN rate = USD rate × platform rate = ${convertToMillify(usdRate)} USD × ${formatNumber(platformRate)} ${platformCurrency}/USD = ${convertToMillify(fiatRate)} ${platformCurrency}`;
-      
-      return React.createElement(
-        'span',
-        { className: 'flex flex-col md:flex-row md:items-center gap-1 md:justify-end md:gap-2' },
-        React.createElement('span', { className: 'text-black text-end md:text-start' }, marketRate),
-        React.createElement('span', { className: 'text-black text-end md:text-start' }, `• ${ourRate}`)
-      );
     }
     
     return marketRate;

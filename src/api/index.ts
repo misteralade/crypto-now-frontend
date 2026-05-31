@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios, { type AxiosRequestHeaders } from "axios";
+import * as Sentry from "@sentry/react";
 import {BASIC} from "../config/index.config.ts";
 import {LOCAL_STORAGE_KEYS, ROUTES} from "../util/constants.util.ts";
 import type {BaseApiResponse} from "../types/response.payload.types.ts";
@@ -12,12 +13,23 @@ export const API_KIT = axios.create({
 
 API_KIT.interceptors.request.use(async (config) => {
   const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+  const traceData =
+    typeof Sentry.getTraceData === "function" ? Sentry.getTraceData() : undefined;
+
   if (token) {
     config.headers = {
       ...config.headers,
       Authorization: `Bearer ${token}`,
     } as AxiosRequestHeaders;
   }
+
+  if (traceData) {
+    config.headers = {
+      ...config.headers,
+      ...traceData,
+    } as AxiosRequestHeaders;
+  }
+
   return config;
 });
 

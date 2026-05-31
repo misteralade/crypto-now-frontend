@@ -81,37 +81,15 @@ const TransactionDetailsPage = () => {
 
     if (safeUsdRate > 0 && finalFiatRate > 0) {
       return (
-        <span className="flex flex-col gap-1 leading-relaxed">
-          <span>
-            1 {symbol} = ${convertToMillify(safeUsdRate, 2)} USD (
-            ₦{convertToMillify(finalFiatRate, 2)} NGN)
-          </span>
-          <span className="text-[11px] text-gray-500">
-            Quote equation: NGN rate = USD rate × platform rate = $
-            {convertToMillify(safeUsdRate, 2)} × ₦
-            {formatNumber(snapshotPlatformRate)}
-            /USD = ₦{convertToMillify(finalFiatRate, 2)}
-          </span>
+        <span>
+          1 {symbol} = ${convertToMillify(safeUsdRate, 2)} USD (
+          ₦{convertToMillify(finalFiatRate, 2)} NGN)
         </span>
       );
     }
 
     if (finalFiatRate > 0) {
-      return (
-        <span className="flex flex-col gap-1 leading-relaxed">
-          <span>
-            1 {symbol} = ₦{convertToMillify(finalFiatRate, 2)} NGN
-          </span>
-          {snapshotUsdRate > 0 && snapshotPlatformRate > 0 && (
-            <span className="text-[11px] text-gray-500">
-              Quote equation: NGN rate = USD rate × platform rate = $
-              {convertToMillify(snapshotUsdRate, 2)} × ₦
-              {formatNumber(snapshotPlatformRate)}
-              /USD = ₦{convertToMillify(finalFiatRate, 2)}
-            </span>
-          )}
-        </span>
-      );
+      return <span>1 {symbol} = ₦{convertToMillify(finalFiatRate, 2)} NGN</span>;
     }
 
     return currency === "USD"
@@ -397,47 +375,6 @@ const TransactionDetailsPage = () => {
                     </p>
                   )}
                 </div>
-
-                {/* ── Confirmation Progress ── */}
-                {(transaction.status === "DEPOSIT_DETECTED" ||
-                  transaction.status === "DEPOSIT_PENDING_MINIMUM") &&
-                  transaction.requiredConfirmations &&
-                  transaction.requiredConfirmations > 0 && (
-                    <div className="mt-4">
-                      <div className="flex items-center justify-between mb-1.5">
-                        <p
-                          className="text-[10px] font-bold tracking-widest uppercase"
-                          style={{ color: "#9A9A9A" }}
-                        >
-                          Network Confirmations
-                        </p>
-                        <p
-                          className="text-xs font-bold"
-                          style={{ color: "#A07000" }}
-                        >
-                          {transaction.confirmationCount || 0} /{" "}
-                          {transaction.requiredConfirmations}
-                        </p>
-                      </div>
-                      <div
-                        className="w-full h-1.5 rounded-full overflow-hidden"
-                        style={{ background: "#EEEEEE" }}
-                      >
-                        <div
-                          className="h-full transition-all duration-500"
-                          style={{
-                            width: `${Math.min(
-                              100,
-                              ((transaction.confirmationCount || 0) /
-                                transaction.requiredConfirmations) *
-                                100
-                            )}%`,
-                            background: "#FFE4A0",
-                          }}
-                        />
-                      </div>
-                    </div>
-                  )}
 
                 {/* ── Payout Failure Alert & Action ── */}
                 {transaction.status === "PAYOUT_FAILED" && (
