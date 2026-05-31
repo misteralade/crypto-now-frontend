@@ -194,61 +194,11 @@ function PayingToRow({ payoutBank }: { payoutBank: UserBankAccountResponse | und
   );
 }
 
-function DepositWalletRow({
-  wallet,
-  selectedToken,
-}: {
-  wallet?: WalletSummary | null;
-  selectedToken?: SupportedCryptoOrCurrencyResponse;
-}) {
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = () => {
-    if (!wallet?.walletAddress) return;
-    navigator.clipboard.writeText(wallet.walletAddress).then(() => {
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2000);
-    });
-  };
-
-  if (!wallet) return null;
-
-  return (
-    <div className="rounded-2xl border border-[#ECECEC] bg-[#F9FAFB] px-4 py-4">
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
-            Your unique {selectedToken?.symbol ?? "crypto"} deposit wallet
-          </p>
-          <p className="mt-1 text-xs font-semibold text-[#A07000]">
-            {wallet.network}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={handleCopy}
-          className="shrink-0 rounded-xl border border-[#E8E8E8] bg-white px-3 py-1.5 text-[10px] font-bold"
-          style={{ color: "#948EEE" }}
-        >
-          {copied ? "Copied" : "Copy"}
-        </button>
-      </div>
-      <p className="break-all font-mono text-sm leading-relaxed text-[#0E0F0C]">
-        {wallet.walletAddress}
-      </p>
-      <p className="mt-2 text-xs text-gray-500">
-        Send only {selectedToken?.symbol ?? "crypto"} on {wallet.network}.
-      </p>
-    </div>
-  );
-}
-
 function TradeMonitoringView({
   selectedToken,
   payoutBank,
   sellDepositWallet,
   amountToBuy,
-  numberOfToken,
   status,
   isBuy,
   onManualRecheck,
@@ -258,7 +208,6 @@ function TradeMonitoringView({
   payoutBank?: UserBankAccountResponse;
   sellDepositWallet?: WalletSummary | null;
   amountToBuy?: number;
-  numberOfToken?: number;
   status?: string;
   isBuy?: boolean;
   onManualRecheck?: () => void;
@@ -645,13 +594,6 @@ export default function DashboardTradeStep2({
   const { useTransactionStatus, manualSellDepositRecheckMutation } = useTransactionQuery();
   const { data: txData } = useTransactionStatus(transactionRef);
   const txStatus = txData?.status;
-  const sellTxAmountCrypto =
-    txData?.amountCrypto && Number(txData.amountCrypto) > 0
-      ? Number(txData.amountCrypto)
-      : txData?.rateSnapshot?.expectedCryptoAmount &&
-          Number(txData.rateSnapshot.expectedCryptoAmount) > 0
-        ? Number(txData.rateSnapshot.expectedCryptoAmount)
-        : numberOfToken;
   const sellTxAmountFiat =
     txData?.amountFiatNGN && Number(txData.amountFiatNGN) > 0
       ? Number(txData.amountFiatNGN)
@@ -877,7 +819,6 @@ export default function DashboardTradeStep2({
             payoutBank={payoutBank}
             sellDepositWallet={sellMonitoringWallet}
             amountToBuy={sellTxAmountFiat}
-            numberOfToken={sellTxAmountCrypto}
             status={txStatus}
             onManualRecheck={
               transactionRef

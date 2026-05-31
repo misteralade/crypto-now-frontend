@@ -217,7 +217,6 @@ export const useTransactionQuery = () => {
       toast.dismiss(QUERY_KEYS.TRANSACTION.INITIATE_TRANSACTION);
       console.info("[trade] initiated transaction", {
         sessionId: data?.sessionId,
-        status: data?.status ?? "unknown",
       });
       sessionStorage.setItem(SESSION_STORAGE_KEYS.SESSION_ID, data?.sessionId as string);
       toast.success(message);
@@ -483,7 +482,6 @@ export const useTransactionQuery = () => {
       toast.dismiss(QUERY_KEYS.TRANSACTION.CREATE_AND_SUBMIT_TRANSACTION);
       console.info("[trade] submitted transaction", {
         sessionId: data?.sessionId,
-        status: data?.status ?? "unknown",
       });
       sessionStorage.setItem(SESSION_STORAGE_KEYS.SESSION_ID, data?.sessionId as string);
       toast.success(message);
