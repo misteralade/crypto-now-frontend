@@ -229,6 +229,34 @@ test.describe("Landing Page Guest Checkout", () => {
     await expect(page.getByText(/Your unique/i)).toBeVisible();
     await expect(page.getByText(/Send & forget/i)).toBeVisible();
     await expect(page.getByText(/Payout Bank/i)).toBeVisible();
+    await expect(page.getByRole("button", { name: /I've Sent Already/i })).toBeVisible();
+
+    await page.getByRole("button", { name: /I've Sent Already/i }).click();
+
+    const recheckDialog = page.getByRole("dialog", {
+      name: /Confirm manual deposit check/i,
+    });
+    await expect(recheckDialog).toBeVisible({ timeout: 10000 });
+    await expect(
+      recheckDialog.getByText(
+        /We will read the live wallet balance and compare it against the cached wallet state/i,
+      ),
+    ).toBeVisible();
+
+    const manualRecheckResponse = page.waitForResponse((response) => {
+      return (
+        response.request().method() === "POST" &&
+        response.url().includes(
+          "/transaction/manual-recheck-sell-deposit/anonymous/",
+        )
+      );
+    });
+
+    await recheckDialog.getByRole("button", { name: /Yes, check now/i }).click();
+
+    const response = await manualRecheckResponse;
+    expect(response.ok(), "manual recheck request should succeed").toBeTruthy();
+    await expect(recheckDialog).toBeHidden({ timeout: 15000 });
   });
 
   test("keeps the guest sell checkout state after refresh", async ({ page }) => {
