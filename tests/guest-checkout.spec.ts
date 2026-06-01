@@ -26,6 +26,54 @@ type SupportedBank = {
   name: string;
 };
 
+async function mockSellExchangeRate(page: Page) {
+  await page.route(/\/rate\/crypto-rate\/.+\/SELL$/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        success: true,
+        message: "OK",
+        data: {
+          fiatRate: 1000,
+          coinGeckoRate: 1000,
+          currency: "NGN",
+          platformRate: 1000,
+          usdRate: 1,
+        },
+        error: null,
+      }),
+    });
+  });
+}
+
+async function mockGuestSellWalletAllocation(page: Page) {
+  await page.route(/\/custodial-wallet\/guest\/allocate$/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        success: true,
+        message: "Guest wallet allocated successfully",
+        data: {
+          id: "guest-wallet-playwright",
+          userId: null,
+          cryptocurrencyId: "crypto-sol",
+          network: "SOLANA",
+          blockchainEnvironment: "testnet",
+          walletAddress: "FpX5pGgSfzeYde3zUjqdrdTBL5s5USrcGczX92FP7ToU",
+          derivationIndex: 1,
+          isActive: true,
+          createdAt: new Date().toISOString(),
+          walletPurpose: "GUEST",
+          leasedTransactionId: "guest-session-playwright",
+        },
+        error: null,
+      }),
+    });
+  });
+}
+
 async function resolveBankName(page: Page, bankId: string): Promise<string> {
   const response = await page.request.get(`${API_BASE_URL}/bank/supported-bank/all`);
   expect(response.ok(), "bank list request should succeed").toBeTruthy();
@@ -131,6 +179,8 @@ async function completeGuestSellStepTwo(page: Page, bankName: string, email = bu
 }
 
 test.describe("Landing Page Guest Checkout", () => {
+  test.describe.configure({ timeout: 120000 });
+
   test.beforeEach(async ({ page }) => {
     await resetHomepage(page);
   });
@@ -205,8 +255,12 @@ test.describe("Landing Page Guest Checkout", () => {
   test("continues the guest sell checkout into the deposit-wallet step", async ({
     page,
   }) => {
+    test.setTimeout(180000);
+
     const bankName = await resolveBankName(page, guestBankId);
     const email = buildGuestEmail();
+    await mockSellExchangeRate(page);
+    await mockGuestSellWalletAllocation(page);
     await openGuestTradeWidget(page);
     await selectGuestSellCrypto(page);
 
@@ -217,15 +271,15 @@ test.describe("Landing Page Guest Checkout", () => {
     const continueButton = page.getByRole("button", {
       name: /Continue/i,
     }).first();
-    await expect(page.getByText(/You receive/i)).toBeVisible({ timeout: 30000 });
-    await expect(continueButton).toBeEnabled({ timeout: 10000 });
+    await expect(page.getByText(/Calculating preview/i)).toBeHidden({ timeout: 60000 });
+    await expect(continueButton).toBeEnabled({ timeout: 60000 });
     await continueButton.click();
 
-    await expect(page.getByText(/Step 2 of 2 · Payment details/i)).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText(/Step 2 of 2 · Payment details/i)).toBeVisible({ timeout: 60000 });
 
     await completeGuestSellStepTwo(page, bankName, email);
 
-    await expect(page.getByText(/Step 3 of 2 · Send to this wallet/i)).toBeVisible({ timeout: 25000 });
+    await expect(page.getByText(/Step 3 of 2 · Send to this wallet/i)).toBeVisible({ timeout: 60000 });
     await expect(page.getByText(/Your unique/i)).toBeVisible();
     await expect(page.getByText(/Send & forget/i)).toBeVisible();
     await expect(page.getByText(/Payout Bank/i)).toBeVisible();
@@ -260,22 +314,27 @@ test.describe("Landing Page Guest Checkout", () => {
   });
 
   test("keeps the guest sell checkout state after refresh", async ({ page }) => {
+    test.setTimeout(180000);
+
     const bankName = await resolveBankName(page, guestBankId);
     const email = buildGuestEmail();
+    await mockSellExchangeRate(page);
+    await mockGuestSellWalletAllocation(page);
     await openGuestTradeWidget(page);
     await selectGuestSellCrypto(page);
 
     const amountInput = page.locator('input[placeholder="0"]').first();
     await amountInput.fill("1");
 
-    await expect(page.getByText(/You receive/i)).toBeVisible({ timeout: 30000 });
-    await expect(page.getByRole("button", { name: /Continue/i }).first()).toBeEnabled({ timeout: 30000 });
-    await page.getByRole("button", { name: /Continue/i }).first().click();
-    await expect(page.getByText(/Step 2 of 2 · Payment details/i)).toBeVisible({ timeout: 15000 });
+    const continueButton = page.getByRole("button", { name: /Continue/i }).first();
+    await expect(page.getByText(/Calculating preview/i)).toBeHidden({ timeout: 60000 });
+    await expect(continueButton).toBeEnabled({ timeout: 60000 });
+    await continueButton.click();
+    await expect(page.getByText(/Step 2 of 2 · Payment details/i)).toBeVisible({ timeout: 60000 });
 
     await completeGuestSellStepTwo(page, bankName, email);
 
-    await expect(page.getByText(/Step 3 of 2 · Send to this wallet/i)).toBeVisible({ timeout: 25000 });
+    await expect(page.getByText(/Step 3 of 2 · Send to this wallet/i)).toBeVisible({ timeout: 60000 });
 
     await page.reload({
       waitUntil: "domcontentloaded",

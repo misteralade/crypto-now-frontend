@@ -36,6 +36,9 @@ import { extractErrorMessage, isExchangeRateExpiryError } from "../../../util/in
 import { emailValidation } from "../../../util/constants.regex.util.ts";
 
 const GUEST_QUOTE_CACHE_TTL_MS = 60_000;
+const GUEST_RATE_FETCH_TIMEOUT_MS = 12_000;
+const GUEST_RATE_FETCH_TIMEOUT_MESSAGE =
+  "Rate preview is taking longer than expected. Please try again.";
 
 type QuoteCacheEntry = {
   data: SupportedExchangeRateResponse;
@@ -47,6 +50,28 @@ const buildGuestQuoteCacheKey = (
   currencyId: string,
   action: "BUY" | "SELL",
 ) => `${cryptoId}:${currencyId}:${action}`;
+
+const withTimeout = async <T,>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  timeoutMessage: string,
+) => {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  const timeoutPromise = new Promise<T>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new Error(timeoutMessage));
+    }, timeoutMs);
+  });
+
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+};
+
+const isTimeoutError = (error: unknown, timeoutMessage: string) =>
+  error instanceof Error && error.message === timeoutMessage;
 
 const ALL_NETWORKS = [
   { id: "TRC20", label: "TRC20 (Tron)" },
@@ -404,7 +429,8 @@ const AppSimCard = () => {
   );
   const [usdToNgnRate, setUsdToNgnRate] = useState<number | null>(null);
   const [usdRateLoading, setUsdRateLoading] = useState(false);
-  const [activeSellPreset, setActiveSellPreset] = useState<number | null>(null);
+  const [activeSellPreset, setActiveSellPreset] = useState<number | "custom" | null>(null);
+  const [customSellAmount, setCustomSellAmount] = useState("");
   const guestTransactionStatusPollRef =
     useRef<ReturnType<typeof setInterval> | null>(null);
   const [guestTransactionStatus, setGuestTransactionStatus] =
@@ -580,6 +606,10 @@ const AppSimCard = () => {
     value,
     label: formatChip(value, sellReceiveCurrency),
   }));
+  const customSellChipItem = {
+    value: "custom" as const,
+    label: "Custom",
+  };
   const formatCryptoAmountForDisplay = (value: string) => {
     if (!value) return "";
     if (!value.includes(".")) return value;
@@ -650,10 +680,10 @@ const AppSimCard = () => {
     if (cachedQuote) return { data: cachedQuote, fromCache: true };
 
     try {
-      const { data, success } = await exchangeRateServiceApi.getExchangeRate(
-        cryptoId,
-        currencyId,
-        action,
+      const { data, success } = await withTimeout(
+        exchangeRateServiceApi.getExchangeRate(cryptoId, currencyId, action),
+        GUEST_RATE_FETCH_TIMEOUT_MS,
+        GUEST_RATE_FETCH_TIMEOUT_MESSAGE,
       );
       if (success && data?.fiatRate > 0) {
         setCachedQuote(cryptoId, currencyId, action, data);
@@ -662,7 +692,12 @@ const AppSimCard = () => {
       }
       return { data: null, fromCache: false };
     } catch (error) {
-      if (!forceRefresh && cachedQuote && isRateLimitedError(error)) {
+      if (
+        !forceRefresh &&
+        cachedQuote &&
+        (isRateLimitedError(error) ||
+          isTimeoutError(error, GUEST_RATE_FETCH_TIMEOUT_MESSAGE))
+      ) {
         rateLimitNoticeShownRef.current = true;
         return { data: cachedQuote, fromCache: true };
       }
@@ -756,6 +791,9 @@ const AppSimCard = () => {
       }
     } catch (error) {
       console.error("AppSimCard: failed to compute trade preview", error);
+      if (isTimeoutError(error, GUEST_RATE_FETCH_TIMEOUT_MESSAGE)) {
+        toast.error(GUEST_RATE_FETCH_TIMEOUT_MESSAGE);
+      }
       if (requestId === quoteRequestIdRef.current) {
         setReceiveAmount("");
       }
@@ -990,7 +1028,10 @@ const AppSimCard = () => {
     }
   };
 
-  const handleSellChipClick = async (targetFiatAmount: number) => {
+  const applySellFiatAmount = async (
+    targetFiatAmount: number,
+    preset: number | "custom",
+  ) => {
     if (!selectedCrypto || !quoteCurrencyObj?.id) return;
 
     let resolvedUsdToNgnRate = usdToNgnRate;
@@ -1018,8 +1059,43 @@ const AppSimCard = () => {
     skipNextAutoQuoteRef.current = true;
     setAmount(roundedCryptoAmount);
     setReceiveAmount(computedReceiveAmount);
-    setActiveSellPreset(targetFiatAmount);
+    setActiveSellPreset(preset);
   };
+
+  const handleSellChipClick = async (targetFiatAmount: number) => {
+    setCustomSellAmount("");
+    await applySellFiatAmount(targetFiatAmount, targetFiatAmount);
+  };
+
+  const handleCustomSellAmountChange = (value: string) => {
+    setActiveSellPreset("custom");
+    setCustomSellAmount(value);
+    setGuestError(null);
+  };
+
+  useEffect(() => {
+    if (activeSellPreset !== "custom") return;
+
+    const trimmedValue = customSellAmount.trim();
+    if (!trimmedValue) {
+      setAmount("");
+      setReceiveAmount("");
+      return;
+    }
+
+    const targetValue = Number(trimmedValue);
+    if (!targetValue || Number.isNaN(targetValue)) {
+      setAmount("");
+      setReceiveAmount("");
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      void applySellFiatAmount(targetValue, "custom");
+    }, 300);
+
+    return () => window.clearTimeout(timer);
+  }, [activeSellPreset, customSellAmount, sellReceiveCurrency, selectedCrypto, quoteCurrencyObj?.id, usdToNgnRate]);
 
   const handleStep1Next = async () => {
     if (!selectedCrypto || !quoteCurrencyObj?.id || !amount) return;
@@ -1345,13 +1421,14 @@ const AppSimCard = () => {
                     key={item.id}
                     item={item}
                     selected={item.id === selectedCrypto}
-                    onSelect={() => {
-                      setSelectedCrypto(item.id);
-                      setReceiveAmount("");
-                      setGuestError(null);
-                      setActiveSellPreset(null);
-                      setNetwork(getDefaultNetworkForCrypto(item));
-                    }}
+                        onSelect={() => {
+                          setSelectedCrypto(item.id);
+                          setReceiveAmount("");
+                          setGuestError(null);
+                          setActiveSellPreset(null);
+                          setCustomSellAmount("");
+                          setNetwork(getDefaultNetworkForCrypto(item));
+                        }}
                   />
                   ))}
                 </div>
@@ -1395,6 +1472,7 @@ const AppSimCard = () => {
                             setReceiveAmount("");
                             setGuestError(null);
                             setActiveSellPreset(null);
+                            setCustomSellAmount("");
                           }
                         }}
                             className="px-2.5 py-1 text-[10px] font-bold cursor-pointer transition-colors"
@@ -1437,19 +1515,6 @@ const AppSimCard = () => {
                     className="flex-1 bg-transparent outline-none text-2xl font-bold text-[#0E0F0C] placeholder:text-gray-200"
                   />
                 </div>
-                {selectedCrypto && anonymousMinimumCryptoAmount > 0 && (
-                  <div className="px-4 pb-2 -mt-1">
-                    <span className="text-xs text-gray-400">
-                      Anonymous minimum:{" "}
-                      <span className="font-semibold text-[#0E0F0C]">
-                        {formatCryptoAmountForDisplay(
-                          anonymousMinimumCryptoAmount.toFixed(8),
-                        )}{" "}
-                        {cryptoSymbol}
-                      </span>
-                    </span>
-                  </div>
-                )}
                 {/* BUY: NGN equivalent preview when typing in USD */}
                 {isBuy && buyInputCurrency === "USD" && amount && (
                   <div className="px-4 pb-2 -mt-1">
@@ -1491,10 +1556,10 @@ const AppSimCard = () => {
                   </div>
                 )}
                 {/* Quick chips */}
-                <div className="flex border-t border-gray-100">
+                <div className={`grid border-t border-gray-100 ${isBuy ? "grid-cols-4" : "grid-cols-5"}`}>
                   {(isBuy
                     ? buyChips.map((chip) => ({ value: chip, label: formatChip(chip, buyInputCurrency) }))
-                    : sellChipItems
+                    : [...sellChipItems, customSellChipItem]
                   ).map((chip) => {
                     const isActive = isBuy
                       ? amount === String(chip.value)
@@ -1506,6 +1571,14 @@ const AppSimCard = () => {
                           if (isBuy) {
                             setAmount(String(chip.value));
                             setReceiveAmount("");
+                            return;
+                          }
+                          if (chip.value === "custom") {
+                            setActiveSellPreset("custom");
+                            setAmount("");
+                            setReceiveAmount("");
+                            setCustomSellAmount("");
+                            setGuestError(null);
                             return;
                           }
                           void handleSellChipClick(chip.value);
@@ -1524,6 +1597,38 @@ const AppSimCard = () => {
                     );
                   })}
                 </div>
+                {!isBuy && activeSellPreset === "custom" && (
+                  <div className="px-4 pb-4 pt-3">
+                    <div className="mx-auto w-full max-w-[220px]">
+                      <label
+                        className="block text-[10px] font-semibold uppercase tracking-widest text-center mb-2 text-gray-400"
+                        htmlFor="custom-sell-amount"
+                      >
+                        Enter custom {sellReceiveCurrency}
+                      </label>
+                      <div
+                        className="flex items-center gap-2 rounded-xl px-3 py-2"
+                        style={{
+                          background: "#FFFFFF",
+                          border: "1.5px solid #E8E8E8",
+                        }}
+                      >
+                        <span className="text-sm font-bold text-gray-300 shrink-0">
+                          {sellReceiveCurrency === "USD" ? "$" : "₦"}
+                        </span>
+                        <input
+                          id="custom-sell-amount"
+                          type="text"
+                          inputMode="decimal"
+                          value={customSellAmount}
+                          onChange={(e) => handleCustomSellAmountChange(e.target.value)}
+                          placeholder="0"
+                          className="flex-1 bg-transparent outline-none text-sm font-semibold text-[#0E0F0C] placeholder:text-gray-200 text-center"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Rate / receive preview */}
@@ -1550,14 +1655,7 @@ const AppSimCard = () => {
                   !amount ||
                   !selectedCrypto ||
                   !quoteCurrencyObj?.id ||
-                  quoteLoading ||
-                  (anonymousMinimumCryptoAmount > 0 &&
-                    ((isBuy
-                      ? Number(receiveAmount)
-                      : Number(amount)) < anonymousMinimumCryptoAmount ||
-                      Number.isNaN(
-                        isBuy ? Number(receiveAmount) : Number(amount),
-                      )))
+                  quoteLoading
                 }
                 className="w-full py-3.5 rounded-xl font-bold text-sm text-white border-none transition-opacity disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 style={{ background: isBuy ? "#948EEE" : "#22c55e" }}
