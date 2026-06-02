@@ -14,6 +14,17 @@ export interface SweepPreviewData {
   targetAdminWallet: { id: string; address: string };
   totalWallets: number;
   estimatedAmount: number;
+  liveBalanceAmount: number;
+  estimatedSweepableAmount: number;
+  estimatedFeeAmount: number;
+  feeAssetSymbol: string;
+  feeHandling: "deducted_from_swept_asset" | "paid_from_source_native_balance";
+  walletsSweepable: number;
+  walletsBlockedByFee: number;
+  walletsSkippedBelowThreshold: number;
+  filteredToSpecific: boolean;
+  oldestRefreshedAt: string | null;
+  neverRefreshedCount: number;
 }
 
 export interface SweepWalletResult {
@@ -58,6 +69,13 @@ export interface SweepHistoryData {
 export interface InitiateSweepParams {
   cryptocurrencyId: string;
   network: string;
+  options?: {
+    dustThresholdOverride?: number;
+    targetWalletAddresses?: string[];
+    note?: string;
+    autoFuel?: boolean;
+    maxTotalAmount?: number;
+  };
 }
 
 export interface SweepHistoryParams {
