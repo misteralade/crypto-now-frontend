@@ -512,6 +512,9 @@ const AppSimCard = () => {
   const anonymousMinimumCryptoAmount = Number(
     cryptoObj?.minTradeAmountForAnonymous || 0,
   );
+  const anonymousMaximumCryptoAmount = Number(
+    cryptoObj?.maxTradeAmountForAnonymous || 0,
+  );
 
   // Init defaults once loaded (only if not already restored from localStorage)
   useEffect(() => {
@@ -1113,6 +1116,25 @@ const AppSimCard = () => {
           anonymousMinimumCryptoAmount.toFixed(8),
         )} ${cryptoSymbol}`;
         const errorMessage = `Anonymous trades must be at least ${minimumLabel}.`;
+        setGuestError(errorMessage);
+        toast.error(errorMessage);
+        return;
+      }
+    }
+
+    if (anonymousMaximumCryptoAmount > 0) {
+      const submittedCryptoAmount = isBuy
+        ? Number(receiveAmount)
+        : Number(amount);
+      if (
+        !submittedCryptoAmount ||
+        Number.isNaN(submittedCryptoAmount) ||
+        submittedCryptoAmount > anonymousMaximumCryptoAmount
+      ) {
+        const maximumLabel = `${formatCryptoAmountForDisplay(
+          anonymousMaximumCryptoAmount.toFixed(8),
+        )} ${cryptoSymbol}`;
+        const errorMessage = `Anonymous trades must not exceed ${maximumLabel}.`;
         setGuestError(errorMessage);
         toast.error(errorMessage);
         return;

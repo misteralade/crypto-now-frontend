@@ -1,6 +1,5 @@
 import { Link } from "@tanstack/react-router";
 import { type ReactNode } from "react";
-import { motion } from "framer-motion";
 
 type ButtonVariant = "button" | "link";
 
@@ -27,8 +26,6 @@ interface LinkProps extends BaseProps {
 
 type CustomButtonProps = ButtonProps | LinkProps;
 
-const MotionLink = motion.create(Link);
-
 const CustomButton = (props: CustomButtonProps) => {
   const { children, className = "", variant = "button", buttonText } = props;
 
@@ -48,15 +45,13 @@ const CustomButton = (props: CustomButtonProps) => {
   if (variant === "link") {
     const linkProps = props as LinkProps;
     return (
-      <MotionLink
+      <Link
         to={linkProps.to}
         className={finalClassName}
         onClick={linkProps.onClick}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
       >
         {children ? children : buttonText}
-      </MotionLink>
+      </Link>
     );
   }
 
@@ -64,17 +59,14 @@ const CustomButton = (props: CustomButtonProps) => {
   const buttonProps = props as ButtonProps;
 
   return (
-    <motion.button
+    <button
       className={finalClassName}
       onClick={buttonProps.onClick}
       type={buttonProps.type || "button"}
       disabled={buttonProps.disabled}
-      whileHover={{ scale: 1.01, boxShadow: "0 10px 15px -3px rgba(3, 3, 77, 0.2)" }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ type: "spring", stiffness: 400, damping: 17 }}
     >
       {children ? children : buttonText}
-    </motion.button>
+    </button>
   );
 };
 
