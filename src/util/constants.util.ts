@@ -69,21 +69,9 @@ export const transactionStatusMessages: Record<string, { title: string, message:
     title: 'Transaction Initiated',
     message: 'Your transaction has been initiated. Please proceed to make the payment using the provided details.'
   },
-  PENDING: {
-    title: 'Payment Pending',
-    message: 'Your transaction is pending. We are waiting to receive your payment.'
-  },
   AWAITING_PAYMENT: {
     title: 'Payment Account Confirmed',
     message: 'Your transaction is pending admin confirmation. You\'ll receive an email notification once it\'s been verified.'
-  },
-  PAYMENT_RECEIVED: {
-    title: 'Payment Received',
-    message: 'We have received your payment. It is currently under verification.'
-  },
-  PAYMENT_CONFIRMED: {
-    title: 'Payment Confirmed',
-    message: 'Your payment has been confirmed. We are now processing your transaction.'
   },
   PROCESSING: {
     title: 'Processing Transaction',
@@ -92,18 +80,6 @@ export const transactionStatusMessages: Record<string, { title: string, message:
   AWAITING_CRYPTO: {
     title: 'Awaiting Crypto Transfer',
     message: 'We are awaiting the cryptocurrency transfer to complete your transaction.'
-  },
-  CRYPTO_SENT: {
-    title: 'Crypto Sent',
-    message: 'The cryptocurrency has been sent. We are waiting for it to be received and confirmed.'
-  },
-  CRYPTO_RECEIVED: {
-    title: 'Crypto Received',
-    message: 'The cryptocurrency has been received. It is currently under confirmation.'
-  },
-  CRYPTO_CONFIRMED: {
-    title: 'Crypto Confirmed',
-    message: 'The cryptocurrency transfer has been confirmed. Your transaction is now complete.'
   },
   COMPLETED: {
     title: 'Transaction Completed',
@@ -123,15 +99,11 @@ export const transactionStatusMessages: Record<string, { title: string, message:
   },
   DISPUTED: {
     title: 'Transaction Disputed',
-    message: 'Your transaction is currently under dispute. Our support team will review the case and get back to you shortly.'
-  },
-  REFUNDING: {
-    title: 'Refund In Process',
-    message: 'Your refund is being processed. This may take a few business days to reflect in your account.'
+    message: 'Your transaction is currently under dispute. Our support team will review the case and the reason will be shown with the transaction details.'
   },
   REFUNDED: {
     title: 'Refund Completed',
-    message: 'Your refund has been successfully processed. Please check your account for the refunded amount.'
+    message: 'Your refund has been processed successfully and the funds have been returned to your original payment method.'
   },
   DEPOSIT_DETECTED: {
     title: 'Deposit Detected',
@@ -166,33 +138,12 @@ export const transactionStatusStyles: Record<
     textColor: 'text-orange-600',
     message: `Your transaction has been initiated. Please proceed to make the payment using the provided details.`
   },
-  PENDING: {
-    text: 'Pending',
-    bg: 'bg-orange-50',
-    dot: 'bg-orange-400',
-    textColor: 'text-orange-600',
-    message: `Your transaction is pending. We are waiting to receive your payment.`
-  },
   AWAITING_PAYMENT: {
     text: 'Pending',
     bg: 'bg-yellow-50',
     dot: 'bg-yellow-400',
     textColor: 'text-yellow-600',
     message: `We are awaiting your payment. Please ensure to complete the payment within the stipulated time.`
-  },
-  PAYMENT_RECEIVED: {
-    text: 'Pending',
-    bg: 'bg-blue-50',
-    dot: 'bg-blue-400',
-    textColor: 'text-blue-600',
-    message: `We have received your payment. It is currently under verification.`
-  },
-  PAYMENT_CONFIRMED: {
-    text: 'Pending',
-    bg: 'bg-blue-50',
-    dot: 'bg-blue-400',
-    textColor: 'text-blue-600',
-    message: `Your payment has been confirmed. We are now processing your transaction.`
   },
   PROCESSING: {
     text: 'Pending',
@@ -207,27 +158,6 @@ export const transactionStatusStyles: Record<
     dot: 'bg-blue-400',
     textColor: 'text-blue-600',
     message: `We are awaiting the cryptocurrency transfer to complete your transaction.`
-  },
-  CRYPTO_SENT: {
-    text: 'Pending',
-    bg: 'bg-blue-50',
-    dot: 'bg-blue-400',
-    textColor: 'text-blue-600',
-    message: `The cryptocurrency has been sent. We are waiting for it to be received and confirmed.`
-  },
-  CRYPTO_RECEIVED: {
-    text: 'Pending',
-    bg: 'bg-blue-50',
-    dot: 'bg-blue-400',
-    textColor: 'text-blue-600',
-    message: `The cryptocurrency has been received. It is currently under confirmation.`
-  },
-  CRYPTO_CONFIRMED: {
-    text: 'Pending',
-    bg: 'bg-blue-50',
-    dot: 'bg-blue-400',
-    textColor: 'text-blue-600',
-    message: `The cryptocurrency transfer has been confirmed. Your transaction is now complete.`
   },
   DEPOSIT_DETECTED: {
     text: 'Pending',
@@ -299,20 +229,14 @@ export const transactionStatusStyles: Record<
     textColor: 'text-red-600',
     message: `Your transaction is currently under dispute. Our support team will review the case and get back to you shortly.`
   },
-  REFUNDING: {
-    text: 'Pending',
-    bg: 'bg-yellow-50',
-    dot: 'bg-yellow-400',
-    textColor: 'text-yellow-600',
-    message: `Your refund is being processed. This may take a few business days to reflect in your account.`
-  },
   REFUNDED: {
-    text: 'Completed',
-    bg: 'bg-green-50',
-    dot: 'bg-green-400',
-    textColor: 'text-green-600',
-    message: `Your refund has been successfully processed. Please check your account for the refunded amount.`
+    text: 'Refunded',
+    bg: 'bg-emerald-50',
+    dot: 'bg-emerald-500',
+    textColor: 'text-emerald-600',
+    message: `Your refund has been processed successfully and the funds have been returned to your original payment method.`
   },
+  
 }
 
 export const ATTACHMENT_TYPE = {

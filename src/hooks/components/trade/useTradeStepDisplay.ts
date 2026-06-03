@@ -575,7 +575,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     // Ongoing public transactions always resume on step 2, where the UI now
     // decides between action form vs live monitoring based on current status.
     const status = transaction.status;
-    if (['INITIATED', 'PENDING', 'AWAITING_PAYMENT', 'PAYMENT_RECEIVED', 'PAYMENT_CONFIRMED', 'PROCESSING', 'AWAITING_CRYPTO', 'CRYPTO_SENT', 'CRYPTO_RECEIVED', 'CRYPTO_CONFIRMED'].includes(status)) {
+    if (['INITIATED', 'AWAITING_PAYMENT', 'PROCESSING', 'AWAITING_CRYPTO'].includes(status)) {
       setStep(2);
       saveTradeProgress({ step: 2 });
       

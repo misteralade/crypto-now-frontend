@@ -8,7 +8,7 @@ import type {BaseApiResponse} from "../types/response.payload.types.ts";
 export const API_KIT = axios.create({
   baseURL: BASIC.API_BASE_URL,
   // timeout: 20000,
-  // withCredentials: true,
+  withCredentials: true,
 });
 
 API_KIT.interceptors.request.use(async (config) => {

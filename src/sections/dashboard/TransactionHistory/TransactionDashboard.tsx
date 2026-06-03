@@ -27,7 +27,6 @@ const STATUS_TABS: { label: string; value: TabValue }[] = [
   { label: "All", value: {} },
   { label: "Buys", value: { type: "BUY" } },
   { label: "Sells", value: { type: "SELL" } },
-  { label: "Pending", value: { status: "PENDING" } },
   { label: "Completed", value: { status: "COMPLETED" } },
   { label: "Failed", value: { status: "FAILED" } },
 ];

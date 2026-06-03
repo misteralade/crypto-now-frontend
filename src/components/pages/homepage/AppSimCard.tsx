@@ -329,6 +329,57 @@ const SRow = ({
   </div>
 );
 
+const CopyableSRow = ({
+  label,
+  value,
+  green,
+}: {
+  label: string;
+  value: string;
+  green?: boolean;
+}) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setCopied(false);
+    }
+  };
+
+  return (
+    <div className="flex justify-between items-center gap-3 text-sm py-0.5">
+      <span className="text-gray-400">{label}</span>
+      <div className="flex items-center gap-2 min-w-0">
+        <span
+          className={`font-semibold whitespace-nowrap ${
+            green ? "text-[#22c55e]" : "text-[#0E0F0C]"
+          }`}
+        >
+          {value}
+        </span>
+        <button
+          type="button"
+          onClick={handleCopy}
+          className="shrink-0 text-[10px] font-semibold px-2.5 py-1 rounded-lg cursor-pointer"
+          style={{
+            background: "white",
+            border: "1.5px solid #E8E8E8",
+            color: copied ? "#22c55e" : "#948EEE",
+          }}
+          aria-label={`Copy ${label.toLowerCase()}`}
+          title={`Copy ${label.toLowerCase()}`}
+        >
+          {copied ? "Copied" : "Copy"}
+        </button>
+      </div>
+    </div>
+  );
+};
+
 // ── Floating-label input ──────────────────────────────────────────────────────
 const FloatInput = ({
   label,
@@ -2221,7 +2272,7 @@ const AppSimCard = () => {
                 className="rounded-xl p-3"
                 style={{ background: "white", border: "1.5px solid #E8E8E8" }}
               >
-                <SRow label="Amount to Send" value={`${amount} ${cryptoSymbol}`} />
+                <CopyableSRow label="Amount to Send" value={`${amount} ${cryptoSymbol}`} />
                 <SRow label="Asset" value={cryptoSymbol} />
                 <SRow label="Network" value={networkLabel} />
               </div>
@@ -2290,6 +2341,16 @@ const AppSimCard = () => {
                 <SRow label="Account" value={accountNumber} />
                 {guestTransactionStatus?.status && (
                   <SRow label="Status" value={guestTransactionStatus.status} />
+                )}
+                {guestTransactionStatus?.failureReason && (
+                  <div className="mt-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2">
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-rose-500">
+                      Reason
+                    </p>
+                    <p className="mt-1 text-sm font-medium leading-relaxed text-rose-900">
+                      {guestTransactionStatus.failureReason}
+                    </p>
+                  </div>
                 )}
                 {receiveAmount && (
                   <SRow

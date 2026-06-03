@@ -26,7 +26,7 @@ export function TransactionFilters({ onClose, filters, onFiltersChange, supporte
     onClose()
   }
 
-  const statusOptions = ['PENDING', 'COMPLETED', 'FAILED'];
+  const statusOptions = ['AWAITING_PAYMENT', 'AWAITING_CRYPTO', 'DEPOSIT_DETECTED', 'DEPOSIT_PENDING_MINIMUM', 'DEPOSIT_CONFIRMED', 'PAYOUT_INITIATED', 'PENDING_PAYOUT', 'PAYOUT_FAILED', 'COMPLETED', 'FAILED', 'CANCELLED', 'EXPIRED', 'DISPUTED', 'REFUNDED'];
 
   return (
     <div

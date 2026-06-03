@@ -239,15 +239,13 @@ function TradeMonitoringView({
       switch (i) {
         case 0: return "done"; // Receipt submitted
         case 1: // Admin Verifying
-          if (status === "PAYMENT_RECEIVED") return "active";
-          if (status === "CRYPTO_SENT" || status === "COMPLETED") return "done";
+          if (status === "COMPLETED" || status === "REFUNDED") return "done";
           return "active"; // Default active after submission
         case 2: // Releasing
-          if (status === "CRYPTO_SENT") return "active";
-          if (status === "COMPLETED") return "done";
+          if (status === "COMPLETED" || status === "REFUNDED") return "done";
           return "pending";
         case 3: // Completed
-          if (status === "COMPLETED") return "done";
+          if (status === "COMPLETED" || status === "REFUNDED") return "done";
           return "pending";
         default: return "pending";
       }
@@ -255,7 +253,7 @@ function TradeMonitoringView({
       switch (i) {
         case 0: return "done"; // Monitoring active
         case 1: // Detection
-          if (status === "INITIATED" || status === "PENDING" || !status) return "active";
+          if (status === "INITIATED" || !status) return "active";
           return "done";
         case 2: // Conversion
           if (status === "DEPOSIT_DETECTED") return "active";

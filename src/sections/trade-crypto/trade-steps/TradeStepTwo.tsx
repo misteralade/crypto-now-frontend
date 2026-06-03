@@ -34,17 +34,13 @@ type StatusMeta = {
 
 const BUY_MONITORING_STATUSES: TransactionStatus[] = [
   "AWAITING_PAYMENT",
-  "PAYMENT_RECEIVED",
-  "PAYMENT_CONFIRMED",
   "PROCESSING",
-  "CRYPTO_SENT",
-  "CRYPTO_RECEIVED",
-  "CRYPTO_CONFIRMED",
   "COMPLETED",
   "FAILED",
   "EXPIRED",
   "CANCELLED",
   "DISPUTED",
+  "REFUNDED",
 ];
 
 const SELL_MONITORING_STATUSES: TransactionStatus[] = [
@@ -69,41 +65,11 @@ const STATUS_META: Partial<Record<TransactionStatus, StatusMeta>> = {
     emoji: "⏳",
     note: "We are waiting for the payment receipt to be submitted.",
   },
-  PAYMENT_RECEIVED: {
-    label: "Payment Received",
-    tone: "info",
-    emoji: "📥",
-    note: "Your receipt has landed. We are verifying it now.",
-  },
-  PAYMENT_CONFIRMED: {
-    label: "Payment Confirmed",
-    tone: "success",
-    emoji: "✅",
-    note: "The payment is confirmed and crypto is being released.",
-  },
   PROCESSING: {
     label: "Processing",
     tone: "info",
     emoji: "🔄",
     note: "The transaction is being processed right now.",
-  },
-  CRYPTO_SENT: {
-    label: "Crypto Sent",
-    tone: "success",
-    emoji: "🚀",
-    note: "Crypto has been released and is on the way.",
-  },
-  CRYPTO_RECEIVED: {
-    label: "Crypto Received",
-    tone: "success",
-    emoji: "✅",
-    note: "Your wallet has received the crypto.",
-  },
-  CRYPTO_CONFIRMED: {
-    label: "Crypto Confirmed",
-    tone: "success",
-    emoji: "✅",
-    note: "Blockchain confirmation is complete.",
   },
   AWAITING_CRYPTO: {
     label: "Waiting for Deposit",
@@ -152,6 +118,12 @@ const STATUS_META: Partial<Record<TransactionStatus, StatusMeta>> = {
     tone: "success",
     emoji: "✅",
     note: "The transaction has been completed successfully.",
+  },
+  REFUNDED: {
+    label: "Refunded",
+    tone: "success",
+    emoji: "↩️",
+    note: "The payment was reversed and returned to the user.",
   },
   FAILED: {
     label: "Failed",
@@ -238,7 +210,7 @@ function getStatusMeta(status?: string, tradeType?: TradeType): StatusMeta {
 }
 
 function isActiveStatus(status?: string): boolean {
-  return !!status && !["COMPLETED", "FAILED", "EXPIRED", "CANCELLED", "DISPUTED"].includes(status);
+  return !!status && !["COMPLETED", "REFUNDED", "FAILED", "EXPIRED", "CANCELLED", "DISPUTED"].includes(status);
 }
 
 function TradeStatusMonitoring({
@@ -266,30 +238,24 @@ function TradeStatusMonitoring({
         {
           label: "Admin Verifying Payment",
           status:
-            status === "PAYMENT_CONFIRMED" ||
-            status === "CRYPTO_SENT" ||
-            status === "CRYPTO_RECEIVED" ||
-            status === "CRYPTO_CONFIRMED" ||
-            status === "COMPLETED"
+            status === "PROCESSING" ||
+            status === "COMPLETED" ||
+            status === "REFUNDED"
               ? "done"
               : "active",
         },
         {
           label: "Releasing Crypto to Wallet",
           status:
-            status === "PAYMENT_CONFIRMED" ||
-            status === "CRYPTO_SENT" ||
-            status === "CRYPTO_RECEIVED" ||
-            status === "CRYPTO_CONFIRMED" ||
-            status === "PENDING_PAYOUT"
+            status === "PROCESSING"
               ? "active"
-              : status === "COMPLETED"
+              : status === "COMPLETED" || status === "REFUNDED"
                 ? "done"
                 : "pending",
         },
         {
           label: "Transaction Completed",
-          status: status === "COMPLETED" ? "done" : "pending",
+          status: status === "COMPLETED" || status === "REFUNDED" ? "done" : "pending",
         },
       ]
     : [
@@ -335,6 +301,8 @@ function TradeStatusMonitoring({
   const title = isBuy
     ? status === "COMPLETED"
       ? "Transaction Completed"
+      : status === "REFUNDED"
+        ? "Transaction Refunded"
       : status === "DISPUTED"
         ? "Transaction Disputed"
         : "Verifying Payment"
@@ -345,8 +313,10 @@ function TradeStatusMonitoring({
         : "Monitoring Wallet";
 
   const subtitle = isBuy
-    ? status === "PAYMENT_CONFIRMED"
-      ? "Payment confirmed. Releasing crypto."
+    ? status === "PROCESSING"
+      ? "Payment verified. Releasing crypto."
+      : status === "REFUNDED"
+        ? "Your payment was refunded."
       : status === "DISPUTED"
         ? "This transaction has been flagged for review."
         : "Checking your payment status."
@@ -365,6 +335,8 @@ function TradeStatusMonitoring({
   const summary = isBuy
     ? status === "COMPLETED"
       ? `Your payment was verified and ${selectedToken?.symbol ?? "crypto"} has been released.`
+      : status === "REFUNDED"
+        ? "Your payment was refunded and the transaction has been closed."
       : status === "DISPUTED"
         ? "Your transaction is currently under dispute. Our support team is reviewing the case."
         : "Your payment receipt has been submitted. We are polling for updates and will continue automatically."

@@ -45,28 +45,21 @@ const FAILED_CONFIG = {
 // All statuses map to Pending / Completed / Failed — the backend owns the label
 const statusConfig: Record<string, typeof PENDING_CONFIG> = {
   INITIATED: { ...PENDING_CONFIG, displayName: "Pending" },
-  PENDING: { ...PENDING_CONFIG, displayName: "Pending" },
   AWAITING_PAYMENT: { ...PENDING_CONFIG, displayName: "Pending" },
-  PAYMENT_RECEIVED: { ...PENDING_CONFIG, displayName: "Pending" },
-  PAYMENT_CONFIRMED: { ...PENDING_CONFIG, displayName: "Pending" },
   PROCESSING: { ...PENDING_CONFIG, displayName: "Pending" },
   AWAITING_CRYPTO: { ...PENDING_CONFIG, displayName: "Pending" },
-  CRYPTO_SENT: { ...PENDING_CONFIG, displayName: "Pending" },
-  CRYPTO_RECEIVED: { ...PENDING_CONFIG, displayName: "Pending" },
-  CRYPTO_CONFIRMED: { ...PENDING_CONFIG, displayName: "Pending" },
   DEPOSIT_DETECTED: { ...PENDING_CONFIG, displayName: "Pending" },
   DEPOSIT_PENDING_MINIMUM: { ...PENDING_CONFIG, displayName: "Pending" },
   DEPOSIT_CONFIRMED: { ...PENDING_CONFIG, displayName: "Pending" },
   PAYOUT_INITIATED: { ...PENDING_CONFIG, displayName: "Pending" },
-  REFUNDING: { ...PENDING_CONFIG, displayName: "Pending" },
 
   COMPLETED: { ...COMPLETED_CONFIG, displayName: "Completed" },
-  REFUNDED: { ...COMPLETED_CONFIG, displayName: "Completed" },
 
   FAILED: { ...FAILED_CONFIG, displayName: "Failed" },
   EXPIRED: { ...FAILED_CONFIG, displayName: "Failed" },
   CANCELLED: { ...FAILED_CONFIG, displayName: "Failed" },
   DISPUTED: { ...FAILED_CONFIG, displayName: "Disputed" },
+  REFUNDED: { ...COMPLETED_CONFIG, displayName: "Refunded" },
   PAYOUT_FAILED: { ...FAILED_CONFIG, displayName: "Failed" },
 };
 

@@ -14,10 +14,11 @@ const guestEmail = credentials.guest?.email?.trim();
 const guestWalletAddress = credentials.guest?.walletAddress?.trim();
 const guestBankId = credentials.guest?.bankAccount?.bankId?.trim();
 const guestBankAccountNumber = credentials.guest?.bankAccount?.accountNumber?.trim();
+const guestBankName = credentials.guest?.bankAccount?.bankName?.trim();
 
-if (!guestEmail || !guestWalletAddress || !guestBankId || !guestBankAccountNumber) {
+if (!guestEmail || !guestWalletAddress || !guestBankId || !guestBankAccountNumber || !guestBankName) {
   throw new Error(
-    "Missing guest credentials in .agents/agent-credentials.json. Required: guest.email, guest.walletAddress, guest.bankAccount.bankId, guest.bankAccount.accountNumber.",
+    "Missing guest credentials in .agents/agent-credentials.json. Required: guest.email, guest.walletAddress, guest.bankAccount.bankId, guest.bankAccount.accountNumber, guest.bankAccount.bankName.",
   );
 }
 
@@ -47,6 +48,53 @@ async function mockSellExchangeRate(page: Page) {
   });
 }
 
+async function mockGuestSupportedCryptos(page: Page) {
+  await page.route(/\/crypto\/supported-cryptos$/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        success: true,
+        message: "Supported cryptos loaded",
+        data: [
+          {
+            id: "crypto-sol",
+            code: "SOL",
+            symbol: "Solana",
+            name: "Solana",
+            logoUrl: "",
+            minTradeAmountForAnonymous: 1,
+            maxTradeAmountForAnonymous: 1000000,
+          },
+        ],
+        error: null,
+      }),
+    });
+  });
+}
+
+async function mockGuestSupportedCurrencies(page: Page) {
+  await page.route(/\/currency\/supported-currency$/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        success: true,
+        message: "Supported currencies loaded",
+        data: [
+          {
+            id: "currency-ngn",
+            code: "NGN",
+            symbol: "₦",
+            name: "Nigerian Naira",
+          },
+        ],
+        error: null,
+      }),
+    });
+  });
+}
+
 async function mockGuestSellWalletAllocation(page: Page) {
   await page.route(/\/custodial-wallet\/guest\/allocate$/, async (route) => {
     await route.fulfill({
@@ -69,6 +117,75 @@ async function mockGuestSellWalletAllocation(page: Page) {
           leasedTransactionId: "guest-session-playwright",
         },
         error: null,
+      }),
+    });
+  });
+}
+
+async function mockGuestBankLookup(page: Page) {
+  await page.route(/\/bank\/bank\/lookup$/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        success: true,
+        message: "Account verified",
+        data: {
+          accountName: "Guest Test Account",
+        },
+        error: null,
+      }),
+    });
+  });
+}
+
+async function mockGuestAnonymousBankAccountCreation(page: Page) {
+  await page.route(/\/bank\/anonymous-user\/create$/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        success: true,
+        message: "Bank account created",
+        data: {
+          id: "guest-bank-account-playwright",
+        },
+        error: null,
+      }),
+    });
+  });
+}
+
+async function mockGuestAnonymousTransactionInitiation(page: Page) {
+  await page.route(/\/transaction\/initiate\/anonymous$/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        success: true,
+        message: "Transaction initiated",
+        data: {
+          sessionId: "guest-session-playwright",
+        },
+        error: null,
+      }),
+    });
+  });
+}
+
+async function mockGuestSellWalletLimitExceeded(page: Page) {
+  await page.route(/\/custodial-wallet\/guest\/allocate$/, async (route) => {
+    await route.fulfill({
+      status: 429,
+      contentType: "application/json",
+      body: JSON.stringify({
+        success: false,
+        message:
+          "You already have 2 active guest sell wallets. Complete or close one before creating another.",
+        error: {
+          type: "guest_wallet_limit_exceeded",
+          limit: 2,
+        },
       }),
     });
   });
@@ -345,5 +462,44 @@ test.describe("Landing Page Guest Checkout", () => {
     await expect(page.getByText(/Step 3 of 2 · Send to this wallet/i)).toBeVisible({ timeout: 20000 });
     await expect(page.getByText(/Your unique/i)).toBeVisible();
     await expect(page.getByText(/Send & forget/i)).toBeVisible();
+  });
+
+  test("shows the guest wallet quota error when allocation is rate-limited", async ({
+    page,
+  }) => {
+    test.setTimeout(180000);
+
+    const bankName = guestBankName;
+    const email = buildGuestEmail();
+    const quotaMessage =
+      "You already have 2 active guest sell wallets. Complete or close one before creating another.";
+
+    await mockGuestSupportedCryptos(page);
+    await mockGuestSupportedCurrencies(page);
+    await mockSellExchangeRate(page);
+    await mockGuestBankLookup(page);
+    await mockGuestAnonymousBankAccountCreation(page);
+    await mockGuestAnonymousTransactionInitiation(page);
+    await mockGuestSellWalletLimitExceeded(page);
+    await openGuestTradeWidget(page);
+    await selectGuestSellCrypto(page);
+
+    const amountInput = page.locator('input[placeholder="0"]').first();
+    await amountInput.fill("1");
+
+    const continueButton = page.getByRole("button", { name: /Continue/i }).first();
+    await expect(page.getByText(/Calculating preview/i)).toBeHidden({ timeout: 60000 });
+    await expect(continueButton).toBeEnabled({ timeout: 60000 });
+    await continueButton.click();
+    await expect(page.getByText(/Step 2 of 2 · Payment details/i)).toBeVisible({ timeout: 60000 });
+
+    await completeGuestSellStepTwo(page, bankName, email);
+
+    await expect(page.getByText(/Step 2 of 2 · Payment details/i)).toBeVisible({ timeout: 60000 });
+    await expect(page.getByRole("alert").filter({ hasText: quotaMessage })).toBeVisible({
+      timeout: 15000,
+    });
+    await expect(page.getByText(quotaMessage)).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText(/Step 3 of 2 · Send to this wallet/i)).toBeHidden({ timeout: 15000 });
   });
 });

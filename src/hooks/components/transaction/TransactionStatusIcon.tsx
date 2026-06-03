@@ -1,15 +1,13 @@
 import {
-  AlertCircle, AlertTriangle,
+  AlertCircle,
+  AlertTriangle,
   Ban,
-  CheckCheck,
   CheckCircle,
   Clock,
   Coins,
-  Download,
-  Loader, RefreshCw,
-  Send,
+  Loader,
   Timer,
-  XCircle
+  XCircle,
 } from "lucide-react";
 import {Fragment} from "react";
 import {transactionStatusStyles} from "../../../util/constants.util.ts";
@@ -20,24 +18,13 @@ export const TransactionStatus = ({ status }: { status: string }) => {
     
     switch (status) {
       case "INITIATED":
-      case "PENDING":
         return <Clock className={`w-5 h-5 ${color}`} />;
       case "AWAITING_PAYMENT":
         return <AlertCircle className={`w-5 h-5 ${color}`} />;
-      case "PAYMENT_RECEIVED":
-        return <Download className={`w-5 h-5 ${color}`} />;
-      case "PAYMENT_CONFIRMED":
-        return <CheckCircle className={`w-5 h-5 ${color}`} />;
       case "PROCESSING":
         return <Loader className={`w-5 h-5 ${color}`} />;
       case "AWAITING_CRYPTO":
         return <Coins className={`w-5 h-5 ${color}`} />;
-      case "CRYPTO_SENT":
-        return <Send className={`w-5 h-5 ${color}`} />;
-      case "CRYPTO_RECEIVED":
-        return <Download className={`w-5 h-5 ${color}`} />;
-      case "CRYPTO_CONFIRMED":
-        return <CheckCheck className={`w-5 h-5 ${color}`} />;
       case "COMPLETED":
         return <CheckCircle className={`w-5 h-5 ${color}`} />;
       case "FAILED":
@@ -48,10 +35,20 @@ export const TransactionStatus = ({ status }: { status: string }) => {
         return <Ban className={`w-5 h-5 ${color}`} />;
       case "DISPUTED":
         return <AlertTriangle className={`w-5 h-5 ${color}`} />;
-      case "REFUNDING":
-        return <RefreshCw className={`w-5 h-5 ${color}`} />;
       case "REFUNDED":
         return <CheckCircle className={`w-5 h-5 ${color}`} />;
+      case "DEPOSIT_DETECTED":
+        return <AlertCircle className={`w-5 h-5 ${color}`} />;
+      case "DEPOSIT_PENDING_MINIMUM":
+        return <AlertCircle className={`w-5 h-5 ${color}`} />;
+      case "DEPOSIT_CONFIRMED":
+        return <CheckCircle className={`w-5 h-5 ${color}`} />;
+      case "PAYOUT_INITIATED":
+        return <CheckCircle className={`w-5 h-5 ${color}`} />;
+      case "PENDING_PAYOUT":
+        return <Clock className={`w-5 h-5 ${color}`} />;
+      case "PAYOUT_FAILED":
+        return <XCircle className={`w-5 h-5 ${color}`} />;
       default:
         return <AlertCircle className={`w-5 h-5 ${color}`} />;
     }
