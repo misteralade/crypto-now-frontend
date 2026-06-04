@@ -546,9 +546,10 @@ const AppSimCard = () => {
   const quoteRequestIdRef = useRef(0);
   const [guestManualRecheckPending, setGuestManualRecheckPending] =
     useState(false);
+  const guestTransactionBootstrapSyncRef = useRef<string | null>(null);
 
   const [depositWallet, setDepositWallet] = useState(saved.depositWallet || "");
-  const [done, setDone] = useState(saved.done || false);
+  const [done, setDone] = useState(false);
   const quoteCacheRef = useRef<Record<string, QuoteCacheEntry>>({});
   const rateLimitNoticeShownRef = useRef(false);
   const skipNextAutoQuoteRef = useRef(false);
@@ -642,7 +643,6 @@ const AppSimCard = () => {
         platformBank,
         sessionId,
         depositWallet,
-        done,
       })
     );
   }, [
@@ -662,7 +662,6 @@ const AppSimCard = () => {
     platformBank,
     sessionId,
     depositWallet,
-    done,
   ]);
 
   const buyChips =
@@ -981,6 +980,21 @@ const AppSimCard = () => {
 
   useEffect(() => {
     if (!sessionId || step !== 3 || done || isBuy) {
+      return;
+    }
+
+    if (guestTransactionBootstrapSyncRef.current === sessionId) {
+      return;
+    }
+
+    guestTransactionBootstrapSyncRef.current = sessionId;
+    void syncGuestTransactionStatus().catch((error) => {
+      console.error("AppSimCard: failed to bootstrap guest transaction status", error);
+    });
+  }, [done, isBuy, sessionId, step]);
+
+  useEffect(() => {
+    if (!sessionId || step !== 3 || done || isBuy) {
       stopGuestTransactionPolling();
       return;
     }
@@ -997,7 +1011,6 @@ const AppSimCard = () => {
       }
     };
 
-    void pollGuestTransaction();
     guestTransactionStatusPollRef.current = setInterval(
       pollGuestTransaction,
       5000,
@@ -1415,6 +1428,7 @@ const AppSimCard = () => {
     setUsdToNgnRate(null);
     setActiveSellPreset(null);
     setNetwork(getDefaultNetworkForCrypto(cryptoObj));
+    guestTransactionBootstrapSyncRef.current = null;
     localStorage.removeItem(LS_KEY);
   };
 
@@ -2426,7 +2440,43 @@ const AppSimCard = () => {
               transition={{ duration: 0.2 }}
               className="flex flex-col items-center gap-4 py-4"
             >
-              {guestTransactionFailed ? (
+              {guestTransactionDisputed ? (
+                <>
+                  <div
+                    className="w-16 h-16 rounded-full flex items-center justify-center"
+                    style={{ background: "#FEF3C7" }}
+                  >
+                    <Warning size={30} weight="fill" className="text-amber-500" />
+                  </div>
+                  <div className="text-center">
+                    <p className="font-bold text-xl text-[#0E0F0C]">
+                      Deposit disputed
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1 px-3 leading-relaxed">
+                      The amount received did not exactly match the initiated transaction amount, so the transaction is waiting on support review.
+                    </p>
+                  </div>
+                  <div
+                    className="w-full rounded-xl p-4 text-left"
+                    style={{ background: "#FFFBEB", border: "1px solid #FDE68A" }}
+                  >
+                    <p className="text-sm font-bold text-amber-700">
+                      Support review required
+                    </p>
+                    <p className="text-xs mt-1 leading-relaxed text-amber-700/90">
+                      {guestTransactionStatus?.failureReason ||
+                        "Please contact support so we can review the transaction mismatch."}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => navigate({ to: ROUTES.CONTACT })}
+                      className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-amber-500 px-3 py-2 text-xs font-bold text-white"
+                    >
+                      Contact support
+                    </button>
+                  </div>
+                </>
+              ) : guestTransactionFailed ? (
                 <>
                   <div
                     className="w-16 h-16 rounded-full flex items-center justify-center"
