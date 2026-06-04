@@ -390,6 +390,7 @@ const FloatInput = ({
   label,
   value,
   onChange,
+  onBlur,
   placeholder,
   type = "text",
   maxLength,
@@ -401,6 +402,7 @@ const FloatInput = ({
   label: string;
   value: string;
   onChange: (v: string) => void;
+  onBlur?: () => void;
   placeholder?: string;
   type?: string;
   maxLength?: number;
@@ -420,6 +422,7 @@ const FloatInput = ({
       type={type}
       value={value}
       onChange={(e) => onChange(e.target.value)}
+      onBlur={onBlur}
       placeholder={placeholder}
       maxLength={maxLength}
       inputMode={inputMode}
@@ -474,6 +477,7 @@ const AppSimCard = () => {
   );
   const [amount, setAmount] = useState(saved.amount || "");
   const [receiveAmount, setReceiveAmount] = useState(saved.receiveAmount || "");
+  const [emailTouched, setEmailTouched] = useState(false);
 
   // BUY: allow input in USD, but transact in NGN
   const [buyInputCurrency, setBuyInputCurrency] = useState<"NGN" | "USD">(
@@ -550,7 +554,9 @@ const AppSimCard = () => {
   const normalizedEmail = email.trim();
   const isEmailValid = normalizedEmail ? emailValidation.test(normalizedEmail) : false;
   const emailError =
-    normalizedEmail && !isEmailValid ? "Please enter a valid email address." : null;
+    emailTouched && normalizedEmail && !isEmailValid
+      ? "Please enter a valid email address."
+      : null;
   const showGuestManualRecheck =
     !isBuy &&
     step === 3 &&
@@ -1168,12 +1174,6 @@ const AppSimCard = () => {
         Number.isNaN(submittedCryptoAmount) ||
         submittedCryptoAmount < anonymousMinimumCryptoAmount
       ) {
-        const minimumLabel = `${formatCryptoAmountForDisplay(
-          anonymousMinimumCryptoAmount.toFixed(8),
-        )} ${cryptoSymbol}`;
-        const errorMessage = `Anonymous trades must be at least ${minimumLabel}.`;
-        setGuestError(errorMessage);
-        toast.error(errorMessage);
         return;
       }
     }
@@ -1212,6 +1212,7 @@ const AppSimCard = () => {
   const handleBuyStep2Next = async (retrying = false) => {
     const guestEmail = normalizedEmail;
     if (!guestEmail || !isEmailValid || !walletAddress || !transactionCurrencyObj?.id) {
+      setEmailTouched(true);
       setGuestError(
         !guestEmail || !isEmailValid
           ? "Please enter a valid email address."
@@ -1274,6 +1275,7 @@ const AppSimCard = () => {
   const handleSellStep2Next = async (retrying = false) => {
     const guestEmail = normalizedEmail;
     if (!guestEmail || !isEmailValid || !selectedBankId || !accountNumber || !accountName || !transactionCurrencyObj?.id) {
+      setEmailTouched(true);
       setGuestError(
         !guestEmail || !isEmailValid
           ? "Please enter a valid email address."
@@ -1827,7 +1829,11 @@ const AppSimCard = () => {
               <FloatInput
                 label="Your Email Address"
                 value={email}
-                onChange={setEmail}
+                onChange={(nextEmail) => {
+                  setEmail(nextEmail);
+                  setGuestError(null);
+                }}
+                onBlur={() => setEmailTouched(true)}
                 placeholder="you@email.com"
                 type="email"
                 error={emailError}
