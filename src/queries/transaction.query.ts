@@ -121,7 +121,7 @@ export const useTransactionQuery = () => {
       refetchInterval: (query) => {
         const status = query.state.data?.status;
         // Stop polling if completed or failed
-        if (status === "COMPLETED" || status === "FAILED" || status === "CANCELLED" || status === "EXPIRED" || status === "PAYOUT_FAILED") {
+        if (status === "COMPLETED" || status === "FAILED" || status === "CANCELLED" || status === "EXPIRED" || status === "PAYOUT_FAILED" || status === "DISPUTED") {
           return false;
         }
         return TIME_IN_MILLISECONDS.FIVE_SECONDS;

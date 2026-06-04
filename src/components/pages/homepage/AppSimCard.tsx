@@ -172,6 +172,11 @@ const GUEST_STATUS_META: Record<
     tone: "danger",
     emoji: "❌",
   },
+  DISPUTED: {
+    label: "Disputed",
+    tone: "danger",
+    emoji: "⚖️",
+  },
   COMPLETED: {
     label: "Completed",
     tone: "success",
@@ -245,19 +250,21 @@ const GUEST_SELL_RECHECK_STATUSES = new Set([
   "AWAITING_CRYPTO",
 ]);
 
+const GUEST_SELL_FAILED_STATUSES = new Set([
+  "FAILED",
+  "CANCELLED",
+  "EXPIRED",
+  "PAYOUT_FAILED",
+  "DISPUTED",
+]);
+
 const GUEST_SELL_TERMINAL_STATUSES = new Set([
   "COMPLETED",
   "FAILED",
   "CANCELLED",
   "EXPIRED",
   "PAYOUT_FAILED",
-]);
-
-const GUEST_SELL_FAILED_STATUSES = new Set([
-  "FAILED",
-  "CANCELLED",
-  "EXPIRED",
-  "PAYOUT_FAILED",
+  "DISPUTED",
 ]);
 
 // ── Crypto token button ───────────────────────────────────────────────────────
@@ -551,6 +558,7 @@ const AppSimCard = () => {
   const guestTransactionFailed =
     !!guestTransactionTerminalStatus &&
     GUEST_SELL_FAILED_STATUSES.has(guestTransactionTerminalStatus);
+  const guestTransactionDisputed = guestTransactionTerminalStatus === "DISPUTED";
   const normalizedEmail = email.trim();
   const isEmailValid = normalizedEmail ? emailValidation.test(normalizedEmail) : false;
   const emailError =
@@ -2363,6 +2371,23 @@ const AppSimCard = () => {
                     </p>
                   </div>
                 )}
+                {guestTransactionDisputed ? (
+                  <div className="mt-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2">
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-rose-500">
+                      Support required
+                    </p>
+                    <p className="mt-1 text-sm font-medium leading-relaxed text-rose-900">
+                      The amount received did not exactly match your order. Please contact support so we can review the transaction.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => navigate({ to: ROUTES.CONTACT })}
+                      className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-rose-600 px-3 py-2 text-xs font-bold text-white"
+                    >
+                      Contact support
+                    </button>
+                  </div>
+                ) : null}
                 {receiveAmount && (
                   <SRow
                     label="NGN to Credit"
