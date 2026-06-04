@@ -484,7 +484,8 @@ const AppSimCard = () => {
   );
   const [amount, setAmount] = useState(saved.amount || "");
   const [receiveAmount, setReceiveAmount] = useState(saved.receiveAmount || "");
-  const [emailTouched, setEmailTouched] = useState(false);
+  const [emailValidationError, setEmailValidationError] = useState<string | null>(null);
+  const emailValidationMessage = "Please enter a valid email address.";
 
   // BUY: allow input in USD, but transact in NGN
   const [buyInputCurrency, setBuyInputCurrency] = useState<"NGN" | "USD">(
@@ -562,10 +563,27 @@ const AppSimCard = () => {
   const guestTransactionDisputed = guestTransactionTerminalStatus === "DISPUTED";
   const normalizedEmail = email.trim();
   const isEmailValid = normalizedEmail ? emailValidation.test(normalizedEmail) : false;
-  const emailError =
-    emailTouched && normalizedEmail && !isEmailValid
-      ? "Please enter a valid email address."
-      : null;
+  const emailError = emailValidationError;
+
+  const handleEmailChange = (nextEmail: string) => {
+    setEmail(nextEmail);
+    setEmailValidationError(null);
+    setGuestError(null);
+  };
+
+  const handleEmailBlur = () => {
+    if (!normalizedEmail) {
+      setEmailValidationError(null);
+      return;
+    }
+
+    if (!isEmailValid) {
+      setEmailValidationError(emailValidationMessage);
+      return;
+    }
+
+    setEmailValidationError(null);
+  };
   const showGuestManualRecheck =
     !isBuy &&
     step === 3 &&
@@ -1233,12 +1251,11 @@ const AppSimCard = () => {
   const handleBuyStep2Next = async (retrying = false) => {
     const guestEmail = normalizedEmail;
     if (!guestEmail || !isEmailValid || !walletAddress || !transactionCurrencyObj?.id) {
-      setEmailTouched(true);
-      setGuestError(
-        !guestEmail || !isEmailValid
-          ? "Please enter a valid email address."
-          : "Please complete the required fields before continuing.",
-      );
+      const message = !guestEmail || !isEmailValid
+        ? emailValidationMessage
+        : "Please complete the required fields before continuing.";
+      setEmailValidationError(!guestEmail || !isEmailValid ? message : null);
+      setGuestError(message);
       return;
     }
     setLoading(true);
@@ -1296,12 +1313,11 @@ const AppSimCard = () => {
   const handleSellStep2Next = async (retrying = false) => {
     const guestEmail = normalizedEmail;
     if (!guestEmail || !isEmailValid || !selectedBankId || !accountNumber || !accountName || !transactionCurrencyObj?.id) {
-      setEmailTouched(true);
-      setGuestError(
-        !guestEmail || !isEmailValid
-          ? "Please enter a valid email address."
-          : "Please complete the required fields before continuing.",
-      );
+      const message = !guestEmail || !isEmailValid
+        ? emailValidationMessage
+        : "Please complete the required fields before continuing.";
+      setEmailValidationError(!guestEmail || !isEmailValid ? message : null);
+      setGuestError(message);
       return;
     }
     setLoading(true);
@@ -1405,6 +1421,7 @@ const AppSimCard = () => {
 
   const reset = () => {
     setGuestError(null);
+    setEmailValidationError(null);
     setStep(1);
     setDone(false);
     setAmount("");
@@ -1851,11 +1868,8 @@ const AppSimCard = () => {
               <FloatInput
                 label="Your Email Address"
                 value={email}
-                onChange={(nextEmail) => {
-                  setEmail(nextEmail);
-                  setGuestError(null);
-                }}
-                onBlur={() => setEmailTouched(true)}
+                onChange={handleEmailChange}
+                onBlur={handleEmailBlur}
                 placeholder="you@email.com"
                 type="email"
                 error={emailError}
@@ -2030,7 +2044,8 @@ const AppSimCard = () => {
               <FloatInput
                 label="Your Email Address"
                 value={email}
-                onChange={setEmail}
+                onChange={handleEmailChange}
+                onBlur={handleEmailBlur}
                 placeholder="you@email.com — for payout updates"
                 type="email"
                 error={emailError}
