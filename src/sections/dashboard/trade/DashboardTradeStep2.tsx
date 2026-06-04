@@ -168,7 +168,7 @@ const MONITORING_STEPS_SELL: MonitoringStep[] = [
 
 const MONITORING_STEPS_BUY: MonitoringStep[] = [
   { label: "Payment Receipt Submitted", status: "done" },
-  { label: "Admin Verifying Payment", status: "active" },
+  { label: "Payment In Review", status: "active" },
   { label: "Releasing Crypto to Wallet", status: "pending" },
   { label: "Transaction Completed", status: "pending" },
 ];
@@ -240,9 +240,11 @@ function TradeMonitoringView({
         case 0: return "done"; // Receipt submitted
         case 1: // Admin Verifying
           if (status === "COMPLETED" || status === "REFUNDED") return "done";
+          if (status === "IN_REVIEW") return "active";
           return "active"; // Default active after submission
         case 2: // Releasing
           if (status === "COMPLETED" || status === "REFUNDED") return "done";
+          if (status === "IN_REVIEW") return "pending";
           return "pending";
         case 3: // Completed
           if (status === "COMPLETED" || status === "REFUNDED") return "done";
@@ -274,7 +276,7 @@ function TradeMonitoringView({
   }));
 
   const headline = isBuy ? "Verifying Payment" : "Monitoring Wallet";
-  const subHeadline = isBuy ? "Checking your receipt…" : "Listening for Transaction…";
+  const subHeadline = isBuy ? (status === "IN_REVIEW" ? "Your payment receipt is under review." : "Checking your receipt…") : "Listening for Transaction…";
   const showManualRecheck =
     !isBuy &&
     [
@@ -321,7 +323,9 @@ function TradeMonitoringView({
           {status === "COMPLETED" ? 
             (isBuy ? `Your payment was verified and ${selectedToken?.symbol} has been sent to your wallet.` : 
                     `Your ${selectedToken?.symbol} has been sold and NGN sent to your bank.`) :
-            (isBuy ? "We're verifying your bank transfer. Crypto will be released automatically once confirmed." :
+            (isBuy ? (status === "IN_REVIEW"
+              ? "Your payment receipt has been submitted and is under review."
+              : "We're verifying your bank transfer. Crypto will be released automatically once confirmed.") :
                     `Send any amount of ${selectedToken?.symbol ?? "crypto"} to your wallet. NGN will hit your bank automatically.`)}
         </p>
       </div>

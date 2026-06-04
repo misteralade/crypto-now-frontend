@@ -73,6 +73,10 @@ export const transactionStatusMessages: Record<string, { title: string, message:
     title: 'Payment Account Confirmed',
     message: 'Your transaction is pending admin confirmation. You\'ll receive an email notification once it\'s been verified.'
   },
+  IN_REVIEW: {
+    title: 'In Review',
+    message: 'Your payment receipt has been submitted and is now being reviewed by our team.'
+  },
   PROCESSING: {
     title: 'Processing Transaction',
     message: 'Your transaction is being processed. This may take a few moments.'
@@ -144,6 +148,13 @@ export const transactionStatusStyles: Record<
     dot: 'bg-yellow-400',
     textColor: 'text-yellow-600',
     message: `We are awaiting your payment. Please ensure to complete the payment within the stipulated time.`
+  },
+  IN_REVIEW: {
+    text: 'In Review',
+    bg: 'bg-amber-50',
+    dot: 'bg-amber-500',
+    textColor: 'text-amber-700',
+    message: `Your payment receipt has been submitted and is now being reviewed by our team.`
   },
   PROCESSING: {
     text: 'Pending',

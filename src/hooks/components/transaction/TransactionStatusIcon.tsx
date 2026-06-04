@@ -21,6 +21,8 @@ export const TransactionStatus = ({ status }: { status: string }) => {
         return <Clock className={`w-5 h-5 ${color}`} />;
       case "AWAITING_PAYMENT":
         return <AlertCircle className={`w-5 h-5 ${color}`} />;
+      case "IN_REVIEW":
+        return <Clock className={`w-5 h-5 ${color}`} />;
       case "PROCESSING":
         return <Loader className={`w-5 h-5 ${color}`} />;
       case "AWAITING_CRYPTO":

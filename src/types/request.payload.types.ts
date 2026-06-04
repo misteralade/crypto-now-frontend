@@ -35,7 +35,7 @@ export type UserCreateCryptoWalletRequestPayload = {
 }
 
 // Start Transaction
-export type TransactionStatus = "INITIATED" | "AWAITING_PAYMENT" | "PROCESSING" | "AWAITING_CRYPTO" | "COMPLETED" | "FAILED" | "EXPIRED" | "CANCELLED" | "DISPUTED" | "REFUNDED" | "DEPOSIT_DETECTED" | "DEPOSIT_PENDING_MINIMUM" | "DEPOSIT_CONFIRMED" | "PAYOUT_INITIATED" | "PENDING_PAYOUT" | "PAYOUT_FAILED";
+export type TransactionStatus = "INITIATED" | "AWAITING_PAYMENT" | "IN_REVIEW" | "PROCESSING" | "AWAITING_CRYPTO" | "COMPLETED" | "FAILED" | "EXPIRED" | "CANCELLED" | "DISPUTED" | "REFUNDED" | "DEPOSIT_DETECTED" | "DEPOSIT_PENDING_MINIMUM" | "DEPOSIT_CONFIRMED" | "PAYOUT_INITIATED" | "PENDING_PAYOUT" | "PAYOUT_FAILED";
 export type TransactionPriority = "LOW" | "NORMAL" | "HIGH" | "URGENT";
 
 export type SearchTransactionsRequestPayload = {

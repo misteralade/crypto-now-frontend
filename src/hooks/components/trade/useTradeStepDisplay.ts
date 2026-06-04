@@ -575,12 +575,12 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     // Ongoing public transactions always resume on step 2, where the UI now
     // decides between action form vs live monitoring based on current status.
     const status = transaction.status;
-    if (['INITIATED', 'AWAITING_PAYMENT', 'PROCESSING', 'AWAITING_CRYPTO'].includes(status)) {
+    if (['INITIATED', 'AWAITING_PAYMENT', 'IN_REVIEW', 'AWAITING_CRYPTO'].includes(status)) {
       setStep(2);
       saveTradeProgress({ step: 2 });
       
       // Only sell transactions in AWAITING_CRYPTO still need the payout-bank
-      // confirmation modal on resume. Buy transactions at AWAITING_PAYMENT are
+      // confirmation modal on resume. Buy transactions at AWAITING_PAYMENT or IN_REVIEW are
       // already submitted and should go straight into monitoring.
       if (transaction.type === 'SELL' && status === 'AWAITING_CRYPTO') {
         saveTradeProgress({ shouldOpenBankDetailsModal: true });
@@ -1200,7 +1200,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
 
       if (activeTab === "buy") {
         // BUY: no API call here — just advance to step 2 with amounts synced.
-        // Transaction is created at AWAITING_PAYMENT when receipt is submitted.
+        // Transaction is created at IN_REVIEW when receipt is submitted.
         const tokenAmount = Number(numberOfToken || 0);
         const receiveAmount = Number(amountToBuy || 0);
         dispatch(setInitiateTransactionField({ field: "amountToSend", value: receiveAmount }));
@@ -1244,8 +1244,8 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
 
   const makePaymentTransaction = async () => {
     if (activeTab === "buy") {
-      // BUY: create transaction at AWAITING_PAYMENT in one shot
-      try {
+        // BUY: create transaction at IN_REVIEW in one shot
+        try {
         const res = await createAndSubmitTransactionMutation.mutateAsync();
         setIsCountdownLocked(true);
         if (countdownIntervalRef.current) {

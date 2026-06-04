@@ -46,6 +46,7 @@ const FAILED_CONFIG = {
 const statusConfig: Record<string, typeof PENDING_CONFIG> = {
   INITIATED: { ...PENDING_CONFIG, displayName: "Pending" },
   AWAITING_PAYMENT: { ...PENDING_CONFIG, displayName: "Pending" },
+  IN_REVIEW: { ...PENDING_CONFIG, displayName: "In Review" },
   PROCESSING: { ...PENDING_CONFIG, displayName: "Pending" },
   AWAITING_CRYPTO: { ...PENDING_CONFIG, displayName: "Pending" },
   DEPOSIT_DETECTED: { ...PENDING_CONFIG, displayName: "Pending" },

@@ -157,6 +157,11 @@ const GUEST_STATUS_META: Record<
     tone: "info",
     emoji: "🔄",
   },
+  IN_REVIEW: {
+    label: "In Review",
+    tone: "warning",
+    emoji: "📝",
+  },
   PENDING_PAYOUT: {
     label: "Pending Payout",
     tone: "warning",
