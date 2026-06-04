@@ -5,7 +5,15 @@ import {
   type TradeProgress,
 } from "../../util/tradeProgress.storage.util.ts";
 import { motion } from "framer-motion";
-import { Bell, ArrowUpRight, ChevronRight, Copy, Check } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowUpRight,
+  Bell,
+  Check,
+  ChevronRight,
+  Copy,
+  ExternalLink,
+} from "lucide-react";
 import { useDashboardContent } from "../../hooks/components/dashboard/useDashboardContent.ts";
 import { useCryptoQuery } from "../../queries/crypto.query.ts";
 import { useUserQuery } from "../../queries/user.query.ts";
@@ -75,7 +83,8 @@ function RecentOrderRow({ tx }: { tx: TransactionResponseEntity }) {
   const isFailed =
     tx.status === "FAILED" ||
     tx.status === "EXPIRED" ||
-    tx.status === "CANCELLED";
+    tx.status === "CANCELLED" ||
+    tx.status === "DISPUTED";
 
   const badgeStyle = isCompleted
     ? { background: "#E8F8F0", color: "#037847" }
@@ -252,6 +261,10 @@ export default function DashboardContent() {
     : "0";
 
   const recentOrders = userTransactionHistory?.transactions?.slice(0, 5) ?? [];
+  const disputedOrder =
+    userTransactionHistory?.transactions?.find(
+      (tx) => tx.status === "DISPUTED",
+    ) ?? null;
 
   const cryptoMap = new Map(
     (supportedCryptoCurrencies ?? []).map((c) => [c.id, c]),
@@ -291,6 +304,18 @@ export default function DashboardContent() {
     navigate({
       to: ROUTES.DASHBOARD_TRADE,
       search: { option: pendingTrade.activeTab, resume: true } as any,
+    });
+  };
+
+  const handleContactSupport = () => {
+    navigate({ to: ROUTES.CONTACT });
+  };
+
+  const handleViewDisputedOrder = () => {
+    if (!disputedOrder) return;
+    navigate({
+      to: ROUTES.TRANSACTION_DETAILS,
+      params: { id: disputedOrder.sessionId },
     });
   };
 
@@ -367,6 +392,67 @@ export default function DashboardContent() {
           facilitate the exchange.
         </p>
       </div>
+
+      {disputedOrder ? (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+          className="mx-5 mb-6 rounded-3xl p-4 sm:p-5"
+          style={{
+            background: "linear-gradient(135deg, #FFF1F1 0%, #FFE8E8 100%)",
+            border: "1px solid #F3BABA",
+            boxShadow: "0 8px 28px rgba(235, 87, 87, 0.08)",
+          }}
+        >
+          <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+            <div
+              className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0"
+              style={{ background: "#EB5757" }}
+            >
+              <AlertTriangle size={18} className="text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p
+                className="text-[10px] font-bold tracking-[0.14em] uppercase mb-1"
+                style={{ color: "#B24444" }}
+              >
+                Action required
+              </p>
+              <p
+                className="text-sm font-semibold leading-relaxed"
+                style={{ color: "#0E0F0C" }}
+              >
+                One of your transactions was marked as disputed because the
+                received amount did not match the amount in the order.
+                Please contact support so the team can review it.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={handleContactSupport}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl text-xs font-bold"
+                  style={{ background: "#EB5757", color: "#FFFFFF" }}
+                >
+                  Contact support <ExternalLink size={11} />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleViewDisputedOrder}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl text-xs font-bold"
+                  style={{
+                    background: "#FFFFFF",
+                    color: "#EB5757",
+                    border: "1px solid #F3BABA",
+                  }}
+                >
+                  View transaction
+                </button>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      ) : null}
 
       {/* ═══════════════════════════════════════════
           HERO PURPLE CARD — floating with side margin
