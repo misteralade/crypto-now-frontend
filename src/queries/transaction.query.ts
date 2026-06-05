@@ -14,6 +14,7 @@ import type {MessageAttachment} from "../types/transaction.types.ts";
 import {extractErrorMessage, isExchangeRateExpiryError} from "../util/index.util.ts";
 import { useSelector } from "react-redux";
 import { setInitiateTransactionField } from "../redux/transaction.slice.ts";
+import { useTransactionLiveStatus } from "../hooks/components/trade/useTransactionLiveStatus.ts";
 
 export const useTransactionQuery = () => {
   const queryClient = useQueryClient();
@@ -107,26 +108,9 @@ export const useTransactionQuery = () => {
     enabled: !!store.getState().transaction.details.sessionId && !!matchRoute({ to: ROUTES.TRANSACTION_DETAILS }),
   });
 
-  // Poll transaction status
+  // Live transaction status stream with SSE fallback to polling
   const useTransactionStatus = (sessionId?: string) => {
-    return useQuery({
-      queryKey: [QUERY_KEYS.TRANSACTION.USER_TRANSACTION_DETAILS, sessionId, "status"],
-      queryFn: async () => {
-        if (!sessionId) return null;
-        const { data, success } = await transactionServiceApi.getTransactionDetails(sessionId);
-        if (success) return data;
-        return null;
-      },
-      enabled: !!sessionId,
-      refetchInterval: (query) => {
-        const status = query.state.data?.status;
-        // Stop polling if completed or failed
-        if (status === "COMPLETED" || status === "FAILED" || status === "CANCELLED" || status === "EXPIRED" || status === "PAYOUT_FAILED" || status === "DISPUTED") {
-          return false;
-        }
-        return TIME_IN_MILLISECONDS.FIVE_SECONDS;
-      },
-    });
+    return useTransactionLiveStatus(sessionId);
   };
   
   // Get Dispute Messages

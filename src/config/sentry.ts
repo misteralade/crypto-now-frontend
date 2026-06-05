@@ -34,9 +34,11 @@ export function initializeSentry(): boolean {
     environment: BASIC.SENTRY_ENVIRONMENT,
     tracesSampleRate: clampRate(BASIC.SENTRY_TRACES_SAMPLE_RATE),
     profilesSampleRate: clampRate(BASIC.SENTRY_PROFILES_SAMPLE_RATE),
+    replaysSessionSampleRate: clampRate(BASIC.SENTRY_REPLAYS_SESSION_SAMPLE_RATE),
+    replaysOnErrorSampleRate: clampRate(BASIC.SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE),
     debug: false,
     sendDefaultPii: true,
-    integrations: [Sentry.browserTracingIntegration()],
+    integrations: [Sentry.browserTracingIntegration(), Sentry.replayIntegration()],
     tracePropagationTargets: getTracePropagationTargets(),
   });
 

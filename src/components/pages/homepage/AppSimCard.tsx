@@ -23,7 +23,6 @@ import type {
   SupportedCryptoOrCurrencyResponse,
   TransactionResponseEntity,
 } from "../../../types/response.payload.types.ts";
-import type { TransactionStatus } from "../../../types/request.payload.types.ts";
 import { ROUTES } from "../../../util/constants.util.ts";
 import { useNavigate } from "@tanstack/react-router";
 import BankSelector from "../../global/BankSelector.tsx";
@@ -34,6 +33,7 @@ import {
 import type { SupportedExchangeRateResponse } from "../../../types/response.payload.types.ts";
 import { extractErrorMessage, isExchangeRateExpiryError } from "../../../util/index.util.ts";
 import { emailValidation } from "../../../util/constants.regex.util.ts";
+import { useTransactionLiveStatus } from "../../../hooks/components/trade/useTransactionLiveStatus.ts";
 
 const GUEST_QUOTE_CACHE_TTL_MS = 60_000;
 const GUEST_RATE_FETCH_TIMEOUT_MS = 12_000;
@@ -499,8 +499,6 @@ const AppSimCard = () => {
   const [usdRateLoading, setUsdRateLoading] = useState(false);
   const [activeSellPreset, setActiveSellPreset] = useState<number | "custom" | null>(null);
   const [customSellAmount, setCustomSellAmount] = useState("");
-  const guestTransactionStatusPollRef =
-    useRef<ReturnType<typeof setInterval> | null>(null);
   const [guestTransactionStatus, setGuestTransactionStatus] =
     useState<TransactionResponseEntity | null>(null);
   const [guestError, setGuestError] = useState<string | null>(null);
@@ -511,12 +509,6 @@ const AppSimCard = () => {
   const [network, setNetwork] = useState(saved.network || "");
   const [showNetworkPicker, setShowNetworkPicker] = useState(false);
   const networkPickerRef = useRef<HTMLDivElement>(null);
-  const stopGuestTransactionPolling = () => {
-    if (guestTransactionStatusPollRef.current) {
-      clearInterval(guestTransactionStatusPollRef.current);
-      guestTransactionStatusPollRef.current = null;
-    }
-  };
 
   useEffect(() => {
     if (!showNetworkPicker) return;
@@ -547,7 +539,6 @@ const AppSimCard = () => {
   const quoteRequestIdRef = useRef(0);
   const [guestManualRecheckPending, setGuestManualRecheckPending] =
     useState(false);
-  const guestTransactionBootstrapSyncRef = useRef<string | null>(null);
 
   const [depositWallet, setDepositWallet] = useState(saved.depositWallet || "");
   const [done, setDone] = useState(false);
@@ -555,6 +546,9 @@ const AppSimCard = () => {
   const rateLimitNoticeShownRef = useRef(false);
   const skipNextAutoQuoteRef = useRef(false);
   const isBuy = tab === "BUY";
+  const guestTransactionLiveQuery = useTransactionLiveStatus(sessionId, {
+    enabled: !isBuy && step === 3 && !done,
+  });
   const guestTransactionTerminalStatus = guestTransactionStatus?.status ?? null;
   const guestPayoutFailed = guestTransactionTerminalStatus === "PAYOUT_FAILED";
   const guestTransactionFailed =
@@ -593,6 +587,20 @@ const AppSimCard = () => {
     ((guestTransactionStatus?.status &&
       GUEST_SELL_RECHECK_STATUSES.has(guestTransactionStatus.status)) ||
       !guestTransactionStatus?.status);
+
+  useEffect(() => {
+    if (!guestTransactionLiveQuery.data) {
+      return;
+    }
+
+    setGuestTransactionStatus(guestTransactionLiveQuery.data);
+
+    if (
+      GUEST_SELL_TERMINAL_STATUSES.has(guestTransactionLiveQuery.data.status)
+    ) {
+      setDone(true);
+    }
+  }, [guestTransactionLiveQuery.data]);
 
   const cryptoObj = supportedCryptoCurrencies?.find(
     (c) => c.id === selectedCrypto
@@ -996,68 +1004,6 @@ const AppSimCard = () => {
     usdToNgnRate,
   ]);
 
-  useEffect(() => {
-    if (!sessionId || step !== 3 || done || isBuy) {
-      return;
-    }
-
-    if (guestTransactionBootstrapSyncRef.current === sessionId) {
-      return;
-    }
-
-    guestTransactionBootstrapSyncRef.current = sessionId;
-    void syncGuestTransactionStatus().catch((error) => {
-      console.error("AppSimCard: failed to bootstrap guest transaction status", error);
-    });
-  }, [done, isBuy, sessionId, step]);
-
-  useEffect(() => {
-    if (!sessionId || step !== 3 || done || isBuy) {
-      stopGuestTransactionPolling();
-      return;
-    }
-
-    const pollGuestTransaction = async () => {
-      try {
-        const transaction = await syncGuestTransactionStatus();
-        if (transaction && GUEST_SELL_TERMINAL_STATUSES.has(transaction.status)) {
-          stopGuestTransactionPolling();
-          setDone(true);
-        }
-      } catch (error) {
-        console.error("AppSimCard: failed to poll guest transaction status", error);
-      }
-    };
-
-    guestTransactionStatusPollRef.current = setInterval(
-      pollGuestTransaction,
-      5000,
-    );
-
-    return () => stopGuestTransactionPolling();
-  }, [done, isBuy, sessionId, step]);
-
-  const syncGuestTransactionStatus = async () => {
-    if (!sessionId) return null;
-
-    const { data, success } = await transactionServiceApi.getTransactionDetails(
-      sessionId,
-    );
-    if (!success || !data) return null;
-
-    const transaction = data as TransactionResponseEntity | null;
-    if (!transaction) return null;
-
-    setGuestTransactionStatus(transaction);
-
-    if (GUEST_SELL_TERMINAL_STATUSES.has(transaction.status)) {
-      stopGuestTransactionPolling();
-      setDone(true);
-    }
-
-    return transaction;
-  };
-
   const handleGuestManualRecheck = async () => {
     if (!sessionId) return;
 
@@ -1098,22 +1044,12 @@ const AppSimCard = () => {
         outcome: data?.outcome ?? "unknown",
       });
 
-      if (data?.status) {
-        setGuestTransactionStatus((current) => {
-          if (!current) {
-            return current;
-          }
-
-          return {
-            ...current,
-            status: data.status as TransactionStatus,
-          };
-        });
-
-        if (GUEST_SELL_TERMINAL_STATUSES.has(data.status)) {
-          stopGuestTransactionPolling();
-          setDone(true);
-        }
+      const refreshed = await guestTransactionLiveQuery.refetch();
+      if (
+        refreshed.data &&
+        GUEST_SELL_TERMINAL_STATUSES.has(refreshed.data.status)
+      ) {
+        setDone(true);
       }
     } catch (error) {
       toast.dismiss(toastId);
@@ -1439,13 +1375,11 @@ const AppSimCard = () => {
     setSessionId("");
     setGuestTransactionStatus(null);
     setGuestManualRecheckPending(false);
-    stopGuestTransactionPolling();
     setBuyInputCurrency("NGN");
     setSellReceiveCurrency("NGN");
     setUsdToNgnRate(null);
     setActiveSellPreset(null);
     setNetwork(getDefaultNetworkForCrypto(cryptoObj));
-    guestTransactionBootstrapSyncRef.current = null;
     localStorage.removeItem(LS_KEY);
   };
 
