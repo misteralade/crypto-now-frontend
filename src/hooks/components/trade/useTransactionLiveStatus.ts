@@ -149,7 +149,7 @@ export const useTransactionLiveStatus = (
       });
     };
 
-    eventSource.onmessage = (event) => {
+    const handleStatusEvent = (event: MessageEvent<string>) => {
       if (!event.data) {
         return;
       }
@@ -193,6 +193,13 @@ export const useTransactionLiveStatus = (
       void refetch();
     };
 
+    eventSource.addEventListener(
+      "transaction-status",
+      handleStatusEvent as EventListener,
+    );
+
+    eventSource.onmessage = handleStatusEvent;
+
     eventSource.onerror = () => {
       if (terminalEventSeenRef.current || isTerminalTransactionStatus(data?.status)) {
         eventSource.close();
@@ -205,6 +212,10 @@ export const useTransactionLiveStatus = (
     };
 
     return () => {
+      eventSource.removeEventListener(
+        "transaction-status",
+        handleStatusEvent as EventListener,
+      );
       eventSource.close();
       if (eventSourceRef.current === eventSource) {
         eventSourceRef.current = null;
@@ -214,6 +225,9 @@ export const useTransactionLiveStatus = (
 
   return {
     ...query,
+    data,
+    isFetched,
+    refetch,
     transport,
     isPollingFallback: transport === "poll",
     isSseActive: transport === "sse",
