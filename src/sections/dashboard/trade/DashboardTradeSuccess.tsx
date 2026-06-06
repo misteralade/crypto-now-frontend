@@ -4,7 +4,7 @@
  * SELL → "NGN Credited!" large green check (frames 180/183)
  */
 import { motion } from "framer-motion";
-import { ArrowLeft, BarChart3, Rocket, Timer, Wallet } from "lucide-react";
+import { AlertTriangle, ArrowLeft, BarChart3, Rocket, Timer, Wallet } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { ROUTES } from "../../../util/constants.util.ts";
 import type { TradeType } from "../../../types/trade.types.ts";
@@ -61,6 +61,22 @@ export default function DashboardTradeSuccess({
     !isBuy && txData?.userBankAccount?.accountNumber
       ? txData.userBankAccount.accountNumber
       : accountNumber;
+  const expectedCryptoAmount = Number(
+    txData?.rateSnapshot?.expectedCryptoAmount ?? amount ?? 0,
+  );
+  const settledCryptoAmount = Number(
+    txData?.amountCrypto ?? amount ?? 0,
+  );
+  const hasAdjustedSellAmount =
+    !isBuy &&
+    expectedCryptoAmount > 0 &&
+    settledCryptoAmount > 0 &&
+    Math.abs(expectedCryptoAmount - settledCryptoAmount) > 0.00000001;
+  const cryptoSymbol = selectedTokenSymbol ?? "Crypto";
+  const formatCryptoAmount = (value: number) =>
+    value.toLocaleString("en-US", {
+      maximumFractionDigits: 8,
+    });
 
   /* ── BUY success ── */
   if (isBuy) {
@@ -258,6 +274,19 @@ export default function DashboardTradeSuccess({
         >
           Crypto received &amp; auto-converted. Your bank has been credited.
         </p>
+        {hasAdjustedSellAmount && (
+          <div
+            className="mt-3 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-bold"
+            style={{
+              background: "#FFFBEB",
+              borderColor: "#FDE68A",
+              color: "#B45309",
+            }}
+          >
+            <AlertTriangle size={13} aria-hidden="true" />
+            Adjusted amount
+          </div>
+        )}
       </div>
 
       {/* Details table */}
@@ -265,7 +294,42 @@ export default function DashboardTradeSuccess({
         className="w-full rounded-2xl overflow-hidden"
         style={{ border: "1px solid #EEEEEE" }}
       >
-        {tableRows.map(({ label, value }, i) => (
+        {hasAdjustedSellAmount && !isBuy && (
+          <div
+            className="border-b px-4 py-3"
+            style={{ background: "#FFFBEB", borderColor: "#FDE68A" }}
+          >
+            <p className="text-[10px] font-bold tracking-widest uppercase mb-1.5 text-amber-700">
+              Amount adjusted
+            </p>
+            <p className="text-xs leading-relaxed text-amber-900">
+              Expected {formatCryptoAmount(expectedCryptoAmount)} {cryptoSymbol} but received{" "}
+              {formatCryptoAmount(settledCryptoAmount)} {cryptoSymbol}.
+            </p>
+          </div>
+        )}
+        {(hasAdjustedSellAmount
+          ? [
+              {
+                label: "Expected Crypto",
+                value: `${formatCryptoAmount(expectedCryptoAmount)} ${cryptoSymbol}`,
+              },
+              {
+                label: "Crypto Received",
+                value: `${formatCryptoAmount(settledCryptoAmount)} ${cryptoSymbol}`,
+              },
+              resolvedNgnAmount
+                ? {
+                    label: "NGN Credited",
+                    value: `₦${Number(resolvedNgnAmount).toLocaleString()}`,
+                  }
+                : null,
+              resolvedBankName ? { label: "To Bank", value: resolvedBankName } : null,
+              resolvedAccountNumber ? { label: "Account", value: resolvedAccountNumber } : null,
+              { label: "Status", value: "✓ Completed" },
+            ]
+          : tableRows
+        ).map(({ label, value }, i) => (
           <div
             key={i}
             className="flex items-center justify-between px-4 py-3"

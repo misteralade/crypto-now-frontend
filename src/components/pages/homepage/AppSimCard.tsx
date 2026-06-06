@@ -591,6 +591,23 @@ const AppSimCard = () => {
   const cryptoObj = supportedCryptoCurrencies?.find(
     (c) => c.id === selectedCrypto
   );
+  const cryptoSymbol = cryptoObj?.symbol || cryptoObj?.code || "";
+  const guestExpectedCryptoAmount = Number(
+    guestTransactionStatus?.rateSnapshot?.expectedCryptoAmount ?? amount ?? 0,
+  );
+  const guestSettledCryptoAmount = Number(
+    guestTransactionStatus?.amountCrypto ?? amount ?? 0,
+  );
+  const guestHasAdjustedAmount =
+    !isBuy &&
+    guestTransactionTerminalStatus === "COMPLETED" &&
+    guestExpectedCryptoAmount > 0 &&
+    guestSettledCryptoAmount > 0 &&
+    Math.abs(guestExpectedCryptoAmount - guestSettledCryptoAmount) > 0.00000001;
+  const formatCryptoAmount = (value: number) =>
+    value.toLocaleString("en-US", {
+      maximumFractionDigits: 8,
+    });
   const selectedBank = allBanks?.find((bank) => bank.id === selectedBankId);
   const anonymousMinimumCryptoAmount = Number(
     cryptoObj?.minTradeAmountForAnonymous || 0,
@@ -798,7 +815,6 @@ const AppSimCard = () => {
     (c) => c.id === selectedCurrency,
   );
   const currSymbol = transactionCurrencyObj?.symbol || transactionCurrencyObj?.code || "₦";
-  const cryptoSymbol = cryptoObj?.symbol || cryptoObj?.code || "";
   const cryptoCode = cryptoObj?.code?.toUpperCase() || cryptoSymbol.toUpperCase();
 
   const fetchUsdToNgnRate = async (
@@ -2483,6 +2499,22 @@ const AppSimCard = () => {
                         : "Crypto received & auto-converted. Your bank account has been credited."}
                     </p>
                   </div>
+                  {guestHasAdjustedAmount ? (
+                    <div
+                      className="w-full rounded-xl border px-3 py-2 text-left"
+                      style={{ background: "#FFFBEB", borderColor: "#FDE68A" }}
+                    >
+                      <div className="flex items-center gap-2 text-amber-700">
+                        <Warning size={16} weight="fill" />
+                        <p className="text-sm font-bold">Adjusted amount</p>
+                      </div>
+                      <p className="mt-1 text-xs leading-relaxed text-amber-900">
+                        Expected {formatCryptoAmount(guestExpectedCryptoAmount)}{" "}
+                        {cryptoSymbol}, but received{" "}
+                        {formatCryptoAmount(guestSettledCryptoAmount)} {cryptoSymbol}.
+                      </p>
+                    </div>
+                  ) : null}
                 </>
               )}
 
@@ -2504,10 +2536,23 @@ const AppSimCard = () => {
                   </>
                 ) : (
                   <>
-                    <SRow
-                      label="Crypto Sold"
-                      value={`${amount} ${cryptoSymbol}`}
-                    />
+                    {guestHasAdjustedAmount ? (
+                      <>
+                        <SRow
+                          label="Expected Crypto"
+                          value={`${formatCryptoAmount(guestExpectedCryptoAmount)} ${cryptoSymbol}`}
+                        />
+                        <SRow
+                          label="Crypto Received"
+                          value={`${formatCryptoAmount(guestSettledCryptoAmount)} ${cryptoSymbol}`}
+                        />
+                      </>
+                    ) : (
+                      <SRow
+                        label="Crypto Sold"
+                        value={`${amount} ${cryptoSymbol}`}
+                      />
+                    )}
                     {receiveAmount && (
                       <SRow
                         label="NGN Sent"
