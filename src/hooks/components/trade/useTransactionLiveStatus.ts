@@ -4,6 +4,8 @@ import { transactionServiceApi } from "../../../api/transaction.api.ts";
 import { BASIC } from "../../../config/index.config.ts";
 import { QUERY_KEYS } from "../../../queries/query.keys.ts";
 import { TIME_IN_MILLISECONDS } from "../../../util/constants.util.ts";
+import type { TransactionResponseEntity } from "../../../types/response.payload.types.ts";
+import type { TransactionStatus } from "../../../types/request.payload.types.ts";
 
 const TERMINAL_TRANSACTION_STATUSES = new Set([
   "COMPLETED",
@@ -19,7 +21,7 @@ type TransactionStatusEventPayload = {
   transactionId: string;
   sessionId: string;
   previousStatus: string | null;
-  status: string;
+  status: TransactionStatus;
   source: "INSERT" | "UPDATE";
   transactionUpdatedAt: string;
 };
@@ -38,6 +40,7 @@ export const useTransactionLiveStatus = (
 ) => {
   const isEnabled = !!sessionId && options.enabled !== false;
   const [transport, setTransport] = useState<"idle" | "sse" | "poll">("idle");
+  const [eventStatus, setEventStatus] = useState<TransactionStatus | null>(null);
   const transportRef = useRef(transport);
   const eventSourceRef = useRef<EventSource | null>(null);
   const terminalEventSeenRef = useRef(false);
@@ -52,6 +55,7 @@ export const useTransactionLiveStatus = (
     eventSourceRef.current = null;
     terminalEventSeenRef.current = false;
     lastEventIdRef.current = 0;
+    setEventStatus(null);
     setTransport("idle");
   }, [sessionId]);
 
@@ -178,6 +182,8 @@ export const useTransactionLiveStatus = (
         return;
       }
 
+      setEventStatus(payload.status);
+
       if (isTerminalTransactionStatus(payload.status)) {
         terminalEventSeenRef.current = true;
       }
@@ -223,9 +229,34 @@ export const useTransactionLiveStatus = (
     };
   }, [data?.status, isEnabled, isFetched, refetch, sessionId]);
 
+  useEffect(() => {
+    if (!data?.status) {
+      return;
+    }
+
+    if (eventStatus === data.status) {
+      setEventStatus(null);
+    }
+  }, [data?.status, eventStatus]);
+
+  const liveData = useMemo(() => {
+    if (!data) {
+      return data;
+    }
+
+    if (!eventStatus || eventStatus === data.status) {
+      return data;
+    }
+
+    return {
+      ...data,
+      status: eventStatus,
+    } satisfies TransactionResponseEntity;
+  }, [data, eventStatus]);
+
   return {
     ...query,
-    data,
+    data: liveData,
     isFetched,
     refetch,
     transport,
