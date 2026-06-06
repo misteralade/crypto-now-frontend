@@ -31,6 +31,11 @@ type UseTransactionLiveStatusOptions = {
   pollIntervalMs?: number;
 };
 
+type EventStatusState = {
+  status: TransactionStatus;
+  transactionUpdatedAt: string;
+};
+
 const isTerminalTransactionStatus = (status?: string | null) =>
   !!status && TERMINAL_TRANSACTION_STATUSES.has(status);
 
@@ -40,7 +45,7 @@ export const useTransactionLiveStatus = (
 ) => {
   const isEnabled = !!sessionId && options.enabled !== false;
   const [transport, setTransport] = useState<"idle" | "sse" | "poll">("idle");
-  const [eventStatus, setEventStatus] = useState<TransactionStatus | null>(null);
+  const [eventStatus, setEventStatus] = useState<EventStatusState | null>(null);
   const transportRef = useRef(transport);
   const eventSourceRef = useRef<EventSource | null>(null);
   const terminalEventSeenRef = useRef(false);
@@ -182,7 +187,10 @@ export const useTransactionLiveStatus = (
         return;
       }
 
-      setEventStatus(payload.status);
+      setEventStatus({
+        status: payload.status,
+        transactionUpdatedAt: payload.transactionUpdatedAt,
+      });
 
       if (isTerminalTransactionStatus(payload.status)) {
         terminalEventSeenRef.current = true;
@@ -234,23 +242,35 @@ export const useTransactionLiveStatus = (
       return;
     }
 
-    if (eventStatus === data.status) {
+    if (
+      eventStatus &&
+      new Date(data.updatedAt).getTime() >=
+        new Date(eventStatus.transactionUpdatedAt).getTime()
+    ) {
       setEventStatus(null);
     }
-  }, [data?.status, eventStatus]);
+  }, [data?.updatedAt, eventStatus]);
 
   const liveData = useMemo(() => {
     if (!data) {
       return data;
     }
 
-    if (!eventStatus || eventStatus === data.status) {
+    if (!eventStatus || eventStatus.status === data.status) {
+      return data;
+    }
+
+    if (
+      data.updatedAt &&
+      new Date(data.updatedAt).getTime() >=
+        new Date(eventStatus.transactionUpdatedAt).getTime()
+    ) {
       return data;
     }
 
     return {
       ...data,
-      status: eventStatus,
+      status: eventStatus.status,
     } satisfies TransactionResponseEntity;
   }, [data, eventStatus]);
 

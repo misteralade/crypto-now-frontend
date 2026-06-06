@@ -120,82 +120,67 @@ type GuestStatusTone = "info" | "warning" | "success" | "danger";
 
 const GUEST_STATUS_META: Record<
   string,
-  { label: string; tone: GuestStatusTone; emoji: string }
+  { label: string; tone: GuestStatusTone }
 > = {
   INITIATED: {
     label: "Initiated",
     tone: "info",
-    emoji: "⏳",
   },
   AWAITING_CRYPTO: {
     label: "Waiting for Deposit",
     tone: "warning",
-    emoji: "📡",
   },
   DEPOSIT_DETECTED: {
     label: "Deposit Detected",
     tone: "info",
-    emoji: "⚡",
   },
   DEPOSIT_PENDING_MINIMUM: {
     label: "Below Minimum",
     tone: "warning",
-    emoji: "⚠️",
   },
   DEPOSIT_CONFIRMED: {
     label: "Deposit Confirmed",
     tone: "success",
-    emoji: "✅",
   },
   PAYOUT_INITIATED: {
     label: "Payout Initiated",
     tone: "info",
-    emoji: "🏦",
   },
   PROCESSING: {
     label: "Processing",
     tone: "info",
-    emoji: "🔄",
   },
   IN_REVIEW: {
     label: "In Review",
     tone: "warning",
-    emoji: "📝",
   },
   PENDING_PAYOUT: {
     label: "Pending Payout",
     tone: "warning",
-    emoji: "🕒",
   },
   PAYOUT_FAILED: {
     label: "Payout Failed",
     tone: "danger",
-    emoji: "❌",
   },
   DISPUTED: {
     label: "Disputed",
     tone: "danger",
-    emoji: "⚖️",
   },
   COMPLETED: {
     label: "Completed",
     tone: "success",
-    emoji: "✅",
   },
   FAILED: {
     label: "Failed",
     tone: "danger",
-    emoji: "❌",
   },
   EXPIRED: {
     label: "Expired",
     tone: "danger",
-    emoji: "⌛",
   },
   CANCELLED: {
     label: "Cancelled",
     tone: "danger",
-    emoji: "🚫",
   },
 };
 
@@ -236,7 +221,6 @@ const getGuestStatusMeta = (status?: string | null) =>
     : {
         label: "Monitoring",
         tone: "info" as GuestStatusTone,
-        emoji: "📡",
       };
 
 const getGuestPayoutFailureCopy = () => ({
@@ -344,17 +328,19 @@ const SRow = ({
 const CopyableSRow = ({
   label,
   value,
+  copyValue,
   green,
 }: {
   label: string;
   value: string;
+  copyValue?: string;
   green?: boolean;
 }) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(value);
+      await navigator.clipboard.writeText(copyValue ?? value);
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
     } catch {
@@ -2241,10 +2227,7 @@ const AppSimCard = () => {
                       ) : (
                         <span className={`w-2 h-2 rounded-full inline-block ${tone.dot}`} />
                       )}
-                      <span className="flex items-center gap-1">
-                        <span>{meta.emoji}</span>
-                        <span>{meta.label}</span>
-                      </span>
+                      <span>{meta.label}</span>
                     </span>
                   );
                 })()}
@@ -2254,7 +2237,11 @@ const AppSimCard = () => {
                 className="rounded-xl p-3"
                 style={{ background: "white", border: "1.5px solid #E8E8E8" }}
               >
-                <CopyableSRow label="Amount to Send" value={`${amount} ${cryptoSymbol}`} />
+                <CopyableSRow
+                  label="Amount to Send"
+                  value={`${amount} ${cryptoSymbol}`}
+                  copyValue={amount}
+                />
                 <SRow label="Asset" value={cryptoSymbol} />
                 <SRow label="Network" value={networkLabel} />
               </div>
