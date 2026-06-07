@@ -62,7 +62,7 @@ export default function DashboardTradeSuccess({
       ? txData.userBankAccount.accountNumber
       : accountNumber;
   const expectedCryptoAmount = Number(
-    txData?.rateSnapshot?.expectedCryptoAmount ?? amount ?? 0,
+    txData?.expectedCryptoAmount ?? txData?.rateSnapshot?.expectedCryptoAmount ?? amount ?? 0,
   );
   const settledCryptoAmount = Number(
     txData?.amountCrypto ?? amount ?? 0,

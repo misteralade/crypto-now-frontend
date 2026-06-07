@@ -593,7 +593,10 @@ const AppSimCard = () => {
   );
   const cryptoSymbol = cryptoObj?.symbol || cryptoObj?.code || "";
   const guestExpectedCryptoAmount = Number(
-    guestTransactionStatus?.rateSnapshot?.expectedCryptoAmount ?? amount ?? 0,
+    guestTransactionStatus?.expectedCryptoAmount ??
+      guestTransactionStatus?.rateSnapshot?.expectedCryptoAmount ??
+      amount ??
+      0,
   );
   const guestSettledCryptoAmount = Number(
     guestTransactionStatus?.amountCrypto ?? amount ?? 0,
