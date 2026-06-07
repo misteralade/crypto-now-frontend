@@ -309,7 +309,7 @@ export default function DashboardTradeSuccess({
           </div>
         )}
         {(hasAdjustedSellAmount
-          ? [
+          ? ([
               {
                 label: "Expected Crypto",
                 value: `${formatCryptoAmount(expectedCryptoAmount)} ${cryptoSymbol}`,
@@ -327,15 +327,14 @@ export default function DashboardTradeSuccess({
               resolvedBankName ? { label: "To Bank", value: resolvedBankName } : null,
               resolvedAccountNumber ? { label: "Account", value: resolvedAccountNumber } : null,
               { label: "Status", value: "✓ Completed" },
-            ]
+            ].filter(Boolean) as { label: string; value: string }[])
           : tableRows
-        ).map(({ label, value }, i) => (
+        ).map(({ label, value }, i, arr) => (
           <div
             key={i}
             className="flex items-center justify-between px-4 py-3"
             style={{
-              borderBottom:
-                i < tableRows.length - 1 ? "1px solid #F7F7F9" : "none",
+              borderBottom: i < arr.length - 1 ? "1px solid #F7F7F9" : "none",
             }}
           >
             <span className="text-xs" style={{ color: "#9A9A9A" }}>
