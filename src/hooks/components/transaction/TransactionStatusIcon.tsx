@@ -40,6 +40,7 @@ export const TransactionStatus = ({ status }: { status: string }) => {
       case "REFUNDED":
         return <CheckCircle className={`w-5 h-5 ${color}`} />;
       case "DEPOSIT_DETECTED":
+      case "PENDING_CONFIRMATION":
         return <AlertCircle className={`w-5 h-5 ${color}`} />;
       case "DEPOSIT_PENDING_MINIMUM":
         return <AlertCircle className={`w-5 h-5 ${color}`} />;

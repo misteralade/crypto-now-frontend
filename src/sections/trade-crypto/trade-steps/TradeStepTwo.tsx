@@ -47,6 +47,7 @@ const SELL_MONITORING_STATUSES: TransactionStatus[] = [
   "INITIATED",
   "AWAITING_CRYPTO",
   "DEPOSIT_DETECTED",
+  "PENDING_CONFIRMATION",
   "DEPOSIT_PENDING_MINIMUM",
   "DEPOSIT_CONFIRMED",
   "PAYOUT_INITIATED",
@@ -82,6 +83,12 @@ const STATUS_META: Partial<Record<TransactionStatus, StatusMeta>> = {
     tone: "info",
     emoji: "⚡",
     note: "We detected the deposit and are waiting for confirmations.",
+  },
+  PENDING_CONFIRMATION: {
+    label: "Pending Confirmation",
+    tone: "warning",
+    emoji: "⏳",
+    note: "We detected the deposit and are rechecking it until the network confirms it.",
   },
   DEPOSIT_PENDING_MINIMUM: {
     label: "Below Minimum",
@@ -264,6 +271,7 @@ function TradeStatusMonitoring({
           label: "Waiting for Crypto Detection",
           status:
             status === "DEPOSIT_DETECTED" ||
+            status === "PENDING_CONFIRMATION" ||
             status === "DEPOSIT_PENDING_MINIMUM" ||
             status === "DEPOSIT_CONFIRMED" ||
             status === "PAYOUT_INITIATED" ||
@@ -276,6 +284,7 @@ function TradeStatusMonitoring({
           label: "Auto-Converting to NGN",
           status:
             status === "DEPOSIT_DETECTED" ||
+            status === "PENDING_CONFIRMATION" ||
             status === "DEPOSIT_PENDING_MINIMUM"
               ? "active"
             : status === "DEPOSIT_CONFIRMED" ||
@@ -324,6 +333,8 @@ function TradeStatusMonitoring({
         : "Checking your payment status."
     : status === "DEPOSIT_DETECTED"
       ? "Deposit detected. Waiting for confirmations."
+      : status === "PENDING_CONFIRMATION"
+        ? "Deposit detected. Rechecking until confirmations arrive."
       : status === "DEPOSIT_PENDING_MINIMUM"
         ? "Deposit found, but it is still below the minimum."
         : status === "DEPOSIT_CONFIRMED"
@@ -352,7 +363,7 @@ function TradeStatusMonitoring({
 
   const showManualRecheck =
     !isBuy &&
-    ["INITIATED", "AWAITING_CRYPTO"].includes(status ?? "");
+    ["INITIATED", "AWAITING_CRYPTO", "DEPOSIT_DETECTED", "PENDING_CONFIRMATION"].includes(status ?? "");
 
   const statusColors = {
     done: {

@@ -105,6 +105,7 @@ const ACTIVE_GUEST_SELL_STATUSES = new Set([
   "INITIATED",
   "AWAITING_CRYPTO",
   "DEPOSIT_DETECTED",
+  "PENDING_CONFIRMATION",
   "DEPOSIT_PENDING_MINIMUM",
   "DEPOSIT_CONFIRMED",
   "PAYOUT_INITIATED",
@@ -133,6 +134,10 @@ const GUEST_STATUS_META: Record<
   DEPOSIT_DETECTED: {
     label: "Deposit Detected",
     tone: "info",
+  },
+  PENDING_CONFIRMATION: {
+    label: "Pending Confirmation",
+    tone: "warning",
   },
   DEPOSIT_PENDING_MINIMUM: {
     label: "Below Minimum",
@@ -232,6 +237,8 @@ const getGuestPayoutFailureCopy = () => ({
 const GUEST_SELL_RECHECK_STATUSES = new Set([
   "INITIATED",
   "AWAITING_CRYPTO",
+  "DEPOSIT_DETECTED",
+  "PENDING_CONFIRMATION",
 ]);
 
 const GUEST_SELL_FAILED_STATUSES = new Set([

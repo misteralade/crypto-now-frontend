@@ -258,7 +258,7 @@ function TradeMonitoringView({
           if (status === "INITIATED" || !status) return "active";
           return "done";
         case 2: // Conversion
-          if (status === "DEPOSIT_DETECTED") return "active";
+          if (status === "DEPOSIT_DETECTED" || status === "PENDING_CONFIRMATION") return "active";
           if (status === "DEPOSIT_CONFIRMED" || status === "PAYOUT_INITIATED" || status === "COMPLETED") return "done";
           return "pending";
         case 3: // Bank Transfer
@@ -282,6 +282,8 @@ function TradeMonitoringView({
     [
       "INITIATED",
       "AWAITING_CRYPTO",
+      "DEPOSIT_DETECTED",
+      "PENDING_CONFIRMATION",
     ].includes(status ?? "");
   const walletNetwork = sellDepositWallet?.network ?? "";
   const walletAddress = sellDepositWallet?.walletAddress ?? "";
@@ -312,6 +314,7 @@ function TradeMonitoringView({
             {status === "COMPLETED" ? "Success!" : 
              isBuy ? subHeadline :
              (status === "DEPOSIT_DETECTED" ? "Deposit Detected - Confirming..." : 
+              status === "PENDING_CONFIRMATION" ? "Pending Confirmation - Rechecking..." :
               status === "DEPOSIT_CONFIRMED" ? "Deposit Confirmed - Processing Payout..." :
               status === "PAYOUT_INITIATED" ? "Payout Initiated - Checking Bank..." : subHeadline)}
           </p>
