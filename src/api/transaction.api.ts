@@ -4,7 +4,10 @@ import {
   axiosPatchRequestHandler,
   axiosPostRequestHandler,
 } from "./index.ts";
-import type {SearchTransactionsRequestPayload} from "../types/request.payload.types.ts";
+import type {
+  InitiateTransactionRequestPayload,
+  SearchTransactionsRequestPayload
+} from "../types/request.payload.types.ts";
 import type {
   BaseApiResponse,
   GetTransactionDetailsAPIResponse,
@@ -67,14 +70,14 @@ class TransactionServiceApi {
     }
   }
 
-  async initiateTransactionAnonymousUser(transactionData: Record<string, any>): Promise<InitiateTransactionAPIResponse> {
+  async initiateTransactionAnonymousUser(transactionData: InitiateTransactionRequestPayload): Promise<InitiateTransactionAPIResponse> {
     return await axiosPostRequestHandler(
       '/transaction/initiate/anonymous',
       transactionData
     ) as InitiateTransactionAPIResponse
   }
 
-  async createAndSubmitTransaction(payload: FormData | Record<string, any>): Promise<InitiateTransactionAPIResponse> {
+  async createAndSubmitTransaction(payload: FormData | Record<string, unknown>): Promise<InitiateTransactionAPIResponse> {
     const isMultipart = payload instanceof FormData;
     return await axiosPostRequestHandler(
       '/transaction/create-and-submit',
@@ -83,7 +86,7 @@ class TransactionServiceApi {
     ) as InitiateTransactionAPIResponse;
   }
 
-  async anonymousCreateAndSubmitTransaction(payload: FormData | Record<string, any>): Promise<InitiateTransactionAPIResponse> {
+  async anonymousCreateAndSubmitTransaction(payload: FormData | Record<string, unknown>): Promise<InitiateTransactionAPIResponse> {
     const isMultipart = payload instanceof FormData;
     return await axiosPostRequestHandler(
       '/transaction/create-and-submit/anonymous',
@@ -92,52 +95,52 @@ class TransactionServiceApi {
     ) as InitiateTransactionAPIResponse;
   }
 
-  async initiateTransaction(transactionData: Record<string, any>) {
+  async initiateTransaction(transactionData: InitiateTransactionRequestPayload) {
     return await axiosPostRequestHandler(
       '/transaction/initiate',
       transactionData
     ) as InitiateTransactionAPIResponse
   }
 
-  async makeTransactionPayment(paymentData: Record<string, any>) {
+  async makeTransactionPayment(paymentData: { sessionId: string } & Record<string, unknown>) {
     const {data, message, success, error}: {
       data: { sessionId: string },
       message: string,
       success: boolean,
-      error: any
+      error: { message?: string } | null | undefined
     } = await axiosPatchRequestHandler(
       `/transaction/make-payment/${paymentData.sessionId}`,
       paymentData
     )
 
     if (!success || error) {
-      toast.error(error.message || message || error || "Failed to initiate transaction");
+      toast.error(error?.message || message || "Failed to initiate transaction");
       return;
     }
 
     return data.sessionId;
   }
   
-  async anonymousUserMakeTransactionPayment(paymentData: Record<string, any>) {
+  async anonymousUserMakeTransactionPayment(paymentData: { sessionId: string } & Record<string, unknown>) {
     const {data, message, success, error}: {
       data: { sessionId: string },
       message: string,
       success: boolean,
-      error: any
+      error: { message?: string } | null | undefined
     } = await axiosPatchRequestHandler(
       `/transaction/make-payment/${paymentData.sessionId}/anonymous`,
       paymentData
     )
     
     if (!success || error) {
-      toast.error(error.message || message || error || "Failed to initiate transaction");
+      toast.error(error?.message || message || "Failed to initiate transaction");
       return;
     }
     
     return data.sessionId;
   }
 
-  async confirmReceivingPaymentAccount(sessionId: string, accountData: Record<string, any>) {
+  async confirmReceivingPaymentAccount(sessionId: string, accountData: Record<string, unknown>) {
      return await axiosPatchRequestHandler(
       `/transaction/confirm-receiving-payment-account/${sessionId}`,
       {
@@ -147,7 +150,7 @@ class TransactionServiceApi {
     ) as BaseApiResponse<{ sessionId: string }>
   }
   
-  async confirmAnonymousUserReceivingPaymentAccount(sessionId: string, accountData: Record<string, any>) {
+  async confirmAnonymousUserReceivingPaymentAccount(sessionId: string, accountData: Record<string, unknown>) {
     return await axiosPatchRequestHandler(
       `/transaction/confirm-receiving-payment-account/${sessionId}/anonymous`,
       {
@@ -188,7 +191,7 @@ class TransactionServiceApi {
     return await axiosPostRequestHandler(
       "/transaction/anonymous/resumable-sell",
       payload,
-    ) as BaseApiResponse<any>;
+    ) as BaseApiResponse<unknown>;
   }
 
   async manualRecheckSellDeposit(sessionId: string) {

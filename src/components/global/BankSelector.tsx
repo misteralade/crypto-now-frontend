@@ -13,6 +13,8 @@ interface BankSelectorProps {
   className?: string;
 }
 
+type SelectorOption = AllBanksResponse | SupportedCryptoOrCurrencyResponse;
+
 const BankSelector = ({
   label,
   placeholder = "Search bank...",
@@ -22,7 +24,7 @@ const BankSelector = ({
   error,
   className = "",
 }: BankSelectorProps) => {
-  const [items, setItems] = useState<any[]>(options || []);
+  const [items, setItems] = useState<SelectorOption[]>(options || []);
 
   // Sync items when options prop changes
   useEffect(() => {
@@ -44,7 +46,7 @@ const BankSelector = ({
       return item ? item.name : "";
     },
     onInputValueChange({ inputValue }) {
-      const filtered = (options || []).filter((item: any) =>
+      const filtered = (options || []).filter((item: SelectorOption) =>
           item.name.toLowerCase().includes(inputValue?.toLowerCase() || "")
       );
       setItems(filtered);
@@ -54,7 +56,7 @@ const BankSelector = ({
         onValueChange(selectedItem.id);
       }
     },
-    selectedItem: (options as any[]).find((opt: any) => opt.id === value) || null,
+    selectedItem: (options as SelectorOption[]).find((opt) => opt.id === value) || null,
   });
 
   const isLabelFloating = isOpen || value || getInputProps().value;

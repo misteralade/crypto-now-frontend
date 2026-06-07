@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Logo from "../../../assets/logo/logo.svg";
 import { LOCAL_STORAGE_KEYS, ROUTES } from "../../../util/constants.util.ts";
 import { userServiceApi } from "../../../api/user.api.ts";
+import type { BaseApiResponse } from "../../../types/response.payload.types.ts";
 
 const NAVBAR_H = 56;
 
@@ -69,7 +70,7 @@ export default function PublicNavbar({ innerClassName }: { innerClassName?: stri
         const { success } = (await Promise.race([
           userServiceApi.pingUser(),
           timeoutPromise,
-        ])) as any;
+        ])) as BaseApiResponse<null>;
 
         setIsLoggedIn(success);
         if (!success) localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);

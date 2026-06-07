@@ -32,7 +32,7 @@ interface DashboardTradeStep3Props {
 }
 
 export default function DashboardTradeStep3({
-  tradeType, bankAccounts, selectedTokenNetworks: _selectedTokenNetworks,
+  tradeType, bankAccounts,
   selectedToken, selectedCurrency, amountToBuy, numberOfToken,
   buyWalletAddress, buyNetwork, onProceed, onBack,
 }: DashboardTradeStep3Props) {

@@ -43,7 +43,9 @@ const toEmbedUrl = (url: string, autoplay = false) => {
       return autoplay ? `${url}?autoplay=1` : url;
     if (videoId)
       return `https://www.youtube.com/embed/${videoId}${autoplay ? "?autoplay=1" : ""}`;
-  } catch {}
+  } catch {
+    // Return original URL if parsing fails
+  }
   return url;
 };
 

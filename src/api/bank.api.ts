@@ -8,6 +8,7 @@ import type {
   AllBanksResponse, BaseApiResponse,
   SupportedPlatformBankAccountResponse, UserBanksAPIResponse
 } from "../types/response.payload.types.ts";
+import type { CreateBankAccountRequestPayload } from "../types/request.payload.types.ts";
 
 class BankServiceApi {
   private static instance: BankServiceApi;
@@ -35,16 +36,16 @@ class BankServiceApi {
   async getUserBankAccounts() {
     return  await axiosGetRequestHandler(`/bank/user/bank-accounts`) as UserBanksAPIResponse;
   }
-  
+
   async getAnonymousUserBankAccounts(email: string) {
     return await axiosGetRequestHandler(`/bank/anonymous-user/bank-accounts`, { email }) as UserBanksAPIResponse;
   }
-  
-  async createUserBankAccount(payload: Record<string, any>) {
+
+  async createUserBankAccount(payload: CreateBankAccountRequestPayload) {
     return await axiosPostRequestHandler("/bank/user/create", payload) as BaseApiResponse<null>;
   }
-  
-  async createAnonymousUserBankAccount(payload: Record<string, any>) {
+
+  async createAnonymousUserBankAccount(payload: CreateBankAccountRequestPayload) {
     return await axiosPostRequestHandler("/bank/anonymous-user/create", payload) as BaseApiResponse<{ id: string }>;
   }
   

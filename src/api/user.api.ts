@@ -23,7 +23,7 @@ class UserServiceApi {
     return { data, message, success };
   }
   
-  private pingCache: { lastChecked: number; result: any } | null = null;
+  private pingCache: { lastChecked: number; result: BaseApiResponse<null> } | null = null;
   private readonly PING_CACHE_DURATION = 1000 * 60; // 1 minute
   private pingPromise: Promise<BaseApiResponse<null>> | null = null;
 

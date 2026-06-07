@@ -17,6 +17,7 @@ function searchPayloadWithoutPageKey(
   payload: SearchTransactionsRequestPayload | null,
 ): string {
   if (!payload) return "";
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { page: _p, ...rest } = payload;
   return JSON.stringify(rest);
 }

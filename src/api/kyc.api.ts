@@ -24,7 +24,7 @@ class KycServiceApi {
     return axiosPostRequestHandler("/kyc/start", {});
   }
 
-  private sessionCache: { lastChecked: number; result: any } | null = null;
+  private sessionCache: { lastChecked: number; result: GetKycSessionApiResponse } | null = null;
   private readonly SESSION_CACHE_DURATION = 1000 * 60 * 5; // 5 minutes
 
   async getSession(): Promise<GetKycSessionApiResponse> {

@@ -1,9 +1,10 @@
+import React from "react";
 import { Link } from "@tanstack/react-router";
 import AuthBg from "../assets/backgrounds/auth-bg.webp";
 import Logo from "../assets/logo/logo.svg";
 import { motion } from "framer-motion";
 
-const AuthLayout = ({ children, layoutType }: { children: any; layoutType: number; }) => {
+const AuthLayout = ({ children, layoutType }: { children: React.ReactNode; layoutType: number; }) => {
   return (
     <div className="min-h-screen flex flex-col lg:flex-row relative">
       {/* Logo - Global position at top left of the screen */}

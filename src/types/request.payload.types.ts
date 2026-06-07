@@ -4,6 +4,7 @@ export type OrderBy = "ASC" | "DESC";
 export type InitiateTransactionRequestPayload = {
   action?: TradeType;
   tokenId?: string;
+  coinId?: string;
   currencyId?: string;
   amountToReceive?: number;
   amountToSend?: number;
@@ -13,13 +14,16 @@ export type InitiateTransactionRequestPayload = {
   custodialWalletId?: string;
   walletAddress?: string;
   network?: string;
+  email?: string;
 }
 
 export type CreateBankAccountRequestPayload = {
   bankId: string | null;
-  accountName: string | null;
+  accountName?: string | null;
+  accountHolderName?: string | null;
   accountNumber: string | null;
   isDefault: boolean | null;
+  email?: string | null;
   bankName?: string | null;
   bankCode?: string | null;
   bankLogo?: string | null;
