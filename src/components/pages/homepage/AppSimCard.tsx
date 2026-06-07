@@ -601,6 +601,9 @@ const AppSimCard = () => {
   const guestSettledCryptoAmount = Number(
     guestTransactionStatus?.amountCrypto ?? amount ?? 0,
   );
+  const guestSettledNgnAmount = Number(
+    guestTransactionStatus?.amountFiatNGN ?? receiveAmount ?? 0,
+  );
   const guestHasAdjustedAmount =
     !isBuy &&
     guestTransactionTerminalStatus === "COMPLETED" &&
@@ -1048,6 +1051,16 @@ const AppSimCard = () => {
         status: data?.status ?? "unknown",
         outcome: data?.outcome ?? "unknown",
       });
+
+      if (data?.status) {
+        const nextStatus = data.status as TransactionResponseEntity["status"];
+        setGuestTransactionStatus((current) =>
+          current ? { ...current, status: nextStatus } : current,
+        );
+        if (GUEST_SELL_TERMINAL_STATUSES.has(nextStatus)) {
+          setDone(true);
+        }
+      }
 
       const refreshed = await guestTransactionLiveQuery.refetch();
       if (
@@ -2559,7 +2572,9 @@ const AppSimCard = () => {
                     {receiveAmount && (
                       <SRow
                         label="NGN Sent"
-                        value={formatReceiveNgnDisplay(receiveAmount)}
+                        value={formatReceiveNgnDisplay(
+                          `${guestSettledNgnAmount}`,
+                        )}
                         green
                       />
                     )}
