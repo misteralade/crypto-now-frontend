@@ -53,6 +53,7 @@ const statusConfig: Record<string, typeof PENDING_CONFIG> = {
   PENDING_CONFIRMATION: { ...PENDING_CONFIG, displayName: "Pending Confirmation" },
   DEPOSIT_PENDING_MINIMUM: { ...PENDING_CONFIG, displayName: "Pending" },
   DEPOSIT_CONFIRMED: { ...PENDING_CONFIG, displayName: "Pending" },
+  NO_OWNER: { ...FAILED_CONFIG, displayName: "No Owner" },
   PAYOUT_INITIATED: { ...PENDING_CONFIG, displayName: "Pending" },
 
   COMPLETED: { ...COMPLETED_CONFIG, displayName: "Completed" },

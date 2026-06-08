@@ -3,8 +3,6 @@ import { Link } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import Logo from "../../../assets/logo/logo.svg";
 import { LOCAL_STORAGE_KEYS, ROUTES } from "../../../util/constants.util.ts";
-import { userServiceApi } from "../../../api/user.api.ts";
-import type { BaseApiResponse } from "../../../types/response.payload.types.ts";
 
 const NAVBAR_H = 56;
 
@@ -55,32 +53,8 @@ export default function PublicNavbar({ innerClassName }: { innerClassName?: stri
   }, []);
 
   useEffect(() => {
-    const check = async () => {
-      const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
-      if (!token) {
-        setIsLoggedIn(false);
-        return;
-      }
-
-      try {
-        // Add a 5s timeout to the ping check to ensure buttons eventually show
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Timeout")), 5000)
-        );
-        const { success } = (await Promise.race([
-          userServiceApi.pingUser(),
-          timeoutPromise,
-        ])) as BaseApiResponse<null>;
-
-        setIsLoggedIn(success);
-        if (!success) localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
-      } catch (err) {
-        console.error("Ping failed or timed out:", err);
-        setIsLoggedIn(false);
-        localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
-      }
-    };
-    check();
+    const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+    setIsLoggedIn(!!token);
   }, []);
 
   return (

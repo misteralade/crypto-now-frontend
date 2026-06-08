@@ -153,7 +153,7 @@ const HeroSectionNew = () => {
             letterSpacing: "0.02em",
           }}
         >
-          Fast, simple, and clear.
+          fast simple and secure
         </p>
       </div>
     </section>

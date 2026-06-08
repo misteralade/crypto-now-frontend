@@ -147,6 +147,10 @@ const GUEST_STATUS_META: Record<
     label: "Deposit Confirmed",
     tone: "success",
   },
+  NO_OWNER: {
+    label: "No Owner",
+    tone: "warning",
+  },
   PAYOUT_INITIATED: {
     label: "Payout Initiated",
     tone: "info",
@@ -256,6 +260,7 @@ const GUEST_SELL_TERMINAL_STATUSES = new Set([
   "EXPIRED",
   "PAYOUT_FAILED",
   "DISPUTED",
+  "NO_OWNER",
 ]);
 
 // ── Crypto token button ───────────────────────────────────────────────────────
@@ -548,6 +553,7 @@ const AppSimCard = () => {
     !!guestTransactionTerminalStatus &&
     GUEST_SELL_FAILED_STATUSES.has(guestTransactionTerminalStatus);
   const guestTransactionDisputed = guestTransactionTerminalStatus === "DISPUTED";
+  const guestTransactionNoOwner = guestTransactionTerminalStatus === "NO_OWNER";
   const normalizedEmail = email.trim();
   const isEmailValid = normalizedEmail ? emailValidation.test(normalizedEmail) : false;
   const emailError = emailValidationError;
@@ -2377,6 +2383,23 @@ const AppSimCard = () => {
                     </button>
                   </div>
                 ) : null}
+                {guestTransactionNoOwner ? (
+                  <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-amber-500">
+                      Manual review required
+                    </p>
+                    <p className="mt-1 text-sm font-medium leading-relaxed text-amber-900">
+                      We received a deposit on a guest wallet, but no transaction owner was linked. The wallet has been retired from reuse.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => navigate({ to: ROUTES.CONTACT })}
+                      className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-amber-500 px-3 py-2 text-xs font-bold text-white"
+                    >
+                      Contact support
+                    </button>
+                  </div>
+                ) : null}
                 {receiveAmount && (
                   <SRow
                     label="NGN to Credit"
@@ -2441,6 +2464,42 @@ const AppSimCard = () => {
                     <p className="text-xs mt-1 leading-relaxed text-amber-700/90">
                       {guestTransactionStatus?.failureReason ||
                         "Please contact support so we can review the transaction mismatch."}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => navigate({ to: ROUTES.CONTACT })}
+                      className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-amber-500 px-3 py-2 text-xs font-bold text-white"
+                    >
+                      Contact support
+                    </button>
+                  </div>
+                </>
+              ) : guestTransactionNoOwner ? (
+                <>
+                  <div
+                    className="w-16 h-16 rounded-full flex items-center justify-center"
+                    style={{ background: "#FEF3C7" }}
+                  >
+                    <Warning size={30} weight="fill" className="text-amber-500" />
+                  </div>
+                  <div className="text-center">
+                    <p className="font-bold text-xl text-[#0E0F0C]">
+                      Deposit recorded without owner
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1 px-3 leading-relaxed">
+                      We received a deposit on a guest wallet, but no transaction owner was linked.
+                    </p>
+                  </div>
+                  <div
+                    className="w-full rounded-xl p-4 text-left"
+                    style={{ background: "#FFFBEB", border: "1px solid #FDE68A" }}
+                  >
+                    <p className="text-sm font-bold text-amber-700">
+                      Manual review required
+                    </p>
+                    <p className="text-xs mt-1 leading-relaxed text-amber-700/90">
+                      {guestTransactionStatus?.failureReason ||
+                        "This deposit is being held for accounting review and will not be disbursed automatically."}
                     </p>
                     <button
                       type="button"

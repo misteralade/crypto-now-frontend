@@ -47,10 +47,12 @@ API_KIT.interceptors.response.use(
   },
   async (error) => {
     if (axios.isAxiosError(error)) {
-      if (error.response?.data?.message?.toLowerCase() === "jwt token error") {
-        setTimeout(() => {
-          window.location.href = ROUTES.SIGNIN;
-        }, 3000);
+      const status = error.response?.status;
+      const message = error.response?.data?.message?.toLowerCase();
+
+      if (status === 401 || message === "jwt token error") {
+        localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+        window.location.href = ROUTES.SIGNIN;
       }
     }
     return Promise.reject(error);

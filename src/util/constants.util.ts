@@ -125,6 +125,10 @@ export const transactionStatusMessages: Record<string, { title: string, message:
     title: 'Deposit Confirmed',
     message: 'Your deposit has been confirmed. We are now processing your payout to your bank account.'
   },
+  NO_OWNER: {
+    title: 'Deposit Recorded Without Owner',
+    message: 'We received a deposit on a guest wallet, but no transaction owner was linked. The wallet has been retired and the deposit is held for accounting review.'
+  },
   PAYOUT_INITIATED: {
     title: 'Payout Initiated',
     message: 'Your payout has been initiated and is currently being processed by the bank.'
@@ -201,6 +205,13 @@ export const transactionStatusStyles: Record<
     dot: 'bg-green-400',
     textColor: 'text-green-600',
     message: `Your deposit has been confirmed. We are now processing your payout to your bank account.`
+  },
+  NO_OWNER: {
+    text: 'No Owner',
+    bg: 'bg-amber-50',
+    dot: 'bg-amber-500',
+    textColor: 'text-amber-700',
+    message: `We received a deposit on a guest wallet, but no transaction owner was linked. The wallet has been retired and the deposit is held for accounting review.`
   },
   PAYOUT_INITIATED: {
     text: 'Pending',

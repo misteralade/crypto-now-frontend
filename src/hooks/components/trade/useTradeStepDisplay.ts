@@ -126,38 +126,17 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   // Custodial wallet for sell flow (deposit address the user sends crypto to)
   const [sellDepositWallet, setSellDepositWallet] = useState<CustodialWalletResponse | null>(null);
 
-  // Ping user to check authentication status
-  const { isLoading: isLoadingPingUser } = useQuery({
-    queryKey: [QUERY_KEYS.USER.PING, "trade-step-display"],
-    queryFn: async () => {
-      try {
-        const { success, message } = await userServiceApi.pingUser();
+  // Determine if the user is anonymous based on presence of access token
+  const hasAccessToken = !!localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
 
-        if (!success) {
-          // User is anonymous - this is expected behavior
-          dispatch(setIsAnonymousUser(true));
-          return { success: false, message, isAnonymous: true };
-        }
-
-        // User is authenticated
-        dispatch(setIsAnonymousUser(false));
-        
-        // If user is authenticated, clear any stored anonymous user email
-        const accessToken = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
-        if (accessToken) {
-          dispatch(clearAnonymousUserEmail());
-        }
-
-        return { success, message, isAnonymous: false };
-      } catch {
-        // If ping fails (e.g., network error), treat as anonymous
-        dispatch(setIsAnonymousUser(true));
-        return { success: false, message: "Failed to ping user", isAnonymous: true };
-      }
-    },
-    retry: false,
-    refetchOnWindowFocus: false,
-  });
+  useEffect(() => {
+    if (hasAccessToken) {
+      dispatch(setIsAnonymousUser(false));
+      dispatch(clearAnonymousUserEmail());
+    } else {
+      dispatch(setIsAnonymousUser(true));
+    }
+  }, [hasAccessToken, dispatch]);
 
   // Amount to send
   const amountToSend =
@@ -172,38 +151,24 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   }, [debouncedAmountToSend, dispatch]);
   
   // Update the show Enter email modal for anonymous users
-  // Only show after ping is complete and user is confirmed as anonymous
-  // By default, modal is false - only show when we know user is anonymous after ping
   useEffect(() => {
-    // Don't show modal while pinging
-    if (isLoadingPingUser) {
-      setShowUserEnterEmail(false);
-      return;
-    }
-
-    // Check access token first - if user has access token, they're authenticated
-    const hasAccessToken = !!localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
-    
     // If user has access token, they're authenticated - don't show modal
     if (hasAccessToken) {
       setShowUserEnterEmail(false);
       return;
     }
 
-    // After ping completes and no access token, check if user is confirmed as anonymous
     const currentState = store.getState() as RootState;
     const isAnonymous = currentState.user.trade.anonymous.isAnonymousUser;
     const hasEmail = currentState.user.trade.anonymous.email;
 
     // Only show email modal if user is confirmed as anonymous AND doesn't already have an email
-    // (If they have an email, they can manually open it via the "Change email" button)
     if (isAnonymous === true && !hasEmail) {
       setShowUserEnterEmail(true);
     } else {
-      // User status is unclear or not anonymous, or already has email - don't auto-show email modal
       setShowUserEnterEmail(false);
     }
-  }, [isLoadingPingUser])
+  }, [hasAccessToken]);
 
   const generationLockRef = useRef<string | null>(null);
 

@@ -259,11 +259,11 @@ function TradeMonitoringView({
           return "done";
         case 2: // Conversion
           if (status === "DEPOSIT_DETECTED" || status === "PENDING_CONFIRMATION") return "active";
-          if (status === "DEPOSIT_CONFIRMED" || status === "PAYOUT_INITIATED" || status === "COMPLETED") return "done";
+          if (status === "DEPOSIT_CONFIRMED" || status === "PAYOUT_INITIATED" || status === "COMPLETED" || status === "NO_OWNER") return "done";
           return "pending";
         case 3: // Bank Transfer
           if (status === "DEPOSIT_CONFIRMED" || status === "PAYOUT_INITIATED") return "active";
-          if (status === "COMPLETED") return "done";
+          if (status === "COMPLETED" || status === "NO_OWNER") return "done";
           return "pending";
         default: return "pending";
       }
@@ -277,6 +277,7 @@ function TradeMonitoringView({
 
   const headline = isBuy ? "Verifying Payment" : "Monitoring Wallet";
   const subHeadline = isBuy ? (status === "IN_REVIEW" ? "Your payment receipt is under review." : "Checking your receipt…") : "Listening for Transaction…";
+  const isNoOwnerStatus = status === "NO_OWNER";
   const showManualRecheck =
     !isBuy &&
     [
@@ -304,19 +305,24 @@ function TradeMonitoringView({
             border: `2px solid ${isBuy ? "#6B45D033" : "#00BFA533"}` 
           }}
         >
-          {status === "COMPLETED" ? "✅" : (isBuy ? "🔍" : "📡")}
+          {status === "COMPLETED" ? "✅" : isNoOwnerStatus ? "⚠️" : (isBuy ? "🔍" : "📡")}
         </div>
         <div className="text-center">
           <p className="text-base font-extrabold" style={{ color: "#0E0F0C" }}>
-            {status === "COMPLETED" ? "Transaction Completed" : headline}
+            {status === "COMPLETED"
+              ? "Transaction Completed"
+              : isNoOwnerStatus
+                ? "Deposit Recorded Without Owner"
+                : headline}
           </p>
           <p className="text-xs mt-1" style={{ color: "#9A9A9A" }}>
             {status === "COMPLETED" ? "Success!" : 
              isBuy ? subHeadline :
+             (isNoOwnerStatus ? "We received a guest-wallet deposit without a linked transaction owner." :
              (status === "DEPOSIT_DETECTED" ? "Deposit Detected - Confirming..." : 
               status === "PENDING_CONFIRMATION" ? "Pending Confirmation - Rechecking..." :
               status === "DEPOSIT_CONFIRMED" ? "Deposit Confirmed - Processing Payout..." :
-              status === "PAYOUT_INITIATED" ? "Payout Initiated - Checking Bank..." : subHeadline)}
+              status === "PAYOUT_INITIATED" ? "Payout Initiated - Checking Bank..." : subHeadline))}
           </p>
         </div>
         <p
@@ -329,7 +335,9 @@ function TradeMonitoringView({
             (isBuy ? (status === "IN_REVIEW"
               ? "Your payment receipt has been submitted and is under review."
               : "We're verifying your bank transfer. Crypto will be released automatically once confirmed.") :
-                    `Send any amount of ${selectedToken?.symbol ?? "crypto"} to your wallet. NGN will hit your bank automatically.`)}
+                    (isNoOwnerStatus
+                      ? "We recorded a deposit on a guest wallet without a linked transaction owner. The wallet has been retired from reuse and the funds are held for manual accounting review."
+                      : `Send any amount of ${selectedToken?.symbol ?? "crypto"} to your wallet. NGN will hit your bank automatically.`))}
         </p>
       </div>
 

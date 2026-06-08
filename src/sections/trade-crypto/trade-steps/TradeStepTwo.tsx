@@ -50,6 +50,7 @@ const SELL_MONITORING_STATUSES: TransactionStatus[] = [
   "PENDING_CONFIRMATION",
   "DEPOSIT_PENDING_MINIMUM",
   "DEPOSIT_CONFIRMED",
+  "NO_OWNER",
   "PAYOUT_INITIATED",
   "PAYOUT_FAILED",
   "COMPLETED",
@@ -101,6 +102,12 @@ const STATUS_META: Partial<Record<TransactionStatus, StatusMeta>> = {
     tone: "success",
     emoji: "✅",
     note: "Deposit confirmed. NGN payout is being prepared.",
+  },
+  NO_OWNER: {
+    label: "No Owner",
+    tone: "danger",
+    emoji: "⚠️",
+    note: "We received a deposit on a guest wallet, but there was no linked transaction owner. The wallet has been retired from reuse.",
   },
   PAYOUT_INITIATED: {
     label: "Payout Initiated",
@@ -274,6 +281,7 @@ function TradeStatusMonitoring({
             status === "PENDING_CONFIRMATION" ||
             status === "DEPOSIT_PENDING_MINIMUM" ||
             status === "DEPOSIT_CONFIRMED" ||
+            status === "NO_OWNER" ||
             status === "PAYOUT_INITIATED" ||
             status === "PENDING_PAYOUT" ||
             status === "COMPLETED"
@@ -290,6 +298,7 @@ function TradeStatusMonitoring({
             : status === "DEPOSIT_CONFIRMED" ||
                   status === "PAYOUT_INITIATED" ||
                   status === "PENDING_PAYOUT" ||
+                  status === "NO_OWNER" ||
                   status === "COMPLETED"
                 ? "done"
                 : "pending",
@@ -301,7 +310,9 @@ function TradeStatusMonitoring({
             status === "PAYOUT_INITIATED" ||
             status === "PENDING_PAYOUT"
               ? "active"
-              : status === "COMPLETED"
+              : status === "NO_OWNER"
+                ? "done"
+                : status === "COMPLETED"
                 ? "done"
                 : "pending",
         },
@@ -319,6 +330,8 @@ function TradeStatusMonitoring({
         : "Verifying Payment"
     : status === "COMPLETED"
       ? "Transaction Completed"
+      : status === "NO_OWNER"
+        ? "Deposit Recorded Without Owner"
       : status === "DISPUTED"
         ? "Transaction Disputed"
         : "Monitoring Wallet";
@@ -339,6 +352,8 @@ function TradeStatusMonitoring({
         ? "Deposit found, but it is still below the minimum."
         : status === "DEPOSIT_CONFIRMED"
           ? "Deposit confirmed. Processing payout."
+          : status === "NO_OWNER"
+            ? "We received a guest-wallet deposit without a linked transaction owner."
           : status === "PAYOUT_INITIATED"
             ? "Payout initiated. Waiting for bank completion."
             : status === "DISPUTED"
@@ -357,6 +372,8 @@ function TradeStatusMonitoring({
         : "Your payment receipt has been submitted. We are polling for updates and will continue automatically."
     : status === "COMPLETED"
       ? `Your ${selectedToken?.symbol ?? "crypto"} sale has completed successfully.`
+      : status === "NO_OWNER"
+        ? "We recorded a guest-wallet deposit without a linked transaction owner. The wallet has been retired from reuse and the deposit is held for manual review."
       : status === "DISPUTED"
         ? "Your transaction is currently under dispute. Our support team is reviewing the case."
         : `We are monitoring your ${selectedToken?.symbol ?? "crypto"} deposit and will continue automatically once the network confirms it.`;

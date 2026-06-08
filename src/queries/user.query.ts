@@ -1,18 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "./query.keys.ts";
-import { LOCAL_STORAGE_KEYS, ROUTES } from "../util/constants.util.ts";
+import { LOCAL_STORAGE_KEYS } from "../util/constants.util.ts";
 import { userServiceApi } from "../api/user.api.ts";
-import { useMatchRoute } from "@tanstack/react-router";
-import { useDispatch } from "react-redux";
-import { setIsAnonymousUser } from "../redux/user.slice.ts";
 import { type RootState, store } from "../store.ts";
 import { toast } from "react-toastify";
 import type { AxiosServerError } from "../types/response.payload.types.ts";
 import { extractErrorMessage } from "../util/index.util.ts";
 
 export const useUserQuery = () => {
-  const matchRoute = useMatchRoute();
-  const dispatch = useDispatch();
   const queryClient = useQueryClient();
   
   const { data: userProfileData, isLoading: loadingUserProfile } = useQuery({
@@ -29,27 +24,7 @@ export const useUserQuery = () => {
     enabled: !!localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN),
     staleTime: 1000 * 60 * 5, // 5 minutes
   })
-  
-  useQuery({
-    queryKey: [QUERY_KEYS.USER.PING],
-    queryFn: async () => {
-      const { success, message} = await userServiceApi.pingUser()
 
-      if (!success) {
-        dispatch(setIsAnonymousUser(true));
-        throw new Error(message || "Failed to ping user");
-      }
-
-      dispatch(setIsAnonymousUser(false));
-      return { success, message };
-    },
-    // refetchInterval: 30_000, // ⏱ 30 seconds (in ms)
-    refetchInterval: 100000,
-    refetchIntervalInBackground: true, // ✅ keeps pinging even when tab is inactive
-    refetchOnWindowFocus: false,
-    enabled: !!matchRoute({ to: ROUTES.DASHBOARD_TRADE }) || !!matchRoute({ to: ROUTES.HOMEPAGE }) || !!matchRoute({ to: ROUTES.PROFILE })
-  });
-  
   const updateProfileMutation = useMutation({
     mutationKey: [QUERY_KEYS.USER.UPDATE_USER_PROFILE],
     mutationFn: async () => {

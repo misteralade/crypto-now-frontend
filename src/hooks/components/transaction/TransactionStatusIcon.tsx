@@ -46,6 +46,8 @@ export const TransactionStatus = ({ status }: { status: string }) => {
         return <AlertCircle className={`w-5 h-5 ${color}`} />;
       case "DEPOSIT_CONFIRMED":
         return <CheckCircle className={`w-5 h-5 ${color}`} />;
+      case "NO_OWNER":
+        return <AlertTriangle className={`w-5 h-5 ${color}`} />;
       case "PAYOUT_INITIATED":
         return <CheckCircle className={`w-5 h-5 ${color}`} />;
       case "PENDING_PAYOUT":

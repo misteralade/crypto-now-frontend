@@ -15,6 +15,7 @@ const TERMINAL_TRANSACTION_STATUSES = new Set([
   "PAYOUT_FAILED",
   "DISPUTED",
   "REFUNDED",
+  "NO_OWNER",
 ]);
 
 type TransactionStatusEventPayload = {
