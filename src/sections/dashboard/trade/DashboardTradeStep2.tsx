@@ -333,7 +333,7 @@ function TradeMonitoringView({
             (isBuy ? `Your payment was verified and ${selectedToken?.symbol} has been sent to your wallet.` : 
                     `Your ${selectedToken?.symbol} has been sold and NGN sent to your bank.`) :
             (isBuy ? (status === "IN_REVIEW"
-              ? "Your payment receipt has been submitted and is under review."
+              ? "Your payment receipt has been submitted and is being reviewed."
               : "We're verifying your bank transfer. Crypto will be released automatically once confirmed.") :
                     (isNoOwnerStatus
                       ? "We recorded a deposit on a guest wallet without a linked transaction owner. The wallet has been retired from reuse and the funds are held for manual accounting review."
