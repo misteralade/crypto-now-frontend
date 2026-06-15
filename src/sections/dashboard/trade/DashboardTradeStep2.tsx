@@ -935,7 +935,7 @@ export default function DashboardTradeStep2({
           <p className="text-xs text-white/70 mt-1">
             You'll receive{" "}
             {isLocalBuyFlow && buyRateInfo
-              ? buyRateInfo.cryptoAmount.toFixed(6)
+              ? buyRateInfo.cryptoAmount.toFixed(6).replace(/\.?0+$/, "")
               : numberOfToken}{" "}
             {selectedToken?.symbol}
           </p>

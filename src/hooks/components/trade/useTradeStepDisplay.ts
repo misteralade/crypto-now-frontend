@@ -30,7 +30,6 @@ import {type RootState, store} from "../../../store.ts";
 import {clearAnonymousUserEmail, setAnonymousUserEmail, setIsAnonymousUser} from "../../../redux/user.slice.ts";
 import { convertToMillify, isExchangeRateExpiryError } from "../../../util/index.util.ts";
 import { toast } from "react-toastify";
-import { userServiceApi } from "../../../api/user.api.ts";
 
 // Debounce
 const useDebounce = (value: any, delay: number) => {
@@ -684,7 +683,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       (isEditingNumberOfToken || (noFieldFocused && lastCalculationRef.current?.from !== "amountToBuy")) &&
       lastCalculationRef.current?.from !== "amountToBuy"
     ) {
-      const calculated = (Number(numberOfToken) * calculationRate).toFixed(5);
+      const calculated = (Number(numberOfToken) * calculationRate).toFixed(5).replace(/\.?0+$/, "");
       // Update the receive field (user is not typing here, so it's safe to format)
       if (calculated !== String(amountToBuy)) {
         nextAmountToBuy = calculated;
@@ -703,7 +702,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       lastCalculationRef.current?.from !== "numberOfToken" &&
       !calculationPerformed
     ) {
-      const calculated = (Number(amountToBuy) / calculationRate).toFixed(8);
+      const calculated = (Number(amountToBuy) / calculationRate).toFixed(8).replace(/\.?0+$/, "");
       // Update the receive field (user is not typing here, so it's safe to format)
       if (calculated !== String(numberOfToken)) {
         nextNumberOfToken = calculated;
@@ -725,7 +724,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
         (isEditingAmountToBuy || (noFieldFocused && lastCalculationRef.current?.from !== "numberOfToken")) &&
         lastCalculationRef.current?.from !== "numberOfToken"
       ) {
-        const calculated = (Number(amountToBuy) / calculationRate).toFixed(8);
+        const calculated = (Number(amountToBuy) / calculationRate).toFixed(8).replace(/\.?0+$/, "");
         // Update the enter amount field (user is not typing here, so it's safe to format)
         if (calculated !== String(numberOfToken) && Number(calculated) > 0) {
           nextNumberOfToken = calculated;
@@ -743,7 +742,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
         (isEditingNumberOfToken || (noFieldFocused && lastCalculationRef.current?.from !== "amountToBuy")) &&
         lastCalculationRef.current?.from !== "amountToBuy"
       ) {
-        const calculated = (Number(numberOfToken) * calculationRate).toFixed(5);
+        const calculated = (Number(numberOfToken) * calculationRate).toFixed(5).replace(/\.?0+$/, "");
         // Update the enter amount field (user is not typing here, so it's safe to format)
         if (calculated !== String(amountToBuy) && Number(calculated) > 0) {
           nextAmountToBuy = calculated;
@@ -1523,7 +1522,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     userBankAccounts,
     isInitiatingTrade: initiateTransactionMutation.isPending || createAndSubmitTransactionMutation.isPending,
     showUserEnterEmail,
-    isLoadingPingUser,
+    
     loadingSupportedCryptocurrencies,
     loadingUserBankAccounts,
     hasAnonymousUserEmail,

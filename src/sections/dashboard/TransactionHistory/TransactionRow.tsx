@@ -90,7 +90,7 @@ const TransactionRow = ({ transaction: tx, isLast, isMobileCard = false }: Trans
           {/* Row 2: CRYPTO | NETWORK | RATE */}
           <div className="mt-2.5 ml-14 grid grid-cols-3 gap-2">
             {[
-              { label: "CRYPTO",  val: `${Number(tx.amountCrypto).toFixed(4)} ${tx.cryptocurrency.symbol}` },
+              { label: "CRYPTO",  val: `${Number(tx.amountCrypto).toFixed(4).replace(/\.?0+$/, "")} ${tx.cryptocurrency.symbol}` },
               { label: "NETWORK", val: tx.userCryptoWallet?.network ?? tx.adminCryptoWallet?.network ?? "—" },
               { label: "RATE",    val: `₦${convertToMillify(Number(tx.stableToFiatRate), 0)}/${tx.cryptocurrency.symbol}` },
             ].map(({ label, val }) => (
@@ -155,7 +155,7 @@ const TransactionRow = ({ transaction: tx, isLast, isMobileCard = false }: Trans
       <td className="px-5 py-4">
         <div>
           <p className="text-sm font-semibold" style={{ color: "#0E0F0C" }}>
-            {Number(tx.amountCrypto).toFixed(4)}
+            {Number(tx.amountCrypto).toFixed(4).replace(/\.?0+$/, "")}
           </p>
           <p className="text-xs" style={{ color: "#9A9A9A" }}>{tx.cryptocurrency.symbol}</p>
         </div>

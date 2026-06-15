@@ -1124,7 +1124,7 @@ const AppSimCard = () => {
     if (!data?.fiatRate) return;
 
     const roundedCryptoAmount = formatCryptoAmountForDisplay(
-      (targetNgnAmount / data.fiatRate).toFixed(8),
+      (targetNgnAmount / data.fiatRate).toFixed(8).replace(/\.?0+$/, ""),
     );
     const computedReceiveAmount = targetNgnAmount.toFixed(2);
     skipNextAutoQuoteRef.current = true;
@@ -1194,7 +1194,7 @@ const AppSimCard = () => {
         submittedCryptoAmount > anonymousMaximumCryptoAmount
       ) {
         const maximumLabel = `${formatCryptoAmountForDisplay(
-          anonymousMaximumCryptoAmount.toFixed(8),
+          anonymousMaximumCryptoAmount.toFixed(8).replace(/\.?0+$/, ""),
         )} ${cryptoSymbol}`;
         const errorMessage = `Anonymous trades must not exceed ${maximumLabel}.`;
         setGuestError(errorMessage);

@@ -224,7 +224,7 @@ function BuyFields({
         (
           fiatAmount /
           (rateData.coinGeckoRate * Number(rateData.platformRate))
-        ).toFixed(8),
+        ).toFixed(8).replace(/\.?0+$/, ""),
       );
 
       onRateResolved?.({
@@ -267,9 +267,9 @@ function BuyFields({
   const inputValue = Number(amountToBuy ?? 0);
   const cryptoPreview =
     buyRateInfo && buyRateInfo.fiatAmount === inputValue
-      ? buyRateInfo.cryptoAmount.toFixed(6)
+      ? buyRateInfo.cryptoAmount.toFixed(6).replace(/\.?0+$/, "")
       : inputValue > 0 && Number(selectedToken.buyRate ?? 0) > 0
-        ? (inputValue / Number(selectedToken.buyRate)).toFixed(6)
+        ? (inputValue / Number(selectedToken.buyRate)).toFixed(6).replace(/\.?0+$/, "")
         : null;
 
   return (
