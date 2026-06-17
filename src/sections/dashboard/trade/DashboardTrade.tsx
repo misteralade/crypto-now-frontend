@@ -215,7 +215,6 @@ export default function DashboardTrade({
     isRestoringTransaction,
     userBankAccounts,
     showUserEnterEmail,
-    isLoadingPingUser,
     loadingSupportedCryptocurrencies,
     loadingUserBankAccounts,
     setAmountToBuy,
@@ -327,13 +326,7 @@ export default function DashboardTrade({
     }
   }, [supportedCryptoCurrencies]);
 
-  if (isLoadingPingUser) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <LoadingSpinner fullScreen={false} message="Checking authentication…" />
-      </div>
-    );
-  }
+
 
   if (activeSessionId && isRestoringTransaction) {
     return (
@@ -616,7 +609,7 @@ export default function DashboardTrade({
       </div>
 
       <EmailModal
-        open={showUserEnterEmail && !isLoadingPingUser}
+        open={showUserEnterEmail}
         onClose={toggleShowUserEnterEmail}
         onConfirm={handleAnonymousUserEmailInput}
       />

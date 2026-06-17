@@ -1849,24 +1849,37 @@ const AppSimCard = () => {
 
               {/* Network selector — hidden when only one option */}
               {allowedNetworks.length > 1 ? (
-                <button
-                  onClick={() => setShowNetworkPicker(true)}
-                  className="flex flex-col rounded-xl px-4 pt-2 pb-2.5 text-left cursor-pointer"
+                <div
+                  className="flex flex-col rounded-xl px-4 pt-2 pb-2 text-left relative"
                   style={{
                     background: "#F5F5F5",
                     border: "1.5px solid #E8E8E8",
                   }}
                 >
-                  <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1">
+                  <label htmlFor="network-select-buy" className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-0.5">
                     Network
-                  </span>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-[#0E0F0C]">
-                      {networkLabel}
-                    </span>
-                    <span className="text-gray-400 text-xs">▾</span>
+                  </label>
+                  <div className="relative">
+                    <select
+                      id="network-select-buy"
+                      value={network}
+                      onChange={(e) => {
+                        setNetwork(e.target.value);
+                        setGuestError(null);
+                      }}
+                      className="w-full bg-transparent text-sm font-medium text-[#0E0F0C] outline-none border-none py-1 appearance-none cursor-pointer pr-8"
+                    >
+                      {allowedNetworks.map((n) => (
+                        <option key={n.id} value={n.id} className="text-black">
+                          {n.label}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-500">
+                      <span className="text-xs">▾</span>
+                    </div>
                   </div>
-                </button>
+                </div>
               ) : (
                 <div
                   className="flex flex-col rounded-xl px-4 pt-2 pb-2.5"
@@ -1883,62 +1896,6 @@ const AppSimCard = () => {
                   </span>
                 </div>
               )}
-
-              {/* Network picker overlay */}
-              <AnimatePresence>
-                {showNetworkPicker && (
-                  <motion.div
-                    ref={networkPickerRef}
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 12 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute inset-x-0 bottom-0 z-50"
-                    style={{
-                      background: "#1a1a2e",
-                      borderRadius: "16px 16px 20px 20px",
-                    }}
-                  >
-                    <div className="px-4 pt-4 pb-3 flex flex-col gap-0.5">
-                      <p className="text-white/50 text-xs font-semibold uppercase tracking-widest mb-2">
-                        Select network
-                      </p>
-                      {allowedNetworks.map((n) => (
-                        <button
-                          key={n.id}
-                          onClick={() => {
-                            setNetwork(n.id);
-                            setGuestError(null);
-                            setShowNetworkPicker(false);
-                          }}
-                          className="flex items-center gap-3 py-3 border-b border-white/10 cursor-pointer bg-transparent last:border-0"
-                        >
-                          <div
-                            className="w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center"
-                            style={{
-                              borderColor:
-                                network === n.id
-                                  ? "#948EEE"
-                                  : "rgba(255,255,255,0.3)",
-                            }}
-                          >
-                            {network === n.id && (
-                              <div className="w-2 h-2 rounded-full bg-[#948EEE]" />
-                            )}
-                          </div>
-                          <span
-                            className={`text-sm font-semibold ${
-                              network === n.id ? "text-[#948EEE]" : "text-white"
-                            }`}
-                          >
-                            {n.label}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
 
               <div className="flex gap-2">
                 <button
@@ -2015,6 +1972,57 @@ const AppSimCard = () => {
                 type="email"
                 error={emailError}
               />
+
+              {/* Network selector — hidden when only one option */}
+              {allowedNetworks.length > 1 ? (
+                <div
+                  className="flex flex-col rounded-xl px-4 pt-2 pb-2 text-left relative"
+                  style={{
+                    background: "#F5F5F5",
+                    border: "1.5px solid #E8E8E8",
+                  }}
+                >
+                  <label htmlFor="network-select-sell" className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-0.5">
+                    Network
+                  </label>
+                  <div className="relative">
+                    <select
+                      id="network-select-sell"
+                      value={network}
+                      onChange={(e) => {
+                        setNetwork(e.target.value);
+                        setGuestError(null);
+                      }}
+                      className="w-full bg-transparent text-sm font-medium text-[#0E0F0C] outline-none border-none py-1 appearance-none cursor-pointer pr-8"
+                    >
+                      {allowedNetworks.map((n) => (
+                        <option key={n.id} value={n.id} className="text-black">
+                          {n.label}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-500">
+                      <span className="text-xs">▾</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div
+                  className="flex flex-col rounded-xl px-4 pt-2 pb-2.5"
+                  style={{
+                    background: "#F5F5F5",
+                    border: "1.5px solid #E8E8E8",
+                  }}
+                >
+                  <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1">
+                    Network
+                  </span>
+                  <span className="text-sm font-medium text-[#0E0F0C]">
+                    {networkLabel}
+                  </span>
+                </div>
+              )}
+
               <BankSelector
                 label="Your Bank"
                 placeholder="Select bank"
@@ -2077,6 +2085,7 @@ const AppSimCard = () => {
                   )}
                 </button>
               </div>
+
             </motion.div>
           )}
 
