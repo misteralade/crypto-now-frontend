@@ -9,7 +9,7 @@ import { type RootState, store } from "../../store.ts";
 export const useTradeCryptoCurrenciesButton = () => {
   const navigate = useNavigate();
   useUserQuery();
-  const { supportedCryptoCurrencies, loadingSupportedCrypto } = useCryptoQuery();
+  const { supportedCryptoCurrencies, loadingSupportedCryptocurrencies, errorSupportedCryptocurrencies } = useCryptoQuery();
   const { supportedCurrencies, loadingSupportedCurrencies } = useCurrencyQuery();
   const rootState = store.getState() as RootState;
   
@@ -22,7 +22,7 @@ export const useTradeCryptoCurrenciesButton = () => {
     if (supportedCryptoCurrencies && supportedCryptoCurrencies.length > 0) {
       setSelectedCrypto(supportedCryptoCurrencies[0].id);
     }
-  }, [loadingSupportedCrypto, supportedCryptoCurrencies]);
+  }, [loadingSupportedCryptocurrencies, supportedCryptoCurrencies]);
 
   useEffect(() => {
     if ((rootState.user.trade.anonymous.isAnonymousUser !== undefined && rootState.user.trade.anonymous.isAnonymousUser) || (localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN) === undefined)) {
@@ -45,7 +45,8 @@ export const useTradeCryptoCurrenciesButton = () => {
   return {
     // Values
     supportedCryptoCurrencies,
-    loadingSupportedCrypto,
+    loadingSupportedCrypto: loadingSupportedCryptocurrencies,
+    errorSupportedCrypto: errorSupportedCryptocurrencies,
     supportedCurrencies,
     loadingSupportedCurrencies,
     selectedCrypto,

@@ -463,7 +463,7 @@ function loadLS() {
 // ── Main card ─────────────────────────────────────────────────────────────────
 const AppSimCard = () => {
   const navigate = useNavigate();
-  const { supportedCryptoCurrencies, loadingSupportedCrypto, supportedCurrencies, loadingSupportedCurrencies } =
+  const { supportedCryptoCurrencies, loadingSupportedCrypto, errorSupportedCrypto, supportedCurrencies, loadingSupportedCurrencies } =
     useTradeCryptoCurrenciesButton();
   const { allBanks, loadingAllBanks } = useBankQuery();
 
@@ -1485,13 +1485,12 @@ const AppSimCard = () => {
 
               {/* Crypto picker */}
               {loadingSupportedCrypto && !supportedCryptoCurrencies ? (
-                <div className="flex gap-2">
-                  {[1, 2, 3].map((i) => (
-                    <div
-                      key={i}
-                      className="flex-1 h-20 rounded-xl bg-gray-100 animate-pulse"
-                    />
-                  ))}
+                <div className="rounded-xl border border-dashed border-gray-200 bg-white px-4 py-6 text-center text-sm text-gray-400 animate-pulse">
+                  Crypto assets are loading , pls wait
+                </div>
+              ) : errorSupportedCrypto ? (
+                <div className="rounded-xl border border-dashed border-red-200 bg-red-50 px-4 py-6 text-center text-sm text-red-500">
+                  Problem fetching tokens. Please check your network connection.
                 </div>
               ) : !supportedCryptoCurrencies ||
                 supportedCryptoCurrencies.length === 0 ? (

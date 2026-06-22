@@ -10,7 +10,7 @@ import {extractErrorMessage} from "../util/index.util.ts";
 export const useCryptoQuery = () => {
   const queryClient = useQueryClient();
 
-  const { data: supportedCryptoCurrencies, isLoading: loadingSupportedCryptocurrencies } = useQuery({
+  const { data: supportedCryptoCurrencies, isLoading: loadingSupportedCryptocurrencies, isError: errorSupportedCryptocurrencies } = useQuery({
     queryKey: [QUERY_KEYS.CRYPTO.SUPPORTED_CRYPTO],
     queryFn: async () => {
       const { data, success } = await cryptoServiceApi.getSupportedCrypto();
@@ -19,7 +19,7 @@ export const useCryptoQuery = () => {
         return data;
       }
 
-      return [];
+      throw new Error("Failed to fetch supported cryptos");
     }
   });
 
@@ -99,6 +99,7 @@ export const useCryptoQuery = () => {
     // Values
     supportedCryptoCurrencies,
     loadingSupportedCryptocurrencies,
+    errorSupportedCryptocurrencies,
     supportedCrypto,
     loadingSupportedCrypto,
     custodialWallets,
