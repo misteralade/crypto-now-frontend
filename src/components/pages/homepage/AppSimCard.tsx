@@ -1716,20 +1716,29 @@ const AppSimCard = () => {
 
               {/* Rate / receive preview */}
               {(quoteLoading || receiveAmount) && (
-                <p className="text-center text-sm text-gray-400">
-                  {quoteLoading ? (
-                    "Calculating preview..."
-                  ) : (
-                    <>
-                      You receive:{" "}
-                      <span className="font-bold text-[#22c55e]">
-                        {isBuy
-                          ? `${formatReceiveCryptoDisplay(receiveAmount)} ${cryptoSymbol}`
-                          : formatReceiveNgnDisplay(receiveAmount)}
-                      </span>
-                    </>
+                <div className="flex flex-col gap-1 text-center">
+                  <p className="text-sm text-gray-400">
+                    {quoteLoading ? (
+                      "Calculating preview..."
+                    ) : (
+                      <>
+                        You receive:{" "}
+                        <span className="font-bold text-[#22c55e]">
+                          {isBuy
+                            ? `${formatReceiveCryptoDisplay(receiveAmount)} ${cryptoSymbol}`
+                            : formatReceiveNgnDisplay(receiveAmount)}
+                        </span>
+                      </>
+                    )}
+                  </p>
+                  {isBuy && !quoteLoading && (
+                    <p className="text-xs text-gray-400">
+                      {cryptoSymbol.toUpperCase() === "USDT" && "Fees may apply - 1 USDT"}
+                      {cryptoSymbol.toUpperCase() === "SOL" && "Fees may apply - 0.0004 SOL"}
+                      {cryptoSymbol.toUpperCase() === "BTC" && "Fees may apply - BTC fees are unpredictable"}
+                    </p>
                   )}
-                </p>
+                </div>
               )}
 
               <button
