@@ -903,7 +903,7 @@ const AppSimCard = () => {
 
       if (data && data.fiatRate > 0) {
         const computed = isBuy
-          ? roundTokenAmountUp(numericAmount / data.fiatRate, selectedCrypto.symbol)
+          ? roundTokenAmountUp(numericAmount / data.fiatRate, cryptoSymbol)
           : numericAmount * data.fiatRate;
         setReceiveAmount(computed > 0 ? String(computed) : "");
       } else {
