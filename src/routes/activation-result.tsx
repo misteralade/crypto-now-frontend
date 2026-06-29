@@ -10,9 +10,9 @@ export const Route = createFileRoute('/activation-result')({
     
     // Save token to localStorage
     if (success) {
-      toast.success(decodeURIComponent(message))
+      toast.success(decodeURIComponent(message), { toastId: "activation-result-toast" })
     } else {
-      toast.error(decodeURIComponent(message))
+      toast.error(decodeURIComponent(message), { toastId: "activation-result-toast" })
     }
     
     // Redirect immediately to /dashboard

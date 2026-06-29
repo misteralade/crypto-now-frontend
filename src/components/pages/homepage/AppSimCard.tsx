@@ -29,6 +29,7 @@ import BankSelector from "../../global/BankSelector.tsx";
 import {
   TRADE_FIAT_AMOUNT_PRESETS,
   formatTradeFiatPreset,
+  roundTokenAmountUp,
 } from "../../../constants/tradeAmounts.ts";
 import type { SupportedExchangeRateResponse } from "../../../types/response.payload.types.ts";
 import { extractErrorMessage, isExchangeRateExpiryError } from "../../../util/index.util.ts";
@@ -902,7 +903,7 @@ const AppSimCard = () => {
 
       if (data && data.fiatRate > 0) {
         const computed = isBuy
-          ? numericAmount / data.fiatRate
+          ? roundTokenAmountUp(numericAmount / data.fiatRate, selectedCrypto.symbol)
           : numericAmount * data.fiatRate;
         setReceiveAmount(computed > 0 ? String(computed) : "");
       } else {

@@ -9,7 +9,7 @@ export const Route = createFileRoute('/oauth/error')({
     
     if (message) {
       // Save token to localStorage
-      toast.error(message)
+      toast.error(message, { toastId: "oauth-error-toast" })
       
       // Redirect immediately to /dashboard
       throw redirect({
