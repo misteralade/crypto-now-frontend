@@ -1,25 +1,12 @@
 import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
 import AuthenticatedLayout from "../layouts/AuthenticatedLayout.tsx";
 import { LOCAL_STORAGE_KEYS, ROUTES } from "../util/constants.util.ts";
-import { kycServiceApi } from "../api/kyc.api.ts";
 
 export const Route = createFileRoute("/dashboard")({
   beforeLoad: async () => {
     const accessToken = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
     if (!accessToken) {
       throw redirect({ to: ROUTES.SIGNIN });
-    }
-
-    // KYC gate: only verified users can access dashboard routes.
-    try {
-      const { data } = await kycServiceApi.getSession();
-      if (!data || data.currentStep !== "Approved") {
-        throw redirect({ to: ROUTES.KYC });
-      }
-    } catch (error) {
-      if (error && typeof error === "object" && "isRedirect" in error)
-        throw error;
-      throw redirect({ to: ROUTES.KYC });
     }
   },
   component: DashboardLayoutRoute,
