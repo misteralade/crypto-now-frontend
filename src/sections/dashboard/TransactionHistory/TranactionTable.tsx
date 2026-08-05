@@ -79,10 +79,9 @@ const TransactionTable = ({
   }, [loadingSupportedCurrencies, supportedCurrencies]);
 
   const goTrade = () => {
-    if (selectedCrypto && supportedCurrency)
-      navigate({
-        to: `${ROUTES.DASHBOARD_TRADE}?option=buy&currency=${supportedCurrency}&token=${selectedCrypto}`,
-      });
+    navigate({
+      to: ROUTES.DASHBOARD,
+    });
   };
 
   if (isLoading) {

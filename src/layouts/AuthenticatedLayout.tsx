@@ -1,6 +1,6 @@
 import { type ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, User, LogOut, TrendingUp, Settings, Wallet, History } from "lucide-react";
+import { LayoutDashboard, User, LogOut, Settings, Wallet, History } from "lucide-react";
 import { LOCAL_STORAGE_KEYS, ROUTES } from "../util/constants.util.ts";
 import { useUserQuery } from "../queries/user.query.ts";
 import { clearUserSessionStorage } from "../util/tradeProgress.storage.util.ts";
@@ -19,7 +19,6 @@ const mobileTabs = [
 /* ─── desktop sidebar config ────────────────────────────────── */
 const sidebarNav = [
   { to: ROUTES.DASHBOARD,         label: "Dashboard",  icon: LayoutDashboard, exact: true },
-  { to: ROUTES.DASHBOARD_TRADE,   label: "Trade",      icon: TrendingUp,      exact: false },
   { to: ROUTES.DASHBOARD_WALLETS, label: "Wallets",    icon: Wallet,          exact: false },
   { to: ROUTES.TRANSACTION,       label: "History",    icon: History,         exact: false },
   { to: ROUTES.PROFILE,           label: "Settings",   icon: Settings,        exact: false },
@@ -27,7 +26,6 @@ const sidebarNav = [
 
 const getPageTitle = (pathname: string) => {
   if (pathname === ROUTES.DASHBOARD) return "Home";
-  if (pathname.startsWith(ROUTES.DASHBOARD_TRADE)) return "Trade";
   if (pathname.startsWith(ROUTES.DASHBOARD_WALLETS)) return "Wallets";
   if (pathname.startsWith(ROUTES.TRANSACTION)) return "History";
   if (pathname.startsWith(ROUTES.PROFILE)) return "Profile";

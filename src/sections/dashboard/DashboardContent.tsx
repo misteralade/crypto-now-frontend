@@ -271,6 +271,9 @@ export default function DashboardContent() {
     (supportedCryptoCurrencies ?? []).map((c) => [c.id, c]),
   );
   const recentWallets = (custodialWallets ?? []).slice(0, 3);
+  void loadingCustodialWallets;
+  void recentWallets;
+  void WalletMiniCard;
 
   const goTrade = (option: "buy" | "sell") => {
     navigate({ to: ROUTES.DASHBOARD_TRADE, search: { option } as any });
@@ -815,6 +818,7 @@ export default function DashboardContent() {
           )}
 
         {/* DEPOSIT WALLETS */}
+        {/* DEPOSIT WALLETS
         <section>
           <div className="flex items-center justify-between mb-3">
             <p
@@ -928,6 +932,7 @@ export default function DashboardContent() {
             </div>
           )}
         </section>
+        */}
 
         {/* RECENT ORDERS */}
         <section>
