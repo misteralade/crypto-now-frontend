@@ -23,7 +23,7 @@ const  InstantTradeSection = ({ cryptoCurrencies, currencies, selectedCryptoId, 
 
   
   const handleSubmit = () => {
-    navigate({ to: `${ROUTES.DASHBOARD_TRADE}?option=${selectedAction.toLowerCase()}&currency=${selectedCurrencyId}&token=${selectedCryptoId}&amount=${fiatAmount}` });
+    navigate({ to: ROUTES.DASHBOARD });
   }
 
   

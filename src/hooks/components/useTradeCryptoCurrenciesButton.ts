@@ -38,7 +38,7 @@ export const useTradeCryptoCurrenciesButton = () => {
   
   const handleTradeCrypto = () => {
     navigate({
-      to: `${ROUTES.DASHBOARD_TRADE}?option=${selectedAction.toLowerCase()}&currency=${supportedCurrency}&token=${selectedCrypto}`,
+      to: ROUTES.DASHBOARD,
     });
   };
   

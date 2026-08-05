@@ -38,9 +38,7 @@ export const useNavbarDropdown = (handleMenuItemClick?: (() => void) | undefined
     }
 
   const handleRouting = (currency?: string) => {
-        const defaultCurrency = currency ? currency : supportedCurrencies?.[0]?.id;
-
-        navigate({to: `${ROUTES.DASHBOARD_TRADE}?option=${activeDropOption}&currency=${defaultCurrency}&token=${selectedToken}`})
+        navigate({to: ROUTES.DASHBOARD})
 
         if (isMobile && handleMenuItemClick) {
             handleMenuItemClick();
