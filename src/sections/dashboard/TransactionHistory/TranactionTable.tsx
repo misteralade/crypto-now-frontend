@@ -12,6 +12,7 @@ export interface FilterState {
   toDate: string | undefined;
   cryptocurrency: string | undefined;
   status: string | undefined;
+  type: string | undefined;
 }
 
 interface TransactionTableProps {

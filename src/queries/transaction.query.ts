@@ -68,7 +68,7 @@ export const useTransactionQuery = () => {
 
       return null;
     },
-    enabled: !!matchRoute({ to: ROUTES.DASHBOARD }),
+    enabled: isDashboardShell,
   })
 
   // Get Incomplete Transactions Count

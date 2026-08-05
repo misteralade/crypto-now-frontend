@@ -12,6 +12,7 @@ import { LOCAL_STORAGE_KEYS, ROUTES } from "../util/constants.util.ts";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useTransactionQuery } from "../queries/transaction.query.ts";
 import { convertToMillify } from "../util/index.util.ts";
+import { clearUserSessionStorage } from "../util/tradeProgress.storage.util.ts";
 import type { ProfileSection } from "../routes/dashboard/profile.tsx";
 
 type Section = ProfileSection | null;
@@ -117,6 +118,7 @@ const ProfilePage = () => {
 
   const handleLogout = () => {
     localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+    clearUserSessionStorage();
     navigate({ to: ROUTES.HOMEPAGE });
   };
 
@@ -296,7 +298,14 @@ const ProfilePage = () => {
               <div className="flex items-center justify-between pt-6 pb-5">
                 <div className="flex items-center gap-3">
                   <button
-                    onClick={() => setActiveSection(null)}
+                    type="button"
+                    onClick={() => {
+                      if (window.history.length > 1) {
+                        window.history.back();
+                      } else {
+                        setActiveSection(null);
+                      }
+                    }}
                     className="w-9 h-9 rounded-full flex items-center justify-center transition-colors hover:bg-gray-100"
                     style={{ border: "1px solid #F0F0F0" }}
                   >

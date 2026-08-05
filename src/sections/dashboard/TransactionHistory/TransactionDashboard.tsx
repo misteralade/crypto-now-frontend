@@ -1,14 +1,10 @@
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useTransactionBoard } from "../../../hooks/components/dashboard/useTransactionBoard.ts";
-import type {
-  SupportedCryptoOrCurrencyResponse,
-  TransactionResponseEntity,
-} from "../../../types/response.payload.types.ts";
+import type { TransactionResponseEntity } from "../../../types/response.payload.types.ts";
 import type { SearchTransactionsRequestPayload } from "../../../types/request.payload.types.ts";
 import type { RootState } from "../../../store.ts";
 import { TransactionSearch } from "./TranactionSearch.tsx";
-import ExportTransaction from "./ExportTransaction.tsx";
 import TransactionTable from "./TranactionTable.tsx";
 import { convertToMillify } from "../../../util/index.util.ts";
 
@@ -45,17 +41,15 @@ export function TransactionDashboard() {
 
   const {
     searchQuery,
-    showFilters,
     userTransactionHistory,
     loadingUserTransactionHistory,
     fetchingUserTransactionHistory,
     filters,
-    supportedCryptoCurrencies,
-    loadingSupportedCryptocurrencies,
-    setShowFilters,
     handleSearchChange,
     handleFiltersChange,
     handleLoadMore,
+    transactionSummary,
+    loadingTransactionSummary,
   } = useTransactionBoard();
 
   // New filters/search → drop merged list so we don't flash stale rows while page 1 refetches.
@@ -86,40 +80,35 @@ export function TransactionDashboard() {
 
   const handleTab = (val: TabValue, idx: number) => {
     setActiveTabIdx(idx);
-    handleFiltersChange({ ...filters, status: val.status });
+    handleFiltersChange({ ...filters, status: val.status, type: val.type });
   };
 
   /* summary stats */
   const total = userTransactionHistory?.count ?? 0;
-  const bought = accumulatedTransactions
-    .filter((t) => t.type.toUpperCase() === "BUY")
-    .reduce((a, t) => a + Number(t.amountFiat), 0);
-  const sold = accumulatedTransactions
-    .filter((t) => t.type.toUpperCase() === "SELL")
-    .reduce((a, t) => a + Number(t.amountFiat), 0);
+  const bought = transactionSummary?.total
+    ? transactionSummary.total.reduce((sum, item) => sum + Number(item.fiatSpentOnBuying), 0)
+    : 0;
+  const sold = transactionSummary?.total
+    ? transactionSummary.total.reduce((sum, item) => sum + Number(item.fiatReceivedFromSelling), 0)
+    : 0;
 
   return (
     <div style={{ background: "#FFFFFF", minHeight: "100dvh" }}>
       {/* ── page header (shared mobile + desktop) ── */}
-      <div className="px-5 lg:px-0 pt-6 pb-4 flex items-start justify-between gap-4">
-        <div>
-          <h2
-            className="text-[22px] font-extrabold"
-            style={{
-              color: "#0E0F0C",
-              fontFamily: "'DM Sans',sans-serif",
-              letterSpacing: "-0.02em",
-            }}
-          >
-            Transaction History
-          </h2>
-          <p className="text-xs mt-0.5" style={{ color: "#9A9A9A" }}>
-            All your buy &amp; sell orders
-          </p>
-        </div>
-        <div className="shrink-0 mt-1">
-          <ExportTransaction />
-        </div>
+      <div className="px-5 lg:px-0 pt-6 pb-4">
+        <h2
+          className="text-[22px] font-extrabold"
+          style={{
+            color: "#0E0F0C",
+            fontFamily: "'DM Sans',sans-serif",
+            letterSpacing: "-0.02em",
+          }}
+        >
+          Transaction History
+        </h2>
+        <p className="text-xs mt-0.5" style={{ color: "#9A9A9A" }}>
+          All your buy &amp; sell orders
+        </p>
       </div>
 
       {/* ── summary pills ── */}
@@ -128,10 +117,10 @@ export function TransactionDashboard() {
         style={{ scrollbarWidth: "none" }}
       >
         {[
-          { label: "TOTAL", val: String(total) },
-          { label: "BOUGHT", val: `₦${convertToMillify(bought, 0)}` },
-          { label: "SOLD", val: `₦${convertToMillify(sold, 0)}` },
-        ].map(({ label, val }) => (
+          { label: "TOTAL", val: String(total), loading: loadingUserTransactionHistory },
+          { label: "BOUGHT", val: `₦${convertToMillify(bought, 0)}`, loading: loadingTransactionSummary },
+          { label: "SOLD", val: `₦${convertToMillify(sold, 0)}`, loading: loadingTransactionSummary },
+        ].map(({ label, val, loading }) => (
           <div
             key={label}
             className="flex flex-col items-center justify-center px-5 py-3 rounded-2xl shrink-0"
@@ -147,7 +136,7 @@ export function TransactionDashboard() {
             >
               {label}
             </p>
-            {loadingUserTransactionHistory ? (
+            {loading ? (
               <div className="mt-1 h-4 w-14 rounded animate-pulse bg-gray-200" />
             ) : (
               <p
@@ -190,16 +179,6 @@ export function TransactionDashboard() {
         <TransactionSearch
           searchQuery={searchQuery}
           onSearchChange={handleSearchChange}
-          showFilters={showFilters}
-          onToggleFilters={() => setShowFilters(!showFilters)}
-          setShowFilters={setShowFilters}
-          filters={filters}
-          onFiltersChange={handleFiltersChange}
-          supportedCrypto={
-            !loadingSupportedCryptocurrencies && supportedCryptoCurrencies
-              ? supportedCryptoCurrencies
-              : ([] as SupportedCryptoOrCurrencyResponse[])
-          }
         />
       </div>
 

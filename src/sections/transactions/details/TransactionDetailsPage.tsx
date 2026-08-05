@@ -198,7 +198,13 @@ const TransactionDetailsPage = () => {
               <div className="flex items-center gap-3">
                 <button
                   type="button"
-                  onClick={() => navigate({ to: ROUTES.TRANSACTION })}
+                  onClick={() => {
+                    if (window.history.length > 1) {
+                      window.history.back();
+                    } else {
+                      navigate({ to: ROUTES.TRANSACTION });
+                    }
+                  }}
                   className="w-10 h-10 rounded-2xl flex items-center justify-center transition-colors"
                   style={{
                     background: "#F7F7F9",

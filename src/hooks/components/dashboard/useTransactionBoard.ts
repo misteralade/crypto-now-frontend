@@ -6,7 +6,6 @@ import { type RootState, store } from "../../../store.ts";
 import { setSearchUserTransactions } from "../../../redux/transaction.slice.ts";
 import type { SearchTransactionsRequestPayload } from "../../../types/request.payload.types.ts";
 import momentClient from "../../../lib/moment.ts";
-import { useCryptoQuery } from "../../../queries/crypto.query.ts";
 import { userSearchTransactionInitialState } from "../../../redux/states/initial-transaction.state.ts";
 import { TIME_IN_MILLISECONDS } from "../../../util/constants.util.ts";
 import { debounce } from "../../../util/debouce.util.ts";
@@ -17,17 +16,17 @@ export const useTransactionBoard = () => {
     userTransactionHistory,
     loadingUserTransactionHistory,
     fetchingUserTransactionHistory,
+    transactionSummary,
+    loadingTransactionSummary,
   } = useTransactionQuery();
-  const { supportedCryptoCurrencies, loadingSupportedCryptocurrencies } =
-    useCryptoQuery();
 
-  const [showFilters, setShowFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<FilterState>({
     fromDate: "",
     toDate: "",
     cryptocurrency: "",
     status: "",
+    type: "",
   });
   const handlePageChange = (page: number) => {
     const searchTransactionPayload = (store.getState() as RootState)
@@ -64,6 +63,7 @@ export const useTransactionBoard = () => {
       cryptoCurrencyId: newFilters.cryptocurrency || undefined,
       page: 1,
       status: (newFilters.status || undefined) as any,
+      type: (newFilters.type || undefined) as any,
     };
 
     dispatch(setSearchUserTransactions(updatedPayload));
@@ -99,17 +99,15 @@ export const useTransactionBoard = () => {
   return {
     // Values
     searchQuery,
-    showFilters,
     userTransactionHistory,
     loadingUserTransactionHistory,
     fetchingUserTransactionHistory,
     filters,
-    supportedCryptoCurrencies,
-    loadingSupportedCryptocurrencies,
+    transactionSummary,
+    loadingTransactionSummary,
 
     // Functions
     setSearchQuery,
-    setShowFilters,
     handlePageChange,
     handleLoadMore,
     handleFiltersChange,

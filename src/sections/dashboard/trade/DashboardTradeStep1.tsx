@@ -16,6 +16,11 @@ import { setInitiateTransactionField } from "../../../redux/transaction.slice.ts
 import { setSelectedCryptoId } from "../../../redux/crypto.slice.ts";
 import { ROUTES } from "../../../util/constants.util.ts";
 import { exchangeRateServiceApi } from "../../../api/rate.api.ts";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { bankServiceApi } from "../../../api/bank.api.ts";
+import { QUERY_KEYS } from "../../../queries/query.keys.ts";
+import { toast } from "react-toastify";
+import { extractErrorMessage } from "../../../util/index.util.ts";
 import {
   TRADE_FIAT_AMOUNT_PRESETS,
   TOKEN_PRECISION,
@@ -722,16 +727,19 @@ function SellDepositWalletSection({
 }
 
 // ── SELL payout bank section ──────────────────────────────────────────────────
+// ── SELL payout bank section ──────────────────────────────────────────────────
 function BankAccountRow({
   account,
   selected,
   accentColor,
   onSelect,
+  onMakeDefault,
 }: {
   account: UserBankAccountResponse;
   selected: boolean;
   accentColor: string;
   onSelect: () => void;
+  onMakeDefault: (id: string) => void;
 }) {
   return (
     <button
@@ -774,14 +782,30 @@ function BankAccountRow({
             ****{account.accountNumber.slice(-4)} · {account.accountName}
           </p>
         </div>
-        <div className="flex items-center gap-1.5 shrink-0">
-          {account.isDefault && (
+        <div className="flex items-center gap-2 shrink-0">
+          {account.isDefault ? (
             <span
               className="text-[9px] font-bold px-2 py-0.5 rounded-full"
               style={{ background: "#E8F8F0", color: "#037847" }}
             >
               DEFAULT
             </span>
+          ) : (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onMakeDefault(account.id);
+              }}
+              className="text-[9px] font-bold px-2 py-0.5 rounded-full border transition-colors hover:bg-gray-100"
+              style={{
+                background: "#FFFFFF",
+                color: "#6B6E6B",
+                borderColor: "#D0D0D0",
+              }}
+            >
+              Make Default
+            </button>
           )}
           {/* Radio dot */}
           <div
@@ -814,6 +838,31 @@ function SellPayoutBank({
 }) {
   const navigate = useNavigate();
   const accentColor = "#F7A600";
+  const queryClient = useQueryClient();
+
+  const makeDefaultMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await bankServiceApi.makeBankAccountDefault(id);
+    },
+    onSuccess: ({ success, message }) => {
+      if (success) {
+        toast.success(message || "Default bank account updated successfully.");
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.BANK.USER_BANK_ACCOUNTS],
+        });
+      } else {
+        toast.error(message || "Failed to update default bank account.");
+      }
+    },
+    onError: (error: any) => {
+      const errMessage = extractErrorMessage(error) || "Failed to update default bank. Please try again.";
+      toast.error(errMessage);
+    },
+  });
+
+  const handleMakeDefault = (id: string) => {
+    makeDefaultMutation.mutate(id);
+  };
 
   const accounts = userBankAccounts ?? [];
   const selectedId =
@@ -855,7 +904,7 @@ function SellPayoutBank({
       >
         Payout Account
       </p>
-
+      
       {/* All accounts as a radio list */}
       {accounts.map((acct) => (
         <BankAccountRow
@@ -864,6 +913,7 @@ function SellPayoutBank({
           selected={acct.id === selectedId}
           accentColor={accentColor}
           onSelect={() => onPayoutAccountChange?.(acct.id)}
+          onMakeDefault={handleMakeDefault}
         />
       ))}
 

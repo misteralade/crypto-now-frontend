@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { LayoutDashboard, User, LogOut, TrendingUp, Settings, Wallet, History } from "lucide-react";
 import { LOCAL_STORAGE_KEYS, ROUTES } from "../util/constants.util.ts";
 import { useUserQuery } from "../queries/user.query.ts";
+import { clearUserSessionStorage } from "../util/tradeProgress.storage.util.ts";
 import Logo from "../assets/logo/logo.svg";
 
 interface AuthenticatedLayoutProps {
@@ -56,6 +57,7 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
 
   const handleLogout = () => {
     localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+    clearUserSessionStorage();
     navigate({ to: ROUTES.HOMEPAGE });
   };
 

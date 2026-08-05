@@ -3,6 +3,7 @@ import axios, { type AxiosRequestHeaders } from "axios";
 import * as Sentry from "@sentry/react";
 import {BASIC} from "../config/index.config.ts";
 import {LOCAL_STORAGE_KEYS, ROUTES} from "../util/constants.util.ts";
+import {clearUserSessionStorage} from "../util/tradeProgress.storage.util.ts";
 import type {BaseApiResponse} from "../types/response.payload.types.ts";
 
 export const API_KIT = axios.create({
@@ -52,6 +53,7 @@ API_KIT.interceptors.response.use(
 
       if (status === 401 || message === "jwt token error") {
         localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+        clearUserSessionStorage();
         window.location.href = ROUTES.SIGNIN;
       }
     }
