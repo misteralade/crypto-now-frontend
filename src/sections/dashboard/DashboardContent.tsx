@@ -276,7 +276,7 @@ export default function DashboardContent() {
   void WalletMiniCard;
 
   const goTrade = (option: "buy" | "sell") => {
-    navigate({ to: ROUTES.DASHBOARD_TRADE, search: { option } as any });
+    navigate({ to: ROUTES.DASHBOARD });
   };
 
   // Check for in-progress trade to offer "Continue" banner
@@ -297,18 +297,7 @@ export default function DashboardContent() {
   }, []);
 
   const handleContinueTrade = () => {
-    if (!pendingTrade) return;
-    if (pendingTrade.transactionSessionId) {
-      navigate({
-        to: ROUTES.DASHBOARD_TRADE_SESSION,
-        params: { sessionId: pendingTrade.transactionSessionId },
-      });
-      return;
-    }
-    navigate({
-      to: ROUTES.DASHBOARD_TRADE,
-      search: { option: pendingTrade.activeTab, resume: true } as any,
-    });
+    navigate({ to: ROUTES.DASHBOARD });
   };
 
   const handleContactSupport = () => {
