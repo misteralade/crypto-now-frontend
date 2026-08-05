@@ -117,8 +117,8 @@ const ProfilePage = () => {
     : 0;
 
   const handleLogout = () => {
-    localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
     clearUserSessionStorage();
+    localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
     navigate({ to: ROUTES.HOMEPAGE });
   };
 

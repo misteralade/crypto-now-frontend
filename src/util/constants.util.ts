@@ -14,6 +14,7 @@ export const ROUTES = {
   FORGOT_PASSWORD: "forgot-password",
   SIGNUP: "/sign-up",
   TWO_FACTOR_VERIFY: "/sign-in/verify",
+  ONBOARDING: "/onboarding",
   DASHBOARD: "/dashboard",
   ORGANIZATIONS: "/dashboard/organizations",
   PROFILE: '/dashboard/profile',

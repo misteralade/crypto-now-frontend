@@ -176,6 +176,12 @@ export type GetUserProfileResponse = {
   profile: UserProfilePayload;
 };
 
+export type OnboardingStatusResponse = {
+  needsName: boolean;
+  needsBankAccount: boolean;
+  isComplete: boolean;
+};
+
 // Start Transactions
 export type CryptoCurrencyResponseEntity = {
   id: string;

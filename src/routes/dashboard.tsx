@@ -1,14 +1,9 @@
-import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
+import { Outlet, createFileRoute } from "@tanstack/react-router";
 import AuthenticatedLayout from "../layouts/AuthenticatedLayout.tsx";
-import { LOCAL_STORAGE_KEYS, ROUTES } from "../util/constants.util.ts";
+import { requireOnboarded } from "../util/guards/requireOnboarded.ts";
 
 export const Route = createFileRoute("/dashboard")({
-  beforeLoad: async () => {
-    const accessToken = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
-    if (!accessToken) {
-      throw redirect({ to: ROUTES.SIGNIN });
-    }
-  },
+  beforeLoad: requireOnboarded,
   component: DashboardLayoutRoute,
 });
 

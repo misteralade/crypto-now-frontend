@@ -39,6 +39,7 @@ export const useUserQuery = () => {
       if (success) {
         toast.success(message);
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.USER.GET_PROFILE] });
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.USER.ONBOARDING_STATUS] });
       } else {
         toast.error(message);
       }

@@ -52,8 +52,8 @@ API_KIT.interceptors.response.use(
       const message = error.response?.data?.message?.toLowerCase();
 
       if (status === 401 || message === "jwt token error") {
-        localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
         clearUserSessionStorage();
+        localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
         window.location.href = ROUTES.SIGNIN;
       }
     }

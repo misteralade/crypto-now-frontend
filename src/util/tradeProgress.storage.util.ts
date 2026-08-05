@@ -1,6 +1,26 @@
 import type { TradeType } from "../types/trade.types";
 import {LOCAL_STORAGE_KEYS, SESSION_STORAGE_KEYS} from "./constants.util.ts";
 
+// Best-effort decode of the JWT payload, used only to namespace localStorage
+// per-user — never trusted for auth (that's the backend's job).
+function currentUserKey(): string {
+  try {
+    const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+    if (!token) return "guest";
+    const payload = token.split(".")[1];
+    if (!payload) return "guest";
+    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=");
+    const decoded = JSON.parse(atob(padded));
+    return decoded?.id ? String(decoded.id) : "guest";
+  } catch {
+    return "guest";
+  }
+}
+
+function tradeProgressKey(): string {
+  return `${LOCAL_STORAGE_KEYS.TRADE_PROGRESS}:${currentUserKey()}`;
+}
 
 export interface TradeProgress {
   step?: number;
@@ -35,7 +55,7 @@ export interface TradeProgress {
 // Read
 export function loadTradeProgress(): TradeProgress | null {
   try {
-    const raw = localStorage.getItem(LOCAL_STORAGE_KEYS.TRADE_PROGRESS);
+    const raw = localStorage.getItem(tradeProgressKey());
     if (!raw) return null;
     return JSON.parse(raw) as TradeProgress;
   } catch {
@@ -48,7 +68,7 @@ export function saveTradeProgress(partial: Partial<TradeProgress>) {
   try {
     const current = loadTradeProgress() || {};
     const merged = { ...current, ...partial };
-    localStorage.setItem(LOCAL_STORAGE_KEYS.TRADE_PROGRESS, JSON.stringify(merged));
+    localStorage.setItem(tradeProgressKey(), JSON.stringify(merged));
   } catch {
     // no-op
   }
@@ -57,19 +77,20 @@ export function saveTradeProgress(partial: Partial<TradeProgress>) {
 // Clear
 export function clearTradeProgress() {
   try {
-    localStorage.removeItem(LOCAL_STORAGE_KEYS.TRADE_PROGRESS);
+    localStorage.removeItem(tradeProgressKey());
   } catch {
     // no-op
   }
 }
 
-// Clears every piece of trade/user-scoped browser state (localStorage + sessionStorage).
-// Must run on every logout path and defensively on login, since none of these keys
-// are namespaced per-user — left as-is they leak one user's in-flight trade state
-// (e.g. a "Continue sell" indicator) into the next user's session on a shared device.
+// Clears the *current* user's trade/session-scoped browser state (localStorage +
+// sessionStorage) on logout. TRADE_PROGRESS is namespaced per-user (see
+// tradeProgressKey), so this only ever touches the account that was just signed
+// out of — it never leaks into, and never wipes, another user's saved progress on
+// a shared device.
 export function clearUserSessionStorage() {
   try {
-    localStorage.removeItem(LOCAL_STORAGE_KEYS.TRADE_PROGRESS);
+    localStorage.removeItem(tradeProgressKey());
     localStorage.removeItem(LOCAL_STORAGE_KEYS.LAST_TRADE_TOKEN);
   } catch {
     // no-op

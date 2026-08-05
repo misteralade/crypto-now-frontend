@@ -11,8 +11,8 @@ export const formatTime = (seconds: number) => {
 }
 
 export const handleLogout = () => {
-  localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
   clearUserSessionStorage();
+  localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
   window.location.href = "/sign-in";
 }
 

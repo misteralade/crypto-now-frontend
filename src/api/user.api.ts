@@ -1,5 +1,5 @@
 import {axiosGetRequestHandler, axiosPatchRequestHandler, axiosPostRequestHandler} from "./index.ts";
-import type {BaseApiResponse, GetUserProfileResponse} from "../types/response.payload.types.ts";
+import type {BaseApiResponse, GetUserProfileResponse, OnboardingStatusResponse} from "../types/response.payload.types.ts";
 import type {ContactUsRequestType, UserProfileUpdateRequestType} from "../schemas/user.schema.ts";
 
 // import {LoginRequestSchema} from "../schema/auth.schema.ts";
@@ -22,8 +22,14 @@ class UserServiceApi {
 
     return { data, message, success };
   }
-  
-  
+
+  async getOnboardingStatus() {
+    const { data, message, success }:{ data: OnboardingStatusResponse, message: string, success: boolean } = await axiosGetRequestHandler('/user/onboarding-status');
+
+    return { data, message, success };
+  }
+
+
   async uploadProfilePicture(formData: FormData) {
     const response =  await axiosPostRequestHandler(
       `/upload/profile-image`,

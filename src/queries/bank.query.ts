@@ -91,8 +91,11 @@ export const useBankQuery = () => {
         queryClient.invalidateQueries({
           queryKey: [QUERY_KEYS.BANK.USER_BANK_ACCOUNTS]
         });
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.USER.ONBOARDING_STATUS]
+        });
       }
-      
+
       return { success, message };
     },
     onError: ( error: AxiosServerError ) => {
@@ -155,10 +158,13 @@ export const useBankQuery = () => {
         queryClient.invalidateQueries({
           queryKey: [QUERY_KEYS.BANK.USER_BANK_ACCOUNTS]
         });
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.USER.ONBOARDING_STATUS]
+        });
       } else {
         toast.error(message)
       }
-      
+
       return { success, message };
     },
     onError: ( error: AxiosServerError ) => {
