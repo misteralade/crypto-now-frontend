@@ -28,6 +28,7 @@ import { useNavigate } from "@tanstack/react-router";
 import BankSelector from "../../global/BankSelector.tsx";
 import {
   TRADE_FIAT_AMOUNT_PRESETS,
+  TOKEN_PRECISION,
   formatTradeFiatPreset,
   roundTokenAmountUp,
 } from "../../../constants/tradeAmounts.ts";
@@ -1125,7 +1126,7 @@ const AppSimCard = () => {
     if (!data?.fiatRate) return;
 
     const roundedCryptoAmount = formatCryptoAmountForDisplay(
-      (targetNgnAmount / data.fiatRate).toFixed(8).replace(/\.?0+$/, ""),
+      String(roundTokenAmountUp(targetNgnAmount / data.fiatRate, cryptoSymbol)),
     );
     const computedReceiveAmount = targetNgnAmount.toFixed(2);
     skipNextAutoQuoteRef.current = true;
@@ -1195,7 +1196,9 @@ const AppSimCard = () => {
         submittedCryptoAmount > anonymousMaximumCryptoAmount
       ) {
         const maximumLabel = `${formatCryptoAmountForDisplay(
-          anonymousMaximumCryptoAmount.toFixed(8).replace(/\.?0+$/, ""),
+          anonymousMaximumCryptoAmount
+            .toFixed(TOKEN_PRECISION[cryptoSymbol.toUpperCase()] ?? 8)
+            .replace(/\.?0+$/, ""),
         )} ${cryptoSymbol}`;
         const errorMessage = `Anonymous trades must not exceed ${maximumLabel}.`;
         setGuestError(errorMessage);

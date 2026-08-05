@@ -18,6 +18,7 @@ import { useDashboardContent } from "../../hooks/components/dashboard/useDashboa
 import { useCryptoQuery } from "../../queries/crypto.query.ts";
 import { useUserQuery } from "../../queries/user.query.ts";
 import { useTransactionQuery } from "../../queries/transaction.query.ts";
+import { useNotificationQuery } from "../../queries/notification.query.ts";
 import type {
   TransactionResponseEntity,
   SupportedCryptoOrCurrencyResponse,
@@ -240,8 +241,8 @@ export default function DashboardContent() {
   const {
     userTransactionHistory,
     loadingUserTransactionHistory,
-    incompleteTransactionsCount,
   } = useTransactionQuery();
+  const { hasNewNotifications } = useNotificationQuery();
 
   const firstName = userProfileData?.profile?.firstName ?? "";
   const lastName = userProfileData?.profile?.lastName ?? "";
@@ -362,17 +363,15 @@ export default function DashboardContent() {
             </h2>
           )}
         </div>
-        {/* Opens history — closest to in-app notifications until a dedicated feed exists */}
         <button
           type="button"
-          onClick={() => navigate({ to: ROUTES.TRANSACTION })}
-          aria-label="View orders and transaction updates"
+          onClick={() => navigate({ to: ROUTES.NOTIFICATIONS })}
+          aria-label="View notifications"
           className="relative mt-1 w-10 h-10 rounded-full flex items-center justify-center"
           style={{ background: "#F7F7F9" }}
         >
           <Bell size={18} style={{ color: "#0E0F0C" }} />
-          {typeof incompleteTransactionsCount === "number" &&
-          incompleteTransactionsCount > 0 ? (
+          {hasNewNotifications?.hasNew ? (
             <span
               className="absolute top-1.5 right-1.5 min-w-[8px] h-2 px-0.5 rounded-full bg-[#EB5757] border-2 border-white"
               aria-hidden

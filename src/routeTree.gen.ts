@@ -34,6 +34,7 @@ import { Route as DisputeIdRouteImport } from './routes/dispute/$id'
 import { Route as DashboardWalletsRouteImport } from './routes/dashboard/wallets'
 import { Route as DashboardTradeRouteImport } from './routes/dashboard/trade'
 import { Route as DashboardProfileRouteImport } from './routes/dashboard/profile'
+import { Route as DashboardNotificationsRouteImport } from './routes/dashboard/notifications'
 import { Route as DashboardKycRouteImport } from './routes/dashboard/kyc'
 import { Route as DashboardTransactionsIndexRouteImport } from './routes/dashboard/transactions/index'
 import { Route as DashboardTransactionsIdRouteImport } from './routes/dashboard/transactions/$id'
@@ -172,6 +173,13 @@ const DashboardProfileRoute = DashboardProfileRouteImport.update({
 } as any).lazy(() =>
   import('./routes/dashboard/profile.lazy').then((d) => d.Route),
 )
+const DashboardNotificationsRoute = DashboardNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => DashboardRoute,
+} as any).lazy(() =>
+  import('./routes/dashboard/notifications.lazy').then((d) => d.Route),
+)
 const DashboardKycRoute = DashboardKycRouteImport.update({
   id: '/kyc',
   path: '/kyc',
@@ -216,6 +224,7 @@ export interface FileRoutesByFullPath {
   '/terms-of-service': typeof TermsOfServiceRoute
   '/verify-account': typeof VerifyAccountRoute
   '/dashboard/kyc': typeof DashboardKycRoute
+  '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/trade': typeof DashboardTradeRouteWithChildren
   '/dashboard/wallets': typeof DashboardWalletsRoute
@@ -246,6 +255,7 @@ export interface FileRoutesByTo {
   '/terms-of-service': typeof TermsOfServiceRoute
   '/verify-account': typeof VerifyAccountRoute
   '/dashboard/kyc': typeof DashboardKycRoute
+  '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/trade': typeof DashboardTradeRouteWithChildren
   '/dashboard/wallets': typeof DashboardWalletsRoute
@@ -278,6 +288,7 @@ export interface FileRoutesById {
   '/terms-of-service': typeof TermsOfServiceRoute
   '/verify-account': typeof VerifyAccountRoute
   '/dashboard/kyc': typeof DashboardKycRoute
+  '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/trade': typeof DashboardTradeRouteWithChildren
   '/dashboard/wallets': typeof DashboardWalletsRoute
@@ -311,6 +322,7 @@ export interface FileRouteTypes {
     | '/terms-of-service'
     | '/verify-account'
     | '/dashboard/kyc'
+    | '/dashboard/notifications'
     | '/dashboard/profile'
     | '/dashboard/trade'
     | '/dashboard/wallets'
@@ -341,6 +353,7 @@ export interface FileRouteTypes {
     | '/terms-of-service'
     | '/verify-account'
     | '/dashboard/kyc'
+    | '/dashboard/notifications'
     | '/dashboard/profile'
     | '/dashboard/trade'
     | '/dashboard/wallets'
@@ -372,6 +385,7 @@ export interface FileRouteTypes {
     | '/terms-of-service'
     | '/verify-account'
     | '/dashboard/kyc'
+    | '/dashboard/notifications'
     | '/dashboard/profile'
     | '/dashboard/trade'
     | '/dashboard/wallets'
@@ -587,6 +601,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardProfileRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/notifications': {
+      id: '/dashboard/notifications'
+      path: '/notifications'
+      fullPath: '/dashboard/notifications'
+      preLoaderRoute: typeof DashboardNotificationsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/kyc': {
       id: '/dashboard/kyc'
       path: '/kyc'
@@ -632,6 +653,7 @@ const DashboardTradeRouteWithChildren = DashboardTradeRoute._addFileChildren(
 
 interface DashboardRouteChildren {
   DashboardKycRoute: typeof DashboardKycRoute
+  DashboardNotificationsRoute: typeof DashboardNotificationsRoute
   DashboardProfileRoute: typeof DashboardProfileRoute
   DashboardTradeRoute: typeof DashboardTradeRouteWithChildren
   DashboardWalletsRoute: typeof DashboardWalletsRoute
@@ -642,6 +664,7 @@ interface DashboardRouteChildren {
 
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardKycRoute: DashboardKycRoute,
+  DashboardNotificationsRoute: DashboardNotificationsRoute,
   DashboardProfileRoute: DashboardProfileRoute,
   DashboardTradeRoute: DashboardTradeRouteWithChildren,
   DashboardWalletsRoute: DashboardWalletsRoute,

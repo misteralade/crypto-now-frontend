@@ -18,7 +18,9 @@ import { ROUTES } from "../../../util/constants.util.ts";
 import { exchangeRateServiceApi } from "../../../api/rate.api.ts";
 import {
   TRADE_FIAT_AMOUNT_PRESETS,
+  TOKEN_PRECISION,
   formatTradeFiatPreset,
+  roundTokenAmountUp,
 } from "../../../constants/tradeAmounts.ts";
 
 export interface BuyRateInfo {
@@ -219,12 +221,16 @@ function BuyFields({
         );
       if (!rateOk || !rateData) return;
 
-      // BUY: crypto received = fiatAmount / (coinGeckoRate * platformRate)
-      const cryptoAmount = parseFloat(
-        (
-          fiatAmount /
-          (rateData.coinGeckoRate * Number(rateData.platformRate))
-        ).toFixed(8).replace(/\.?0+$/, ""),
+      // coinGeckoRate is always USD-per-token. platformRate is the platform's
+      // NGN-per-USD markup, so it only applies when the quote currency is NGN —
+      // for USD quotes, fiatAmount is already USD and must divide by coinGeckoRate alone.
+      const isNgnQuote = rateData.currency === "NGN";
+      const divisor = isNgnQuote
+        ? rateData.coinGeckoRate * Number(rateData.platformRate)
+        : rateData.coinGeckoRate;
+      const cryptoAmount = roundTokenAmountUp(
+        fiatAmount / divisor,
+        selectedToken.symbol,
       );
 
       onRateResolved?.({
@@ -263,14 +269,14 @@ function BuyFields({
     if (currencyId) fetchRate(a, currencyId);
   };
 
-  // Preview: use live rate if amount matches, else static rate estimate
+  // Preview: only from the backend live rate (server-cached) — never approximate client-side.
   const inputValue = Number(amountToBuy ?? 0);
   const cryptoPreview =
     buyRateInfo && buyRateInfo.fiatAmount === inputValue
-      ? buyRateInfo.cryptoAmount.toFixed(6).replace(/\.?0+$/, "")
-      : inputValue > 0 && Number(selectedToken.buyRate ?? 0) > 0
-        ? (inputValue / Number(selectedToken.buyRate)).toFixed(6).replace(/\.?0+$/, "")
-        : null;
+      ? buyRateInfo.cryptoAmount
+          .toFixed(TOKEN_PRECISION[selectedToken.symbol.toUpperCase()] ?? 8)
+          .replace(/\.?0+$/, "")
+      : null;
 
   return (
     <div className="flex flex-col gap-3 mt-1">
@@ -1012,7 +1018,7 @@ export default function DashboardTradeStep1({
           const selected = selectedToken?.id === token.id;
           const rate = isBuy ? token.buyRate : token.sellRate;
           const rateLabel = rate
-            ? `${isBuy ? "Buy" : "Sell"}: ₦${Number(rate).toLocaleString()}`
+            ? `${isBuy ? "Buy" : "Sell"}: ₦${Number(rate).toLocaleString()}/$`
             : "";
           return (
             <motion.button

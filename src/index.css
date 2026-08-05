@@ -188,3 +188,14 @@ input[type="number"] {
     border-radius: 8px !important;
   }
 }
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.scrollbar-none {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}

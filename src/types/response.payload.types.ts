@@ -318,6 +318,29 @@ export type UserTransactionsHistoryResponse = {
   transactions: TransactionResponseEntity[];
 };
 
+export type NotificationResponseEntity = {
+  id: string;
+  userId: string;
+  transactionId: string | null;
+  type: string;
+  title: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
+};
+
+export type UserNotificationsHistoryResponse = {
+  count: number;
+  limit: number;
+  page: number;
+  totalPages: number;
+  notifications: NotificationResponseEntity[];
+};
+
+export type HasNewNotificationsResponse = {
+  hasNew: boolean;
+};
+
 // Stat Transaction
 export type GetTransactionDetailsAPIResponse =
   BaseApiResponse<TransactionResponseEntity>;

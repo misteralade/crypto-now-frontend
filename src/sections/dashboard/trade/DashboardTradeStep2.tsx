@@ -35,6 +35,7 @@ import { bankServiceApi } from "../../../api/bank.api.ts";
 import { transactionServiceApi } from "../../../api/transaction.api.ts";
 import { useTransactionQuery } from "../../../queries/transaction.query.ts";
 import { isExchangeRateExpiryError } from "../../../util/index.util.ts";
+import { TOKEN_PRECISION } from "../../../constants/tradeAmounts.ts";
 
 interface DashboardTradeStep2Props {
   tradeType: TradeType;
@@ -935,7 +936,9 @@ export default function DashboardTradeStep2({
           <p className="text-xs text-white/70 mt-1">
             You'll receive{" "}
             {isLocalBuyFlow && buyRateInfo
-              ? buyRateInfo.cryptoAmount.toFixed(6).replace(/\.?0+$/, "")
+              ? buyRateInfo.cryptoAmount
+                  .toFixed(TOKEN_PRECISION[selectedToken?.symbol?.toUpperCase() ?? ""] ?? 8)
+                  .replace(/\.?0+$/, "")
               : numberOfToken}{" "}
             {selectedToken?.symbol}
           </p>

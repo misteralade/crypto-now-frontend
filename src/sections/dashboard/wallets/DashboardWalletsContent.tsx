@@ -1,47 +1,18 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { AlertTriangle, Copy, Check, Wallet } from "lucide-react";
 import { useCryptoQuery } from "../../../queries/crypto.query.ts";
 import type { CustodialWalletResponse } from "../../../types/response.payload.types.ts";
 import { useBankQuery } from "../../../queries/bank.query.ts";
 import { toast } from "react-toastify";
 
-// Shortens long addresses while preserving the first and last parts.
-function truncateAddress(addr: string) {
-  if (addr.length <= 20) return addr;
-  return `${addr.slice(0, 10)}…${addr.slice(-8)}`;
-}
-
-// Displays a full wallet address, truncating only when overflow is detected.
+// Displays a full wallet address that is horizontally scrollable to prevent container overflow.
 function AdaptiveWalletAddress({ address }: { address: string }) {
-  const textRef = useRef<HTMLParagraphElement | null>(null);
-  const [shouldTruncate, setShouldTruncate] = useState(false);
-
-  useEffect(() => {
-    const element = textRef.current;
-    if (!element) return;
-
-    // Checks if rendered content overflows the available horizontal space.
-    const checkOverflow = () => {
-      setShouldTruncate(element.scrollWidth > element.clientWidth + 1);
-    };
-
-    checkOverflow();
-
-    // Re-checks truncation when the text container resizes.
-    const resizeObserver = new ResizeObserver(checkOverflow);
-    resizeObserver.observe(element);
-    window.addEventListener("resize", checkOverflow);
-
-    return () => {
-      resizeObserver.disconnect();
-      window.removeEventListener("resize", checkOverflow);
-    };
-  }, [address]);
-
   return (
-    <p ref={textRef} className="text-xs font-mono truncate flex-1" style={{ color: "#0E0F0C" }}>
-      {shouldTruncate ? truncateAddress(address) : address}
-    </p>
+    <div className="overflow-x-auto whitespace-nowrap scrollbar-none flex-1 min-w-0 mr-2 py-0.5">
+      <p className="text-xs font-mono select-all inline-block" style={{ color: "#0E0F0C" }}>
+        {address}
+      </p>
+    </div>
   );
 }
 
@@ -63,7 +34,7 @@ function CopyButton({ text }: { text: string }) {
     <button
       type="button"
       onClick={handleCopy}
-      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all"
+      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0"
       style={{
         background: copied ? "#E8F8F0" : "#F7F7F9",
         color: copied ? "#037847" : "#6B6E6B",
