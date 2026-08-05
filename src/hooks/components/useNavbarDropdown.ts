@@ -37,7 +37,7 @@ export const useNavbarDropdown = (handleMenuItemClick?: (() => void) | undefined
         setDropStep(2);
     }
 
-  const handleRouting = (currency?: string) => {
+  const handleRouting = (_currency?: string) => {
         navigate({to: ROUTES.DASHBOARD})
 
         if (isMobile && handleMenuItemClick) {

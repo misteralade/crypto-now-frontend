@@ -275,7 +275,7 @@ export default function DashboardContent() {
   void recentWallets;
   void WalletMiniCard;
 
-  const goTrade = (option: "buy" | "sell") => {
+  const goTrade = (_option: "buy" | "sell") => {
     navigate({ to: ROUTES.DASHBOARD });
   };
 

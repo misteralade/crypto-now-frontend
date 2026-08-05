@@ -20,6 +20,7 @@ const  InstantTradeSection = ({ cryptoCurrencies, currencies, selectedCryptoId, 
   const navigate = useNavigate();
 
   const [fiatAmount, setFiatAmount] = useState(0)
+  void fiatAmount;
 
   
   const handleSubmit = () => {
