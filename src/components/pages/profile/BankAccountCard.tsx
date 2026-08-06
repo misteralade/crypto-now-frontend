@@ -5,6 +5,7 @@ interface BankAccountCardProps {
   index: number
   onMakeDefault: (id: string) => void
   onDelete: (index: string) => void
+  canDelete: boolean
 }
 
 const BankAccountCard = ({
@@ -12,6 +13,7 @@ const BankAccountCard = ({
   index,
   onMakeDefault,
   onDelete,
+  canDelete,
 }: BankAccountCardProps) => {
   return (
     <section className="relative p-5 rounded-2xl border border-[#ECECEC] bg-white shadow-sm overflow-hidden flex flex-col h-full w-full max-w-[330px] mx-auto sm:mx-0">
@@ -71,12 +73,14 @@ const BankAccountCard = ({
               Make as default
             </button>
           )}
-          <button
-            className="text-[#EB5757] text-xs font-semibold hover:opacity-80 transition-opacity ml-auto"
-            onClick={() => onDelete(account.id)}
-          >
-            Delete
-          </button>
+          {canDelete && (
+            <button
+              className="text-[#EB5757] text-xs font-semibold hover:opacity-80 transition-opacity ml-auto"
+              onClick={() => onDelete(account.id)}
+            >
+              Delete
+            </button>
+          )}
         </div>
       </div>
     </section>

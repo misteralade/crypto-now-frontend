@@ -10,6 +10,8 @@ interface ProfileBankDetailsSectionProps {
 }
 
 const ProfileBankDetailsSection = ({ banks, makeBankAccountDefault, handleDeleteBank }: ProfileBankDetailsSectionProps) => {
+  const canDelete = (banks?.length ?? 0) > 1;
+
   return (
     <Fragment>
       <div className="flex flex-wrap gap-4 sm:gap-6 justify-start">
@@ -21,6 +23,7 @@ const ProfileBankDetailsSection = ({ banks, makeBankAccountDefault, handleDelete
               index={index}
               onMakeDefault={makeBankAccountDefault}
               onDelete={handleDeleteBank}
+              canDelete={canDelete}
             />
           ))}
       </div>

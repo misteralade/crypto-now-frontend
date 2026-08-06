@@ -52,7 +52,11 @@ export const useBankQuery = () => {
 
       return [];
     },
-    enabled: !!(matchRoute({ to: ROUTES.PROFILE }) || matchRoute({ to: ROUTES.DASHBOARD_WALLETS })),
+    enabled: !!(
+      matchRoute({ to: ROUTES.PROFILE }) ||
+      matchRoute({ to: ROUTES.DASHBOARD }) ||
+      matchRoute({ to: ROUTES.DASHBOARD_WALLETS })
+    ),
     staleTime: 1000 * 60 * 5, // 5 minutes — bank accounts don't change often
   });
 
@@ -140,14 +144,18 @@ export const useBankQuery = () => {
   const deleteBankAccountMutation = useMutation({
     mutationKey: [QUERY_KEYS.BANK.UPDATE_DEFAULT_BANK_ACCOUNT],
     mutationFn: async () => {
-      toast.loading(`Deleting bank account...`)
       const rootState = store.getState() as RootState;
       const id = rootState.bank.update.selectedBankAccountId;
-      
+
       if (!id) {
         throw new Error(`No bank selected`)
       }
-      
+
+      if ((userBankAccounts?.length ?? 0) <= 1) {
+        throw new Error("LAST_BANK_ACCOUNT");
+      }
+
+      toast.loading(`Deleting bank account...`)
       return await bankServiceApi.deleteBankAccount(id);
     },
     onSuccess: ({ success, message}) => {
@@ -169,6 +177,10 @@ export const useBankQuery = () => {
     },
     onError: ( error: AxiosServerError ) => {
       toast.dismiss();
+      if (error instanceof Error && error.message === "LAST_BANK_ACCOUNT") {
+        toast.error("You must keep at least one bank account.");
+        return;
+      }
       const message = extractErrorMessage(error) || 'Failed to delete bank account. Please try again.'
       toast.error(message);
     },
