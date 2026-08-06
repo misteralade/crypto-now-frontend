@@ -1037,11 +1037,11 @@ export default function DashboardContent() {
       {tradeModalMode && (
         <div className="fixed inset-0 z-50" role="dialog" aria-modal="true">
           <div
-            className="absolute inset-0 bg-black/30"
+            className="absolute inset-0 z-0 bg-black/30"
             onClick={() => setTradeModalMode(null)}
           />
           <div
-            className="absolute inset-x-0 bottom-0 top-6 md:top-10 md:inset-x-auto md:right-10 md:left-10 lg:left-auto lg:w-[480px] bg-white rounded-t-3xl md:rounded-3xl overflow-y-auto"
+            className="absolute z-10 inset-x-0 bottom-0 top-6 md:top-10 md:inset-x-auto md:right-10 md:left-10 lg:left-auto lg:w-[480px] bg-white rounded-t-3xl md:rounded-3xl overflow-y-auto isolate"
           >
             <button
               type="button"
@@ -1052,7 +1052,13 @@ export default function DashboardContent() {
             >
               <X size={16} />
             </button>
-            <DashboardTrade initialTradeType={tradeModalMode} />
+            {/* DashboardTrade renders itself as a full page (min-h-100dvh); reset
+                that here so it lays out within the modal panel instead of the
+                viewport, which otherwise pushed its own content/controls out of
+                this panel's actual clickable bounds. */}
+            <div className="[&>div]:!min-h-0 [&>div]:!bg-transparent">
+              <DashboardTrade initialTradeType={tradeModalMode} />
+            </div>
           </div>
         </div>
       )}

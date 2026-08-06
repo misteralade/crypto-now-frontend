@@ -844,12 +844,15 @@ function SellPayoutBank({
     mutationFn: async (id: string) => {
       return await bankServiceApi.makeBankAccountDefault(id);
     },
-    onSuccess: ({ success, message }) => {
+    onSuccess: ({ success, message }, id) => {
       if (success) {
         toast.success(message || "Default bank account updated successfully.");
         queryClient.invalidateQueries({
           queryKey: [QUERY_KEYS.BANK.USER_BANK_ACCOUNTS],
         });
+        if (onPayoutAccountChange) {
+          onPayoutAccountChange(id);
+        }
       } else {
         toast.error(message || "Failed to update default bank account.");
       }
