@@ -545,30 +545,8 @@ function SellDepositWalletSection({
 
   if (!selectedToken) return null;
 
-  const rate = selectedToken.sellRate
-    ? `₦${Number(selectedToken.sellRate).toLocaleString(undefined, {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })} per 1 ${selectedToken.symbol}`
-    : null;
-
   return (
     <div className="flex flex-col gap-3">
-      {/* Rate bar */}
-      {rate && (
-        <div
-          className="flex items-center gap-2 px-4 py-2 rounded-2xl"
-          style={{ background: "#FFF8F0", border: "1px solid #FFE4A0" }}
-        >
-          <span
-            className="w-2 h-2 rounded-full animate-pulse shrink-0"
-            style={{ background: "#EB5757" }}
-          />
-          <span className="text-xs font-bold" style={{ color: "#A07000" }}>
-            {rate} • Live quote
-          </span>
-        </div>
-      )}
 
       <p
         className="text-[10px] font-bold tracking-widest uppercase"
