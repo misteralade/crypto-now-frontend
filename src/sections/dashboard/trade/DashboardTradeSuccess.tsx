@@ -1,0 +1,393 @@
+/**
+ * Success screen
+ * BUY  → "Order Submitted! 🚀 / Receipt Received!" (frame 139)
+ * SELL → "NGN Credited!" large green check (frames 180/183)
+ */
+import { motion } from "framer-motion";
+import { AlertTriangle, ArrowLeft, BarChart3, Rocket, Timer, Wallet } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { ROUTES } from "../../../util/constants.util.ts";
+import type { TradeType } from "../../../types/trade.types.ts";
+import { useTransactionQuery } from "../../../queries/transaction.query.ts";
+
+interface DashboardTradeSuccessProps {
+  tradeType: TradeType;
+  selectedTokenSymbol?: string;
+  amount?: number | string;
+  ngnAmount?: number | string;
+  walletAddress?: string;
+  walletNetwork?: string;
+  bankName?: string;
+  accountNumber?: string;
+  transactionRef?: string;
+  onReset: () => void;
+}
+
+export default function DashboardTradeSuccess({
+  tradeType,
+  selectedTokenSymbol,
+  amount,
+  ngnAmount,
+  walletAddress,
+  walletNetwork,
+  bankName,
+  accountNumber,
+  transactionRef,
+  onReset,
+}: DashboardTradeSuccessProps) {
+  const isBuy = tradeType === "buy";
+  const { useTransactionStatus } = useTransactionQuery();
+  const { data: txData } = useTransactionStatus(transactionRef);
+  const resolvedAmount = isBuy
+    ? amount
+    : txData?.amountCrypto && Number(txData.amountCrypto) > 0
+      ? Number(txData.amountCrypto)
+      : amount;
+  const resolvedNgnAmount =
+    !isBuy && txData?.amountFiatNGN && Number(txData.amountFiatNGN) > 0
+      ? Number(txData.amountFiatNGN)
+      : ngnAmount;
+  const resolvedWalletAddress =
+    !isBuy && txData?.userCryptoWallet?.walletAddress
+      ? txData.userCryptoWallet.walletAddress
+      : walletAddress;
+  const resolvedWalletNetwork =
+    !isBuy && txData?.userCryptoWallet?.network
+      ? txData.userCryptoWallet.network
+      : walletNetwork;
+  const resolvedBankName =
+    !isBuy && txData?.userBankAccount?.bankName ? txData.userBankAccount.bankName : bankName;
+  const resolvedAccountNumber =
+    !isBuy && txData?.userBankAccount?.accountNumber
+      ? txData.userBankAccount.accountNumber
+      : accountNumber;
+  const expectedCryptoAmount = Number(
+    txData?.expectedCryptoAmount ?? txData?.rateSnapshot?.expectedCryptoAmount ?? amount ?? 0,
+  );
+  const settledCryptoAmount = Number(
+    txData?.amountCrypto ?? amount ?? 0,
+  );
+  const hasAdjustedSellAmount =
+    !isBuy &&
+    expectedCryptoAmount > 0 &&
+    settledCryptoAmount > 0 &&
+    Math.abs(expectedCryptoAmount - settledCryptoAmount) > 0.00000001;
+  const cryptoSymbol = selectedTokenSymbol ?? "Crypto";
+  const formatCryptoAmount = (value: number) =>
+    value.toLocaleString("en-US", {
+      maximumFractionDigits: 8,
+    });
+
+  /* ── BUY success ── */
+  if (isBuy) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="flex flex-col items-center gap-6 py-6"
+      >
+        {/* Rocket circle */}
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", delay: 0.12 }}
+          className="w-24 h-24 rounded-full flex items-center justify-center"
+          style={{
+            background: "linear-gradient(135deg,#948EEE,#6B45D0)",
+            boxShadow: "0 16px 40px #948EEE55",
+          }}
+        >
+          <Rocket
+            size={42}
+            color="#FFFFFF"
+            strokeWidth={2.4}
+            aria-hidden="true"
+          />
+        </motion.div>
+
+        {/* Title */}
+        <div className="text-center">
+          <h2 className="text-xl font-extrabold" style={{ color: "#0E0F0C" }}>
+            Order Submitted!
+          </h2>
+          <p
+            className="text-sm font-semibold mt-0.5"
+            style={{ color: "#948EEE" }}
+          >
+            Receipt Received!
+          </p>
+          <p
+            className="text-xs mt-2 leading-relaxed px-4"
+            style={{ color: "#9A9A9A" }}
+          >
+            Your payment proof has been submitted. We're verifying it right now.
+          </p>
+        </div>
+
+        {/* Info box */}
+        <div
+          className="w-full rounded-2xl px-4 py-4"
+          style={{ background: "#EEF0FF", border: "1px solid #C7CAFF" }}
+        >
+          <div className="flex items-center gap-3">
+            <Timer size={24} color="#5B5EA6" aria-hidden="true" />
+            <div>
+              <p className="text-sm font-bold" style={{ color: "#5B5EA6" }}>
+                Crypto arrives in ~5 minutes
+              </p>
+              <p className="text-xs mt-0.5" style={{ color: "#8080C0" }}>
+                {selectedTokenSymbol ?? "Crypto"} will be sent to your wallet
+                once payment is confirmed.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Action rows */}
+        <div className="w-full flex flex-col gap-3">
+          <div
+            className="flex items-center gap-3 rounded-2xl p-4"
+            style={{ background: "#FAFAFA", border: "1px solid #F0F0F0" }}
+          >
+            <Wallet size={22} color="#6B6E6B" aria-hidden="true" />
+            <div>
+              <p className="text-sm font-bold" style={{ color: "#0E0F0C" }}>
+                Check Your Wallet
+              </p>
+              <p className="text-xs" style={{ color: "#9A9A9A" }}>
+                Open your wallet app. {selectedTokenSymbol ?? "Crypto"} should
+                appear within 5 minutes.
+              </p>
+            </div>
+          </div>
+          <div
+            className="flex items-center gap-3 rounded-2xl p-4"
+            style={{ background: "#FAFAFA", border: "1px solid #F0F0F0" }}
+          >
+            <BarChart3 size={22} color="#6B6E6B" aria-hidden="true" />
+            <div>
+              <p className="text-sm font-bold" style={{ color: "#0E0F0C" }}>
+                Track on Dashboard
+              </p>
+              <p className="text-xs" style={{ color: "#9A9A9A" }}>
+                Check the History tab for live order status.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Buttons */}
+        <div className="w-full flex flex-col gap-3">
+          <Link
+            to={ROUTES.DASHBOARD}
+            className="w-full py-4 rounded-2xl text-sm font-bold text-center flex items-center justify-center gap-2"
+            style={{
+              background: "linear-gradient(135deg,#948EEE,#6B45D0)",
+              color: "#FFFFFF",
+              boxShadow: "0 6px 20px #948EEE44",
+            }}
+          >
+            <ArrowLeft size={16} /> Back to Dashboard
+          </Link>
+          <button
+            type="button"
+            onClick={onReset}
+            className="w-full py-3 rounded-2xl text-sm font-bold"
+            style={{
+              background: "#F7F7F9",
+              color: "#6B6E6B",
+              border: "1px solid #EEEEEE",
+            }}
+          >
+            Start New Trade
+          </button>
+        </div>
+      </motion.div>
+    );
+  }
+
+  /* ── SELL success ── */
+  const tableRows = [
+    {
+      label: "Crypto Sent",
+      value: `${resolvedAmount ?? "—"} ${selectedTokenSymbol ?? ""}`,
+    },
+    resolvedWalletAddress
+      ? {
+          label: "Deposit Wallet",
+          value: resolvedWalletAddress,
+        }
+      : null,
+    resolvedWalletNetwork
+      ? {
+          label: "Network",
+          value: resolvedWalletNetwork,
+        }
+      : null,
+    resolvedNgnAmount
+      ? {
+          label: "NGN Credited",
+          value: `₦${Number(resolvedNgnAmount).toLocaleString()}`,
+        }
+      : null,
+    resolvedBankName ? { label: "To Bank", value: resolvedBankName } : null,
+    resolvedAccountNumber ? { label: "Account", value: resolvedAccountNumber } : null,
+    { label: "Status", value: "✓ Completed" },
+  ].filter(Boolean) as { label: string; value: string }[];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.96 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="flex flex-col items-center gap-6 py-6"
+    >
+      {/* Large green checkmark */}
+      <motion.div
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ type: "spring", delay: 0.12 }}
+        className="w-24 h-24 rounded-full flex items-center justify-center"
+        style={{
+          background: "linear-gradient(135deg,#037847,#04A860)",
+          boxShadow: "0 16px 40px #03784755",
+        }}
+      >
+        <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+          <path
+            d="M8 22L18 32L36 12"
+            stroke="white"
+            strokeWidth="4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </motion.div>
+
+      {/* Title */}
+      <div className="text-center">
+        <h2 className="text-xl font-extrabold" style={{ color: "#0E0F0C" }}>
+          NGN Credited!
+        </h2>
+        <p
+          className="text-xs mt-2 leading-relaxed px-4"
+          style={{ color: "#9A9A9A" }}
+        >
+          Crypto received &amp; auto-converted. Your bank has been credited.
+        </p>
+        {hasAdjustedSellAmount && (
+          <div
+            className="mt-3 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-bold"
+            style={{
+              background: "#FFFBEB",
+              borderColor: "#FDE68A",
+              color: "#B45309",
+            }}
+          >
+            <AlertTriangle size={13} aria-hidden="true" />
+            Adjusted amount
+          </div>
+        )}
+      </div>
+
+      {/* Details table */}
+      <div
+        className="w-full rounded-2xl overflow-hidden"
+        style={{ border: "1px solid #EEEEEE" }}
+      >
+        {hasAdjustedSellAmount && !isBuy && (
+          <div
+            className="border-b px-4 py-3"
+            style={{ background: "#FFFBEB", borderColor: "#FDE68A" }}
+          >
+            <p className="text-[10px] font-bold tracking-widest uppercase mb-1.5 text-amber-700">
+              Amount adjusted
+            </p>
+            <p className="text-xs leading-relaxed text-amber-900">
+              Expected {formatCryptoAmount(expectedCryptoAmount)} {cryptoSymbol} but received{" "}
+              {formatCryptoAmount(settledCryptoAmount)} {cryptoSymbol}.
+            </p>
+          </div>
+        )}
+        {(hasAdjustedSellAmount
+          ? ([
+              {
+                label: "Expected Crypto",
+                value: `${formatCryptoAmount(expectedCryptoAmount)} ${cryptoSymbol}`,
+              },
+              {
+                label: "Crypto Received",
+                value: `${formatCryptoAmount(settledCryptoAmount)} ${cryptoSymbol}`,
+              },
+              resolvedNgnAmount
+                ? {
+                    label: "NGN Credited",
+                    value: `₦${Number(resolvedNgnAmount).toLocaleString()}`,
+                  }
+                : null,
+              resolvedBankName ? { label: "To Bank", value: resolvedBankName } : null,
+              resolvedAccountNumber ? { label: "Account", value: resolvedAccountNumber } : null,
+              { label: "Status", value: "✓ Completed" },
+            ].filter(Boolean) as { label: string; value: string }[])
+          : tableRows
+        ).map(({ label, value }, i, arr) => (
+          <div
+            key={i}
+            className="flex items-center justify-between px-4 py-3"
+            style={{
+              borderBottom: i < arr.length - 1 ? "1px solid #F7F7F9" : "none",
+            }}
+          >
+            <span className="text-xs" style={{ color: "#9A9A9A" }}>
+              {label}
+            </span>
+            <span
+              className={`text-xs font-semibold ${
+                label === "Deposit Wallet" ? "max-w-[62%] break-all text-right" : ""
+              }`}
+              style={{ color: label === "Status" ? "#037847" : "#0E0F0C" }}
+            >
+              {value}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* TX ref */}
+      {transactionRef && (
+        <p
+          className="text-[10px] font-mono tracking-wider"
+          style={{ color: "#BDBDBD" }}
+        >
+          TX REF: {transactionRef.toUpperCase().slice(0, 20)}
+        </p>
+      )}
+
+      {/* Buttons */}
+      <div className="w-full flex flex-col gap-3">
+        <Link
+          to={ROUTES.DASHBOARD}
+          className="w-full py-4 rounded-2xl text-sm font-bold text-center flex items-center justify-center gap-2"
+          style={{
+            background: "linear-gradient(135deg,#037847,#04A860)",
+            color: "#FFFFFF",
+            boxShadow: "0 6px 20px #03784744",
+          }}
+        >
+          <ArrowLeft size={16} /> Back to Dashboard
+        </Link>
+        <button
+          type="button"
+          onClick={onReset}
+          className="w-full py-3 rounded-2xl text-sm font-bold"
+          style={{
+            background: "#F7F7F9",
+            color: "#6B6E6B",
+            border: "1px solid #EEEEEE",
+          }}
+        >
+          Start New Trade
+        </button>
+      </div>
+    </motion.div>
+  );
+}

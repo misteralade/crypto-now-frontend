@@ -13,7 +13,10 @@ import {
   ChevronRight,
   Copy,
   ExternalLink,
+  X,
 } from "lucide-react";
+import type { TradeType } from "../../types/trade.types.ts";
+import DashboardTrade from "./trade/DashboardTrade.tsx";
 import { useDashboardContent } from "../../hooks/components/dashboard/useDashboardContent.ts";
 import { useCryptoQuery } from "../../queries/crypto.query.ts";
 import { useUserQuery } from "../../queries/user.query.ts";
@@ -275,8 +278,10 @@ export default function DashboardContent() {
   void recentWallets;
   void WalletMiniCard;
 
-  const goTrade = (_option: "buy" | "sell") => {
-    navigate({ to: ROUTES.DASHBOARD });
+  const [tradeModalMode, setTradeModalMode] = useState<TradeType | null>(null);
+
+  const goTrade = (option: "buy" | "sell") => {
+    setTradeModalMode(option);
   };
 
   // Check for in-progress trade to offer "Continue" banner
@@ -297,7 +302,9 @@ export default function DashboardContent() {
   }, []);
 
   const handleContinueTrade = () => {
-    navigate({ to: ROUTES.DASHBOARD });
+    if (pendingTrade?.activeTab) {
+      setTradeModalMode(pendingTrade.activeTab);
+    }
   };
 
   const handleContactSupport = () => {
@@ -1026,6 +1033,29 @@ export default function DashboardContent() {
           )}
         </section>
       </div>
+
+      {tradeModalMode && (
+        <div className="fixed inset-0 z-50" role="dialog" aria-modal="true">
+          <div
+            className="absolute inset-0 bg-black/30"
+            onClick={() => setTradeModalMode(null)}
+          />
+          <div
+            className="absolute inset-x-0 bottom-0 top-6 md:top-10 md:inset-x-auto md:right-10 md:left-10 lg:left-auto lg:w-[480px] bg-white rounded-t-3xl md:rounded-3xl overflow-y-auto"
+          >
+            <button
+              type="button"
+              onClick={() => setTradeModalMode(null)}
+              className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full flex items-center justify-center"
+              style={{ background: "#F7F7F9" }}
+              aria-label="Close"
+            >
+              <X size={16} />
+            </button>
+            <DashboardTrade initialTradeType={tradeModalMode} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
