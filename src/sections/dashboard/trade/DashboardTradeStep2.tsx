@@ -10,7 +10,7 @@
  *   "monitoring" — 4-step animated tracker (frames 172 / 203)
  */
 import { useState, useEffect, type ReactNode } from "react";
-import { Copy, Check, ArrowLeft, ArrowRight, Upload } from "lucide-react";
+import { Copy, Check, ArrowLeft, ArrowRight, Upload, Search, Radio, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-toastify";
 import ManualDepositRecheckAction from "../../../components/global/ManualDepositRecheckAction.tsx";
@@ -29,7 +29,7 @@ import { SESSION_STORAGE_KEYS } from "../../../util/constants.util.ts";
 import type { BuyRateInfo } from "./DashboardTradeStep1.tsx";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../../store.ts";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "../../../queries/query.keys.ts";
 import { bankServiceApi } from "../../../api/bank.api.ts";
 import { transactionServiceApi } from "../../../api/transaction.api.ts";
@@ -306,7 +306,15 @@ function TradeMonitoringView({
             border: `2px solid ${isBuy ? "#6B45D033" : "#00BFA533"}` 
           }}
         >
-          {status === "COMPLETED" ? "✅" : isNoOwnerStatus ? "⚠️" : (isBuy ? "🔍" : "📡")}
+          {status === "COMPLETED" ? (
+            <CheckCircle2 size={32} style={{ color: "#22C55E" }} />
+          ) : isNoOwnerStatus ? (
+            <AlertTriangle size={32} style={{ color: "#F59E0B" }} />
+          ) : isBuy ? (
+            <Search size={32} style={{ color: "#6B45D0" }} />
+          ) : (
+            <Radio size={32} style={{ color: "#00BFA5" }} className="animate-pulse" />
+          )}
         </div>
         <div className="text-center">
           <p className="text-base font-extrabold" style={{ color: "#0E0F0C" }}>
@@ -605,6 +613,7 @@ export default function DashboardTradeStep2({
   setTransactionSessionId,
 }: DashboardTradeStep2Props) {
   const isBuy = tradeType === "buy";
+  const queryClient = useQueryClient();
   const { useTransactionStatus, manualSellDepositRecheckMutation } = useTransactionQuery();
   const { data: txData } = useTransactionStatus(transactionRef);
   const txStatus = txData?.status;
@@ -639,9 +648,15 @@ export default function DashboardTradeStep2({
   // Auto-transition to success screen (Step 4) only when status is COMPLETED
   useEffect(() => {
     if (txStatus === "COMPLETED") {
+      // Transaction history/summary queries are cached for minutes and never
+      // invalidated by the submit call — refresh them now so the dashboard
+      // reflects this transaction immediately instead of on next stale-refetch.
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.TRANSACTION.USER_SEARCH_TRANSACTION_HISTORY] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.TRANSACTION.USER_TRANSACTION_SUMMARY] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.TRANSACTION.USER_INCOMPLETE_TRANSACTIONS_COUNT] });
       onBuySubmitSuccess?.();
     }
-  }, [txStatus, onBuySubmitSuccess]);
+  }, [txStatus, onBuySubmitSuccess, queryClient]);
 
   const userEmail = useSelector((s: RootState) => s.user.trade.anonymous.email);
   const isLocalBuyFlow = isBuy && !!buyRateInfo;
@@ -1013,7 +1028,7 @@ export default function DashboardTradeStep2({
           className="flex items-start gap-3 rounded-2xl px-4 py-3"
           style={{ background: "#FFFBF0", border: "1px solid #FFE4A0" }}
         >
-          <span className="text-base leading-none mt-0.5">⚠️</span>
+          <AlertTriangle size={16} style={{ color: "#F59E0B" }} className="mt-0.5 shrink-0" />
           <p className="text-xs leading-relaxed" style={{ color: "#A07000" }}>
             Transfer the exact amount shown above. Use any bank app or USSD.
             Then upload your receipt.
