@@ -709,7 +709,7 @@ export default function DashboardTradeStep2({
     formData.append("file", localReceiptFile);
     formData.append("coinId", initiateForm?.tokenId ?? "");
     formData.append("currencyId", buyRateInfo.currencyId);
-    formData.append("action", "BUY");
+    formData.append("action", initiateForm?.action ?? "BUY");
     const exchangeRateId = buyRateInfo.rateId;
     if (exchangeRateId) formData.append("exchangeRateId", exchangeRateId);
     formData.append("amountToSend", String(buyRateInfo.fiatAmount));
@@ -717,7 +717,6 @@ export default function DashboardTradeStep2({
     formData.append("walletAddress", buyWalletAddress ?? "");
     formData.append("network", buyNetwork ?? "");
     if (userEmail) formData.append("email", userEmail);
-    if (initiateForm?.action) formData.append("action", initiateForm.action);
 
     const toastId = "buy-submit";
     toast.loading("Submitting transaction…", { toastId });
