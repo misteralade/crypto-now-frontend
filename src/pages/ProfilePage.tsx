@@ -1,6 +1,6 @@
 import { Fragment, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, ArrowLeft, CheckCircle, Plus } from "lucide-react";
+import { ChevronRight, ArrowLeft, Plus } from "lucide-react";
 import { useProfilePage } from "../hooks/pages/useProfilePage.ts";
 import ProfilePersonalInfoSection from "../components/pages/profile/ProfilePersonalInfoSection.tsx";
 import ProfileBankDetailsSection from "../components/pages/profile/ProfileBankDetailsSection.tsx";
@@ -165,11 +165,6 @@ const ProfilePage = () => {
 
                 {/* Badges */}
                 <div className="flex items-center gap-2 mt-3">
-                  {/* TODO: connect to real KYC status */}
-                  <span className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold"
-                    style={{ background: "#E8F8F0", color: "#037847" }}>
-                    <CheckCircle size={11} /> KYC Verified
-                  </span>
                   <span className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold"
                     style={{ background: "#FFFBF0", color: "#A07000" }}>
                     🤝 Non-Custodial
@@ -230,15 +225,6 @@ const ProfilePage = () => {
 
                 {/* Security */}
                 <div className="rounded-3xl overflow-hidden" style={{ border: "1px solid #F0F0F0" }}>
-                  {/* TODO: Connect KYC verification to real API */}
-                  <MenuRow
-                    icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#575AE5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>}
-                    label="KYC Verification"
-                    sub="Identity fully verified"
-                    color="#575AE5"
-                    onClick={() => {}}
-                  />
-                  <div style={{ height: "1px", background: "#F7F7F9", margin: "0 16px" }} />
                   <MenuRow
                     icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#037847" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>}
                     label="Security"
@@ -271,17 +257,7 @@ const ProfilePage = () => {
                   />
                 </div>
               </div>
-
-              {/* KYC pill floating above bottom nav (mobile only) */}
-              {/* TODO: hide when KYC is not verified */}
-              <div className="lg:hidden flex justify-center pb-6">
-                <div className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold"
-                  style={{ background: "#03034D", color: "#FFFFFF" }}>
-                  <CheckCircle size={12} />
-                  KYC is fully verified ✓
-                </div>
-              </div>
-            </motion.div>
+             </motion.div>
           )}
 
           {/* ════════ SECTION VIEWS ════════ */}

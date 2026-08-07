@@ -36,15 +36,21 @@ export default function ForgotPasswordLayout({children, loading, icon, heading, 
                     </p>
                 </div>
 
-                {/* Form */}
-                <form className="space-y-6">
+                <form
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        if (!submitInvalid) {
+                            handleSubmit();
+                        }
+                    }}
+                    className="space-y-6"
+                >
                     {children}
 
                     <CustomButton
                         className="w-full"
                         buttonText={`${loading ? "loading...": "Reset password"}`}
-                        type="button"
-                        onClick={handleSubmit}
+                        type="submit"
                         disabled={submitInvalid}
                     />
                 </form>
