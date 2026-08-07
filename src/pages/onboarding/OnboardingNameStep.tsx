@@ -40,14 +40,14 @@ const OnboardingNameStep = ({ onComplete }: OnboardingNameStepProps) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <BankAccountFormInput
-          label="First name"
-          value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
-        />
-        <BankAccountFormInput
-          label="Last name"
+          label="Surname"
           value={lastName}
           onChange={(e) => setLastName(e.target.value)}
+        />
+        <BankAccountFormInput
+          label="First or middle name"
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
         />
       </div>
 
