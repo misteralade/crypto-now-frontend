@@ -943,7 +943,7 @@ export default function DashboardTradeStep2({
                 {selectedToken?.buyRate
                   ? Number(selectedToken.buyRate).toLocaleString()
                   : "—"}
-                /$1
+                /{selectedToken?.symbol}
               </>
             )}
           </p>

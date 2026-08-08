@@ -1041,23 +1041,26 @@ export default function DashboardContent() {
             onClick={() => setTradeModalMode(null)}
           />
           <div
-            className="absolute z-10 inset-x-0 bottom-0 top-6 md:top-10 md:inset-x-auto md:right-10 md:left-10 lg:left-auto lg:w-[480px] bg-white rounded-t-3xl md:rounded-3xl overflow-y-auto isolate"
+            className="absolute z-10 inset-x-0 bottom-0 top-6 bg-white rounded-t-3xl overflow-y-auto isolate
+                       md:inset-0 md:top-0 md:flex md:items-center md:justify-center md:bg-transparent md:rounded-none md:overflow-visible md:pointer-events-none"
           >
-            <button
-              type="button"
-              onClick={() => setTradeModalMode(null)}
-              className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full flex items-center justify-center"
-              style={{ background: "#F7F7F9" }}
-              aria-label="Close"
-            >
-              <X size={16} />
-            </button>
-            {/* DashboardTrade renders itself as a full page (min-h-100dvh); reset
-                that here so it lays out within the modal panel instead of the
-                viewport, which otherwise pushed its own content/controls out of
-                this panel's actual clickable bounds. */}
-            <div className="[&>div]:!min-h-0 [&>div]:!bg-transparent">
-              <DashboardTrade initialTradeType={tradeModalMode} />
+            <div className="md:w-full md:max-w-2xl md:max-h-[90vh] md:bg-white md:rounded-3xl md:overflow-y-auto md:shadow-2xl md:pointer-events-auto md:relative">
+              <button
+                type="button"
+                onClick={() => setTradeModalMode(null)}
+                className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full flex items-center justify-center"
+                style={{ background: "#F7F7F9" }}
+                aria-label="Close"
+              >
+                <X size={16} />
+              </button>
+              {/* DashboardTrade renders itself as a full page (min-h-100dvh); reset
+                  that here so it lays out within the modal panel instead of the
+                  viewport, which otherwise pushed its own content/controls out of
+                  this panel's actual clickable bounds. */}
+              <div className="[&>div]:!min-h-0 [&>div]:!bg-transparent">
+                <DashboardTrade initialTradeType={tradeModalMode} />
+              </div>
             </div>
           </div>
         </div>
