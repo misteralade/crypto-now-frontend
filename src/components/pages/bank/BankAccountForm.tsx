@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { AllBanksResponse } from "../../../types/response.payload.types.ts";
 import type { CreateBankAccountRequestPayload } from "../../../types/request.payload.types.ts";
 import BankSelector from "../../global/BankSelector.tsx";
@@ -27,6 +27,14 @@ const BankAccountForm = ({
 }: BankAccountFormProps) => {
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [lookupError, setLookupError] = useState<string | null>(null);
+
+  // Every bank account added here is the default — there's no per-account
+  // toggle, so make sure the parent's state reflects that explicitly rather
+  // than relying on its own initial value matching.
+  useEffect(() => {
+    handleChangeField("isDefault", true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleLookup = async (
     accountNumber: string,
@@ -147,9 +155,7 @@ const BankAccountForm = ({
                     }
                   }
                 }}
-                onBlur={() => {
-                  handleBlur("accountNumber")(undefined as any);
-                }}
+                onBlur={handleBlur("accountNumber")}
                 error={
                   !!(touched.accountNumber && errors.accountNumber)
                 }
@@ -200,34 +206,6 @@ const BankAccountForm = ({
               )}
             </div>
 
-            {/* Default Bank Toggle */}
-            <div className="flex flex-col justify-center gap-2 md:col-span-2">
-              <div className="flex items-center gap-3">
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    id="isDefault"
-                    type="checkbox"
-                    className="sr-only peer"
-                    onChange={(e) => {
-                      handleChangeField("isDefault", e.target.checked);
-                      setFieldValue("isDefault", e.target.checked);
-                    }}
-                    onBlur={handleBlur("isDefault")}
-                    checked={values.isDefault}
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#03034D] peer-focus:ring-offset-2 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#03034D]"></div>
-                </label>
-                <label
-                  htmlFor="isDefault"
-                  className="text-sm font-semibold text-[#0E0F0C] cursor-pointer"
-                >
-                  Set as Default Bank
-                </label>
-              </div>
-              <p className="text-xs text-[#9A9A9A] ml-14">
-                This bank will be used for all transactions by default
-              </p>
-            </div>
           </div>
 
           {/* Action Buttons */}

@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent } from "react";
+import { useState, type ChangeEvent, type FocusEvent } from "react";
 
 // Input styled to match the bank-account form (floating label, boolean error flag).
 // Distinct from components/global/CustomInput.tsx, which has a different prop shape
@@ -15,7 +15,7 @@ const BankAccountFormInput = ({
   label: string;
   value: string;
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
-  onBlur?: () => void;
+  onBlur?: (e: FocusEvent<HTMLInputElement>) => void;
   type?: string;
   inputMode?: string;
   error?: boolean;
@@ -30,9 +30,9 @@ const BankAccountFormInput = ({
         inputMode={inputMode as any}
         value={value}
         onChange={onChange}
-        onBlur={() => {
+        onBlur={(e) => {
           setIsFocused(false);
-          onBlur?.();
+          onBlur?.(e);
         }}
         onFocus={() => setIsFocused(true)}
         className={`
