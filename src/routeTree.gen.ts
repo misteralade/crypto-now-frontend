@@ -33,9 +33,11 @@ import { Route as OauthSuccessRouteImport } from './routes/oauth/success'
 import { Route as OauthErrorRouteImport } from './routes/oauth/error'
 import { Route as DisputeIdRouteImport } from './routes/dispute/$id'
 import { Route as DashboardWalletsRouteImport } from './routes/dashboard/wallets'
+import { Route as DashboardSellRouteImport } from './routes/dashboard/sell'
 import { Route as DashboardProfileRouteImport } from './routes/dashboard/profile'
 import { Route as DashboardNotificationsRouteImport } from './routes/dashboard/notifications'
 import { Route as DashboardKycRouteImport } from './routes/dashboard/kyc'
+import { Route as DashboardBuyRouteImport } from './routes/dashboard/buy'
 import { Route as DashboardTransactionsIndexRouteImport } from './routes/dashboard/transactions/index'
 import { Route as DashboardTransactionsIdRouteImport } from './routes/dashboard/transactions/$id'
 
@@ -163,6 +165,13 @@ const DashboardWalletsRoute = DashboardWalletsRouteImport.update({
 } as any).lazy(() =>
   import('./routes/dashboard/wallets.lazy').then((d) => d.Route),
 )
+const DashboardSellRoute = DashboardSellRouteImport.update({
+  id: '/sell',
+  path: '/sell',
+  getParentRoute: () => DashboardRoute,
+} as any).lazy(() =>
+  import('./routes/dashboard/sell.lazy').then((d) => d.Route),
+)
 const DashboardProfileRoute = DashboardProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -182,6 +191,11 @@ const DashboardKycRoute = DashboardKycRouteImport.update({
   path: '/kyc',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardBuyRoute = DashboardBuyRouteImport.update({
+  id: '/buy',
+  path: '/buy',
+  getParentRoute: () => DashboardRoute,
+} as any).lazy(() => import('./routes/dashboard/buy.lazy').then((d) => d.Route))
 const DashboardTransactionsIndexRoute =
   DashboardTransactionsIndexRouteImport.update({
     id: '/transactions/',
@@ -214,9 +228,11 @@ export interface FileRoutesByFullPath {
   '/sign-up': typeof SignUpRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/verify-account': typeof VerifyAccountRoute
+  '/dashboard/buy': typeof DashboardBuyRoute
   '/dashboard/kyc': typeof DashboardKycRoute
   '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/profile': typeof DashboardProfileRoute
+  '/dashboard/sell': typeof DashboardSellRoute
   '/dashboard/wallets': typeof DashboardWalletsRoute
   '/dispute/$id': typeof DisputeIdRoute
   '/oauth/error': typeof OauthErrorRoute
@@ -244,9 +260,11 @@ export interface FileRoutesByTo {
   '/sign-up': typeof SignUpRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/verify-account': typeof VerifyAccountRoute
+  '/dashboard/buy': typeof DashboardBuyRoute
   '/dashboard/kyc': typeof DashboardKycRoute
   '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/profile': typeof DashboardProfileRoute
+  '/dashboard/sell': typeof DashboardSellRoute
   '/dashboard/wallets': typeof DashboardWalletsRoute
   '/dispute/$id': typeof DisputeIdRoute
   '/oauth/error': typeof OauthErrorRoute
@@ -276,9 +294,11 @@ export interface FileRoutesById {
   '/sign-up': typeof SignUpRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/verify-account': typeof VerifyAccountRoute
+  '/dashboard/buy': typeof DashboardBuyRoute
   '/dashboard/kyc': typeof DashboardKycRoute
   '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/profile': typeof DashboardProfileRoute
+  '/dashboard/sell': typeof DashboardSellRoute
   '/dashboard/wallets': typeof DashboardWalletsRoute
   '/dispute/$id': typeof DisputeIdRoute
   '/oauth/error': typeof OauthErrorRoute
@@ -309,9 +329,11 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/terms-of-service'
     | '/verify-account'
+    | '/dashboard/buy'
     | '/dashboard/kyc'
     | '/dashboard/notifications'
     | '/dashboard/profile'
+    | '/dashboard/sell'
     | '/dashboard/wallets'
     | '/dispute/$id'
     | '/oauth/error'
@@ -339,9 +361,11 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/terms-of-service'
     | '/verify-account'
+    | '/dashboard/buy'
     | '/dashboard/kyc'
     | '/dashboard/notifications'
     | '/dashboard/profile'
+    | '/dashboard/sell'
     | '/dashboard/wallets'
     | '/dispute/$id'
     | '/oauth/error'
@@ -370,9 +394,11 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/terms-of-service'
     | '/verify-account'
+    | '/dashboard/buy'
     | '/dashboard/kyc'
     | '/dashboard/notifications'
     | '/dashboard/profile'
+    | '/dashboard/sell'
     | '/dashboard/wallets'
     | '/dispute/$id'
     | '/oauth/error'
@@ -579,6 +605,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardWalletsRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/sell': {
+      id: '/dashboard/sell'
+      path: '/sell'
+      fullPath: '/dashboard/sell'
+      preLoaderRoute: typeof DashboardSellRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/profile': {
       id: '/dashboard/profile'
       path: '/profile'
@@ -600,6 +633,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardKycRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/buy': {
+      id: '/dashboard/buy'
+      path: '/buy'
+      fullPath: '/dashboard/buy'
+      preLoaderRoute: typeof DashboardBuyRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/transactions/': {
       id: '/dashboard/transactions/'
       path: '/transactions'
@@ -618,9 +658,11 @@ declare module '@tanstack/react-router' {
 }
 
 interface DashboardRouteChildren {
+  DashboardBuyRoute: typeof DashboardBuyRoute
   DashboardKycRoute: typeof DashboardKycRoute
   DashboardNotificationsRoute: typeof DashboardNotificationsRoute
   DashboardProfileRoute: typeof DashboardProfileRoute
+  DashboardSellRoute: typeof DashboardSellRoute
   DashboardWalletsRoute: typeof DashboardWalletsRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardTransactionsIdRoute: typeof DashboardTransactionsIdRoute
@@ -628,9 +670,11 @@ interface DashboardRouteChildren {
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardBuyRoute: DashboardBuyRoute,
   DashboardKycRoute: DashboardKycRoute,
   DashboardNotificationsRoute: DashboardNotificationsRoute,
   DashboardProfileRoute: DashboardProfileRoute,
+  DashboardSellRoute: DashboardSellRoute,
   DashboardWalletsRoute: DashboardWalletsRoute,
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardTransactionsIdRoute: DashboardTransactionsIdRoute,

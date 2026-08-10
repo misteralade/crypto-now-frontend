@@ -13,10 +13,7 @@ import {
   ChevronRight,
   Copy,
   ExternalLink,
-  X,
 } from "lucide-react";
-import type { TradeType } from "../../types/trade.types.ts";
-import DashboardTrade from "./trade/DashboardTrade.tsx";
 import { useDashboardContent } from "../../hooks/components/dashboard/useDashboardContent.ts";
 import { useCryptoQuery } from "../../queries/crypto.query.ts";
 import { useUserQuery } from "../../queries/user.query.ts";
@@ -44,7 +41,18 @@ const getInitials = (first?: string, last?: string) =>
   ((first?.[0] ?? "") + (last?.[0] ?? "")).toUpperCase() || "U";
 
 /* ─────────────────────── Live Rate Chip ─────────────────────────── */
-function RateChip({ crypto }: { crypto: SupportedCryptoOrCurrencyResponse }) {
+// buyRate/sellRate only carry the platform's NGN-per-$1 rate on the USDT
+// row — other tokens' own rows aren't priced per-$ the same way, so every
+// chip shows the platform rate (USDT's), not each token's own column.
+function RateChip({
+  crypto,
+  platformBuyRate,
+  platformSellRate,
+}: {
+  crypto: SupportedCryptoOrCurrencyResponse;
+  platformBuyRate: number;
+  platformSellRate: number;
+}) {
   return (
     <div
       className="flex items-center gap-2 px-3 py-2 rounded-2xl shrink-0"
@@ -66,13 +74,13 @@ function RateChip({ crypto }: { crypto: SupportedCryptoOrCurrencyResponse }) {
           className="text-[10px] leading-none mt-0.5"
           style={{ color: "#948EEE" }}
         >
-          BUY {formatCurrency(Number(crypto.buyRate))}
+          BUY ₦{platformBuyRate.toLocaleString()}/$
         </p>
         <p
           className="text-[10px] leading-none mt-0.5"
           style={{ color: "#037847" }}
         >
-          SELL {formatCurrency(Number(crypto.sellRate))}
+          SELL ₦{platformSellRate.toLocaleString()}/$
         </p>
       </div>
     </div>
@@ -278,10 +286,8 @@ export default function DashboardContent() {
   void recentWallets;
   void WalletMiniCard;
 
-  const [tradeModalMode, setTradeModalMode] = useState<TradeType | null>(null);
-
   const goTrade = (option: "buy" | "sell") => {
-    setTradeModalMode(option);
+    navigate({ to: option === "buy" ? ROUTES.DASHBOARD_BUY : ROUTES.DASHBOARD_SELL });
   };
 
   // Check for in-progress trade to offer "Continue" banner
@@ -303,7 +309,9 @@ export default function DashboardContent() {
 
   const handleContinueTrade = () => {
     if (pendingTrade?.activeTab) {
-      setTradeModalMode(pendingTrade.activeTab);
+      navigate({
+        to: pendingTrade.activeTab === "buy" ? ROUTES.DASHBOARD_BUY : ROUTES.DASHBOARD_SELL,
+      });
     }
   };
 
@@ -806,9 +814,20 @@ export default function DashboardContent() {
                 className="flex gap-2 overflow-x-auto pb-1"
                 style={{ scrollbarWidth: "none" }}
               >
-                {supportedCryptoCurrencies.map((c) => (
-                  <RateChip key={c.id} crypto={c} />
-                ))}
+                {(() => {
+                  const usdtToken =
+                    supportedCryptoCurrencies.find(
+                      (c) => c.symbol.toUpperCase() === "USDT",
+                    ) ?? supportedCryptoCurrencies[0];
+                  return supportedCryptoCurrencies.map((c) => (
+                    <RateChip
+                      key={c.id}
+                      crypto={c}
+                      platformBuyRate={Number(usdtToken.buyRate)}
+                      platformSellRate={Number(usdtToken.sellRate)}
+                    />
+                  ));
+                })()}
               </div>
             </section>
           )}
@@ -1033,38 +1052,6 @@ export default function DashboardContent() {
           )}
         </section>
       </div>
-
-      {tradeModalMode && (
-        <div className="fixed inset-0 z-50" role="dialog" aria-modal="true">
-          <div
-            className="absolute inset-0 z-0 bg-black/30"
-            onClick={() => setTradeModalMode(null)}
-          />
-          <div
-            className="absolute z-10 inset-x-0 bottom-0 top-6 bg-white rounded-t-3xl overflow-y-auto isolate
-                       md:inset-0 md:top-0 md:flex md:items-center md:justify-center md:bg-transparent md:rounded-none md:overflow-visible md:pointer-events-none"
-          >
-            <div className="md:w-full md:max-w-2xl md:max-h-[90vh] md:bg-white md:rounded-3xl md:overflow-y-auto md:shadow-2xl md:pointer-events-auto md:relative">
-              <button
-                type="button"
-                onClick={() => setTradeModalMode(null)}
-                className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full flex items-center justify-center"
-                style={{ background: "#F7F7F9" }}
-                aria-label="Close"
-              >
-                <X size={16} />
-              </button>
-              {/* DashboardTrade renders itself as a full page (min-h-100dvh); reset
-                  that here so it lays out within the modal panel instead of the
-                  viewport, which otherwise pushed its own content/controls out of
-                  this panel's actual clickable bounds. */}
-              <div className="[&>div]:!min-h-0 [&>div]:!bg-transparent">
-                <DashboardTrade initialTradeType={tradeModalMode} />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

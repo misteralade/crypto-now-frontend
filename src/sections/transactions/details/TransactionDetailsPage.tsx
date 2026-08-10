@@ -627,16 +627,6 @@ const TransactionDetailsPage = () => {
                   }
                   field="email"
                 />
-                <CopyRow
-                  label="Rate Snapshot"
-                  value={
-                    transaction.rateSnapshot
-                      ? JSON.stringify(transaction.rateSnapshot)
-                      : "—"
-                  }
-                  field="exchange"
-                  mono
-                />
               </div>
             </Card>
 

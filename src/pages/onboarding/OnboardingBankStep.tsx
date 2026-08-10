@@ -14,16 +14,12 @@ interface OnboardingBankStepProps {
 }
 
 // Nigerian bank account names come back from the provider as
-// "SURNAME FIRSTNAME MIDDLENAME" — first token is the surname, the rest
-// is the first/middle name, matching how the (now-removed) name step
-// labeled these fields.
+// "SURNAME FIRSTNAME MIDDLENAME" — first token is the surname, second is
+// the first name. Any further middle names are dropped; we only keep the
+// two-word display name shown elsewhere in the app (greeting, initials).
 function splitAccountName(accountName: string): { firstName: string; lastName: string } {
-  const parts = accountName.trim().split(/\s+/).filter(Boolean);
-  const [lastName, ...rest] = parts;
-  return {
-    lastName: lastName ?? "",
-    firstName: rest.join(" "),
-  };
+  const [lastName = "", firstName = ""] = accountName.trim().split(/\s+/).filter(Boolean);
+  return { lastName, firstName };
 }
 
 const OnboardingBankStep = ({ onComplete }: OnboardingBankStepProps) => {

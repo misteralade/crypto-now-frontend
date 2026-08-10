@@ -30,7 +30,6 @@ import {
 import { useDispatch } from "react-redux";
 import {
   LOCAL_STORAGE_KEYS,
-  ROUTES,
   SESSION_STORAGE_KEYS,
 } from "../../../util/constants.util.ts";
 
@@ -39,6 +38,10 @@ type DashboardTradeProps = {
   initialTradeType?: TradeType;
   initialStep?: number;
   prefetchedTransaction?: TransactionResponseEntity | null;
+  // Called from Step 1's back button when initialTradeType is set (so
+  // there's no in-flow mode picker to fall back to) — e.g. dedicated
+  // /dashboard/buy and /dashboard/sell pages navigate to /dashboard.
+  onExit?: () => void;
 };
 
 export default function DashboardTrade({
@@ -46,6 +49,7 @@ export default function DashboardTrade({
   initialTradeType,
   initialStep,
   prefetchedTransaction,
+  onExit,
 }: DashboardTradeProps = {}) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -280,7 +284,7 @@ export default function DashboardTrade({
     clearTradeProgress();
     sessionStorage.removeItem(SESSION_STORAGE_KEYS.SESSION_ID);
     setStep(1);
-    navigate({ to: ROUTES.DASHBOARD_TRADE, search: {}, replace: true });
+    navigate({ search: {} as any, replace: true });
   };
 
   const handleChooseMode = (mode: TradeType) => {
@@ -291,7 +295,6 @@ export default function DashboardTrade({
     setActiveTab(mode);
     setHasChosenMode(true);
     navigate({
-      to: ROUTES.DASHBOARD_TRADE,
       search: { option: mode } as any,
       replace: true,
     });
@@ -301,7 +304,6 @@ export default function DashboardTrade({
     if (!transactionSessionId || activeSessionId) return;
 
     navigate({
-      to: ROUTES.DASHBOARD_TRADE_SESSION,
       search: { sessionId: transactionSessionId } as any,
       replace: true,
     });
@@ -486,7 +488,7 @@ export default function DashboardTrade({
                 isGeneratingDepositWallet={isGeneratingDepositWallet}
                 sellNetwork={sellNetwork}
                 onSellNetworkChange={setSellNetwork}
-                onBack={() => setHasChosenMode(false)}
+                onBack={initialTradeType ? onExit : () => setHasChosenMode(false)}
               />
             </motion.div>
           )}
