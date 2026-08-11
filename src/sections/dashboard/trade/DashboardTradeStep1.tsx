@@ -686,9 +686,7 @@ function SellDepositWalletSection({
                 {depositWallet.note}
               </p>
             )}
-            <p className="mt-2 text-[10px] leading-relaxed" style={{ color: "#9A9A9A" }}>
-              Once you send, we'll detect it automatically and pay out to your default bank account
-            </p>
+
           </>
         ) : (
           <p className="text-xs py-1" style={{ color: "#A07000" }}>
