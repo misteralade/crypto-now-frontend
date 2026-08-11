@@ -2,7 +2,10 @@
  * DashboardTrade — full buy/sell flow inside the dashboard AuthenticatedLayout.
  *
  * BUY:  Step 1 (crypto grid + amount + wallet) → Step 2 (bank payment) → Step 3 (confirm wallet) → Step 4
- * SELL: Step 1 (crypto grid + payout bank) → Step 2 (unique wallet + monitoring) → Step 4
+ * SELL: Step 1 only — crypto grid + default payout bank (read-only) + deposit address.
+ *       There's no separate confirmation step: deposits are detected automatically
+ *       once sent, so the flow ends as soon as the address is shown. Steps 2/4 remain
+ *       reachable only when resuming an in-flight transaction via ?sessionId=.
  */
 import { useState, useEffect, useRef } from "react";
 import { useSearch, useNavigate } from "@tanstack/react-router";
@@ -226,7 +229,6 @@ export default function DashboardTrade({
     setSelectedToken,
     handleReceiptUrl,
     handleTransactionHash,
-    initiateTransaction,
     makePaymentTransaction,
     handleConfirmBankDetails,
     handleAnonymousUserEmailInput,
@@ -448,20 +450,10 @@ export default function DashboardTrade({
                   activeTab === "buy" ? setBuyRateInfo : undefined
                 }
                 onProceed={() => {
-                  if (activeTab === "sell") {
-                    if (!pendingSellToken) return;
-                    setSelectedToken(pendingSellToken);
-                    // Attach the selected payout accountId before initiating
-                    if (sellPayoutAccountId) {
-                      dispatch(
-                        setInitiateTransactionField({
-                          field: "accountId",
-                          value: sellPayoutAccountId,
-                        })
-                      );
-                    }
-                    initiateTransaction();
-                  } else {
+                  // SELL has no separate "proceed" step anymore — the deposit
+                  // address is shown directly on Step 1 and deposits are
+                  // detected automatically, so this only fires for BUY.
+                  if (activeTab === "buy") {
                     // BUY: local-first — no server call yet, just advance to step 2
                     if (!pendingBuyToken || !buyRateInfo) return;
                     setSelectedToken(pendingBuyToken);
@@ -482,8 +474,6 @@ export default function DashboardTrade({
                 orderDetails={AdditionalInfo}
                 // SELL-specific props
                 userBankAccounts={userBankAccounts}
-                selectedPayoutAccountId={sellPayoutAccountId}
-                onPayoutAccountChange={setSellPayoutAccountId}
                 sellDepositWallet={sellDepositWallet}
                 isGeneratingDepositWallet={isGeneratingDepositWallet}
                 sellNetwork={sellNetwork}

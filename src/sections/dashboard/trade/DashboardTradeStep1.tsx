@@ -16,11 +16,6 @@ import { setInitiateTransactionField } from "../../../redux/transaction.slice.ts
 import { setSelectedCryptoId } from "../../../redux/crypto.slice.ts";
 import { ROUTES } from "../../../util/constants.util.ts";
 import { exchangeRateServiceApi } from "../../../api/rate.api.ts";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { bankServiceApi } from "../../../api/bank.api.ts";
-import { QUERY_KEYS } from "../../../queries/query.keys.ts";
-import { toast } from "react-toastify";
-import { extractErrorMessage } from "../../../util/index.util.ts";
 import {
   TRADE_FIAT_AMOUNT_PRESETS,
   TOKEN_PRECISION,
@@ -107,10 +102,8 @@ interface DashboardTradeStep1Props {
   onNetworkChange?: (v: string) => void;
   orderDetails?: TradeAdditionalInfoInterface[];
 
-  // SELL-specific (payout bank)
+  // SELL-specific (payout bank — read-only, always the user's default account)
   userBankAccounts?: UserBankAccountResponse[] | null;
-  selectedPayoutAccountId?: string;
-  onPayoutAccountChange?: (id: string) => void;
 
   // SELL-specific (deposit wallet shown inline)
   sellDepositWallet?: CustodialWalletResponse | null;
@@ -693,6 +686,9 @@ function SellDepositWalletSection({
                 {depositWallet.note}
               </p>
             )}
+            <p className="mt-2 text-[10px] leading-relaxed" style={{ color: "#9A9A9A" }}>
+              Once you send, we'll detect it automatically and pay out to your default bank account
+            </p>
           </>
         ) : (
           <p className="text-xs py-1" style={{ color: "#A07000" }}>
@@ -704,152 +700,15 @@ function SellDepositWalletSection({
   );
 }
 
-// ── SELL payout bank section ──────────────────────────────────────────────────
-// ── SELL payout bank section ──────────────────────────────────────────────────
-function BankAccountRow({
-  account,
-  selected,
-  accentColor,
-  onSelect,
-  onMakeDefault,
-}: {
-  account: UserBankAccountResponse;
-  selected: boolean;
-  accentColor: string;
-  onSelect: () => void;
-  onMakeDefault: (id: string) => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className="w-full rounded-2xl px-4 py-3 text-left transition-all"
-      style={{
-        background: selected ? "#FFFBF0" : "#FAFAFA",
-        border: selected ? `2px solid ${accentColor}` : "1.5px solid #F0F0F0",
-      }}
-    >
-      <div className="flex items-center gap-3">
-        {account.bankLogo ? (
-          <img
-            src={account.bankLogo}
-            alt={account.bankName}
-            className="w-8 h-8 rounded-lg object-cover shrink-0"
-          />
-        ) : (
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-            style={{ background: selected ? "#FFE4A0" : "#F0F0F0" }}
-          >
-            <span
-              className="text-[10px] font-black"
-              style={{ color: selected ? "#A07000" : "#9A9A9A" }}
-            >
-              {account.bankName.slice(0, 2).toUpperCase()}
-            </span>
-          </div>
-        )}
-        <div className="flex-1 min-w-0">
-          <p
-            className="text-xs font-bold truncate"
-            style={{ color: "#0E0F0C" }}
-          >
-            {account.bankName}
-          </p>
-          <p className="text-[11px] font-mono" style={{ color: "#6B6E6B" }}>
-            ****{account.accountNumber.slice(-4)} · {account.accountName}
-          </p>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          {account.isDefault ? (
-            <span
-              className="text-[9px] font-bold px-2 py-0.5 rounded-full"
-              style={{ background: "#E8F8F0", color: "#037847" }}
-            >
-              DEFAULT
-            </span>
-          ) : (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onMakeDefault(account.id);
-              }}
-              className="text-[9px] font-bold px-2 py-0.5 rounded-full border transition-colors hover:bg-gray-100"
-              style={{
-                background: "#FFFFFF",
-                color: "#6B6E6B",
-                borderColor: "#D0D0D0",
-              }}
-            >
-              Make Default
-            </button>
-          )}
-          {/* Radio dot */}
-          <div
-            className="w-4 h-4 rounded-full flex items-center justify-center"
-            style={{
-              border: `2px solid ${selected ? accentColor : "#D0D0D0"}`,
-            }}
-          >
-            {selected && (
-              <div
-                className="w-2 h-2 rounded-full"
-                style={{ background: accentColor }}
-              />
-            )}
-          </div>
-        </div>
-      </div>
-    </button>
-  );
-}
-
+// ── SELL payout bank section (read-only — payouts always go to the default account) ──
 function SellPayoutBank({
   userBankAccounts,
-  selectedPayoutAccountId,
-  onPayoutAccountChange,
 }: {
   userBankAccounts?: UserBankAccountResponse[] | null;
-  selectedPayoutAccountId?: string;
-  onPayoutAccountChange?: (id: string) => void;
 }) {
   const navigate = useNavigate();
-  const accentColor = "#F7A600";
-  const queryClient = useQueryClient();
-
-  const makeDefaultMutation = useMutation({
-    mutationFn: async (id: string) => {
-      return await bankServiceApi.makeBankAccountDefault(id);
-    },
-    onSuccess: ({ success, message }, id) => {
-      if (success) {
-        toast.success(message || "Default bank account updated successfully.");
-        queryClient.invalidateQueries({
-          queryKey: [QUERY_KEYS.BANK.USER_BANK_ACCOUNTS],
-        });
-        if (onPayoutAccountChange) {
-          onPayoutAccountChange(id);
-        }
-      } else {
-        toast.error(message || "Failed to update default bank account.");
-      }
-    },
-    onError: (error: any) => {
-      const errMessage = extractErrorMessage(error) || "Failed to update default bank. Please try again.";
-      toast.error(errMessage);
-    },
-  });
-
-  const handleMakeDefault = (id: string) => {
-    makeDefaultMutation.mutate(id);
-  };
-
   const accounts = userBankAccounts ?? [];
-  const selectedId =
-    selectedPayoutAccountId ??
-    accounts.find((b) => b.isDefault)?.id ??
-    accounts[0]?.id;
+  const defaultAccount = accounts.find((b) => b.isDefault) ?? accounts[0];
 
   if (accounts.length === 0) {
     return (
@@ -885,30 +744,58 @@ function SellPayoutBank({
       >
         Payout Account
       </p>
-      
-      {/* All accounts as a radio list */}
-      {accounts.map((acct) => (
-        <BankAccountRow
-          key={acct.id}
-          account={acct}
-          selected={acct.id === selectedId}
-          accentColor={accentColor}
-          onSelect={() => onPayoutAccountChange?.(acct.id)}
-          onMakeDefault={handleMakeDefault}
-        />
-      ))}
 
-      {/* Manage accounts link */}
-      <button
-        type="button"
-        onClick={() =>
-          navigate({ to: ROUTES.PROFILE, search: { section: "bank" } })
-        }
-        className="text-[11px] font-semibold text-left"
-        style={{ color: "#9A9A9A" }}
+      <div
+        className="rounded-2xl px-4 py-3"
+        style={{ background: "#FAFAFA", border: "1.5px solid #F0F0F0" }}
       >
-        Manage bank accounts →
-      </button>
+        <div className="flex items-center gap-3">
+          {defaultAccount.bankLogo ? (
+            <img
+              src={defaultAccount.bankLogo}
+              alt={defaultAccount.bankName}
+              className="w-8 h-8 rounded-lg object-cover shrink-0"
+            />
+          ) : (
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+              style={{ background: "#F0F0F0" }}
+            >
+              <span className="text-[10px] font-black" style={{ color: "#9A9A9A" }}>
+                {defaultAccount.bankName.slice(0, 2).toUpperCase()}
+              </span>
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold truncate" style={{ color: "#0E0F0C" }}>
+              {defaultAccount.bankName}
+            </p>
+            <p className="text-[11px] font-mono" style={{ color: "#6B6E6B" }}>
+              ****{defaultAccount.accountNumber.slice(-4)} · {defaultAccount.accountName}
+            </p>
+          </div>
+          <span
+            className="text-[9px] font-bold px-2 py-0.5 rounded-full shrink-0"
+            style={{ background: "#E8F8F0", color: "#037847" }}
+          >
+            DEFAULT
+          </span>
+        </div>
+      </div>
+
+      <p className="text-[11px]" style={{ color: "#9A9A9A" }}>
+        Funds will be sent to your default account above.{" "}
+        <button
+          type="button"
+          onClick={() =>
+            navigate({ to: ROUTES.PROFILE, search: { section: "bank" } })
+          }
+          className="font-semibold underline"
+          style={{ color: "#9A9A9A" }}
+        >
+          Change it in bank settings →
+        </button>
+      </p>
     </div>
   );
 }
@@ -935,8 +822,6 @@ export default function DashboardTradeStep1({
   selectedNetwork,
   onNetworkChange,
   userBankAccounts,
-  selectedPayoutAccountId,
-  onPayoutAccountChange,
   sellDepositWallet,
   isGeneratingDepositWallet,
   sellNetwork,
@@ -946,9 +831,6 @@ export default function DashboardTradeStep1({
   const isBuy = tradeType === "buy";
   const accentColor = isBuy ? "#948EEE" : "#F7A600";
 
-  const hasBankAccounts = (userBankAccounts?.length ?? 0) > 0;
-  const noBankAccounts = !isBuy && !hasBankAccounts;
-
   // For BUY: require amount, wallet, AND a fetched rate before allowing proceed
   const buySubmitDisabled =
     isBuy &&
@@ -956,41 +838,22 @@ export default function DashboardTradeStep1({
       Number(amountToBuy) <= 0 ||
       !walletAddress?.trim() ||
       !buyRateInfo);
-  const activeNetwork =
-    !isBuy && selectedToken
-      ? (sellNetwork ?? selectedToken.networks?.[0])
-      : undefined;
-  const sellWalletLoading =
-    !isBuy &&
-    !!selectedToken &&
-    (isGeneratingDepositWallet ||
-      !sellDepositWallet ||
-      (activeNetwork && sellDepositWallet?.network !== activeNetwork));
 
-  const isCtaBusy =
-    isInitiatingTrade ||
-    (!!selectedToken && isRateLoading) ||
-    sellWalletLoading;
+  const isCtaBusy = isInitiatingTrade || (!!selectedToken && isRateLoading);
   const ctaLabel = isInitiatingTrade
     ? "Processing…"
     : isRateLoading && selectedToken
       ? "Loading rate…"
-      : sellWalletLoading
-        ? "Getting deposit address…"
-        : noBankAccounts
-          ? "Add a bank account first"
-          : isBuy &&
-              amountToBuy &&
-              Number(amountToBuy) > 0 &&
-              walletAddress?.trim() &&
-              !buyRateInfo
-            ? "Fetching rate…"
-            : selectedToken
-              ? `${isBuy ? "Buy" : "Start Transaction"} — Continue`
-              : "Select a Crypto to Continue";
+      : amountToBuy &&
+          Number(amountToBuy) > 0 &&
+          walletAddress?.trim() &&
+          !buyRateInfo
+        ? "Fetching rate…"
+        : selectedToken
+          ? "Buy — Continue"
+          : "Select a Crypto to Continue";
 
-  const ctaDisabled =
-    !selectedToken || isCtaBusy || noBankAccounts || buySubmitDisabled;
+  const ctaDisabled = !selectedToken || isCtaBusy || buySubmitDisabled;
 
   return (
     <div className="flex flex-col gap-4">
@@ -1119,16 +982,12 @@ export default function DashboardTradeStep1({
         />
       )}
 
-      {/* SELL: payout bank selector */}
-      {!isBuy && (
-        <SellPayoutBank
-          userBankAccounts={userBankAccounts}
-          selectedPayoutAccountId={selectedPayoutAccountId}
-          onPayoutAccountChange={onPayoutAccountChange}
-        />
-      )}
+      {/* SELL: payout bank (read-only — always the default account) */}
+      {!isBuy && <SellPayoutBank userBankAccounts={userBankAccounts} />}
 
-      {/* SELL: deposit wallet address (shown when token selected) */}
+      {/* SELL: deposit wallet address (shown when token selected) — this is
+          the end of the SELL flow; there's no further step to advance to,
+          deposits are picked up automatically once sent. */}
       {!isBuy && selectedToken && (
         <SellDepositWalletSection
           depositWallet={sellDepositWallet}
@@ -1139,24 +998,24 @@ export default function DashboardTradeStep1({
         />
       )}
 
-      {/* CTA */}
-      <button
-        type="button"
-        disabled={ctaDisabled}
-        onClick={() => !ctaDisabled && onProceed()}
-        className="w-full py-4 rounded-2xl text-sm font-bold transition-all mt-1"
-        style={{
-          background: !ctaDisabled
-            ? `linear-gradient(135deg, ${accentColor}, ${
-                isBuy ? "#6B45D0" : "#E09000"
-              })`
-            : "#F0F0F0",
-          color: !ctaDisabled ? "#FFFFFF" : "#9A9A9A",
-          boxShadow: !ctaDisabled ? `0 6px 20px ${accentColor}44` : "none",
-        }}
-      >
-        {ctaLabel}
-      </button>
+      {/* CTA — BUY only; SELL has nothing left to confirm once the address is shown */}
+      {isBuy && (
+        <button
+          type="button"
+          disabled={ctaDisabled}
+          onClick={() => !ctaDisabled && onProceed()}
+          className="w-full py-4 rounded-2xl text-sm font-bold transition-all mt-1"
+          style={{
+            background: !ctaDisabled
+              ? `linear-gradient(135deg, ${accentColor}, #6B45D0)`
+              : "#F0F0F0",
+            color: !ctaDisabled ? "#FFFFFF" : "#9A9A9A",
+            boxShadow: !ctaDisabled ? `0 6px 20px ${accentColor}44` : "none",
+          }}
+        >
+          {ctaLabel}
+        </button>
+      )}
     </div>
   );
 }
