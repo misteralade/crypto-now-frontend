@@ -311,6 +311,11 @@ export default function DashboardContent() {
     if (pendingTrade?.activeTab) {
       navigate({
         to: pendingTrade.activeTab === "buy" ? ROUTES.DASHBOARD_BUY : ROUTES.DASHBOARD_SELL,
+        // DashboardTrade only restores saved step/amount/wallet progress when
+        // this is set — without it, the "Continue" banner would land on a
+        // fresh trade screen despite tradeProgress.storage.util.ts having the
+        // saved amount/token sitting right there.
+        search: { resume: true },
       });
     }
   };

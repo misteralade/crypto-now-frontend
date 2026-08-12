@@ -474,6 +474,7 @@ export default function DashboardTrade({
                 orderDetails={AdditionalInfo}
                 // SELL-specific props
                 userBankAccounts={userBankAccounts}
+                loadingUserBankAccounts={loadingUserBankAccounts}
                 sellDepositWallet={sellDepositWallet}
                 isGeneratingDepositWallet={isGeneratingDepositWallet}
                 sellNetwork={sellNetwork}

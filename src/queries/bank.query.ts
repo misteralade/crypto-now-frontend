@@ -55,7 +55,9 @@ export const useBankQuery = () => {
     enabled: !!(
       matchRoute({ to: ROUTES.PROFILE }) ||
       matchRoute({ to: ROUTES.DASHBOARD }) ||
-      matchRoute({ to: ROUTES.DASHBOARD_WALLETS })
+      matchRoute({ to: ROUTES.DASHBOARD_WALLETS }) ||
+      matchRoute({ to: ROUTES.DASHBOARD_BUY }) ||
+      matchRoute({ to: ROUTES.DASHBOARD_SELL })
     ),
     staleTime: 1000 * 60 * 5, // 5 minutes — bank accounts don't change often
   });

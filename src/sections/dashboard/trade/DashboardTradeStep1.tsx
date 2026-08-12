@@ -104,6 +104,7 @@ interface DashboardTradeStep1Props {
 
   // SELL-specific (payout bank — read-only, always the user's default account)
   userBankAccounts?: UserBankAccountResponse[] | null;
+  loadingUserBankAccounts?: boolean;
 
   // SELL-specific (deposit wallet shown inline)
   sellDepositWallet?: CustodialWalletResponse | null;
@@ -637,7 +638,7 @@ function SellDepositWalletSection({
               }}
             />
             <p className="text-xs" style={{ color: "#A07000" }}>
-              Generating deposit address…
+              Getting wallet...
             </p>
           </div>
         ) : depositWallet ? (
@@ -701,12 +702,31 @@ function SellDepositWalletSection({
 // ── SELL payout bank section (read-only — payouts always go to the default account) ──
 function SellPayoutBank({
   userBankAccounts,
+  loadingUserBankAccounts,
 }: {
   userBankAccounts?: UserBankAccountResponse[] | null;
+  loadingUserBankAccounts?: boolean;
 }) {
   const navigate = useNavigate();
   const accounts = userBankAccounts ?? [];
   const defaultAccount = accounts.find((b) => b.isDefault) ?? accounts[0];
+
+  if (loadingUserBankAccounts) {
+    return (
+      <div
+        className="rounded-2xl px-4 py-4 flex items-center gap-2"
+        style={{ background: "#FAFAFA", border: "1.5px solid #F0F0F0" }}
+      >
+        <div
+          className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin shrink-0"
+          style={{ borderColor: "#9A9A9A transparent transparent transparent" }}
+        />
+        <p className="text-xs font-semibold" style={{ color: "#9A9A9A" }}>
+          Checking your bank account...
+        </p>
+      </div>
+    );
+  }
 
   if (accounts.length === 0) {
     return (
@@ -820,6 +840,7 @@ export default function DashboardTradeStep1({
   selectedNetwork,
   onNetworkChange,
   userBankAccounts,
+  loadingUserBankAccounts,
   sellDepositWallet,
   isGeneratingDepositWallet,
   sellNetwork,
@@ -899,7 +920,7 @@ export default function DashboardTradeStep1({
           style={{ color: isBuy ? "#5B5EA6" : "#A07000" }}
         >
           {isBuy
-            ? "Pay with NGN bank transfer. We verify your payment and send crypto directly to your wallet within 5 minutes."
+            ? "Pay with NGN bank transfer. We verify your payment and send crypto directly to your wallet"
             : "Send crypto to your unique wallet. We auto-detect receipt and instantly send NGN to your bank. Zero action needed after sending."}
         </p>
       </div>
@@ -981,7 +1002,12 @@ export default function DashboardTradeStep1({
       )}
 
       {/* SELL: payout bank (read-only — always the default account) */}
-      {!isBuy && <SellPayoutBank userBankAccounts={userBankAccounts} />}
+      {!isBuy && (
+        <SellPayoutBank
+          userBankAccounts={userBankAccounts}
+          loadingUserBankAccounts={loadingUserBankAccounts}
+        />
+      )}
 
       {/* SELL: deposit wallet address (shown when token selected) — this is
           the end of the SELL flow; there's no further step to advance to,

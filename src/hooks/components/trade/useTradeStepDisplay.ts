@@ -230,14 +230,23 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
         })
       );
       generationLockRef.current = null; // Clear lock once loaded
+    } else if (
+      sellDepositWallet?.cryptocurrencyId === selectedToken.id &&
+      sellDepositWallet?.network === preferredNetwork
+    ) {
+      // We already resolved/generated this exact wallet locally — the
+      // `custodialWallets` cache just hasn't caught up with the invalidated
+      // query's refetch yet. Keep showing it instead of re-triggering
+      // generation, which would otherwise flash "Getting wallet…" again
+      // and fire a duplicate generate call once the cache does refresh.
     } else {
       const lockKey = `${selectedToken.id}-${preferredNetwork}`;
       if (generationLockRef.current === lockKey || generateCustodialWalletMutation.isPending) {
          return; // Already generating this specific wallet, skip duplicate call
       }
-      
+
       generationLockRef.current = lockKey;
-      
+
       // Clear stale address and generate for the selected network via the HD wallet service
       setSellDepositWallet(null);
       dispatch(setInitiateTransactionField({ field: "custodialWalletId", value: undefined }));

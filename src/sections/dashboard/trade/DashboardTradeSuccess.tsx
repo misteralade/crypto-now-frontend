@@ -155,8 +155,7 @@ export default function DashboardTradeSuccess({
                 Check Your Wallet
               </p>
               <p className="text-xs" style={{ color: "#9A9A9A" }}>
-                Open your wallet app. {selectedTokenSymbol ?? "Crypto"} should
-                appear within 5 minutes.
+                Open your wallet app. {selectedTokenSymbol ?? "Crypto"}
               </p>
             </div>
           </div>
