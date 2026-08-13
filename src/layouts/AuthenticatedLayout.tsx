@@ -1,8 +1,9 @@
 import { type ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, User, LogOut, Settings, Wallet, History } from "lucide-react";
+import { LayoutDashboard, User, LogOut, Settings, Wallet, History, Bell } from "lucide-react";
 import { LOCAL_STORAGE_KEYS, ROUTES } from "../util/constants.util.ts";
 import { useUserQuery } from "../queries/user.query.ts";
+import { useNotificationQuery } from "../queries/notification.query.ts";
 import { clearUserSessionStorage } from "../util/tradeProgress.storage.util.ts";
 import Logo from "../assets/logo/logo.svg";
 
@@ -42,6 +43,7 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
   const location  = useLocation();
   const navigate  = useNavigate();
   const { userProfileData } = useUserQuery();
+  const { hasNewNotifications } = useNotificationQuery();
 
   const initials  = getInitials(userProfileData?.profile?.firstName, userProfileData?.profile?.lastName);
   const fullName  = userProfileData?.profile?.firstName
@@ -132,15 +134,31 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
             style={{ background: "#FFFFFF", borderBottom: "1px solid #F0F0F0" }}>
             <h1 className="text-sm font-semibold" style={{ color: "#0E0F0C" }}>{pageTitle}</h1>
             <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => navigate({ to: ROUTES.NOTIFICATIONS })}
+                aria-label="View notifications"
+                className="relative w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-gray-50"
+                style={{ background: "#F7F7F9" }}
+              >
+                <Bell size={16} style={{ color: "#0E0F0C" }} />
+                {hasNewNotifications?.hasNew ? (
+                  <span
+                    className="absolute top-1 right-1 min-w-[6px] h-1.5 px-0.5 rounded-full bg-[#EB5757] border border-white"
+                    aria-hidden
+                  />
+                ) : null}
+              </button>
+
               <Link to={ROUTES.PROFILE}>
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white transition-opacity hover:opacity-90"
                   style={{ background: "linear-gradient(135deg,#948EEE,#575AE5)" }}>
                   {initials}
                 </div>
               </Link>
             </div>
           </header>
-        )}
+        ) }
 
         <main className="p-6 lg:p-8">{children}</main>
       </div>
