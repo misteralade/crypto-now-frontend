@@ -662,21 +662,27 @@ export default function DashboardTradeStep2({
   const isLocalBuyFlow = isBuy && !!buyRateInfo;
 
   // For local-first BUY flow: fetch bank details directly
-  const { data: localBankDetails, isLoading: localBankDetailsLoading } =
-    useQuery({
-      queryKey: [QUERY_KEYS.BANK.PLATFORM_BANK_DETAILS, "local-buy"],
-      queryFn: async () => {
-        const { data } = await bankServiceApi.getPlatformBankDetails();
-        return data;
-      },
-      enabled: isLocalBuyFlow,
-    });
+  const {
+    data: localBankDetails,
+    isLoading: localBankDetailsLoading,
+    isError: localBankDetailsError,
+    refetch: refetchLocalBankDetails,
+  } = useQuery({
+    queryKey: [QUERY_KEYS.BANK.PLATFORM_BANK_DETAILS, "local-buy"],
+    queryFn: async () => {
+      const { data } = await bankServiceApi.getPlatformBankDetails();
+      return data;
+    },
+    enabled: isLocalBuyFlow,
+  });
 
   const {
     setUploadedFileUrl,
     paymentDetailsLoading,
+    paymentDetailsError,
     submitInvalid,
     bankDetails: hookBankDetails,
+    refetchPaymentDetails,
   } = useTradeStepTwo({
     tradeType,
     amountToBuy,
@@ -786,10 +792,19 @@ export default function DashboardTradeStep2({
     });
   };
 
-  /* ── loading ── */
+  /* ── loading / error ── */
   const effectiveBuyLoading = isLocalBuyFlow
     ? localBankDetailsLoading
     : paymentDetailsLoading;
+  const effectiveBuyError = isLocalBuyFlow
+    ? localBankDetailsError
+    : !!paymentDetailsError;
+  const effectiveBuyMissingDetails =
+    !effectiveBuyLoading && !effectiveBuyError && !bankName && !accountNumber;
+  const retryBankDetails = isLocalBuyFlow
+    ? refetchLocalBankDetails
+    : refetchPaymentDetails;
+
   if (effectiveBuyLoading && isBuy) {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-3">
@@ -803,8 +818,31 @@ export default function DashboardTradeStep2({
       </div>
     );
   }
-  if (!isBuy && paymentDetailsLoading) {
-    // Sell loading shown inside SellWalletView
+  if (isBuy && (effectiveBuyError || effectiveBuyMissingDetails)) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 gap-4 px-4 text-center">
+        <AlertTriangle size={32} style={{ color: "#F59E0B" }} />
+        <div>
+          <p className="text-sm font-bold" style={{ color: "#0E0F0C" }}>
+            Couldn't load payment account
+          </p>
+          <p className="text-xs mt-1" style={{ color: "#9A9A9A" }}>
+            We couldn't fetch the bank account to pay into. Please try again.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => retryBankDetails()}
+          className="px-5 py-2.5 rounded-full text-sm font-bold"
+          style={{
+            background: "linear-gradient(135deg,#948EEE,#6B45D0)",
+            color: "#FFFFFF",
+          }}
+        >
+          Retry
+        </button>
+      </div>
+    );
   }
 
   /* ── MONITORING ── */

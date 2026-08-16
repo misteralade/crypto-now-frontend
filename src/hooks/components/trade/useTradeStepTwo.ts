@@ -91,7 +91,7 @@ export const useTradeStepTwo = ({
   }, [tradeType, sellDepositWallet]);
 
   // Fetch payment details based on trade type
-  const { isLoading: paymentDetailsLoading, error: paymentDetailsError } =
+  const { isLoading: paymentDetailsLoading, error: paymentDetailsError, refetch: refetchPaymentDetails } =
     useQuery({
       queryKey: [
         QUERY_KEYS.BANK.PLATFORM_BANK_DETAILS,
@@ -297,5 +297,6 @@ export const useTradeStepTwo = ({
     setTransactionHash,
     setUploadedFileUrl,
     oldGenerateAccountDetails,
+    refetchPaymentDetails,
   };
 };
