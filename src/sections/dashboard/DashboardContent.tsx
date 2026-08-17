@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
+  clearUserSessionStorage,
   loadTradeProgress,
   type TradeProgress,
 } from "../../util/tradeProgress.storage.util.ts";
@@ -287,6 +288,10 @@ export default function DashboardContent() {
   void WalletMiniCard;
 
   const goTrade = (option: "buy" | "sell") => {
+    // Starting a new trade from these quick actions should never resume a
+    // stale in-progress one — any earlier trade is already recorded
+    // server-side, so the cache has nothing left to contribute here.
+    clearUserSessionStorage();
     navigate({ to: option === "buy" ? ROUTES.DASHBOARD_BUY : ROUTES.DASHBOARD_SELL });
   };
 
@@ -658,14 +663,23 @@ export default function DashboardContent() {
             const cryptoAmt = pendingTrade.numberOfToken
               ? Number(pendingTrade.numberOfToken)
               : null;
-            const action = isBuy ? "Complete Buying" : "Complete Selling";
-            // e.g. "Complete Buying ₦50,000 of USDT" or "Complete Selling 0.05 BTC"
+            // Once a receipt/deposit has already been submitted, there's
+            // nothing left to "complete" — the user is just checking status.
+            const alreadySubmitted = !!pendingTrade.transactionSessionId;
+            const action = alreadySubmitted
+              ? "Check Status"
+              : isBuy
+                ? "Complete Buying"
+                : "Complete Selling";
+            // e.g. "Complete Buying ₦50,000 of USDT" or "Check Status for USDT"
             const detail = token
-              ? isBuy && fiatAmt
-                ? `${fiatAmt} of ${token.symbol}`
-                : !isBuy && cryptoAmt
-                  ? `${cryptoAmt} ${token.symbol}`
-                  : token.symbol
+              ? alreadySubmitted
+                ? `for ${token.symbol}`
+                : isBuy && fiatAmt
+                  ? `${fiatAmt} of ${token.symbol}`
+                  : !isBuy && cryptoAmt
+                    ? `${cryptoAmt} ${token.symbol}`
+                    : token.symbol
               : null;
 
             return (

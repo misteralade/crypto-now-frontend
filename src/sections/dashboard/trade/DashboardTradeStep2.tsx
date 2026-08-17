@@ -695,6 +695,17 @@ export default function DashboardTradeStep2({
   const [copyToastVisible, setCopyToastVisible] = useState(false);
   const [storedYouPay, setStoredYouPay] = useState<string | null>(null);
 
+  // Resuming a transaction whose receipt was already submitted (e.g. via the
+  // dashboard's "Complete Buying" banner, which routes here with the
+  // existing sessionId) should land directly on the verifying view instead
+  // of the bank-details screen — there's nothing left to pay/upload.
+  useEffect(() => {
+    if (isBuy && txStatus && txStatus !== "AWAITING_PAYMENT") {
+      setBuyView("upload");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [txStatus]);
+
   // Merge bank details: prefer local fetch for local-first BUY flow
   const bankDetails = isLocalBuyFlow
     ? localBankDetails ?? hookBankDetails
@@ -845,8 +856,17 @@ export default function DashboardTradeStep2({
     );
   }
 
-  /* ── MONITORING ── */
-  if (buyView === "upload" && transactionRef) {
+  /* ── MONITORING ──
+   * Only once a receipt has actually been submitted (txStatus moves past
+   * AWAITING_PAYMENT) do we show the verifying/monitoring view. Before that,
+   * `transactionRef` alone can already be truthy (e.g. an INITIATED/
+   * AWAITING_PAYMENT transaction with no receipt yet), which used to
+   * intercept the render here and skip straight past the real upload form
+   * below — this condition previously only checked `transactionRef`.
+   */
+  const receiptAlreadySubmitted =
+    isBuy && !!txStatus && txStatus !== "AWAITING_PAYMENT";
+  if (buyView === "upload" && receiptAlreadySubmitted) {
     return (
       <div className="flex flex-col gap-4">
         <BackHeader

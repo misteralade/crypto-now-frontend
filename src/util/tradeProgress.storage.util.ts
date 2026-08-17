@@ -84,10 +84,13 @@ export function clearTradeProgress() {
 }
 
 // Clears the *current* user's trade/session-scoped browser state (localStorage +
-// sessionStorage) on logout. TRADE_PROGRESS is namespaced per-user (see
-// tradeProgressKey), so this only ever touches the account that was just signed
-// out of — it never leaks into, and never wipes, another user's saved progress on
-// a shared device.
+// sessionStorage). Used both on logout and whenever the user explicitly starts a
+// new trade (e.g. tapping "Buy Crypto"/"Sell Crypto" from the dashboard) — a
+// prior in-progress trade is already recorded server-side, so there's no need
+// to resume it just because the cache still has it. TRADE_PROGRESS is
+// namespaced per-user (see tradeProgressKey), so this only ever touches the
+// current account — it never leaks into, and never wipes, another user's saved
+// progress on a shared device.
 export function clearUserSessionStorage() {
   try {
     localStorage.removeItem(tradeProgressKey());
