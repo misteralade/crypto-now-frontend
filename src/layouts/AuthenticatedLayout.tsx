@@ -166,7 +166,7 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
           vs. the mobile bottom-nav clearance via CSS only,
           so the trade flow never double-mounts.
       ══════════════════════════════════════ */}
-      <main className="pb-[72px] lg:pb-8 lg:pl-60 lg:pt-8 lg:px-8">
+      <main className="pb-[72px] lg:pb-8 lg:pl-[272px] lg:pt-8 lg:pr-8">
         {children}
       </main>
 
