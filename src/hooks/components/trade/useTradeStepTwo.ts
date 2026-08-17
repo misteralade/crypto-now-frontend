@@ -29,6 +29,10 @@ interface UseTradeStepTwoProps {
   sellDepositWallet?: CustodialWalletResponse | null;
   sellNetwork?: string;
   transactionRef?: string;
+  // BUY: a receipt was already submitted (txStatus past AWAITING_PAYMENT), so
+  // the "pay into this account" details are no longer relevant — skip fetching
+  // them instead of racing/erroring while the caller shows the verifying view.
+  skipPaymentDetails?: boolean;
 }
 
 export const useTradeStepTwo = ({
@@ -40,6 +44,7 @@ export const useTradeStepTwo = ({
   sellDepositWallet,
   sellNetwork,
   transactionRef,
+  skipPaymentDetails,
 }: UseTradeStepTwoProps) => {
   const savedTradeProgress = loadTradeProgress();
   const [files, setFiles] = useState<File[]>([]);
@@ -154,8 +159,12 @@ export const useTradeStepTwo = ({
           return data;
         }
       },
-      // For sell: only fetch platform wallet if no custodial wallet is available
-      enabled: tradeType === "buy" ? true : !sellDepositWallet || !isAuthenticated,
+      // For sell: only fetch platform wallet if no custodial wallet is available.
+      // For buy: skip once a receipt is already submitted — nothing to pay into anymore.
+      enabled:
+        tradeType === "buy"
+          ? !skipPaymentDetails
+          : !sellDepositWallet || !isAuthenticated,
     });
 
   // Validation based on trade type - only require uploaded file for BUY transactions

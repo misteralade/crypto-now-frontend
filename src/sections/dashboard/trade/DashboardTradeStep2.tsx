@@ -617,6 +617,11 @@ export default function DashboardTradeStep2({
   const { useTransactionStatus, manualSellDepositRecheckMutation } = useTransactionQuery();
   const { data: txData } = useTransactionStatus(transactionRef);
   const txStatus = txData?.status;
+  // A receipt was already submitted (txStatus moved past AWAITING_PAYMENT) —
+  // the "pay into this account" screen/fetch is no longer relevant, the user
+  // should only see the verifying view.
+  const receiptAlreadySubmitted =
+    isBuy && !!txStatus && txStatus !== "AWAITING_PAYMENT";
   const sellTxAmountFiat =
     txData?.amountFiatNGN && Number(txData.amountFiatNGN) > 0
       ? Number(txData.amountFiatNGN)
@@ -689,6 +694,7 @@ export default function DashboardTradeStep2({
     numberOfToken,
     selectedToken,
     selectedCurrency,
+    skipPaymentDetails: receiptAlreadySubmitted,
   });
 
   const [buyView, setBuyView] = useState<BuyView>("bank");
@@ -696,15 +702,15 @@ export default function DashboardTradeStep2({
   const [storedYouPay, setStoredYouPay] = useState<string | null>(null);
 
   // Resuming a transaction whose receipt was already submitted (e.g. via the
-  // dashboard's "Complete Buying" banner, which routes here with the
-  // existing sessionId) should land directly on the verifying view instead
-  // of the bank-details screen — there's nothing left to pay/upload.
+  // dashboard's "Check Status" banner, which routes here with the existing
+  // sessionId) should land directly on the verifying view instead of the
+  // bank-details screen — there's nothing left to pay/upload.
   useEffect(() => {
-    if (isBuy && txStatus && txStatus !== "AWAITING_PAYMENT") {
+    if (receiptAlreadySubmitted) {
       setBuyView("upload");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [txStatus]);
+  }, [receiptAlreadySubmitted]);
 
   // Merge bank details: prefer local fetch for local-first BUY flow
   const bankDetails = isLocalBuyFlow
@@ -803,15 +809,23 @@ export default function DashboardTradeStep2({
     });
   };
 
-  /* ── loading / error ── */
-  const effectiveBuyLoading = isLocalBuyFlow
-    ? localBankDetailsLoading
-    : paymentDetailsLoading;
-  const effectiveBuyError = isLocalBuyFlow
-    ? localBankDetailsError
-    : !!paymentDetailsError;
+  /* ── loading / error ──
+   * None of this applies once a receipt is already submitted — bank-payment
+   * details are irrelevant at that point (skipPaymentDetails keeps the query
+   * disabled), so don't treat their absence as an error/missing state.
+   */
+  const effectiveBuyLoading =
+    !receiptAlreadySubmitted &&
+    (isLocalBuyFlow ? localBankDetailsLoading : paymentDetailsLoading);
+  const effectiveBuyError =
+    !receiptAlreadySubmitted &&
+    (isLocalBuyFlow ? localBankDetailsError : !!paymentDetailsError);
   const effectiveBuyMissingDetails =
-    !effectiveBuyLoading && !effectiveBuyError && !bankName && !accountNumber;
+    !receiptAlreadySubmitted &&
+    !effectiveBuyLoading &&
+    !effectiveBuyError &&
+    !bankName &&
+    !accountNumber;
   const retryBankDetails = isLocalBuyFlow
     ? refetchLocalBankDetails
     : refetchPaymentDetails;
@@ -864,8 +878,6 @@ export default function DashboardTradeStep2({
    * intercept the render here and skip straight past the real upload form
    * below — this condition previously only checked `transactionRef`.
    */
-  const receiptAlreadySubmitted =
-    isBuy && !!txStatus && txStatus !== "AWAITING_PAYMENT";
   if (buyView === "upload" && receiptAlreadySubmitted) {
     return (
       <div className="flex flex-col gap-4">
