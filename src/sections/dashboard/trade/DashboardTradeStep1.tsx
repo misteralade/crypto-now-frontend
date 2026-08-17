@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Check, CheckCircle, ChevronDown, Copy, X, ArrowLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "@tanstack/react-router";
@@ -261,6 +261,24 @@ function BuyFields({
     if (fiatAmount > 0 && currencyId) fetchRate(fiatAmount, currencyId);
   };
 
+  // fetchRate is normally kicked off by the amount input's onBlur or a quick-amount
+  // chip click — neither fires when amountToBuy is restored programmatically (e.g.
+  // resuming a saved trade), which left the UI stuck on "Fetching rate…" forever
+  // with no request in flight. Catch that case here.
+  useEffect(() => {
+    const fiatAmount = Number(amountToBuy ?? 0);
+    const currencyId = selectedCurrency?.id;
+    if (
+      fiatAmount > 0 &&
+      currencyId &&
+      !buyRateInfo &&
+      fetchingRef.current !== fiatAmount
+    ) {
+      fetchRate(fiatAmount, currencyId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [amountToBuy, selectedCurrency?.id, selectedToken.id]);
+
   const handleChipClick = (a: number) => {
     setAmountToBuy?.(String(a));
     onRateResolved?.(null);
@@ -270,12 +288,25 @@ function BuyFields({
 
   // Preview: only from the backend live rate (server-cached) — never approximate client-side.
   const inputValue = Number(amountToBuy ?? 0);
-  const cryptoPreview =
-    buyRateInfo && buyRateInfo.fiatAmount === inputValue
-      ? buyRateInfo.cryptoAmount
-          .toFixed(TOKEN_PRECISION[selectedToken.symbol.toUpperCase()] ?? 8)
-          .replace(/\.?0+$/, "")
-      : null;
+  const rateMatchesCurrentAmount =
+    !!buyRateInfo && buyRateInfo.fiatAmount === inputValue;
+  const cryptoPreview = rateMatchesCurrentAmount
+    ? buyRateInfo!.cryptoAmount
+        .toFixed(TOKEN_PRECISION[selectedToken.symbol.toUpperCase()] ?? 8)
+        .replace(/\.?0+$/, "")
+    : null;
+
+  // Admin-configured min/max are token-denominated, so validate against the
+  // resolved crypto amount rather than the raw fiat input.
+  const minTokenLimit = Number(selectedToken.minTransactionLimit);
+  const maxTokenLimit = Number(selectedToken.maxTransactionLimit);
+  const limitErrorMessage = rateMatchesCurrentAmount
+    ? buyRateInfo!.cryptoAmount < minTokenLimit
+      ? `Minimum buy amount is ${minTokenLimit} ${selectedToken.symbol}`
+      : buyRateInfo!.cryptoAmount > maxTokenLimit
+        ? `Maximum buy amount is ${maxTokenLimit} ${selectedToken.symbol}`
+        : null
+    : null;
 
   return (
     <div className="flex flex-col gap-3 mt-1">
@@ -340,7 +371,7 @@ function BuyFields({
         </div>
 
         {/* Crypto equivalent preview */}
-        {cryptoPreview && !isFetchingRate && (
+        {cryptoPreview && !isFetchingRate && !limitErrorMessage && (
           <div className="px-4 pb-2 -mt-1">
             <p className="text-xs" style={{ color: "#9A9A9A" }}>
               ≈{" "}
@@ -353,6 +384,15 @@ function BuyFields({
                   (live rate)
                 </span>
               )}
+            </p>
+          </div>
+        )}
+
+        {/* Min/max amount error (admin-configured, token-denominated) */}
+        {limitErrorMessage && !isFetchingRate && (
+          <div className="px-4 pb-2 -mt-1">
+            <p className="text-xs font-semibold" style={{ color: "#EB5757" }}>
+              {limitErrorMessage}
             </p>
           </div>
         )}
@@ -850,13 +890,43 @@ export default function DashboardTradeStep1({
   const isBuy = tradeType === "buy";
   const accentColor = isBuy ? "#948EEE" : "#F7A600";
 
-  // For BUY: require amount, wallet, AND a fetched rate before allowing proceed
+  // Admin-configured min/max are token-denominated (see SupportedCryptoEntity),
+  // so compare against buyRateInfo.cryptoAmount, not the fiat amount typed in —
+  // and only once the rate for the CURRENT amount has actually resolved.
+  const rateMatchesCurrentAmount =
+    !!buyRateInfo && buyRateInfo.fiatAmount === Number(amountToBuy ?? 0);
+  const minTokenLimit = selectedToken
+    ? Number(selectedToken.minTransactionLimit)
+    : 0;
+  const maxTokenLimit = selectedToken
+    ? Number(selectedToken.maxTransactionLimit)
+    : Infinity;
+  const amountBelowMin =
+    isBuy &&
+    rateMatchesCurrentAmount &&
+    buyRateInfo!.cryptoAmount < minTokenLimit;
+  const amountAboveMax =
+    isBuy &&
+    rateMatchesCurrentAmount &&
+    buyRateInfo!.cryptoAmount > maxTokenLimit;
+  const amountOutOfRange = amountBelowMin || amountAboveMax;
+  const limitErrorMessage =
+    selectedToken &&
+    (amountBelowMin
+      ? `Minimum buy amount is ${minTokenLimit} ${selectedToken.symbol}`
+      : amountAboveMax
+        ? `Maximum buy amount is ${maxTokenLimit} ${selectedToken.symbol}`
+        : null);
+
+  // For BUY: require amount, wallet, a fetched rate, AND that amount fall
+  // within the admin-configured min/max before allowing proceed
   const buySubmitDisabled =
     isBuy &&
     (!amountToBuy ||
       Number(amountToBuy) <= 0 ||
       !walletAddress?.trim() ||
-      !buyRateInfo);
+      !buyRateInfo ||
+      amountOutOfRange);
 
   const isCtaBusy = isInitiatingTrade || (!!selectedToken && isRateLoading);
   const ctaLabel = isInitiatingTrade
@@ -868,9 +938,11 @@ export default function DashboardTradeStep1({
           walletAddress?.trim() &&
           !buyRateInfo
         ? "Fetching rate…"
-        : selectedToken
-          ? "Buy — Continue"
-          : "Select a Crypto to Continue";
+        : limitErrorMessage
+          ? limitErrorMessage
+          : selectedToken
+            ? "Buy — Continue"
+            : "Select a Crypto to Continue";
 
   const ctaDisabled = !selectedToken || isCtaBusy || buySubmitDisabled;
 

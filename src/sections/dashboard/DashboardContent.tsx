@@ -309,13 +309,18 @@ export default function DashboardContent() {
 
   const handleContinueTrade = () => {
     if (pendingTrade?.activeTab) {
+      // If a transaction was already created (e.g. a BUY receipt was
+      // submitted), route with its sessionId so useTradeStepDisplay's
+      // restoration effect fetches the live transaction from the server and
+      // drops the user straight into Step 2's monitoring/waiting view —
+      // rather than the "resume" flag's local-only path, which always
+      // restarts BUY at Step 1 for a fresh rate since buyRateInfo is never
+      // persisted.
       navigate({
         to: pendingTrade.activeTab === "buy" ? ROUTES.DASHBOARD_BUY : ROUTES.DASHBOARD_SELL,
-        // DashboardTrade only restores saved step/amount/wallet progress when
-        // this is set — without it, the "Continue" banner would land on a
-        // fresh trade screen despite tradeProgress.storage.util.ts having the
-        // saved amount/token sitting right there.
-        search: { resume: true },
+        search: pendingTrade.transactionSessionId
+          ? { sessionId: pendingTrade.transactionSessionId }
+          : { resume: true },
       });
     }
   };
@@ -706,9 +711,11 @@ export default function DashboardContent() {
                       {detail ? ` ${detail}` : ""}
                     </p>
                     <p className="text-[11px] text-white/70 leading-tight mt-0.5">
-                      {isBuy
-                        ? "Get a fresh rate & complete your order"
-                        : `Step ${pendingTrade.step} of 3 · Tap to resume`}
+                      {pendingTrade.transactionSessionId
+                        ? "Payment submitted · Tap to view status"
+                        : isBuy
+                          ? "Get a fresh rate & complete your order"
+                          : `Step ${pendingTrade.step} of 3 · Tap to resume`}
                     </p>
                   </div>
                 </div>

@@ -456,6 +456,15 @@ export default function DashboardTrade({
                   if (activeTab === "buy") {
                     // BUY: local-first — no server call yet, just advance to step 2
                     if (!pendingBuyToken || !buyRateInfo) return;
+                    // Defense-in-depth: the CTA is already disabled while the
+                    // resolved amount is outside the admin-configured
+                    // min/max, but guard here too in case onProceed is ever
+                    // reachable through another path.
+                    const min = Number(pendingBuyToken.minTransactionLimit);
+                    const max = Number(pendingBuyToken.maxTransactionLimit);
+                    if (buyRateInfo.cryptoAmount < min || buyRateInfo.cryptoAmount > max) {
+                      return;
+                    }
                     setSelectedToken(pendingBuyToken);
                     setStep(2);
                   }

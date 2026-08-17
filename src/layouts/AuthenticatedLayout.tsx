@@ -68,7 +68,7 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
     <div style={{ background: "#FFFFFF", minHeight: "100dvh" }}>
 
       {/* ══════════════════════════════════════
-          DESKTOP — fixed sidebar
+          DESKTOP — fixed sidebar (chrome only — content renders once, below)
       ══════════════════════════════════════ */}
       <aside className="hidden lg:flex fixed inset-y-0 left-0 w-60 flex-col"
         style={{ background: "#03034D", zIndex: 50 }}>
@@ -125,11 +125,10 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
       </aside>
 
       {/* ══════════════════════════════════════
-          DESKTOP — main area
+          DESKTOP — sticky top bar (chrome only)
       ══════════════════════════════════════ */}
       <div className="hidden lg:block lg:pl-60">
         {!shouldHideDesktopPageHeader && (
-          /* sticky top bar */
           <header className="sticky top-0 z-40 h-14 flex items-center justify-between px-8"
             style={{ background: "#FFFFFF", borderBottom: "1px solid #F0F0F0" }}>
             <h1 className="text-sm font-semibold" style={{ color: "#0E0F0C" }}>{pageTitle}</h1>
@@ -159,40 +158,43 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
             </div>
           </header>
         ) }
-
-        <main className="p-6 lg:p-8">{children}</main>
       </div>
 
       {/* ══════════════════════════════════════
-          MOBILE — full-screen content + bottom nav
+          CONTENT — rendered exactly once. Responsive
+          classes swap the desktop sidebar offset / padding
+          vs. the mobile bottom-nav clearance via CSS only,
+          so the trade flow never double-mounts.
       ══════════════════════════════════════ */}
-      <div className="lg:hidden">
-        <main style={{ paddingBottom: "72px" }}>{children}</main>
+      <main className="pb-[72px] lg:pb-8 lg:pl-60 lg:pt-8 lg:px-8">
+        {children}
+      </main>
 
-        {/* Bottom tab bar */}
-        <nav className="fixed bottom-0 inset-x-0 z-50 flex"
-          style={{
-            background: "#FFFFFF",
-            borderTop: "1px solid #F0F0F0",
-            height: "64px",
-            boxShadow: "0 -2px 16px rgba(0,0,0,0.06)",
-          }}>
-          {mobileTabs.map(({ to, label, icon: Icon, exact }) => {
-            const active = isActive(to, exact);
-            return (
-              <Link key={to} to={to}
-                className="flex-1 flex flex-col items-center justify-center gap-0.5"
-                style={{ color: active ? "#948EEE" : "#BDBDBD" }}>
-                <Icon size={21} strokeWidth={active ? 2.2 : 1.7} />
-                <span className="text-[10px] font-semibold tracking-wide">{label}</span>
-                {active && (
-                  <span className="absolute bottom-2.5 w-1 h-1 rounded-full bg-[#948EEE]" />
-                )}
-              </Link>
-            );
-          })}
-        </nav>
-      </div>
+      {/* ══════════════════════════════════════
+          MOBILE — bottom tab bar (chrome only)
+      ══════════════════════════════════════ */}
+      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-50 flex"
+        style={{
+          background: "#FFFFFF",
+          borderTop: "1px solid #F0F0F0",
+          height: "64px",
+          boxShadow: "0 -2px 16px rgba(0,0,0,0.06)",
+        }}>
+        {mobileTabs.map(({ to, label, icon: Icon, exact }) => {
+          const active = isActive(to, exact);
+          return (
+            <Link key={to} to={to}
+              className="flex-1 flex flex-col items-center justify-center gap-0.5"
+              style={{ color: active ? "#948EEE" : "#BDBDBD" }}>
+              <Icon size={21} strokeWidth={active ? 2.2 : 1.7} />
+              <span className="text-[10px] font-semibold tracking-wide">{label}</span>
+              {active && (
+                <span className="absolute bottom-2.5 w-1 h-1 rounded-full bg-[#948EEE]" />
+              )}
+            </Link>
+          );
+        })}
+      </nav>
     </div>
   );
 }
