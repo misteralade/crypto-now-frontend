@@ -1112,6 +1112,19 @@ export default function DashboardTradeStep1({
           {ctaLabel}
         </button>
       )}
+
+      <p className="text-xs text-center mt-2" style={{ color: "#9A9A9A" }}>
+        for over the counter vip transactions,{" "}
+        <a
+          href={ROUTES.SOCIALS.WHATSAPP}
+          target="_blank"
+          rel="noreferrer"
+          className="font-semibold underline"
+          style={{ color: accentColor }}
+        >
+          click here.
+        </a>
+      </p>
     </div>
   );
 }
