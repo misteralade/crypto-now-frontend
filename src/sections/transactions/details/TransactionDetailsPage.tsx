@@ -81,7 +81,7 @@ const TransactionDetailsPage = () => {
 
     if (safeUsdRate > 0 && finalFiatRate > 0) {
       return (
-        <span>
+        <span className="text-[11px] sm:text-xs font-semibold leading-normal block">
           1 {symbol} = ${convertToMillify(safeUsdRate, 2)} USD (
           ₦{convertToMillify(finalFiatRate, 2)} NGN)
         </span>
@@ -89,12 +89,18 @@ const TransactionDetailsPage = () => {
     }
 
     if (finalFiatRate > 0) {
-      return <span>1 {symbol} = ₦{convertToMillify(finalFiatRate, 2)} NGN</span>;
+      return <span className="text-[11px] sm:text-xs font-semibold leading-normal block">1 {symbol} = ₦{convertToMillify(finalFiatRate, 2)} NGN</span>;
     }
 
-    return currency === "USD"
-      ? `1 ${symbol} = $${convertToMillify(Number(transaction?.amountFiat ?? 0) / amountCrypto, 2)}`
-      : `1 ${symbol} = ₦${convertToMillify(getAmountFiatNGN() / amountCrypto, 2)}`;
+    return currency === "USD" ? (
+      <span className="text-[11px] sm:text-xs font-semibold leading-normal block">
+        1 {symbol} = ${convertToMillify(Number(transaction?.amountFiat ?? 0) / amountCrypto, 2)}
+      </span>
+    ) : (
+      <span className="text-[11px] sm:text-xs font-semibold leading-normal block">
+        1 {symbol} = ₦{convertToMillify(getAmountFiatNGN() / amountCrypto, 2)}
+      </span>
+    );
   };
 
   const isBuy = transaction?.type?.toUpperCase() === "BUY";
@@ -147,17 +153,25 @@ const TransactionDetailsPage = () => {
   );
 
   /* ── Info row (label + value, no copy) ── */
-  const InfoRow = ({ label, value }: { label: string; value: ReactNode }) => (
-    <div>
+  const InfoRow = ({
+    label,
+    value,
+    align = "left",
+  }: {
+    label: string;
+    value: ReactNode;
+    align?: "left" | "right";
+  }) => (
+    <div className={align === "right" ? "text-right" : "text-left"}>
       <p
-        className="text-[10px] font-bold tracking-widest uppercase mb-1"
+        className="text-[9px] sm:text-[10px] font-bold tracking-widest uppercase mb-1"
         style={{ color: "#9A9A9A" }}
       >
         {label}
       </p>
-      <p className="text-sm font-semibold" style={{ color: "#0E0F0C" }}>
+      <div className="text-xs sm:text-sm font-semibold" style={{ color: "#0E0F0C" }}>
         {value}
-      </p>
+      </div>
     </div>
   );
 
@@ -340,9 +354,9 @@ const TransactionDetailsPage = () => {
                     </p>
                   </div>
                 </div>
-                <div className="mt-3 flex items-center gap-2">
+                <div className="mt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                   <span
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold"
+                    className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold whitespace-nowrap self-start shrink-0"
                     style={{
                       background: transactionColorScheme?.bg?.includes("green")
                         ? "#E8F8F0"
@@ -360,24 +374,10 @@ const TransactionDetailsPage = () => {
                         : "#575AE5",
                     }}
                   >
-                    <span
-                      className="w-1.5 h-1.5 rounded-full"
-                      style={{
-                        background: transactionColorScheme?.bg?.includes(
-                          "green"
-                        )
-                          ? "#037847"
-                          : transactionColorScheme?.bg?.includes("red")
-                          ? "#EB5757"
-                          : transactionColorScheme?.bg?.includes("yellow")
-                          ? "#A07000"
-                          : "#575AE5",
-                      }}
-                    />
                     {getStatusDisplayName(transaction.status)}
                   </span>
                   {transactionMessage?.message && (
-                    <p className="text-xs" style={{ color: "#6B6E6B" }}>
+                    <p className="text-xs leading-normal sm:text-right" style={{ color: "#6B6E6B" }}>
                       {transactionMessage.message}
                     </p>
                   )}
@@ -446,12 +446,12 @@ const TransactionDetailsPage = () => {
                     transaction.cryptocurrency?.symbol
                   }`}
                 />
-                <InfoRow label="Fiat Amount" value={formatFiatAmount()} />
+                <InfoRow label="Fiat Amount" value={formatFiatAmount()} align="right" />
                 <InfoRow
                   label="Exchange Rate"
                   value={getExchangeRateDisplay()}
                 />
-                <InfoRow label="Type" value={isBuy ? "Buy" : "Sell"} />
+                <InfoRow label="Type" value={isBuy ? "Buy" : "Sell"} align="right" />
               </div>
             </Card>
 

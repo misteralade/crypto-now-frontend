@@ -674,6 +674,11 @@ const AppSimCard = () => {
     if (defaultNet) setNetwork(defaultNet);
   }, [cryptoObj?.code, cryptoObj?.symbol, saved.network]);
 
+  // Reset guest error on step transitions so that errors from previous step do not pollute the new step.
+  useEffect(() => {
+    setGuestError(null);
+  }, [step]);
+
   // Persist all state to localStorage on every change
   useEffect(() => {
     localStorage.setItem(
@@ -1135,6 +1140,7 @@ const AppSimCard = () => {
     setReceiveAmount(computedReceiveAmount);
     if (isBuy) setActiveBuyPreset(preset);
     else setActiveSellPreset(preset);
+    setGuestError(null);
   };
 
   const handleChipClick = async (targetFiatAmount: number) => {
