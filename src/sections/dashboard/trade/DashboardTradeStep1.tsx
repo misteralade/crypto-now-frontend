@@ -18,7 +18,6 @@ import { ROUTES } from "../../../util/constants.util.ts";
 import { exchangeRateServiceApi } from "../../../api/rate.api.ts";
 import {
   TRADE_FIAT_AMOUNT_PRESETS,
-  TOKEN_PRECISION,
   formatTradeFiatPreset,
   roundTokenAmountUp,
 } from "../../../constants/tradeAmounts.ts";
@@ -150,6 +149,8 @@ function BuyFields({
   const [isFetchingRate, setIsFetchingRate] = useState(false);
   // Track the fiatAmount that's currently being fetched to avoid duplicate in-flight requests
   const fetchingRef = useRef<number | null>(null);
+  const [activePreset, setActivePreset] = useState<number | "custom" | null>(null);
+  const [customAmount, setCustomAmount] = useState("");
 
   const handleWalletChange = (val: string) => {
     onWalletAddressChange?.(val);
@@ -199,16 +200,19 @@ function BuyFields({
       );
       setAmountToBuy?.("");
       onRateResolved?.(null);
+      setActivePreset(null);
+      setCustomAmount("");
     }
   };
 
-  // Fetch rate from backend (cached server-side), compute crypto amount locally.
-  const fetchRate = async (fiatAmount: number, currencyId: string) => {
+  // `amountToBuy` is now the CRYPTO quantity the user types/picks (mirrors the
+  // guest flow). Fetch the live rate and derive the NGN/USD fiat cost from it.
+  const fetchRate = async (cryptoAmount: number, currencyId: string) => {
     const cryptoId = selectedToken.id;
-    if (!fiatAmount || fiatAmount <= 0 || !currencyId || !cryptoId) return;
-    if (fetchingRef.current === fiatAmount) return; // already fetching this amount
+    if (!cryptoAmount || cryptoAmount <= 0 || !currencyId || !cryptoId) return;
+    if (fetchingRef.current === cryptoAmount) return; // already fetching this amount
 
-    fetchingRef.current = fiatAmount;
+    fetchingRef.current = cryptoAmount;
     onRateResolved?.(null); // clear old rate while fetching
     setIsFetchingRate(true);
     try {
@@ -222,15 +226,12 @@ function BuyFields({
 
       // coinGeckoRate is always USD-per-token. platformRate is the platform's
       // NGN-per-USD markup, so it only applies when the quote currency is NGN —
-      // for USD quotes, fiatAmount is already USD and must divide by coinGeckoRate alone.
+      // for USD quotes, the fiat cost is already USD and must multiply by coinGeckoRate alone.
       const isNgnQuote = rateData.currency === "NGN";
-      const divisor = isNgnQuote
+      const multiplier = isNgnQuote
         ? rateData.coinGeckoRate * Number(rateData.platformRate)
         : rateData.coinGeckoRate;
-      const cryptoAmount = roundTokenAmountUp(
-        fiatAmount / divisor,
-        selectedToken.symbol,
-      );
+      const fiatAmount = Number((cryptoAmount * multiplier).toFixed(2));
 
       onRateResolved?.({
         rate: rateData.fiatRate,
@@ -252,13 +253,14 @@ function BuyFields({
   const handleAmountChange = (val: string) => {
     setAmountToBuy?.(val);
     onRateResolved?.(null); // clear rate when user edits amount
+    setActivePreset(null);
   };
 
   const handleBlur = () => {
     handleFocusAmountToBuy?.();
-    const fiatAmount = Number(amountToBuy ?? 0);
+    const cryptoAmount = Number(amountToBuy ?? 0);
     const currencyId = selectedCurrency?.id;
-    if (fiatAmount > 0 && currencyId) fetchRate(fiatAmount, currencyId);
+    if (cryptoAmount > 0 && currencyId) fetchRate(cryptoAmount, currencyId);
   };
 
   // fetchRate is normally kicked off by the amount input's onBlur or a quick-amount
@@ -266,34 +268,100 @@ function BuyFields({
   // resuming a saved trade), which left the UI stuck on "Fetching rate…" forever
   // with no request in flight. Catch that case here.
   useEffect(() => {
-    const fiatAmount = Number(amountToBuy ?? 0);
+    const cryptoAmount = Number(amountToBuy ?? 0);
     const currencyId = selectedCurrency?.id;
     if (
-      fiatAmount > 0 &&
+      cryptoAmount > 0 &&
       currencyId &&
       !buyRateInfo &&
-      fetchingRef.current !== fiatAmount
+      fetchingRef.current !== cryptoAmount
     ) {
-      fetchRate(fiatAmount, currencyId);
+      fetchRate(cryptoAmount, currencyId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [amountToBuy, selectedCurrency?.id, selectedToken.id]);
 
-  const handleChipClick = (a: number) => {
-    setAmountToBuy?.(String(a));
-    onRateResolved?.(null);
+  // A fiat preset/custom chip is picked in NGN or USD — convert it into the
+  // crypto quantity that goes into the input, and resolve the rate for it.
+  const applyFiatPresetAmount = async (
+    targetFiatAmount: number,
+    preset: number | "custom",
+  ) => {
     const currencyId = selectedCurrency?.id;
-    if (currencyId) fetchRate(a, currencyId);
+    const cryptoId = selectedToken.id;
+    if (!targetFiatAmount || !currencyId || !cryptoId) return;
+
+    onRateResolved?.(null);
+    setIsFetchingRate(true);
+    try {
+      const { data: rateData, success: rateOk } =
+        await exchangeRateServiceApi.getExchangeRate(
+          cryptoId,
+          currencyId,
+          "BUY",
+        );
+      if (!rateOk || !rateData) return;
+
+      const isNgnQuote = rateData.currency === "NGN";
+      const divisor = isNgnQuote
+        ? rateData.coinGeckoRate * Number(rateData.platformRate)
+        : rateData.coinGeckoRate;
+      const cryptoAmount = roundTokenAmountUp(
+        targetFiatAmount / divisor,
+        selectedToken.symbol,
+      );
+
+      setAmountToBuy?.(String(cryptoAmount));
+      onRateResolved?.({
+        rate: rateData.fiatRate,
+        rateId: (rateData as unknown as { id?: string }).id,
+        coinGeckoRate: rateData.coinGeckoRate,
+        platformRate: Number(rateData.platformRate),
+        cryptoAmount,
+        fiatAmount: targetFiatAmount,
+        currencyCode: selectedCurrency?.code ?? "NGN",
+        currencyId,
+        fetchedAt: Date.now(),
+      });
+      setActivePreset(preset);
+    } finally {
+      setIsFetchingRate(false);
+    }
   };
+
+  const handleChipClick = (a: number) => {
+    setCustomAmount("");
+    void applyFiatPresetAmount(a, a);
+  };
+
+  const handleCustomAmountChange = (value: string) => {
+    setActivePreset("custom");
+    setCustomAmount(value);
+  };
+
+  useEffect(() => {
+    if (activePreset !== "custom") return;
+
+    const trimmedValue = customAmount.trim();
+    if (!trimmedValue) return;
+
+    const targetValue = Number(trimmedValue);
+    if (!targetValue || Number.isNaN(targetValue)) return;
+
+    const timer = window.setTimeout(() => {
+      void applyFiatPresetAmount(targetValue, "custom");
+    }, 300);
+
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activePreset, customAmount, selectedCurrency?.id, selectedToken.id]);
 
   // Preview: only from the backend live rate (server-cached) — never approximate client-side.
   const inputValue = Number(amountToBuy ?? 0);
   const rateMatchesCurrentAmount =
-    !!buyRateInfo && buyRateInfo.fiatAmount === inputValue;
-  const cryptoPreview = rateMatchesCurrentAmount
-    ? buyRateInfo!.cryptoAmount
-        .toFixed(TOKEN_PRECISION[selectedToken.symbol.toUpperCase()] ?? 8)
-        .replace(/\.?0+$/, "")
+    !!buyRateInfo && buyRateInfo.cryptoAmount === inputValue;
+  const fiatPreview = rateMatchesCurrentAmount
+    ? formatTradeFiatPreset(buyRateInfo!.fiatAmount, isUSD ? "USD" : "NGN")
     : null;
 
   // Admin-configured min/max are token-denominated, so validate against the
@@ -320,9 +388,9 @@ function BuyFields({
             className="text-[10px] font-bold tracking-widest uppercase"
             style={{ color: "#9A9A9A" }}
           >
-            Amount in {isUSD ? "USD ($)" : "NGN (₦)"}
+            {selectedToken.symbol} to buy
           </p>
-          {/* Currency toggle */}
+          {/* Currency toggle — controls the currency of the preset chips & preview */}
           {availableCurrencies && availableCurrencies.length > 1 && (
             <div
               className="flex rounded-lg overflow-hidden"
@@ -349,6 +417,9 @@ function BuyFields({
           )}
         </div>
         <div className="flex items-center gap-3 px-4 pb-3">
+          <span className="text-3xl font-black" style={{ color: "#BDBDBD" }}>
+            {selectedToken.symbol}
+          </span>
           <input
             type="text"
             inputMode="decimal"
@@ -356,7 +427,7 @@ function BuyFields({
             onChange={(e) => handleAmountChange(e.target.value)}
             onFocus={handleFocusAmountToBuy}
             onBlur={handleBlur}
-            placeholder="0.00"
+            placeholder="0"
             className="flex-1 bg-transparent text-3xl font-black outline-none"
             style={{ color: "#0E0F0C", minWidth: 0 }}
           />
@@ -370,16 +441,16 @@ function BuyFields({
           )}
         </div>
 
-        {/* Crypto equivalent preview */}
-        {cryptoPreview && !isFetchingRate && !limitErrorMessage && (
+        {/* Fiat cost preview */}
+        {fiatPreview && !isFetchingRate && !limitErrorMessage && (
           <div className="px-4 pb-2 -mt-1">
             <p className="text-xs" style={{ color: "#9A9A9A" }}>
               ≈{" "}
               <span className="font-semibold" style={{ color: accentColor }}>
-                {cryptoPreview} {selectedToken.symbol}
+                {fiatPreview}
               </span>{" "}
-              you will receive
-              {buyRateInfo && buyRateInfo.fiatAmount === inputValue && (
+              you will pay
+              {buyRateInfo && buyRateInfo.cryptoAmount === inputValue && (
                 <span className="ml-1 text-[10px]" style={{ color: "#BDBDBD" }}>
                   (live rate)
                 </span>
@@ -398,15 +469,25 @@ function BuyFields({
         )}
 
         {/* Quick chips */}
-        <div className="flex border-t" style={{ borderColor: "#EEEEEE" }}>
-          {quickAmounts.map((a) => {
-            const isActive = String(amountToBuy) === String(a);
-            const label = formatTradeFiatPreset(a, isUSD ? "USD" : "NGN");
+        <div className="grid grid-cols-5 border-t" style={{ borderColor: "#EEEEEE" }}>
+          {[
+            ...quickAmounts.map((value) => ({ value, label: formatTradeFiatPreset(value, isUSD ? "USD" : "NGN") })),
+            { value: "custom" as const, label: "Custom" },
+          ].map((chip) => {
+            const isActive = activePreset === chip.value;
             return (
               <button
-                key={a}
+                key={chip.value}
                 type="button"
-                onClick={() => handleChipClick(a)}
+                onClick={() => {
+                  if (chip.value === "custom") {
+                    setActivePreset("custom");
+                    setCustomAmount("");
+                    onRateResolved?.(null);
+                    return;
+                  }
+                  handleChipClick(chip.value);
+                }}
                 className="flex-1 py-2.5 text-xs font-semibold border-r last:border-r-0 transition-colors"
                 style={{
                   borderColor: "#EEEEEE",
@@ -416,11 +497,42 @@ function BuyFields({
                   color: isActive ? accentColor : "#6B6E6B",
                 }}
               >
-                {label}
+                {chip.label}
               </button>
             );
           })}
         </div>
+        {activePreset === "custom" && (
+          <div className="px-4 pb-4 pt-3">
+            <div className="mx-auto w-full max-w-[220px]">
+              <label
+                className="block text-[10px] font-bold uppercase tracking-widest text-center mb-2"
+                style={{ color: "#9A9A9A" }}
+                htmlFor="custom-buy-amount"
+              >
+                Enter custom {isUSD ? "USD" : "NGN"}
+              </label>
+              <div
+                className="flex items-center gap-2 rounded-xl px-3 py-2"
+                style={{ background: "#FFFFFF", border: "1px solid #E0E0E0" }}
+              >
+                <span className="text-sm font-bold shrink-0" style={{ color: "#BDBDBD" }}>
+                  {isUSD ? "$" : "₦"}
+                </span>
+                <input
+                  id="custom-buy-amount"
+                  type="text"
+                  inputMode="decimal"
+                  value={customAmount}
+                  onChange={(e) => handleCustomAmountChange(e.target.value)}
+                  placeholder="0"
+                  className="flex-1 bg-transparent outline-none text-sm font-semibold text-center"
+                  style={{ color: "#0E0F0C" }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Wallet address */}

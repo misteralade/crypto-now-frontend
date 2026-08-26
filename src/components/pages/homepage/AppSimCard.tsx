@@ -497,6 +497,8 @@ const AppSimCard = () => {
   );
   const [usdToNgnRate, setUsdToNgnRate] = useState<number | null>(null);
   const [usdRateLoading, setUsdRateLoading] = useState(false);
+  const [activeBuyPreset, setActiveBuyPreset] = useState<number | "custom" | null>(null);
+  const [customBuyAmount, setCustomBuyAmount] = useState("");
   const [activeSellPreset, setActiveSellPreset] = useState<number | "custom" | null>(null);
   const [customSellAmount, setCustomSellAmount] = useState("");
   const [guestTransactionStatus, setGuestTransactionStatus] =
@@ -714,7 +716,7 @@ const AppSimCard = () => {
     depositWallet,
   ]);
 
-  const buyChips =
+  const buyChipAmounts =
     buyInputCurrency === "USD"
       ? TRADE_FIAT_AMOUNT_PRESETS.usd
       : TRADE_FIAT_AMOUNT_PRESETS.ngn;
@@ -724,11 +726,15 @@ const AppSimCard = () => {
       : TRADE_FIAT_AMOUNT_PRESETS.ngn;
   const formatChip = (n: number, currencyCode: "NGN" | "USD") =>
     formatTradeFiatPreset(n, currencyCode);
+  const buyChipItems = buyChipAmounts.map((value) => ({
+    value,
+    label: formatChip(value, buyInputCurrency),
+  }));
   const sellChipItems = sellChipAmounts.map((value) => ({
     value,
     label: formatChip(value, sellReceiveCurrency),
   }));
-  const customSellChipItem = {
+  const customChipItem = {
     value: "custom" as const,
     label: "Custom",
   };
@@ -876,14 +882,10 @@ const AppSimCard = () => {
     }
   };
 
-  // The NGN amount actually used for transactions
-  const ngnAmount =
-    isBuy && buyInputCurrency === "USD" && usdToNgnRate && amount
-      ? String(Math.round(parseFloat(amount) * usdToNgnRate))
-      : amount;
-
+  // `amount` is always the crypto quantity the user types/picks (for both BUY and SELL);
+  // `receiveAmount` is always the computed NGN fiat counterpart.
   const fetchRate = async (overrideAmount?: string, forceRefresh = false) => {
-    const effectiveAmount = isBuy ? overrideAmount ?? ngnAmount : overrideAmount ?? amount;
+    const effectiveAmount = overrideAmount ?? amount;
     if (!selectedCrypto || !quoteCurrencyObj?.id || !effectiveAmount) return;
     const numericAmount = parseFloat(effectiveAmount);
     if (Number.isNaN(numericAmount) || numericAmount <= 0) {
@@ -903,9 +905,7 @@ const AppSimCard = () => {
       if (requestId !== quoteRequestIdRef.current) return;
 
       if (data && data.fiatRate > 0) {
-        const computed = isBuy
-          ? roundTokenAmountUp(numericAmount / data.fiatRate, cryptoSymbol)
-          : numericAmount * data.fiatRate;
+        const computed = numericAmount * data.fiatRate;
         setReceiveAmount(computed > 0 ? String(computed) : "");
       } else {
         setReceiveAmount("");
@@ -1007,11 +1007,6 @@ const AppSimCard = () => {
       return;
     }
 
-    if (isBuy && buyInputCurrency === "USD" && !usdToNgnRate) {
-      setReceiveAmount("");
-      return;
-    }
-
     const timeout = setTimeout(() => {
       void fetchRate();
     }, 250);
@@ -1101,19 +1096,25 @@ const AppSimCard = () => {
     }
   };
 
-  const applySellFiatAmount = async (
+  // Shared by BUY and SELL: a fiat preset/custom value is picked, we convert it to the
+  // crypto quantity that goes into the input (`amount`), and store the resolved NGN
+  // fiat value in `receiveAmount` as the preview/counterpart.
+  const applyFiatPresetAmount = async (
     targetFiatAmount: number,
     preset: number | "custom",
   ) => {
     if (!selectedCrypto || !quoteCurrencyObj?.id) return;
 
+    const displayCurrency = isBuy ? buyInputCurrency : sellReceiveCurrency;
+    const action = isBuy ? "BUY" : "SELL";
+
     let resolvedUsdToNgnRate = usdToNgnRate;
-    if (sellReceiveCurrency === "USD" && !resolvedUsdToNgnRate) {
-      resolvedUsdToNgnRate = await fetchUsdToNgnRate(selectedCrypto, "SELL");
+    if (displayCurrency === "USD" && !resolvedUsdToNgnRate) {
+      resolvedUsdToNgnRate = await fetchUsdToNgnRate(selectedCrypto, action);
     }
 
     const targetNgnAmount =
-      sellReceiveCurrency === "USD"
+      displayCurrency === "USD"
         ? targetFiatAmount * (resolvedUsdToNgnRate || 0)
         : targetFiatAmount;
     if (!targetNgnAmount || Number.isNaN(targetNgnAmount)) return;
@@ -1121,7 +1122,7 @@ const AppSimCard = () => {
     const { data } = await getExchangeRateWithCache(
       selectedCrypto,
       quoteCurrencyObj.id,
-      "SELL",
+      action,
     );
     if (!data?.fiatRate) return;
 
@@ -1132,24 +1133,31 @@ const AppSimCard = () => {
     skipNextAutoQuoteRef.current = true;
     setAmount(roundedCryptoAmount);
     setReceiveAmount(computedReceiveAmount);
-    setActiveSellPreset(preset);
+    if (isBuy) setActiveBuyPreset(preset);
+    else setActiveSellPreset(preset);
   };
 
-  const handleSellChipClick = async (targetFiatAmount: number) => {
-    setCustomSellAmount("");
-    await applySellFiatAmount(targetFiatAmount, targetFiatAmount);
+  const handleChipClick = async (targetFiatAmount: number) => {
+    if (isBuy) setCustomBuyAmount("");
+    else setCustomSellAmount("");
+    await applyFiatPresetAmount(targetFiatAmount, targetFiatAmount);
   };
 
-  const handleCustomSellAmountChange = (value: string) => {
-    setActiveSellPreset("custom");
-    setCustomSellAmount(value);
+  const handleCustomAmountChange = (value: string) => {
+    if (isBuy) setActiveBuyPreset("custom");
+    else setActiveSellPreset("custom");
+    if (isBuy) setCustomBuyAmount(value);
+    else setCustomSellAmount(value);
     setGuestError(null);
   };
 
-  useEffect(() => {
-    if (activeSellPreset !== "custom") return;
+  const activePreset = isBuy ? activeBuyPreset : activeSellPreset;
+  const customAmount = isBuy ? customBuyAmount : customSellAmount;
 
-    const trimmedValue = customSellAmount.trim();
+  useEffect(() => {
+    if (activePreset !== "custom") return;
+
+    const trimmedValue = customAmount.trim();
     if (!trimmedValue) {
       setAmount("");
       setReceiveAmount("");
@@ -1164,19 +1172,18 @@ const AppSimCard = () => {
     }
 
     const timer = window.setTimeout(() => {
-      void applySellFiatAmount(targetValue, "custom");
+      void applyFiatPresetAmount(targetValue, "custom");
     }, 300);
 
     return () => window.clearTimeout(timer);
-  }, [activeSellPreset, customSellAmount, sellReceiveCurrency, selectedCrypto, quoteCurrencyObj?.id, usdToNgnRate]);
+  }, [activePreset, customAmount, isBuy, buyInputCurrency, sellReceiveCurrency, selectedCrypto, quoteCurrencyObj?.id, usdToNgnRate]);
 
   const handleStep1Next = async () => {
     if (!selectedCrypto || !quoteCurrencyObj?.id || !amount) return;
 
+    const submittedCryptoAmount = Number(amount);
+
     if (anonymousMinimumCryptoAmount > 0) {
-      const submittedCryptoAmount = isBuy
-        ? Number(receiveAmount)
-        : Number(amount);
       if (
         !submittedCryptoAmount ||
         Number.isNaN(submittedCryptoAmount) ||
@@ -1187,9 +1194,6 @@ const AppSimCard = () => {
     }
 
     if (anonymousMaximumCryptoAmount > 0) {
-      const submittedCryptoAmount = isBuy
-        ? Number(receiveAmount)
-        : Number(amount);
       if (
         !submittedCryptoAmount ||
         Number.isNaN(submittedCryptoAmount) ||
@@ -1207,15 +1211,7 @@ const AppSimCard = () => {
       }
     }
 
-    // Commit NGN amount so downstream steps always use NGN
-    if (isBuy && buyInputCurrency === "USD" && usdToNgnRate) {
-      const committed = String(Math.round(parseFloat(amount) * usdToNgnRate));
-      setAmount(committed);
-      setBuyInputCurrency("NGN");
-      await fetchRate(committed);
-    } else {
-      await fetchRate(undefined, true).catch(() => undefined);
-    }
+    await fetchRate(undefined, true).catch(() => undefined);
     setStep(2);
   };
 
@@ -1236,8 +1232,8 @@ const AppSimCard = () => {
         action: "BUY",
         coinId: selectedCrypto,
         currencyId: transactionCurrencyObj?.id,
-        amountToSend: parseFloat(amount),
-        amountToReceive: parseFloat(receiveAmount) || 0,
+        amountToSend: parseFloat(receiveAmount) || 0,
+        amountToReceive: parseFloat(amount),
         email: guestEmail,
         walletAddress,
         network,
@@ -1413,7 +1409,10 @@ const AppSimCard = () => {
     setBuyInputCurrency("NGN");
     setSellReceiveCurrency("NGN");
     setUsdToNgnRate(null);
+    setActiveBuyPreset(null);
+    setCustomBuyAmount("");
     setActiveSellPreset(null);
+    setCustomSellAmount("");
     setNetwork(getDefaultNetworkForCrypto(cryptoObj));
     localStorage.removeItem(LS_KEY);
   };
@@ -1510,8 +1509,11 @@ const AppSimCard = () => {
                     selected={item.id === selectedCrypto}
                         onSelect={() => {
                           setSelectedCrypto(item.id);
+                          setAmount("");
                           setReceiveAmount("");
                           setGuestError(null);
+                          setActiveBuyPreset(null);
+                          setCustomBuyAmount("");
                           setActiveSellPreset(null);
                           setCustomSellAmount("");
                           setNetwork(getDefaultNetworkForCrypto(item));
@@ -1528,11 +1530,9 @@ const AppSimCard = () => {
               >
                 <div className="flex items-center justify-between pt-3 pb-1 px-4">
                   <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                    {isBuy
-                      ? `Amount in ${buyInputCurrency}`
-                      : `Amount in ${cryptoSymbol || "Crypto"}`}
+                    {cryptoSymbol || "Crypto"} to {isBuy ? "buy" : "sell"}
                   </p>
-                  {/* NGN / USD toggle */}
+                  {/* NGN / USD toggle — controls the currency of the preset chips & preview */}
                   {(!loadingSupportedCurrencies || supportedCurrencies?.length) && usdCurrencyObj && (
                     <div
                       className="flex rounded-lg overflow-hidden"
@@ -1549,18 +1549,16 @@ const AppSimCard = () => {
                           if (cur === activeCur) return;
                           if (isBuy) {
                             setBuyInputCurrency(cur);
-                            setAmount("");
-                            setReceiveAmount("");
-                            setGuestError(null);
-                            setActiveSellPreset(null);
                           } else {
                             setSellReceiveCurrency(cur);
-                            setAmount("");
-                            setReceiveAmount("");
-                            setGuestError(null);
-                            setActiveSellPreset(null);
-                            setCustomSellAmount("");
                           }
+                          setAmount("");
+                          setReceiveAmount("");
+                          setGuestError(null);
+                          setActiveBuyPreset(null);
+                          setActiveSellPreset(null);
+                          setCustomBuyAmount("");
+                          setCustomSellAmount("");
                         }}
                             className="px-2.5 py-1 text-[10px] font-bold cursor-pointer transition-colors"
                             style={{
@@ -1582,11 +1580,7 @@ const AppSimCard = () => {
                 </div>
                 <div className="flex items-center px-4 pb-3 gap-2">
                   <span className="text-2xl font-bold text-gray-300">
-                    {isBuy
-                      ? buyInputCurrency === "USD"
-                        ? "$"
-                        : "₦"
-                      : cryptoSymbol}
+                    {cryptoSymbol}
                   </span>
                   <input
                     type="text"
@@ -1596,79 +1590,56 @@ const AppSimCard = () => {
                       setAmount(e.target.value);
                       setReceiveAmount("");
                       setGuestError(null);
-                      if (!isBuy) setActiveSellPreset(null);
+                      setActiveBuyPreset(null);
+                      setActiveSellPreset(null);
                     }}
                     placeholder="0"
                     className="flex-1 bg-transparent outline-none text-2xl font-bold text-[#0E0F0C] placeholder:text-gray-200"
                   />
                 </div>
-                {/* BUY: NGN equivalent preview when typing in USD */}
-                {isBuy && buyInputCurrency === "USD" && amount && (
+                {/* Fiat preview in the non-selected currency, once a quote resolves */}
+                {receiveAmount && usdToNgnRate && (
                   <div className="px-4 pb-2 -mt-1">
                     {usdRateLoading ? (
                       <span className="text-xs text-gray-400">
                         Fetching rate…
                       </span>
-                    ) : usdToNgnRate ? (
+                    ) : (
                       <span className="text-xs text-gray-400">
                         ≈{" "}
                         <span className="font-semibold text-[#0E0F0C]">
-                          ₦
-                          {Math.round(
-                            parseFloat(amount) * usdToNgnRate
-                          ).toLocaleString()}
-                        </span>{" "}
-                        NGN will be transferred
+                          {(isBuy ? buyInputCurrency : sellReceiveCurrency) === "USD"
+                            ? formatUsdEquivalentDisplay(
+                                parseFloat(receiveAmount) / usdToNgnRate,
+                              )
+                            : `₦${Math.round(parseFloat(receiveAmount)).toLocaleString()} NGN`}
+                        </span>
                       </span>
-                    ) : null}
-                  </div>
-                )}
-                {/* SELL: USD receive preview */}
-                {!isBuy && receiveAmount && usdToNgnRate && (
-                  <div className="px-4 pb-2 -mt-1">
-                    {usdRateLoading ? (
-                      <span className="text-xs text-gray-400">
-                        Fetching rate…
-                      </span>
-                    ) : usdToNgnRate ? (
-                      <span className="text-xs text-gray-400">
-                        ≈{" "}
-                        <span className="font-semibold text-[#0E0F0C]">
-                          {formatUsdEquivalentDisplay(
-                            parseFloat(receiveAmount) / usdToNgnRate,
-                          )}
-                        </span>{" "}
-                      </span>
-                    ) : null}
+                    )}
                   </div>
                 )}
                 {/* Quick chips */}
-                <div className={`grid border-t border-gray-100 ${isBuy ? "grid-cols-4" : "grid-cols-5"}`}>
-                  {(isBuy
-                    ? buyChips.map((chip) => ({ value: chip, label: formatChip(chip, buyInputCurrency) }))
-                    : [...sellChipItems, customSellChipItem]
-                  ).map((chip) => {
-                    const isActive = isBuy
-                      ? amount === String(chip.value)
-                      : activeSellPreset === chip.value;
+                <div className="grid grid-cols-5 border-t border-gray-100">
+                  {[
+                    ...(isBuy ? buyChipItems : sellChipItems),
+                    customChipItem,
+                  ].map((chip) => {
+                    const isActive = activePreset === chip.value;
                     return (
                       <button
                         key={chip.value}
                         onClick={() => {
-                          if (isBuy) {
-                            setAmount(String(chip.value));
-                            setReceiveAmount("");
-                            return;
-                          }
                           if (chip.value === "custom") {
-                            setActiveSellPreset("custom");
+                            if (isBuy) setActiveBuyPreset("custom");
+                            else setActiveSellPreset("custom");
                             setAmount("");
                             setReceiveAmount("");
+                            setCustomBuyAmount("");
                             setCustomSellAmount("");
                             setGuestError(null);
                             return;
                           }
-                          void handleSellChipClick(chip.value);
+                          void handleChipClick(chip.value);
                         }}
                         className="flex-1 py-2.5 text-xs font-semibold border-r border-gray-100 last:border-r-0 cursor-pointer transition-colors"
                         data-active={isActive}
@@ -1684,14 +1655,14 @@ const AppSimCard = () => {
                     );
                   })}
                 </div>
-                {!isBuy && activeSellPreset === "custom" && (
+                {activePreset === "custom" && (
                   <div className="px-4 pb-4 pt-3">
                     <div className="mx-auto w-full max-w-[220px]">
                       <label
                         className="block text-[10px] font-semibold uppercase tracking-widest text-center mb-2 text-gray-400"
-                        htmlFor="custom-sell-amount"
+                        htmlFor="custom-trade-amount"
                       >
-                        Enter custom {sellReceiveCurrency}
+                        Enter custom {isBuy ? buyInputCurrency : sellReceiveCurrency}
                       </label>
                       <div
                         className="flex items-center gap-2 rounded-xl px-3 py-2"
@@ -1701,14 +1672,14 @@ const AppSimCard = () => {
                         }}
                       >
                         <span className="text-sm font-bold text-gray-300 shrink-0">
-                          {sellReceiveCurrency === "USD" ? "$" : "₦"}
+                          {(isBuy ? buyInputCurrency : sellReceiveCurrency) === "USD" ? "$" : "₦"}
                         </span>
                         <input
-                          id="custom-sell-amount"
+                          id="custom-trade-amount"
                           type="text"
                           inputMode="decimal"
-                          value={customSellAmount}
-                          onChange={(e) => handleCustomSellAmountChange(e.target.value)}
+                          value={customAmount}
+                          onChange={(e) => handleCustomAmountChange(e.target.value)}
                           placeholder="0"
                           className="flex-1 bg-transparent outline-none text-sm font-semibold text-[#0E0F0C] placeholder:text-gray-200 text-center"
                         />
@@ -1726,11 +1697,9 @@ const AppSimCard = () => {
                       "Calculating preview..."
                     ) : (
                       <>
-                        You receive:{" "}
+                        {isBuy ? "You pay:" : "You receive:"}{" "}
                         <span className="font-bold text-[#22c55e]">
-                          {isBuy
-                            ? `${formatReceiveCryptoDisplay(receiveAmount)} ${cryptoSymbol}`
-                            : formatReceiveNgnDisplay(receiveAmount)}
+                          {formatReceiveNgnDisplay(receiveAmount)}
                         </span>
                       </>
                     )}
@@ -1821,13 +1790,13 @@ const AppSimCard = () => {
               >
                 <SRow label="Buying" value={`${cryptoSymbol} with Naira`} />
                 <SRow
-                  label="Amount to Pay"
-                  value={`${currSymbol}${parseFloat(amount).toLocaleString()}`}
+                  label="You'll Receive"
+                  value={`${formatReceiveCryptoDisplay(amount)} ${cryptoSymbol}`}
                 />
                 {receiveAmount && (
                   <SRow
-                    label="You'll Receive"
-                    value={`${formatReceiveCryptoDisplay(receiveAmount)} ${cryptoSymbol}`}
+                    label="Amount to Pay"
+                    value={formatReceiveNgnDisplay(receiveAmount)}
                     green
                   />
                 )}
@@ -2154,8 +2123,9 @@ const AppSimCard = () => {
                   >
                     <span className="text-white/60 text-sm">Send exactly</span>
                     <span className="text-white font-bold text-lg">
-                      {currSymbol}
-                      {parseFloat(amount).toLocaleString()}
+                      {receiveAmount
+                        ? `${currSymbol}${parseFloat(receiveAmount).toLocaleString()}`
+                        : "—"}
                     </span>
                   </div>
                 </div>
@@ -2168,15 +2138,13 @@ const AppSimCard = () => {
               >
                 <SRow label="Buying" value={`${cryptoSymbol} with Naira`} />
                 <SRow
-                  label="Amount to Pay"
-                  value={`${currSymbol}${parseFloat(amount).toLocaleString()}`}
+                  label="You'll Get"
+                  value={`${parseFloat(amount).toFixed(4)} ${cryptoSymbol}`}
                 />
                 {receiveAmount && (
                   <SRow
-                    label="You'll Get"
-                    value={`${parseFloat(receiveAmount).toFixed(
-                      4
-                    )} ${cryptoSymbol}`}
+                    label="Amount to Pay"
+                    value={`${currSymbol}${parseFloat(receiveAmount).toLocaleString()}`}
                     green
                   />
                 )}

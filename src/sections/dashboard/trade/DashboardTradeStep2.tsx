@@ -727,9 +727,14 @@ export default function DashboardTradeStep2({
     if (v && v !== "[object Object]" && v.trim()) setStoredYouPay(v);
   }, []);
 
-  const payAmount = storedYouPay
-    ? storedYouPay
-    : formatSendAmount(amountToBuy.toLocaleString(), selectedCurrency?.code);
+  const payAmount = isLocalBuyFlow
+    ? formatSendAmount(
+        buyRateInfo!.fiatAmount.toLocaleString(),
+        selectedCurrency?.code,
+      )
+    : storedYouPay
+      ? storedYouPay
+      : formatSendAmount(amountToBuy.toLocaleString(), selectedCurrency?.code);
 
   // Local-first BUY: track selected receipt File for multipart createAndSubmit
   const [localReceiptFile, setLocalReceiptFile] = useState<File | undefined>();
