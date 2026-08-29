@@ -28,8 +28,8 @@ import {
 } from "../../../util/tradeProgress.storage.util.ts";
 import {type RootState, store} from "../../../store.ts";
 import {clearAnonymousUserEmail, setAnonymousUserEmail, setIsAnonymousUser} from "../../../redux/user.slice.ts";
-import { formatForDisplay, formatForDisplayLocalized } from "../../../util/asset-precision.ts";
-import { convertToMillify, isExchangeRateExpiryError } from "../../../util/index.util.ts";
+import { formatForDisplay, formatForDisplayLocalized, formatCompact } from "../../../util/asset-precision.ts";
+import { isExchangeRateExpiryError } from "../../../util/index.util.ts";
 import { toast } from "react-toastify";
 
 // Debounce
@@ -962,10 +962,10 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     let marketRate = "";
     
     if (usdRate > 0 && fiatRate > 0) {
-      marketRate = `1 ${tokenSymbol} = ${convertToMillify(usdRate)} USD (${convertToMillify(fiatRate)} NGN)`;
+      marketRate = `1 ${tokenSymbol} = ${formatCompact(usdRate, "USD")} USD (${formatCompact(fiatRate, "NGN")} NGN)`;
     } else {
       // Show fiat rate for other currencies
-      marketRate = `1 ${tokenSymbol} = ${convertToMillify(fiatRate)} ${currencyCode}`;
+      marketRate = `1 ${tokenSymbol} = ${formatCompact(fiatRate, currencyCode ?? "NGN")} ${currencyCode}`;
     }
     
     return marketRate;

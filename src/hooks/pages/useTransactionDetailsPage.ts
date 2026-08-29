@@ -9,7 +9,7 @@ import {
 import { useTransactionQuery } from "../../queries/transaction.query.ts";
 import type { MessageAttachment } from "../../types/transaction.types.ts";
 // trigger pr 2
-import { convertToMillify } from "../../util/index.util.ts";
+import { formatCompact } from "../../util/asset-precision.ts";
 
 export const useTransactionDetailsPage = () => {
   const dispatch = useDispatch();
@@ -110,7 +110,7 @@ export const useTransactionDetailsPage = () => {
   const openDisputeMailTo = () => {
     const email = "Support@cryptonow.ng";
     const subject = `Dispute Transaction - ${transactionDetails?.sessionId || ""}`;
-    const body = `Hello,\n\nI would like to dispute a transaction with the following details:\n\nTransaction ID: ${transactionDetails?.sessionId || ""}\nAmount: ${convertToMillify(Number(transactionDetails?.amountFiat)) || ""} ${transactionDetails?.currency || ""}\nDate: ${transactionDetails?.createdAt || ""}\n\nReason for Dispute:\n\n[Please provide your reason here]\n\nThank you.`;
+    const body = `Hello,\n\nI would like to dispute a transaction with the following details:\n\nTransaction ID: ${transactionDetails?.sessionId || ""}\nAmount: ${formatCompact(Number(transactionDetails?.amountFiat), transactionDetails?.currency || "NGN") || ""} ${transactionDetails?.currency || ""}\nDate: ${transactionDetails?.createdAt || ""}\n\nReason for Dispute:\n\n[Please provide your reason here]\n\nThank you.`;
 
     window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };

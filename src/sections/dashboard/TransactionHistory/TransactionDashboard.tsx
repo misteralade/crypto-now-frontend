@@ -6,7 +6,7 @@ import type { SearchTransactionsRequestPayload } from "../../../types/request.pa
 import type { RootState } from "../../../store.ts";
 import { TransactionSearch } from "./TranactionSearch.tsx";
 import TransactionTable from "./TranactionTable.tsx";
-import { convertToMillify } from "../../../util/index.util.ts";
+import { formatCompact } from "../../../util/asset-precision.ts";
 
 // Redux search payload without page — changes here mean a new result set (reset accumulated rows).
 function searchPayloadWithoutPageKey(
@@ -118,8 +118,8 @@ export function TransactionDashboard() {
       >
         {[
           { label: "TOTAL", val: String(total), loading: loadingUserTransactionHistory },
-          { label: "BOUGHT", val: `₦${convertToMillify(bought, 0)}`, loading: loadingTransactionSummary },
-          { label: "SOLD", val: `₦${convertToMillify(sold, 0)}`, loading: loadingTransactionSummary },
+          { label: "BOUGHT", val: `₦${formatCompact(bought, "NGN", 0)}`, loading: loadingTransactionSummary },
+          { label: "SOLD", val: `₦${formatCompact(sold, "NGN", 0)}`, loading: loadingTransactionSummary },
         ].map(({ label, val, loading }) => (
           <div
             key={label}

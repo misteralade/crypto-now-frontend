@@ -2,7 +2,6 @@ import {LOCAL_STORAGE_KEYS} from "./constants.util.ts";
 import {clearUserSessionStorage} from "./tradeProgress.storage.util.ts";
 import type {AxiosServerError} from "../types/response.payload.types.ts";
 import {ZodError} from "zod";
-import {formatCompact} from "./asset-precision.ts";
 
 export const formatTime = (seconds: number) => {
   const mins = Math.floor(seconds / 60)
@@ -21,17 +20,6 @@ export const formatNumber = (value: string | number) => {
     minimumFractionDigits: 2,
     maximumFractionDigits: 8,
   })
-}
-
-/**
- * @deprecated Prefer formatCompact(amount, symbolOrCode) from ./asset-precision.ts
- * directly when you know the asset — it applies the correct abbreviation policy
- * (e.g. NGN never abbreviates to "K"). This wrapper defaults to NGN's policy
- * since that's what the overwhelming majority of existing callers display.
- */
-export const convertToMillify = (num: number, precision?: number): string => {
-  const safe = Number.isFinite(num) ? num : 0;
-  return formatCompact(safe, "NGN", precision);
 }
 
 export const getFileType = (file: File) => {

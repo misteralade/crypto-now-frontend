@@ -11,7 +11,7 @@ import NewBankAccountModal from "../components/pages/profile/modals/NewBankAccou
 import { LOCAL_STORAGE_KEYS, ROUTES } from "../util/constants.util.ts";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useTransactionQuery } from "../queries/transaction.query.ts";
-import { convertToMillify } from "../util/index.util.ts";
+import { formatCompact } from "../util/asset-precision.ts";
 import { clearUserSessionStorage } from "../util/tradeProgress.storage.util.ts";
 import type { ProfileSection } from "../routes/dashboard/profile.tsx";
 
@@ -177,7 +177,7 @@ const ProfilePage = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <StatCard
                     label="Total Traded"
-                    value={`₦${convertToMillify(totalFiat, 0)}`}
+                    value={`₦${formatCompact(totalFiat, "NGN", 0)}`}
                     sub="Lifetime volume"
                     loading={loading}
                   />
@@ -189,7 +189,7 @@ const ProfilePage = () => {
                   />
                   <StatCard
                     label="This Month"
-                    value={`₦${convertToMillify(thisMonthFiat, 0)}`}
+                    value={`₦${formatCompact(thisMonthFiat, "NGN", 0)}`}
                     sub={new Date().toLocaleString("default", { month: "long", year: "numeric" })}
                     loading={loading}
                   />

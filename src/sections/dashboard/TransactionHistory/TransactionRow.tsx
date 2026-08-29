@@ -4,7 +4,7 @@ import momentClient from "../../../lib/moment.ts";
 import { getStatusColor, getStatusDot, getStatusDisplayName } from "../../../util/transaction.util.ts";
 import { useNavigate } from "@tanstack/react-router";
 import { ROUTES } from "../../../util/constants.util.ts";
-import { convertToMillify } from "../../../util/index.util.ts";
+import { formatCompact } from "../../../util/asset-precision.ts";
 
 interface TransactionRowProps {
   transaction: TransactionResponseEntity;
@@ -35,7 +35,7 @@ const TransactionRow = ({ transaction: tx, isLast, isMobileCard = false }: Trans
     ["INITIATED", "AWAITING_CRYPTO", "AWAITING_PAYMENT"].includes(tx.status) &&
     momentClient.isWithinDuration(tx.createdAt, 1, "hour");
   const canDispute = tx.status === "DISPUTED";
-  const fiatAmt = convertToMillify(Number(tx.amountFiat), 0);
+  const fiatAmt = formatCompact(Number(tx.amountFiat), "NGN", 0);
 
   const handleView     = () => navigate({ to: `${ROUTES.TRANSACTION}/${tx.sessionId}` });
   const handleDispute  = () => tx.dispute?.id && navigate({ to: "/dispute/$id", params: { id: tx.dispute.id } });
@@ -86,7 +86,7 @@ const TransactionRow = ({ transaction: tx, isLast, isMobileCard = false }: Trans
             {[
               { label: "CRYPTO",  val: `${Number(tx.amountCrypto).toFixed(4).replace(/\.?0+$/, "")} ${tx.cryptocurrency.symbol}` },
               { label: "NETWORK", val: tx.userCryptoWallet?.network ?? tx.adminCryptoWallet?.network ?? "—" },
-              { label: "RATE",    val: `₦${convertToMillify(Number(tx.stableToFiatRate), 0)}/${tx.cryptocurrency.symbol}` },
+              { label: "RATE",    val: `₦${formatCompact(Number(tx.stableToFiatRate), "NGN", 0)}/${tx.cryptocurrency.symbol}` },
             ].map(({ label, val }) => (
               <div key={label}>
                 <p className="text-[9px] font-bold tracking-widest uppercase" style={{ color: "#BDBDBD" }}>{label}</p>
@@ -158,7 +158,7 @@ const TransactionRow = ({ transaction: tx, isLast, isMobileCard = false }: Trans
         ₦{fiatAmt}
       </td>
       <td className="px-5 py-4 text-sm" style={{ color: "#6B6E6B" }}>
-        ₦{convertToMillify(Number(tx.stableToFiatRate), 0)}
+        ₦{formatCompact(Number(tx.stableToFiatRate), "NGN", 0)}
       </td>
       <td className="px-5 py-4 text-sm font-medium" style={{ color: "#6B6E6B" }}>
         {tx.userCryptoWallet?.network ?? tx.adminCryptoWallet?.network ?? "—"}

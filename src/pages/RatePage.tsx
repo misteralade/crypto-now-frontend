@@ -2,8 +2,7 @@ import {Fragment, useState} from "react";
 import PublicNavbar from "../components/global/navbar/PublicNavbar.tsx";
 import Footer from "../components/global/Footer.tsx";
 import {useCryptoQuery} from "../queries/crypto.query.ts";
-import {convertToMillify} from "../util/index.util.ts";
-import {formatForDisplayLocalized} from "../util/asset-precision.ts";
+import {formatForDisplayLocalized, formatCompact} from "../util/asset-precision.ts";
 import type {SupportedCryptoOrCurrencyResponse} from "../types/response.payload.types.ts";
 import {LoadingSpinner} from "../components/global/LoadingSpinner.tsx";
 
@@ -134,12 +133,12 @@ const RatePage = () => {
                       </td>
                       <td className="px-6 py-5 text-right">
                         <div className="text-gray-600">
-                          {convertToMillify(isRegistered ? Number(crypto.minTransactionLimit) : Number(crypto.minTradeAmountForAnonymous), 10)} {crypto.symbol}
+                          {formatCompact(isRegistered ? Number(crypto.minTransactionLimit) : Number(crypto.minTradeAmountForAnonymous), crypto.symbol, 10)} {crypto.symbol}
                         </div>
                       </td>
                       <td className="px-6 py-5 text-right">
                         <div className="text-gray-600">
-                          {convertToMillify(isRegistered ? Number(crypto.maxTransactionLimit) : Number(crypto.maxTradeAmountForAnonymous), 10)} {crypto.symbol}
+                          {formatCompact(isRegistered ? Number(crypto.maxTransactionLimit) : Number(crypto.maxTradeAmountForAnonymous), crypto.symbol, 10)} {crypto.symbol}
                         </div>
                       </td>
                     </tr>
@@ -178,13 +177,13 @@ const RatePage = () => {
                       <div>
                         <div className="text-xs text-gray-500 mb-1">Min Trade (token)</div>
                         <div className="text-gray-600">
-                          {convertToMillify(isRegistered ? Number(crypto.minTransactionLimit) : Number(crypto.minTradeAmountForAnonymous), 10)} {crypto.symbol}
+                          {formatCompact(isRegistered ? Number(crypto.minTransactionLimit) : Number(crypto.minTradeAmountForAnonymous), crypto.symbol, 10)} {crypto.symbol}
                         </div>
                       </div>
                       <div>
                         <div className="text-xs text-gray-500 mb-1">Max Trade (token)</div>
                         <div className="text-gray-600">
-                          {convertToMillify(isRegistered ? Number(crypto.maxTransactionLimit) : Number(crypto.maxTradeAmountForAnonymous), 10)} {crypto.symbol}
+                          {formatCompact(isRegistered ? Number(crypto.maxTransactionLimit) : Number(crypto.maxTradeAmountForAnonymous), crypto.symbol, 10)} {crypto.symbol}
                         </div>
                       </div>
                     </div>

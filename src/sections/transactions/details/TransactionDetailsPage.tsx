@@ -6,8 +6,7 @@ import {
   transactionStatusMessages,
   transactionStatusStyles,
 } from "../../../util/constants.util.ts";
-import { convertToMillify } from "../../../util/index.util.ts";
-import { formatForDisplay, formatForDisplayLocalized } from "../../../util/asset-precision.ts";
+import { formatForDisplay, formatForDisplayLocalized, formatCompact } from "../../../util/asset-precision.ts";
 import { useNavigate } from "@tanstack/react-router";
 import {
   AlertTriangle,
@@ -58,7 +57,7 @@ const TransactionDetailsPage = () => {
 
   const formatFiatAmount = () => {
     if (!transaction) return "";
-    return `₦${convertToMillify(getAmountFiatNGN(), 3)}`;
+    return `₦${formatCompact(getAmountFiatNGN(), "NGN", 3)}`;
   };
 
   const getExchangeRateDisplay = (): ReactNode => {

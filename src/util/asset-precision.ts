@@ -134,9 +134,15 @@ const COMPACT_UNITS = ["", "K", "M", "B", "T", "P", "E"];
  *
  * This is presentation only — never feed the result back into further math.
  */
-export function formatCompact(amount: number, symbolOrCode: string, locale = "en-US"): string {
+export function formatCompact(
+  amount: number,
+  symbolOrCode: string,
+  precisionOverride?: number,
+  locale = "en-US",
+): string {
   if (typeof amount !== "number" || Number.isNaN(amount)) amount = 0;
   const { compactMinTier, compactDecimals } = getRule(symbolOrCode);
+  const decimals = precisionOverride ?? compactDecimals;
   const magnitude = amount === 0 ? 0 : Math.floor(Math.log10(Math.abs(amount)) / 3);
   const tier = Math.max(0, Math.min(magnitude, COMPACT_UNITS.length - 1));
 
@@ -144,14 +150,14 @@ export function formatCompact(amount: number, symbolOrCode: string, locale = "en
     // Below the asset's abbreviation floor — show full digits with separators.
     return new Intl.NumberFormat(locale, {
       minimumFractionDigits: 0,
-      maximumFractionDigits: compactDecimals,
+      maximumFractionDigits: decimals,
     }).format(amount);
   }
 
   const scaled = amount / Math.pow(1000, tier);
   const formattedScaled = new Intl.NumberFormat(locale, {
     minimumFractionDigits: 0,
-    maximumFractionDigits: compactDecimals,
+    maximumFractionDigits: decimals,
   }).format(scaled);
   return `${formattedScaled}${COMPACT_UNITS[tier]}`;
 }

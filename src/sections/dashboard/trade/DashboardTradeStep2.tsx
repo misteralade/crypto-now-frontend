@@ -1067,7 +1067,7 @@ export default function DashboardTradeStep2({
               {bankName || "Loading…"}
             </p>
             <p
-              className="text-2xl font-black font-mono"
+              className="text-3xl font-black font-mono"
               style={{ color: "#0E0F0C" }}
             >
               {accountNumber || "—"}

@@ -25,7 +25,8 @@ import type {
   SupportedCryptoOrCurrencyResponse,
   CustodialWalletResponse,
 } from "../../types/response.payload.types.ts";
-import { formatCurrency, convertToMillify } from "../../util/index.util.ts";
+import { formatCurrency } from "../../util/index.util.ts";
+import { formatCompact } from "../../util/asset-precision.ts";
 import { getStatusDisplayName } from "../../util/transaction.util.ts";
 import momentClient from "../../lib/moment.ts";
 import { ROUTES } from "../../util/constants.util.ts";
@@ -153,7 +154,7 @@ function RecentOrderRow({ tx }: { tx: TransactionResponseEntity }) {
           className="text-sm font-bold leading-snug"
           style={{ color: isBuy ? "#037847" : "#0E0F0C" }}
         >
-          ₦{convertToMillify(Number(tx.amountFiat), 0)}
+          ₦{formatCompact(Number(tx.amountFiat), "NGN", 0)}
         </p>
         <span
           className="inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded-full mt-0.5"
@@ -528,7 +529,7 @@ export default function DashboardContent() {
                 letterSpacing: "-0.03em",
               }}
             >
-              ₦{convertToMillify(totalFiat, 0)}
+              ₦{formatCompact(totalFiat, "NGN", 0)}
             </h3>
           )}
           <p
@@ -545,13 +546,13 @@ export default function DashboardContent() {
                 label: "BOUGHT",
                 value: loadingTransactionSummary
                   ? null
-                  : `₦${convertToMillify(bought, 0)}`,
+                  : `₦${formatCompact(bought, "NGN", 0)}`,
               },
               {
                 label: "SOLD",
                 value: loadingTransactionSummary
                   ? null
-                  : `₦${convertToMillify(sold, 0)}`,
+                  : `₦${formatCompact(sold, "NGN", 0)}`,
               },
               {
                 label: "ORDERS",
@@ -613,7 +614,7 @@ export default function DashboardContent() {
                   className="text-5xl font-black text-white"
                   style={{ letterSpacing: "-0.03em" }}
                 >
-                  ₦{convertToMillify(totalFiat, 0)}
+                  ₦{formatCompact(totalFiat, "NGN", 0)}
                 </h3>
               )}
               <p
@@ -625,8 +626,8 @@ export default function DashboardContent() {
             </div>
             <div className="flex gap-3 shrink-0">
               {[
-                { l: "BOUGHT", v: `₦${convertToMillify(bought, 0)}` },
-                { l: "SOLD", v: `₦${convertToMillify(sold, 0)}` },
+                { l: "BOUGHT", v: `₦${formatCompact(bought, "NGN", 0)}` },
+                { l: "SOLD", v: `₦${formatCompact(sold, "NGN", 0)}` },
                 { l: "ORDERS", v: orders },
               ].map(({ l, v }) => (
                 <div
