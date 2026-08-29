@@ -171,15 +171,15 @@ const TransactionTable = ({
       {/* Desktop: table */}
       <div
         className="hidden lg:block rounded-3xl overflow-hidden"
-        style={{ border: "1px solid #F0F0F0" }}
+        style={{ border: "1px solid #ECECEC" }}
       >
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr
                 style={{
-                  background: "#FAFAFA",
-                  borderBottom: "1px solid #F0F0F0",
+                  background: "#F8F8FF",
+                  borderBottom: "1px solid #ECECEC",
                 }}
               >
                 {[
@@ -194,7 +194,7 @@ const TransactionTable = ({
                 ].map((h) => (
                   <th
                     key={h}
-                    className="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-wider"
+                    className="px-5 py-4 text-left text-[12px] font-semibold uppercase tracking-wide"
                     style={{ color: "#9A9A9A" }}
                   >
                     {h}

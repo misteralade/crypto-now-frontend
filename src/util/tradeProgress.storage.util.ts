@@ -57,7 +57,11 @@ export function loadTradeProgress(): TradeProgress | null {
   try {
     const raw = localStorage.getItem(tradeProgressKey());
     if (!raw) return null;
-    return JSON.parse(raw) as TradeProgress;
+    const parsed = JSON.parse(raw) as TradeProgress;
+    if (parsed.activeTab === "sell") {
+      return null;
+    }
+    return parsed;
   } catch {
     return null;
   }
@@ -66,8 +70,13 @@ export function loadTradeProgress(): TradeProgress | null {
 // Write (merge)
 export function saveTradeProgress(partial: Partial<TradeProgress>) {
   try {
-    const current = loadTradeProgress() || {};
+    const raw = localStorage.getItem(tradeProgressKey());
+    const current = raw ? (JSON.parse(raw) as TradeProgress) : {};
     const merged = { ...current, ...partial };
+    if (merged.activeTab === "sell") {
+      localStorage.removeItem(tradeProgressKey());
+      return;
+    }
     localStorage.setItem(tradeProgressKey(), JSON.stringify(merged));
   } catch {
     // no-op

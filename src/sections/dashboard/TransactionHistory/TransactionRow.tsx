@@ -1,7 +1,7 @@
 import type { TransactionResponseEntity } from "../../../types/response.payload.types.ts";
 import CopyAccountDetails from "../../trade-crypto/CopyAccountDetails.tsx";
 import momentClient from "../../../lib/moment.ts";
-import { getStatusColor, getStatusDot, getStatusDisplayName } from "../../../util/transaction.util.ts";
+import { getStatusColors, getStatusDisplayName } from "../../../util/transaction.util.ts";
 import { useNavigate } from "@tanstack/react-router";
 import { ROUTES } from "../../../util/constants.util.ts";
 import { formatCompact } from "../../../util/asset-precision.ts";
@@ -36,6 +36,7 @@ const TransactionRow = ({ transaction: tx, isLast, isMobileCard = false }: Trans
     momentClient.isWithinDuration(tx.createdAt, 1, "hour");
   const canDispute = tx.status === "DISPUTED";
   const fiatAmt = formatCompact(Number(tx.amountFiat), "NGN", 0);
+  const statusColors = getStatusColors(tx.status);
 
   const handleView     = () => navigate({ to: `${ROUTES.TRANSACTION}/${tx.sessionId}` });
   const handleDispute  = () => tx.dispute?.id && navigate({ to: "/dispute/$id", params: { id: tx.dispute.id } });
@@ -125,14 +126,14 @@ const TransactionRow = ({ transaction: tx, isLast, isMobileCard = false }: Trans
   /* ══ DESKTOP TABLE ROW ══ */
   return (
     <tr
-      className={`transition-colors hover:bg-[#FAFAFA] cursor-pointer ${!isLast ? "border-b" : ""}`}
-      style={{ borderColor: "#F0F0F0" }}
+      className={`transition-colors hover:bg-[#F8F8FF] cursor-pointer ${!isLast ? "border-b" : ""}`}
+      style={{ borderColor: "#F5F5FF" }}
       onClick={handleView}
     >
-      <td className="px-5 py-4">
-        <CopyAccountDetails accountNumber={tx.sessionId} className="!max-w-[120px]" />
+      <td className="px-5 py-4 text-[14px] font-semibold text-[#101828]">
+        {tx.sessionId.slice(0, 8)}...
       </td>
-      <td className="px-5 py-4 text-sm" style={{ color: "#6B6E6B" }}>
+      <td className="px-5 py-4 text-[14px] text-[#667085] whitespace-nowrap">
         {momentClient.formatToTransactionInitiationDate(tx.createdAt)}
       </td>
       <td className="px-5 py-4">
@@ -141,31 +142,31 @@ const TransactionRow = ({ transaction: tx, isLast, isMobileCard = false }: Trans
             style={{ background: isBuy ? "rgba(3,120,71,0.10)" : "rgba(148,142,238,0.12)" }}>
             <img src={tx.cryptocurrency.logoUrl} alt="" className="w-4 h-4 object-contain" />
           </div>
-          <span className="text-sm font-semibold" style={{ color: isBuy ? "#037847" : "#0E0F0C" }}>
+          <span className="text-[14px] font-semibold" style={{ color: isBuy ? "#037847" : "#0E0F0C" }}>
             {tx.type}
           </span>
         </div>
       </td>
       <td className="px-5 py-4">
         <div>
-          <p className="text-sm font-semibold" style={{ color: "#0E0F0C" }}>
+          <p className="text-[14px] font-semibold text-[#101828]">
             {Number(tx.amountCrypto).toFixed(4).replace(/\.?0+$/, "")}
           </p>
-          <p className="text-xs" style={{ color: "#9A9A9A" }}>{tx.cryptocurrency.symbol}</p>
+          <p className="text-[11px] text-[#9A9A9A] mt-0.5">{tx.cryptocurrency.symbol}</p>
         </div>
       </td>
-      <td className="px-5 py-4 text-sm font-bold" style={{ color: "#0E0F0C" }}>
+      <td className="px-5 py-4 text-[14px] font-bold" style={{ color: "#101828" }}>
         ₦{fiatAmt}
       </td>
-      <td className="px-5 py-4 text-sm" style={{ color: "#6B6E6B" }}>
+      <td className="px-5 py-4 text-[14px] text-[#667085] whitespace-nowrap">
         ₦{formatCompact(Number(tx.stableToFiatRate), "NGN", 0)}
       </td>
-      <td className="px-5 py-4 text-sm font-medium" style={{ color: "#6B6E6B" }}>
+      <td className="px-5 py-4 text-[14px] font-medium text-[#667085] whitespace-nowrap">
         {tx.userCryptoWallet?.network ?? tx.adminCryptoWallet?.network ?? "—"}
       </td>
       <td className="px-5 py-4">
-        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusColor(tx.status)}`}>
-          <span className={`w-1.5 h-1.5 rounded-full ${getStatusDot(tx.status)}`} />
+        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12px] font-semibold ${statusColors.background} ${statusColors.text}`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${statusColors.dot}`} />
           {getStatusDisplayName(tx.status)}
         </span>
       </td>

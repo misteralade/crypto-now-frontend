@@ -15,6 +15,8 @@ import {extractErrorMessage, isExchangeRateExpiryError} from "../util/index.util
 import { useSelector } from "react-redux";
 import { setInitiateTransactionField } from "../redux/transaction.slice.ts";
 import { useTransactionLiveStatus } from "../hooks/components/trade/useTransactionLiveStatus.ts";
+import { userSearchTransactionInitialState } from "../redux/states/initial-transaction.state.ts";
+import type { SearchTransactionsRequestPayload } from "../types/request.payload.types.ts";
 
 export const useTransactionQuery = () => {
   const queryClient = useQueryClient();
@@ -560,5 +562,33 @@ export const useTransactionQuery = () => {
 
     // Functions
     useTransactionStatus,
+  };
+};
+
+/**
+ * Dashboard's "Recent Orders" widget — always the caller's 5 most recent
+ * transactions, independent of whatever filters/pagination are active on the
+ * Transaction History page. That page reuses the SAME Redux search payload
+ * (state.transaction.dashboard.searchUserTransactions) for its own filtering,
+ * so reading through it here would let filters/pages set there leak back into
+ * this widget after navigating back to the dashboard.
+ */
+export const useRecentTransactionsQuery = () => {
+  const { data, isLoading, isFetching } = useQuery({
+    queryKey: [QUERY_KEYS.TRANSACTION.USER_RECENT_TRANSACTIONS],
+    queryFn: async () => {
+      const { data, success } = await transactionServiceApi.searchUserTransactions(
+        userSearchTransactionInitialState as SearchTransactionsRequestPayload,
+      );
+      return success ? data : null;
+    },
+    staleTime: TIME_IN_MILLISECONDS.ONE_HUNDRED_TWENTY_SECONDS,
+    retry: 1,
+  });
+
+  return {
+    recentTransactions: data,
+    loadingRecentTransactions: isLoading,
+    fetchingRecentTransactions: isFetching,
   };
 };

@@ -18,7 +18,7 @@ import {
 import { useDashboardContent } from "../../hooks/components/dashboard/useDashboardContent.ts";
 import { useCryptoQuery } from "../../queries/crypto.query.ts";
 import { useUserQuery } from "../../queries/user.query.ts";
-import { useTransactionQuery } from "../../queries/transaction.query.ts";
+import { useRecentTransactionsQuery } from "../../queries/transaction.query.ts";
 import { useNotificationQuery } from "../../queries/notification.query.ts";
 import type {
   TransactionResponseEntity,
@@ -249,31 +249,27 @@ export default function DashboardContent() {
   } = useCryptoQuery();
   const { userProfileData, loadingUserProfile } = useUserQuery();
   const {
-    userTransactionHistory,
-    loadingUserTransactionHistory,
-  } = useTransactionQuery();
+    recentTransactions,
+    loadingRecentTransactions,
+  } = useRecentTransactionsQuery();
   const { hasNewNotifications } = useNotificationQuery();
 
   const firstName = userProfileData?.profile?.firstName ?? "";
   const lastName = userProfileData?.profile?.lastName ?? "";
   void getInitials(firstName, lastName);
 
-  const totalFiat = transactionSummary?.total?.[0]
-    ? Number(transactionSummary.total[0].totalFiatAmount)
+  const bought = transactionSummary?.total
+    ? transactionSummary.total.reduce((sum, item) => sum + Number(item.fiatSpentOnBuying || 0), 0)
     : 0;
-  const bought = transactionSummary?.total?.[0]
-    ? Number(transactionSummary.total[0].fiatSpentOnBuying)
+  const sold = transactionSummary?.total
+    ? transactionSummary.total.reduce((sum, item) => sum + Number(item.fiatReceivedFromSelling || 0), 0)
     : 0;
-  const sold = transactionSummary?.total?.[0]
-    ? Number(transactionSummary.total[0].fiatReceivedFromSelling)
-    : 0;
-  const orders = transactionSummary?.total?.[0]
-    ? transactionSummary.total[0].transactionCount
-    : "0";
+  const totalFiat = bought + sold;
+  const totalTransactionsCount = recentTransactions?.count ?? 0;
 
-  const recentOrders = userTransactionHistory?.transactions?.slice(0, 5) ?? [];
+  const recentOrders = recentTransactions?.transactions?.slice(0, 5) ?? [];
   const disputedOrder =
-    userTransactionHistory?.transactions?.find(
+    recentTransactions?.transactions?.find(
       (tx) => tx.status === "DISPUTED",
     ) ?? null;
 
@@ -552,8 +548,10 @@ export default function DashboardContent() {
                   : `₦${formatCompact(sold, "NGN", 0)}`,
               },
               {
-                label: "ORDERS",
-                value: loadingTransactionSummary ? null : orders,
+                label: "TOTAL",
+                value: loadingRecentTransactions
+                  ? null
+                  : totalTransactionsCount,
               },
             ].map(({ label, value }) => (
               <div
@@ -623,10 +621,10 @@ export default function DashboardContent() {
             </div>
             <div className="flex gap-3 shrink-0">
               {[
-                { l: "BOUGHT", v: `₦${formatCompact(bought, "NGN", 0)}` },
-                { l: "SOLD", v: `₦${formatCompact(sold, "NGN", 0)}` },
-                { l: "ORDERS", v: orders },
-              ].map(({ l, v }) => (
+                { l: "BOUGHT", v: `₦${formatCompact(bought, "NGN", 0)}`, loading: loadingTransactionSummary },
+                { l: "SOLD", v: `₦${formatCompact(sold, "NGN", 0)}`, loading: loadingTransactionSummary },
+                { l: "TOTAL", v: totalTransactionsCount, loading: loadingRecentTransactions },
+              ].map(({ l, v, loading }) => (
                 <div
                   key={l}
                   className="px-4 py-3 rounded-2xl text-center min-w-[80px]"
@@ -638,7 +636,7 @@ export default function DashboardContent() {
                   >
                     {l}
                   </p>
-                  {loadingTransactionSummary ? (
+                  {loading ? (
                     <Skel w="52px" h={5} />
                   ) : (
                     <p className="text-base font-extrabold text-white mt-1">
@@ -993,7 +991,7 @@ export default function DashboardContent() {
             </Link>
           </div>
 
-          {loadingUserTransactionHistory ? (
+          {loadingRecentTransactions ? (
             <div
               className="rounded-3xl overflow-hidden"
               style={{ border: "1px solid #F0F0F0" }}
