@@ -6,7 +6,8 @@ import {
   transactionStatusMessages,
   transactionStatusStyles,
 } from "../../../util/constants.util.ts";
-import { convertToMillify, formatNumber } from "../../../util/index.util.ts";
+import { convertToMillify } from "../../../util/index.util.ts";
+import { formatForDisplay, formatForDisplayLocalized } from "../../../util/asset-precision.ts";
 import { useNavigate } from "@tanstack/react-router";
 import {
   AlertTriangle,
@@ -61,46 +62,20 @@ const TransactionDetailsPage = () => {
   };
 
   const getExchangeRateDisplay = (): ReactNode => {
-    const amountCrypto = Number(transaction?.amountCrypto ?? 0);
-    const symbol = transaction?.cryptocurrency?.symbol || "CRYPTO";
     const rateSnapshot = (transaction?.rateSnapshot ?? null) as Record<
       string,
       unknown
     > | null;
-    const currency = transaction?.currency;
-    if (amountCrypto <= 0) return "—";
-    const snapshotUsdRate = Number(rateSnapshot?.coinGeckoRate ?? 0);
     const snapshotPlatformRate = Number(rateSnapshot?.platformRate ?? 0);
-    const snapshotFiatRate = Number(rateSnapshot?.fiatRate ?? 0);
-    const derivedFiatRate =
-      snapshotUsdRate > 0 && snapshotPlatformRate > 0
-        ? snapshotUsdRate * snapshotPlatformRate
-        : 0;
-    const finalFiatRate = snapshotFiatRate > 0 ? snapshotFiatRate : derivedFiatRate;
-    const safeUsdRate = snapshotUsdRate > 0 ? snapshotUsdRate : 0;
+    const platformRate =
+      snapshotPlatformRate > 0
+        ? snapshotPlatformRate
+        : Number(transaction?.stableToFiatRate ?? 0);
 
-    if (safeUsdRate > 0 && finalFiatRate > 0) {
-      return (
-        <span className="text-[11px] sm:text-xs font-semibold leading-normal block">
-          1 {symbol} = ${convertToMillify(safeUsdRate, 2)} USD (
-          ₦{convertToMillify(finalFiatRate, 2)} NGN)
-        </span>
-      );
+    if (platformRate > 0) {
+      return `₦${formatForDisplayLocalized(platformRate, "NGN")}`;
     }
-
-    if (finalFiatRate > 0) {
-      return <span className="text-[11px] sm:text-xs font-semibold leading-normal block">1 {symbol} = ₦{convertToMillify(finalFiatRate, 2)} NGN</span>;
-    }
-
-    return currency === "USD" ? (
-      <span className="text-[11px] sm:text-xs font-semibold leading-normal block">
-        1 {symbol} = ${convertToMillify(Number(transaction?.amountFiat ?? 0) / amountCrypto, 2)}
-      </span>
-    ) : (
-      <span className="text-[11px] sm:text-xs font-semibold leading-normal block">
-        1 {symbol} = ₦{convertToMillify(getAmountFiatNGN() / amountCrypto, 2)}
-      </span>
-    );
+    return "—";
   };
 
   const isBuy = transaction?.type?.toUpperCase() === "BUY";
@@ -349,7 +324,7 @@ const TransactionDetailsPage = () => {
                       className="text-xs font-semibold mt-0.5"
                       style={{ color: "#6B6E6B" }}
                     >
-                      {formatNumber(transaction.amountCrypto)}{" "}
+                      {formatForDisplay(Number(transaction.amountCrypto), transaction.cryptocurrency?.symbol ?? "")}{" "}
                       {transaction.cryptocurrency?.symbol}
                     </p>
                   </div>
@@ -442,13 +417,13 @@ const TransactionDetailsPage = () => {
               <div className="grid grid-cols-2 gap-4">
                 <InfoRow
                   label="Crypto Amount"
-                  value={`${formatNumber(transaction.amountCrypto)} ${
+                  value={`${formatForDisplay(Number(transaction.amountCrypto), transaction.cryptocurrency?.symbol ?? "")} ${
                     transaction.cryptocurrency?.symbol
                   }`}
                 />
                 <InfoRow label="Fiat Amount" value={formatFiatAmount()} align="right" />
                 <InfoRow
-                  label="Exchange Rate"
+                  label="Rate"
                   value={getExchangeRateDisplay()}
                 />
                 <InfoRow label="Type" value={isBuy ? "Buy" : "Sell"} align="right" />

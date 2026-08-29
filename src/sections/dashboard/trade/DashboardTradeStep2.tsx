@@ -35,7 +35,7 @@ import { bankServiceApi } from "../../../api/bank.api.ts";
 import { transactionServiceApi } from "../../../api/transaction.api.ts";
 import { useTransactionQuery } from "../../../queries/transaction.query.ts";
 import { isExchangeRateExpiryError } from "../../../util/index.util.ts";
-import { TOKEN_PRECISION } from "../../../constants/tradeAmounts.ts";
+import { formatForDisplay, formatForDisplayLocalized } from "../../../util/asset-precision.ts";
 
 interface DashboardTradeStep2Props {
   tradeType: TradeType;
@@ -1004,7 +1004,7 @@ export default function DashboardTradeStep2({
           <p className="text-xs text-white/50 mt-1.5">
             {isLocalBuyFlow && buyRateInfo ? (
               <>
-                at ₦{Math.round(buyRateInfo.rate).toLocaleString()}/
+                at ₦{formatForDisplayLocalized(buyRateInfo.rate, "NGN")}/
                 {selectedToken?.symbol}
               </>
             ) : (
@@ -1016,7 +1016,7 @@ export default function DashboardTradeStep2({
                 )}{" "}
                 at ₦
                 {selectedToken?.buyRate
-                  ? Number(selectedToken.buyRate).toLocaleString()
+                  ? formatForDisplayLocalized(Number(selectedToken.buyRate), "NGN")
                   : "—"}
                 /{selectedToken?.symbol}
               </>
@@ -1025,9 +1025,7 @@ export default function DashboardTradeStep2({
           <p className="text-xs text-white/70 mt-1">
             You'll receive{" "}
             {isLocalBuyFlow && buyRateInfo
-              ? buyRateInfo.cryptoAmount
-                  .toFixed(TOKEN_PRECISION[selectedToken?.symbol?.toUpperCase() ?? ""] ?? 8)
-                  .replace(/\.?0+$/, "")
+              ? formatForDisplay(buyRateInfo.cryptoAmount, selectedToken?.symbol ?? "")
               : numberOfToken}{" "}
             {selectedToken?.symbol}
           </p>

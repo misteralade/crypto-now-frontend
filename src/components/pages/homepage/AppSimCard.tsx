@@ -28,12 +28,12 @@ import { useNavigate } from "@tanstack/react-router";
 import BankSelector from "../../global/BankSelector.tsx";
 import {
   TRADE_FIAT_AMOUNT_PRESETS,
-  TOKEN_PRECISION,
   formatTradeFiatPreset,
   roundTokenAmountUp,
 } from "../../../constants/tradeAmounts.ts";
 import type { SupportedExchangeRateResponse } from "../../../types/response.payload.types.ts";
 import { extractErrorMessage, isExchangeRateExpiryError } from "../../../util/index.util.ts";
+import { formatForDisplay, formatForDisplayLocalized } from "../../../util/asset-precision.ts";
 import { emailValidation } from "../../../util/constants.regex.util.ts";
 import { useTransactionLiveStatus } from "../../../hooks/components/trade/useTransactionLiveStatus.ts";
 
@@ -743,31 +743,18 @@ const AppSimCard = () => {
     value: "custom" as const,
     label: "Custom",
   };
-  const formatCryptoAmountForDisplay = (value: string) => {
-    if (!value) return "";
-    if (!value.includes(".")) return value;
-    return value
-      .replace(/(\.\d*?[1-9])0+$/u, "$1")
-      .replace(/\.0+$/u, "")
-      .replace(/\.$/u, "");
-  };
-  const formatTrimmedDecimal = (value: number, maximumFractionDigits: number) =>
-    value.toLocaleString(undefined, {
-      minimumFractionDigits: 0,
-      maximumFractionDigits,
-    });
   const formatReceiveCryptoDisplay = (value: string) => {
     const amountValue = Number(value);
     if (!amountValue || Number.isNaN(amountValue)) return value;
-    return formatTrimmedDecimal(amountValue, 4);
+    return formatForDisplayLocalized(amountValue, cryptoSymbol);
   };
   const formatReceiveNgnDisplay = (value: string) => {
     const amountValue = Number(value);
     if (!amountValue || Number.isNaN(amountValue)) return `${ngnDisplayCode}0`;
-    return `${ngnDisplayCode}${Math.round(amountValue).toLocaleString()}`;
+    return `${ngnDisplayCode}${formatForDisplayLocalized(amountValue, "NGN")}`;
   };
   const formatUsdEquivalentDisplay = (value: number) =>
-    `$${formatTrimmedDecimal(value, 2)} USD equivalent`;
+    `$${formatForDisplayLocalized(value, "USD")} USD equivalent`;
   const getCachedQuote = (
     cryptoId: string,
     currencyId: string,
@@ -1131,8 +1118,9 @@ const AppSimCard = () => {
     );
     if (!data?.fiatRate) return;
 
-    const roundedCryptoAmount = formatCryptoAmountForDisplay(
-      String(roundTokenAmountUp(targetNgnAmount / data.fiatRate, cryptoSymbol)),
+    const roundedCryptoAmount = formatForDisplay(
+      roundTokenAmountUp(targetNgnAmount / data.fiatRate, cryptoSymbol),
+      cryptoSymbol,
     );
     const computedReceiveAmount = targetNgnAmount.toFixed(2);
     skipNextAutoQuoteRef.current = true;
@@ -1205,11 +1193,7 @@ const AppSimCard = () => {
         Number.isNaN(submittedCryptoAmount) ||
         submittedCryptoAmount > anonymousMaximumCryptoAmount
       ) {
-        const maximumLabel = `${formatCryptoAmountForDisplay(
-          anonymousMaximumCryptoAmount
-            .toFixed(TOKEN_PRECISION[cryptoSymbol.toUpperCase()] ?? 8)
-            .replace(/\.?0+$/, ""),
-        )} ${cryptoSymbol}`;
+        const maximumLabel = `${formatForDisplay(anonymousMaximumCryptoAmount, cryptoSymbol)} ${cryptoSymbol}`;
         const errorMessage = `Anonymous trades must not exceed ${maximumLabel}.`;
         setGuestError(errorMessage);
         toast.error(errorMessage);

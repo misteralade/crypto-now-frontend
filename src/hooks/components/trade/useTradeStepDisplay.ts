@@ -28,6 +28,7 @@ import {
 } from "../../../util/tradeProgress.storage.util.ts";
 import {type RootState, store} from "../../../store.ts";
 import {clearAnonymousUserEmail, setAnonymousUserEmail, setIsAnonymousUser} from "../../../redux/user.slice.ts";
+import { formatForDisplay, formatForDisplayLocalized } from "../../../util/asset-precision.ts";
 import { convertToMillify, isExchangeRateExpiryError } from "../../../util/index.util.ts";
 import { toast } from "react-toastify";
 
@@ -1418,9 +1419,9 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     
     // For BUY transactions, just show the crypto amount
     if (activeTab.toLocaleLowerCase() === 'buy') {
-      return `${Number(numberOfToken)} ${selectedToken?.symbol}`;
+      return `${formatForDisplay(Number(numberOfToken), selectedToken?.symbol ?? "")} ${selectedToken?.symbol}`;
     }
-    
+
     // For SELL transactions, show fiat conversions
     // When currency is USD, show both USD and NGN amounts
     if (exchangeRate.currency === "USD" && exchangeRate.fiatRate && exchangeRate.usdRate) {
@@ -1429,46 +1430,46 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       return React.createElement(
         'span',
         null,
-        `${amountNum.toLocaleString()} ${currencyCode} (`,
-        React.createElement('strong', null, `${ngnAmount.toLocaleString()} NGN`),
+        `${formatForDisplayLocalized(amountNum, currencyCode)} ${currencyCode} (`,
+        React.createElement('strong', null, `${formatForDisplayLocalized(ngnAmount, "NGN")} NGN`),
         ')'
       );
     }
-    
+
     // When currency is NGN, just show NGN amount in bold
     if (exchangeRate.currency === "NGN") {
       return React.createElement(
         'span',
         null,
-        React.createElement('strong', null, `${amountNum.toLocaleString()} ${currencyCode}`)
+        React.createElement('strong', null, `${formatForDisplayLocalized(amountNum, currencyCode)} ${currencyCode}`)
       );
     }
-    
+
     // Fallback: just show the amount
-    return `${amountNum.toLocaleString()} ${currencyCode}`;
+    return `${formatForDisplayLocalized(amountNum, currencyCode)} ${currencyCode}`;
   };
 
   const formatSendAmount = (amount: number | string, currencyCode: string | undefined): string | React.ReactNode => {
     if (!exchangeRate || !currencyCode) return String(amount);
-    
+
     const amountNum = Number(String(amount).replace(/,/g, '')); // Remove commas before parsing
     if (isNaN(amountNum) || amountNum === 0) return String(amount);
-    
+
     // For SELL transactions, show the crypto amount being sent
     if (activeTab.toLowerCase() === 'sell') {
-      return `${Number(numberOfToken).toLocaleString()} ${selectedToken?.symbol}`;
+      return `${formatForDisplay(Number(numberOfToken), selectedToken?.symbol ?? "")} ${selectedToken?.symbol}`;
     }
-    
+
     // For BUY transactions, show fiat amount with proper formatting
     // When currency is NGN, show NGN amount in bold
     if (exchangeRate.currency === "NGN") {
       return React.createElement(
         'span',
         null,
-        React.createElement('strong', null, `${amountNum.toLocaleString()} ${currencyCode}`)
+        React.createElement('strong', null, `${formatForDisplayLocalized(amountNum, currencyCode)} ${currencyCode}`)
       );
     }
-    
+
     // When currency is USD, show both USD and NGN amounts
     if (exchangeRate.currency === "USD" && exchangeRate.fiatRate && exchangeRate.usdRate) {
       // Calculate NGN amount: USD amount * (NGN rate / USD rate)
@@ -1476,15 +1477,15 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       return React.createElement(
         'span',
         null,
-        React.createElement('strong', null, `${ngnAmount.toLocaleString()} NGN`),
+        React.createElement('strong', null, `${formatForDisplayLocalized(ngnAmount, "NGN")} NGN`),
         ' (',
-        `${amountNum.toLocaleString()} ${currencyCode}`,
+        `${formatForDisplayLocalized(amountNum, currencyCode)} ${currencyCode}`,
         ')'
       );
     }
-    
+
     // Fallback: show the amount with currency code
-    return `${amountNum.toLocaleString()} ${currencyCode}`;
+    return `${formatForDisplayLocalized(amountNum, currencyCode)} ${currencyCode}`;
   };
 
   // Handle focus events to prevent calculations while typing

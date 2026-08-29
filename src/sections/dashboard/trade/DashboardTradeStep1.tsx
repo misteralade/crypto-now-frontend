@@ -21,6 +21,7 @@ import {
   formatTradeFiatPreset,
   roundTokenAmountUp,
 } from "../../../constants/tradeAmounts.ts";
+import { roundForCalculation } from "../../../util/asset-precision.ts";
 
 export interface BuyRateInfo {
   rate: number; // NGN per 1 crypto (fiatRate from API)
@@ -231,7 +232,10 @@ function BuyFields({
       const multiplier = isNgnQuote
         ? rateData.coinGeckoRate * Number(rateData.platformRate)
         : rateData.coinGeckoRate;
-      const fiatAmount = Number((cryptoAmount * multiplier).toFixed(2));
+      const fiatAmount = roundForCalculation(
+        cryptoAmount * multiplier,
+        selectedCurrency?.code ?? "NGN",
+      );
 
       onRateResolved?.({
         rate: rateData.fiatRate,

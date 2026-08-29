@@ -1,8 +1,8 @@
-import millify from "millify";
 import {LOCAL_STORAGE_KEYS} from "./constants.util.ts";
 import {clearUserSessionStorage} from "./tradeProgress.storage.util.ts";
 import type {AxiosServerError} from "../types/response.payload.types.ts";
 import {ZodError} from "zod";
+import {formatCompact} from "./asset-precision.ts";
 
 export const formatTime = (seconds: number) => {
   const mins = Math.floor(seconds / 60)

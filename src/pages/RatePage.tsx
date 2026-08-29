@@ -2,7 +2,8 @@ import {Fragment, useState} from "react";
 import PublicNavbar from "../components/global/navbar/PublicNavbar.tsx";
 import Footer from "../components/global/Footer.tsx";
 import {useCryptoQuery} from "../queries/crypto.query.ts";
-import {convertToMillify, formatCurrency} from "../util/index.util.ts";
+import {convertToMillify} from "../util/index.util.ts";
+import {formatForDisplayLocalized} from "../util/asset-precision.ts";
 import type {SupportedCryptoOrCurrencyResponse} from "../types/response.payload.types.ts";
 import {LoadingSpinner} from "../components/global/LoadingSpinner.tsx";
 
@@ -123,12 +124,12 @@ const RatePage = () => {
                       </td>
                       <td className="px-6 py-5 text-right">
                         <div className="font-semibold text-gray-900">
-                          {formatCurrency(Number(crypto.buyRate))}
+                          ₦{formatForDisplayLocalized(Number(crypto.buyRate), "NGN")}
                         </div>
                       </td>
                       <td className="px-6 py-5 text-right">
                         <div className="font-semibold text-gray-900">
-                          {formatCurrency(Number(crypto.sellRate))}
+                          ₦{formatForDisplayLocalized(Number(crypto.sellRate), "NGN")}
                         </div>
                       </td>
                       <td className="px-6 py-5 text-right">
@@ -168,11 +169,11 @@ const RatePage = () => {
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <div className="text-xs text-gray-500 mb-1">We Sell At</div>
-                        <div className="font-semibold text-gray-900">{formatCurrency(Number(crypto.buyRate))}</div>
+                        <div className="font-semibold text-gray-900">₦{formatForDisplayLocalized(Number(crypto.buyRate), "NGN")}</div>
                       </div>
                       <div>
                         <div className="text-xs text-gray-500 mb-1">We Buy At</div>
-                        <div className="font-semibold text-gray-900">{formatCurrency(Number(crypto.sellRate))}</div>
+                        <div className="font-semibold text-gray-900">₦{formatForDisplayLocalized(Number(crypto.sellRate), "NGN")}</div>
                       </div>
                       <div>
                         <div className="text-xs text-gray-500 mb-1">Min Trade (token)</div>
