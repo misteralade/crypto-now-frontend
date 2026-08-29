@@ -43,9 +43,6 @@ const getInitials = (first?: string, last?: string) =>
   ((first?.[0] ?? "") + (last?.[0] ?? "")).toUpperCase() || "U";
 
 /* ─────────────────────── Live Rate Chip ─────────────────────────── */
-// buyRate/sellRate only carry the platform's NGN-per-$1 rate on the USDT
-// row — other tokens' own rows aren't priced per-$ the same way, so every
-// chip shows the platform rate (USDT's), not each token's own column.
 function RateChip({
   crypto,
   platformBuyRate,
@@ -849,20 +846,14 @@ export default function DashboardContent() {
                 className="flex gap-2 overflow-x-auto pb-1"
                 style={{ scrollbarWidth: "none" }}
               >
-                {(() => {
-                  const usdtToken =
-                    supportedCryptoCurrencies.find(
-                      (c) => c.symbol.toUpperCase() === "USDT",
-                    ) ?? supportedCryptoCurrencies[0];
-                  return supportedCryptoCurrencies.map((c) => (
-                    <RateChip
-                      key={c.id}
-                      crypto={c}
-                      platformBuyRate={Number(usdtToken.buyRate)}
-                      platformSellRate={Number(usdtToken.sellRate)}
-                    />
-                  ));
-                })()}
+                {supportedCryptoCurrencies.map((c) => (
+                  <RateChip
+                    key={c.id}
+                    crypto={c}
+                    platformBuyRate={Number(c.buyRate)}
+                    platformSellRate={Number(c.sellRate)}
+                  />
+                ))}
               </div>
             </section>
           )}
