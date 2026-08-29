@@ -23,9 +23,15 @@ export const formatNumber = (value: string | number) => {
   })
 }
 
-export const convertToMillify = (num: number, precision: number = 2): string => {
+/**
+ * @deprecated Prefer formatCompact(amount, symbolOrCode) from ./asset-precision.ts
+ * directly when you know the asset — it applies the correct abbreviation policy
+ * (e.g. NGN never abbreviates to "K"). This wrapper defaults to NGN's policy
+ * since that's what the overwhelming majority of existing callers display.
+ */
+export const convertToMillify = (num: number, precision?: number): string => {
   const safe = Number.isFinite(num) ? num : 0;
-  return millify(safe, { precision });
+  return formatCompact(safe, "NGN", precision);
 }
 
 export const getFileType = (file: File) => {
