@@ -1,5 +1,4 @@
 import type { TransactionResponseEntity } from "../../../types/response.payload.types.ts";
-import CopyAccountDetails from "../../trade-crypto/CopyAccountDetails.tsx";
 import momentClient from "../../../lib/moment.ts";
 import { getStatusColors, getStatusDisplayName } from "../../../util/transaction.util.ts";
 import { useNavigate } from "@tanstack/react-router";
