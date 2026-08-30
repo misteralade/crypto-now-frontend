@@ -29,7 +29,11 @@ export interface BuyRateInfo {
   coinGeckoRate: number;
   platformRate: number;
   cryptoAmount: number; // how much crypto they'll receive
-  fiatAmount: number; // what they typed in
+  fiatAmount: number; // what they typed in (in currencyCode's units)
+  // What actually gets charged — the platform only settles in NGN. USD is shown
+  // for interpretation only, so "you will pay" must always read this, never fiatAmount
+  // when currencyCode is USD.
+  ngnAmount: number;
   currencyCode: string;
   currencyId: string;
   fetchedAt: number; // Date.now()
@@ -236,6 +240,13 @@ function BuyFields({
         cryptoAmount * multiplier,
         selectedCurrency?.code ?? "NGN",
       );
+      // The platform only settles in NGN — USD is shown for interpretation only.
+      // coinGeckoRate * platformRate is always the NGN-per-token rate, regardless
+      // of which currency was actually quoted.
+      const ngnAmount = roundForCalculation(
+        cryptoAmount * rateData.coinGeckoRate * Number(rateData.platformRate),
+        "NGN",
+      );
 
       onRateResolved?.({
         rate: rateData.fiatRate,
@@ -244,6 +255,7 @@ function BuyFields({
         platformRate: Number(rateData.platformRate),
         cryptoAmount,
         fiatAmount,
+        ngnAmount,
         currencyCode: selectedCurrency?.code ?? "NGN",
         currencyId,
         fetchedAt: Date.now(),
@@ -314,6 +326,11 @@ function BuyFields({
         targetFiatAmount / divisor,
         selectedToken.symbol,
       );
+      // The platform only settles in NGN — USD is shown for interpretation only.
+      const ngnAmount = roundForCalculation(
+        cryptoAmount * rateData.coinGeckoRate * Number(rateData.platformRate),
+        "NGN",
+      );
 
       setAmountToBuy?.(String(cryptoAmount));
       onRateResolved?.({
@@ -323,6 +340,7 @@ function BuyFields({
         platformRate: Number(rateData.platformRate),
         cryptoAmount,
         fiatAmount: targetFiatAmount,
+        ngnAmount,
         currencyCode: selectedCurrency?.code ?? "NGN",
         currencyId,
         fetchedAt: Date.now(),
@@ -368,8 +386,12 @@ function BuyFields({
   // clean preset value — use the full localized amount so it never abbreviates
   // to "19.99994k". formatTradeFiatPreset's "k" suffix is only for the fixed
   // preset chip labels below (5000 -> "5k"), which are always round thousands.
+  //
+  // Always shown in NGN — the platform only settles in Naira. USD is a display
+  // convenience for users who think in dollars, but "you will pay" must reflect
+  // what's actually charged, so it reads ngnAmount even when isUSD is true.
   const fiatPreview = rateMatchesCurrentAmount
-    ? `${isUSD ? "$" : "₦"}${formatForDisplayLocalized(buyRateInfo!.fiatAmount, isUSD ? "USD" : "NGN")}`
+    ? `₦${formatForDisplayLocalized(buyRateInfo!.ngnAmount, "NGN")}`
     : null;
 
   // Admin-configured min/max are token-denominated, so validate against the

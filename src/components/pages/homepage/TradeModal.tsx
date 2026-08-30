@@ -7,6 +7,7 @@ import {
   TRADE_FIAT_AMOUNT_PRESETS,
   formatTradeFiatPreset,
 } from "../../../constants/tradeAmounts.ts";
+import { formatForDisplayLocalized } from "../../../util/asset-precision.ts";
 
 const QUICK_AMOUNTS_USD = TRADE_FIAT_AMOUNT_PRESETS.usd;
 const QUICK_AMOUNTS_NGN = TRADE_FIAT_AMOUNT_PRESETS.ngn;
@@ -23,9 +24,7 @@ const CurrencyPicker = ({ items, selectedId, onSelect, rateKey, showRate = false
   const formatRate = (r: string) => {
     const n = parseFloat(r);
     if (isNaN(n)) return r;
-    if (n >= 1_000_000) return `₦${(n / 1_000_000).toFixed(1)}M`;
-    if (n >= 1_000) return `₦${(n / 1_000).toFixed(0)}K`;
-    return `₦${n.toFixed(0)}`;
+    return `₦${formatForDisplayLocalized(n, "NGN")}`;
   };
 
   if (!items || items.length === 0) {
