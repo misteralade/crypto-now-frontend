@@ -1118,9 +1118,12 @@ const AppSimCard = () => {
     );
     if (!data?.fiatRate) return;
 
-    const roundedCryptoAmount = formatForDisplay(
+    // Keep full calc precision here — this becomes `amount`, which is later parsed
+    // back into submittedCryptoAmount for the actual trade. Running it through
+    // formatForDisplay would re-truncate to the token's (smaller) displayDecimals
+    // and silently submit less crypto than roundTokenAmountUp actually quoted.
+    const roundedCryptoAmount = String(
       roundTokenAmountUp(targetNgnAmount / data.fiatRate, cryptoSymbol),
-      cryptoSymbol,
     );
     const computedReceiveAmount = targetNgnAmount.toFixed(2);
     skipNextAutoQuoteRef.current = true;

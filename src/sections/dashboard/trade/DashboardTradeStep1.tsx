@@ -21,7 +21,7 @@ import {
   formatTradeFiatPreset,
   roundTokenAmountUp,
 } from "../../../constants/tradeAmounts.ts";
-import { roundForCalculation } from "../../../util/asset-precision.ts";
+import { roundForCalculation, formatForDisplayLocalized } from "../../../util/asset-precision.ts";
 
 export interface BuyRateInfo {
   rate: number; // NGN per 1 crypto (fiatRate from API)
@@ -364,8 +364,12 @@ function BuyFields({
   const inputValue = Number(amountToBuy ?? 0);
   const rateMatchesCurrentAmount =
     !!buyRateInfo && buyRateInfo.cryptoAmount === inputValue;
+  // The live preview is an arbitrary computed decimal (e.g. 19999.94), not a
+  // clean preset value — use the full localized amount so it never abbreviates
+  // to "19.99994k". formatTradeFiatPreset's "k" suffix is only for the fixed
+  // preset chip labels below (5000 -> "5k"), which are always round thousands.
   const fiatPreview = rateMatchesCurrentAmount
-    ? formatTradeFiatPreset(buyRateInfo!.fiatAmount, isUSD ? "USD" : "NGN")
+    ? `${isUSD ? "$" : "₦"}${formatForDisplayLocalized(buyRateInfo!.fiatAmount, isUSD ? "USD" : "NGN")}`
     : null;
 
   // Admin-configured min/max are token-denominated, so validate against the
