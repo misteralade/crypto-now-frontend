@@ -481,6 +481,7 @@ export type TotalTransactionSummaryEntity = {
 export type TransactionSummaryResponse = {
   summary: TransactionSummaryResponseEntity[];
   total: TotalTransactionSummaryEntity[];
+  thisMonth: TotalTransactionSummaryEntity[];
 };
 // End Transactions
 

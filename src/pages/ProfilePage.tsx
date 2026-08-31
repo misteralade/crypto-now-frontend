@@ -107,7 +107,7 @@ const ProfilePage = () => {
     : "";
 
   const totalFiat    = transactionSummary?.total?.[0] ? Number(transactionSummary.total[0].totalFiatAmount)    : 0;
-  const thisMonthFiat= transactionSummary?.total?.[0] ? Number(transactionSummary.total[0].totalFiatAmount)    : 0;
+  const thisMonthFiat= transactionSummary?.thisMonth?.[0] ? Number(transactionSummary.thisMonth[0].totalFiatAmount) : 0;
   const totalOrders  = transactionSummary?.total?.[0] ? transactionSummary.total[0].transactionCount           : "0";
   const buyCount     = transactionSummary?.total?.[0] ? transactionSummary.total[0].buyCount                   : "0";
   const sellCount    = transactionSummary?.total?.[0] ? transactionSummary.total[0].sellCount                  : "0";
