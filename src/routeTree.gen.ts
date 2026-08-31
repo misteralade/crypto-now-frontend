@@ -239,9 +239,9 @@ export interface FileRoutesByFullPath {
   '/oauth/success': typeof OauthSuccessRoute
   '/sign-in/verify': typeof SignInVerifyRoute
   '/dashboard/': typeof DashboardIndexRoute
-  '/sign-in': typeof SignInIndexRoute
+  '/sign-in/': typeof SignInIndexRoute
   '/dashboard/transactions/$id': typeof DashboardTransactionsIdRoute
-  '/dashboard/transactions': typeof DashboardTransactionsIndexRoute
+  '/dashboard/transactions/': typeof DashboardTransactionsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -340,9 +340,9 @@ export interface FileRouteTypes {
     | '/oauth/success'
     | '/sign-in/verify'
     | '/dashboard/'
-    | '/sign-in'
+    | '/sign-in/'
     | '/dashboard/transactions/$id'
-    | '/dashboard/transactions'
+    | '/dashboard/transactions/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -559,7 +559,7 @@ declare module '@tanstack/react-router' {
     '/sign-in/': {
       id: '/sign-in/'
       path: '/sign-in'
-      fullPath: '/sign-in'
+      fullPath: '/sign-in/'
       preLoaderRoute: typeof SignInIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
@@ -643,7 +643,7 @@ declare module '@tanstack/react-router' {
     '/dashboard/transactions/': {
       id: '/dashboard/transactions/'
       path: '/transactions'
-      fullPath: '/dashboard/transactions'
+      fullPath: '/dashboard/transactions/'
       preLoaderRoute: typeof DashboardTransactionsIndexRouteImport
       parentRoute: typeof DashboardRoute
     }

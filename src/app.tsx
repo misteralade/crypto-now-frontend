@@ -11,7 +11,11 @@ import { routeTree } from "./routeTree.gen";
 import { persistor, store } from "./store.ts";
 import { PersistGate } from "redux-persist/integration/react";
 
-const router = createRouter({ routeTree });
+const router = createRouter({
+  routeTree,
+  defaultPreload: "intent",
+  defaultPreloadStaleTime: 30000,
+});
 
 declare module "@tanstack/react-router" {
   interface Register {

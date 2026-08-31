@@ -6,6 +6,7 @@ import { useUserQuery } from "../queries/user.query.ts";
 import { useNotificationQuery } from "../queries/notification.query.ts";
 import { clearUserSessionStorage } from "../util/tradeProgress.storage.util.ts";
 import Logo from "../assets/logo/logo.svg";
+import PageTransition from "../components/global/PageTransition.tsx";
 
 interface AuthenticatedLayoutProps {
   children: ReactNode;
@@ -75,7 +76,7 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
 
         {/* logo */}
         <div className="px-6 py-5" style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-          <Link to={ROUTES.HOMEPAGE}>
+          <Link to={ROUTES.HOMEPAGE} preload="intent">
             <img src={Logo} alt="CryptoNow" className="h-7 w-auto brightness-0 invert" />
           </Link>
         </div>
@@ -85,8 +86,8 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
           {sidebarNav.map(({ to, label, icon: Icon, exact }) => {
             const active = isActive(to, exact);
             return (
-              <Link key={to} to={to}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all"
+              <Link key={to} to={to} preload="intent"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-[0.98]"
                 style={{
                   background: active ? "rgba(148,142,238,0.18)" : "transparent",
                   color: active ? "#C8C5F8" : "rgba(255,255,255,0.5)",
@@ -113,7 +114,7 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
             </div>
           </div>
           <button onClick={handleLogout}
-            className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-sm transition-all"
+            className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-sm transition-all active:scale-[0.98]"
             style={{ color: "rgba(255,255,255,0.45)" }}
             onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = "#EB5757"; (e.currentTarget as HTMLButtonElement).style.background = "rgba(235,87,87,0.08)"; }}
             onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.45)"; (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
@@ -137,7 +138,7 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
                 type="button"
                 onClick={() => navigate({ to: ROUTES.NOTIFICATIONS })}
                 aria-label="View notifications"
-                className="relative w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-gray-50"
+                className="relative w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-gray-50 active:scale-[0.96]"
                 style={{ background: "#F7F7F9" }}
               >
                 <Bell size={16} style={{ color: "#0E0F0C" }} />
@@ -149,8 +150,8 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
                 ) : null}
               </button>
 
-              <Link to={ROUTES.PROFILE}>
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white transition-opacity hover:opacity-90"
+              <Link to={ROUTES.PROFILE} preload="intent">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white transition-opacity hover:opacity-90 active:scale-[0.96]"
                   style={{ background: "linear-gradient(135deg,#948EEE,#575AE5)" }}>
                   {initials}
                 </div>
@@ -161,13 +162,12 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
       </div>
 
       {/* ══════════════════════════════════════
-          CONTENT — rendered exactly once. Responsive
-          classes swap the desktop sidebar offset / padding
-          vs. the mobile bottom-nav clearance via CSS only,
-          so the trade flow never double-mounts.
+          CONTENT — rendered exactly once wrapped in PageTransition.
       ══════════════════════════════════════ */}
-      <main className="pb-[72px] lg:pb-8 lg:pl-[272px] lg:pt-8 lg:pr-8">
-        {children}
+      <main className="pb-[72px] lg:pb-8 lg:pl-[272px] lg:pt-8 lg:pr-8 overflow-hidden">
+        <PageTransition>
+          {children}
+        </PageTransition>
       </main>
 
       {/* ══════════════════════════════════════
@@ -183,8 +183,8 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
         {mobileTabs.map(({ to, label, icon: Icon, exact }) => {
           const active = isActive(to, exact);
           return (
-            <Link key={to} to={to}
-              className="flex-1 flex flex-col items-center justify-center gap-0.5"
+            <Link key={to} to={to} preload="intent"
+              className="flex-1 flex flex-col items-center justify-center gap-0.5 active:scale-[0.95] transition-transform"
               style={{ color: active ? "#948EEE" : "#BDBDBD" }}>
               <Icon size={21} strokeWidth={active ? 2.2 : 1.7} />
               <span className="text-[10px] font-semibold tracking-wide">{label}</span>

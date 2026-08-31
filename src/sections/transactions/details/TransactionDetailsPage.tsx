@@ -193,7 +193,7 @@ const TransactionDetailsPage = () => {
                       navigate({ to: ROUTES.TRANSACTION });
                     }
                   }}
-                  className="w-10 h-10 rounded-2xl flex items-center justify-center transition-colors"
+                  className="w-10 h-10 rounded-2xl flex items-center justify-center transition-all active:scale-[0.94]"
                   style={{
                     background: "#F7F7F9",
                     border: "1px solid #EEEEEE",
