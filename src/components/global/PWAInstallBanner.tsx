@@ -177,11 +177,14 @@ const PWAInstallBanner: React.FC<PWAInstallBannerProps> = ({ canShow = true }) =
             <div className="p-4 pr-10">
               {/* Header */}
               <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-black/10 flex items-center justify-center">
+                <div
+                  className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center"
+                  style={{ background: "rgba(148,142,238,0.15)" }}
+                >
                   {isIOS ? (
-                    <Smartphone size={20} strokeWidth={1.5} className="text-black" />
+                    <Smartphone size={20} strokeWidth={1.5} style={{ color: "#948EEE" }} />
                   ) : (
-                    <Download size={20} strokeWidth={1.5} className="text-black" />
+                    <Download size={20} strokeWidth={1.5} style={{ color: "#948EEE" }} />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -206,7 +209,10 @@ const PWAInstallBanner: React.FC<PWAInstallBannerProps> = ({ canShow = true }) =
                   >
                     <div className="mt-3 rounded-lg bg-gray-50 border border-gray-100 p-3 space-y-2.5">
                       <div className="flex items-start gap-2.5">
-                        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-black text-white text-[10px] font-bold flex items-center justify-center">
+                        <span
+                          className="flex-shrink-0 w-5 h-5 rounded-full text-white text-[10px] font-bold flex items-center justify-center"
+                          style={{ background: "#948EEE" }}
+                        >
                           1
                         </span>
                         <p className="text-xs text-gray-700 leading-relaxed">
@@ -221,7 +227,8 @@ const PWAInstallBanner: React.FC<PWAInstallBannerProps> = ({ canShow = true }) =
                               strokeWidth="2"
                               strokeLinecap="round"
                               strokeLinejoin="round"
-                              className="text-black inline mx-0.5"
+                              className="inline mx-0.5"
+                              style={{ color: "#948EEE" }}
                             >
                               <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
                               <polyline points="16 6 12 2 8 6" />
@@ -233,7 +240,10 @@ const PWAInstallBanner: React.FC<PWAInstallBannerProps> = ({ canShow = true }) =
                         </p>
                       </div>
                       <div className="flex items-start gap-2.5">
-                        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-black text-white text-[10px] font-bold flex items-center justify-center">
+                        <span
+                          className="flex-shrink-0 w-5 h-5 rounded-full text-white text-[10px] font-bold flex items-center justify-center"
+                          style={{ background: "#948EEE" }}
+                        >
                           2
                         </span>
                         <p className="text-xs text-gray-700 leading-relaxed">
@@ -242,7 +252,10 @@ const PWAInstallBanner: React.FC<PWAInstallBannerProps> = ({ canShow = true }) =
                         </p>
                       </div>
                       <div className="flex items-start gap-2.5">
-                        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-black text-white text-[10px] font-bold flex items-center justify-center">
+                        <span
+                          className="flex-shrink-0 w-5 h-5 rounded-full text-white text-[10px] font-bold flex items-center justify-center"
+                          style={{ background: "#948EEE" }}
+                        >
                           3
                         </span>
                         <p className="text-xs text-gray-700 leading-relaxed">
@@ -260,7 +273,8 @@ const PWAInstallBanner: React.FC<PWAInstallBannerProps> = ({ canShow = true }) =
                   // iOS: Show/hide instructions
                   <button
                     onClick={handleShowIOSGuide}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-black text-white text-xs font-medium rounded-lg hover:bg-black/90 transition-colors"
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-white text-xs font-medium rounded-lg hover:opacity-90 transition-opacity"
+                    style={{ background: "#948EEE" }}
                   >
                     {showIOSGuide ? (
                       <Info size={14} strokeWidth={1.5} />
@@ -274,7 +288,8 @@ const PWAInstallBanner: React.FC<PWAInstallBannerProps> = ({ canShow = true }) =
                   <button
                     onClick={handleInstallChrome}
                     disabled={!isInstallable}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-black text-white text-xs font-medium rounded-lg hover:bg-black/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-white text-xs font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ background: "#948EEE" }}
                   >
                     <Download size={14} strokeWidth={1.5} />
                     Install Now
