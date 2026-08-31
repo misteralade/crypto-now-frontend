@@ -8,15 +8,22 @@ interface PageTransitionProps {
 
 export default function PageTransition({ children }: PageTransitionProps) {
   const location = useLocation();
+  // Key only by the top-level section (e.g. "dashboard", "profile") so
+  // switching tabs still replays the enter animation once, but navigating
+  // within a section (deeper routes, ?section= changes, etc.) doesn't
+  // unmount/remount the subtree — that was discarding React Query's cached
+  // instant-render and re-triggering the fade/offset on every sub-navigation,
+  // which is what read as "glitter".
+  const topLevelSection = location.pathname.split("/")[1] || "root";
 
   return (
     <motion.div
-      key={location.pathname}
-      initial={{ opacity: 0, scale: 0.992 }}
-      animate={{ opacity: 1, scale: 1 }}
+      key={topLevelSection}
+      initial={{ opacity: 0.35, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{
-        duration: 0.14,
-        ease: [0.22, 1, 0.36, 1],
+        duration: 0.2,
+        ease: [0.16, 1, 0.3, 1],
       }}
       style={{ willChange: "transform, opacity" }}
       className="w-full h-full"
