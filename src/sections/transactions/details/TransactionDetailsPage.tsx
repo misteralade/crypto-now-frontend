@@ -426,6 +426,17 @@ const TransactionDetailsPage = () => {
                   value={getExchangeRateDisplay()}
                 />
                 <InfoRow label="Type" value={isBuy ? "Buy" : "Sell"} align="right" />
+                {/* BUY transactions don't have a userCryptoWallet (that's SELL-only,
+                    rendered below in the "Your Crypto Wallet" card) — the network
+                    the crypto is released on lives on adminCryptoWallet instead, and
+                    nothing showed it, so BUY transactions displayed no network at all. */}
+                {isBuy && !transaction.userCryptoWallet && transaction.adminCryptoWallet?.network && (
+                  <InfoRow
+                    label="Network"
+                    value={transaction.adminCryptoWallet.network}
+                    align="right"
+                  />
+                )}
               </div>
             </Card>
 
@@ -576,30 +587,15 @@ const TransactionDetailsPage = () => {
               </div>
             </Card>
 
-            {/* ── Reference IDs ── */}
+            {/* ── Reference ── */}
             <Card>
-              <CardTitle>Reference IDs</CardTitle>
+              <CardTitle>Reference</CardTitle>
               <div className="space-y-3">
                 <CopyRow
                   label="Session ID"
                   value={transaction.sessionId}
                   field="session"
                   mono
-                />
-                <CopyRow
-                  label="Transaction ID"
-                  value={transaction.id}
-                  field="transaction"
-                  mono
-                />
-                <CopyRow
-                  label="User Email"
-                  value={
-                    (transaction?.user
-                      ? transaction.user.email
-                      : (transaction as any).email) || ""
-                  }
-                  field="email"
                 />
               </div>
             </Card>

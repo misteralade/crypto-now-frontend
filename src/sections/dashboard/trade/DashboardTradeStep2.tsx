@@ -29,9 +29,8 @@ import { SESSION_STORAGE_KEYS } from "../../../util/constants.util.ts";
 import type { BuyRateInfo } from "./DashboardTradeStep1.tsx";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../../store.ts";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "../../../queries/query.keys.ts";
-import { bankServiceApi } from "../../../api/bank.api.ts";
 import { transactionServiceApi } from "../../../api/transaction.api.ts";
 import { useTransactionQuery } from "../../../queries/transaction.query.ts";
 import { isExchangeRateExpiryError } from "../../../util/index.util.ts";
@@ -355,7 +354,7 @@ function TradeMonitoringView({
           className="rounded-xl p-3"
           style={{ background: "white", border: "1.5px solid #E8E8E8" }}
         >
-          <SummaryRow label="Network" value={walletNetwork || "Loading..."} />
+          <SummaryRow label="Network" value={walletNetwork || "—"} />
           {showExpectedNgnRow && (
             <SummaryRow label="Expected NGN" value={`₦${amountToBuy!.toLocaleString()}`} />
           )}
@@ -374,7 +373,7 @@ function TradeMonitoringView({
               {walletNetwork ? ` (${walletNetwork})` : ""}
             </p>
             <p className="text-sm font-mono text-[#22c55e] break-all leading-relaxed">
-              {walletAddress || "Loading deposit address..."}
+              {walletAddress || "—"}
             </p>
             <button
               onClick={() =>
@@ -622,12 +621,12 @@ export default function DashboardTradeStep2({
   // should only see the verifying view.
   const receiptAlreadySubmitted =
     isBuy && !!txStatus && txStatus !== "AWAITING_PAYMENT";
+  // amountFiat can be USD-denominated (display-currency choice), never NGN
+  // settlement — only amountFiatNGN is safe to show as "Expected NGN".
   const sellTxAmountFiat =
     txData?.amountFiatNGN && Number(txData.amountFiatNGN) > 0
       ? Number(txData.amountFiatNGN)
-      : txData?.amountFiat && Number(txData.amountFiat) > 0
-        ? Number(txData.amountFiat)
-        : amountToBuy;
+      : amountToBuy;
   const sellNetworkLabel =
     txData?.walletNetwork ??
     txData?.userCryptoWallet?.network ??
@@ -664,22 +663,13 @@ export default function DashboardTradeStep2({
   }, [txStatus, onBuySubmitSuccess, queryClient]);
 
   const userEmail = useSelector((s: RootState) => s.user.trade.anonymous.email);
+  // buyRateInfo is transient parent (Step 1) component state — it does NOT
+  // survive a back-navigation/remount, so it must never gate which bank-details
+  // fetch/loading-state is trusted (that previously caused a permanent "Loading…"
+  // label with no spinner after navigating back into this screen). It's only
+  // used below for the local-first rate/amount display, which correctly falls
+  // back to the non-local values when it's absent.
   const isLocalBuyFlow = isBuy && !!buyRateInfo;
-
-  // For local-first BUY flow: fetch bank details directly
-  const {
-    data: localBankDetails,
-    isLoading: localBankDetailsLoading,
-    isError: localBankDetailsError,
-    refetch: refetchLocalBankDetails,
-  } = useQuery({
-    queryKey: [QUERY_KEYS.BANK.PLATFORM_BANK_DETAILS, "local-buy"],
-    queryFn: async () => {
-      const { data } = await bankServiceApi.getPlatformBankDetails();
-      return data;
-    },
-    enabled: isLocalBuyFlow,
-  });
 
   const {
     setUploadedFileUrl,
@@ -712,10 +702,7 @@ export default function DashboardTradeStep2({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [receiptAlreadySubmitted]);
 
-  // Merge bank details: prefer local fetch for local-first BUY flow
-  const bankDetails = isLocalBuyFlow
-    ? localBankDetails ?? hookBankDetails
-    : hookBankDetails;
+  const bankDetails = hookBankDetails;
 
   // Bank details
   const bankName = bankDetails?.bankName ?? "";
@@ -836,21 +823,15 @@ export default function DashboardTradeStep2({
    * details are irrelevant at that point (skipPaymentDetails keeps the query
    * disabled), so don't treat their absence as an error/missing state.
    */
-  const effectiveBuyLoading =
-    !receiptAlreadySubmitted &&
-    (isLocalBuyFlow ? localBankDetailsLoading : paymentDetailsLoading);
-  const effectiveBuyError =
-    !receiptAlreadySubmitted &&
-    (isLocalBuyFlow ? localBankDetailsError : !!paymentDetailsError);
+  const effectiveBuyLoading = !receiptAlreadySubmitted && paymentDetailsLoading;
+  const effectiveBuyError = !receiptAlreadySubmitted && !!paymentDetailsError;
   const effectiveBuyMissingDetails =
     !receiptAlreadySubmitted &&
     !effectiveBuyLoading &&
     !effectiveBuyError &&
     !bankName &&
     !accountNumber;
-  const retryBankDetails = isLocalBuyFlow
-    ? refetchLocalBankDetails
-    : refetchPaymentDetails;
+  const retryBankDetails = refetchPaymentDetails;
 
   if (effectiveBuyLoading && isBuy) {
     return (
@@ -1081,7 +1062,7 @@ export default function DashboardTradeStep2({
               className="text-xs font-semibold mb-0.5"
               style={{ color: "#5B5EA6" }}
             >
-              {bankName || "Loading…"}
+              {bankName || "—"}
             </p>
             <p
               className="text-3xl font-black font-mono"
