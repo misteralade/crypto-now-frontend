@@ -34,6 +34,28 @@ export const useTransactionQuery = () => {
     });
   };
 
+  // A submitted transaction (new BUY receipt, or a payment marked as paid) should
+  // show up immediately in the Transactions page, the dashboard's Recent Orders
+  // widget, and the Total/Bought/Sold stat cards — none of that happened before,
+  // so the newly created transaction was invisible until an unrelated refetch
+  // (page reload, the 10s notification poll, etc.) happened to catch it.
+  const refreshTransactionData = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.TRANSACTION.USER_SEARCH_TRANSACTION_HISTORY],
+      }),
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.TRANSACTION.USER_RECENT_TRANSACTIONS],
+      }),
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.TRANSACTION.USER_TRANSACTION_SUMMARY],
+      }),
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.TRANSACTION.USER_INCOMPLETE_TRANSACTIONS_COUNT],
+      }),
+    ]);
+  };
+
   const {
     data: userTransactionHistory,
     isLoading: loadingUserTransactionHistory,
@@ -248,6 +270,9 @@ export const useTransactionQuery = () => {
         coinId: transactionForm?.tokenId,
       });
     },
+    onSuccess: async () => {
+      await refreshTransactionData();
+    },
     onError: ( error: AxiosServerError ) => {
       toast.dismiss();
       if (isExchangeRateExpiryError(error)) {
@@ -322,6 +347,9 @@ export const useTransactionQuery = () => {
             "status",
           ],
         }),
+        // A recheck can complete the SELL, so refresh the list/summary too —
+        // not just this transaction's own detail view.
+        refreshTransactionData(),
       ]);
     },
     onError: (error: AxiosServerError) => {
@@ -361,11 +389,12 @@ export const useTransactionQuery = () => {
         accountId,
       });
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.dismiss('confirm-receiving-account');
       toast.success('Successfully confirmed receiving account');
       // Note: clearTradeProgress and step reset are handled in handleConfirmBankDetails
       sessionStorage.removeItem(SESSION_STORAGE_KEYS.SESSION_ID);
+      await refreshTransactionData();
     },
     onError: ( error: AxiosServerError ) => {
       toast.dismiss('confirm-receiving-account');
@@ -373,7 +402,7 @@ export const useTransactionQuery = () => {
       toast.error(message);
     },
   });
-  
+
   const disputeTransactionInitiationMutation = useMutation({
     mutationKey: [QUERY_KEYS.DISPUTE.INITIATE_DISPUTE_TRANSACTION],
     mutationFn: async () => {
@@ -464,13 +493,14 @@ export const useTransactionQuery = () => {
       }
       return await transactionServiceApi.createAndSubmitTransaction(payload);
     },
-    onSuccess: ({ data, message }) => {
+    onSuccess: async ({ data, message }) => {
       toast.dismiss(QUERY_KEYS.TRANSACTION.CREATE_AND_SUBMIT_TRANSACTION);
       console.info("[trade] submitted transaction", {
         sessionId: data?.sessionId,
       });
       sessionStorage.setItem(SESSION_STORAGE_KEYS.SESSION_ID, data?.sessionId as string);
       toast.success(message);
+      await refreshTransactionData();
     },
     onError: (error: AxiosServerError) => {
       toast.dismiss(QUERY_KEYS.TRANSACTION.CREATE_AND_SUBMIT_TRANSACTION);

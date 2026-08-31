@@ -780,6 +780,23 @@ export default function DashboardTradeStep2({
         setTransactionSessionId(result.data.sessionId);
       }
       toast.success(result?.message ?? "Transaction submitted!");
+      // Refresh Transaction History, Recent Orders, and the summary stat cards
+      // so the newly submitted transaction shows up immediately instead of
+      // waiting for an unrelated refetch elsewhere.
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.TRANSACTION.USER_SEARCH_TRANSACTION_HISTORY],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.TRANSACTION.USER_RECENT_TRANSACTIONS],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.TRANSACTION.USER_TRANSACTION_SUMMARY],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.TRANSACTION.USER_INCOMPLETE_TRANSACTIONS_COUNT],
+        }),
+      ]);
       // We don't call onBuySubmitSuccess() here anymore.
       // The polling effect will take us to Step 4 when status is COMPLETED.
     } catch (err: unknown) {

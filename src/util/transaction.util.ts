@@ -1,6 +1,24 @@
 // Status categories for semantic grouping
 import type { TransactionStatus } from "../types/request.payload.types.ts";
 
+/**
+ * `amountFiat` is stored in the transaction's settlement `currency`, which is
+ * USD for stablecoin trades — not always NGN. Anywhere the amount is shown
+ * with a ₦ symbol must convert through `stableToFiatRate` first.
+ */
+export function getTransactionAmountFiatNGN(tx: {
+  amountFiat: string | number;
+  currency: string;
+  stableToFiatRate: string | number;
+}): number {
+  const amountFiat = Number(tx.amountFiat ?? 0);
+  const stableToFiatRate = Number(tx.stableToFiatRate ?? 0);
+  if (tx.currency === "NGN") return amountFiat;
+  if (tx.currency === "USD" && stableToFiatRate > 0)
+    return amountFiat * stableToFiatRate;
+  return amountFiat;
+}
+
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-expect-error
 export enum StatusCategory {

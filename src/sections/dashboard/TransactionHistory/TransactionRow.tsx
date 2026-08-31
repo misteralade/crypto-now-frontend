@@ -1,6 +1,6 @@
 import type { TransactionResponseEntity } from "../../../types/response.payload.types.ts";
 import momentClient from "../../../lib/moment.ts";
-import { getStatusColors, getStatusDisplayName } from "../../../util/transaction.util.ts";
+import { getStatusColors, getStatusDisplayName, getTransactionAmountFiatNGN } from "../../../util/transaction.util.ts";
 import { useNavigate } from "@tanstack/react-router";
 import { ROUTES } from "../../../util/constants.util.ts";
 import { formatCompact } from "../../../util/asset-precision.ts";
@@ -34,7 +34,7 @@ const TransactionRow = ({ transaction: tx, isLast, isMobileCard = false }: Trans
     ["INITIATED", "AWAITING_CRYPTO", "AWAITING_PAYMENT"].includes(tx.status) &&
     momentClient.isWithinDuration(tx.createdAt, 1, "hour");
   const canDispute = tx.status === "DISPUTED";
-  const fiatAmt = formatCompact(Number(tx.amountFiat), "NGN", 0);
+  const fiatAmt = formatCompact(getTransactionAmountFiatNGN(tx), "NGN", 0);
   const statusColors = getStatusColors(tx.status);
 
   const handleView     = () => navigate({ to: `${ROUTES.TRANSACTION}/${tx.sessionId}` });

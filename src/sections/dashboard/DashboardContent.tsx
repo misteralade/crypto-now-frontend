@@ -27,7 +27,7 @@ import type {
 } from "../../types/response.payload.types.ts";
 import { formatCurrency } from "../../util/index.util.ts";
 import { formatCompact } from "../../util/asset-precision.ts";
-import { getStatusDisplayName } from "../../util/transaction.util.ts";
+import { getStatusDisplayName, getTransactionAmountFiatNGN } from "../../util/transaction.util.ts";
 import momentClient from "../../lib/moment.ts";
 import { ROUTES } from "../../util/constants.util.ts";
 
@@ -151,7 +151,7 @@ function RecentOrderRow({ tx }: { tx: TransactionResponseEntity }) {
           className="text-sm font-bold leading-snug"
           style={{ color: isBuy ? "#037847" : "#0E0F0C" }}
         >
-          ₦{formatCompact(Number(tx.amountFiat), "NGN", 0)}
+          ₦{formatCompact(getTransactionAmountFiatNGN(tx), "NGN", 0)}
         </p>
         <span
           className="inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded-full mt-0.5"
