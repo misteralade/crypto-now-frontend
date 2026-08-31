@@ -4,6 +4,7 @@ import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { ToastContainer } from "react-toastify";
 import { Provider } from "react-redux";
 import QueryClientProviderWrapper from "../src/queries/ReactQuery.tsx";
+import PWAInstallBanner from "./components/global/PWAInstallBanner.tsx";
 import "./index.css";
 import "./assets/css/colors.css";
 
@@ -43,6 +44,7 @@ if (!rootElement.innerHTML) {
               pauseOnHover
               theme="light"
             />
+            <PWAInstallBanner />
             <RouterProvider router={router} />
           </QueryClientProviderWrapper>
         </PersistGate>

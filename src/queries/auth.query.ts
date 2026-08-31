@@ -22,10 +22,9 @@ export const useAuthQuery = () => {
     },
     onSuccess: ({ success, message }) => {
       toast.dismiss();
-      toast.success("Login successfully.");
       setLoggingInLoading(false);
       if (success) {
-        toast.success(message);
+        toast.success(message || "Login successfully.");
         setTimeout(() => {
           window.location.href = ROUTES.DASHBOARD;
         }, 3000);

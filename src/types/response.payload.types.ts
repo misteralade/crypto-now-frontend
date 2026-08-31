@@ -478,10 +478,28 @@ export type TotalTransactionSummaryEntity = {
   usdReceivedFromSelling: string;
 };
 
+/**
+ * A single grand-total row across ALL of the user's cryptocurrencies —
+ * unlike TotalTransactionSummaryEntity, which is one row per crypto. Not
+ * pre-filtered to COMPLETED: breaks completed/terminally-failed/pending out
+ * so a genuine success rate can be computed.
+ */
+export type OverallTransactionTotalsEntity = {
+  transactionCount: string;
+  buyCount: string;
+  sellCount: string;
+  completedCount: string;
+  terminallyFailedCount: string;
+  pendingCount: string;
+  totalFiatAmount: string;
+};
+
 export type TransactionSummaryResponse = {
   summary: TransactionSummaryResponseEntity[];
   total: TotalTransactionSummaryEntity[];
   thisMonth: TotalTransactionSummaryEntity[];
+  overallTotals: OverallTransactionTotalsEntity;
+  overallTotalsThisMonth: OverallTransactionTotalsEntity;
 };
 // End Transactions
 

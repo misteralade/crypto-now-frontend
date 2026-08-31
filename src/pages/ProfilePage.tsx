@@ -106,14 +106,30 @@ const ProfilePage = () => {
     ? `${userProfileData.profile.firstName} ${userProfileData.profile.lastName ?? ""}`.trim()
     : "";
 
-  const totalFiat    = transactionSummary?.total?.[0] ? Number(transactionSummary.total[0].totalFiatAmount)    : 0;
-  const thisMonthFiat= transactionSummary?.thisMonth?.[0] ? Number(transactionSummary.thisMonth[0].totalFiatAmount) : 0;
-  const totalOrders  = transactionSummary?.total?.[0] ? transactionSummary.total[0].transactionCount           : "0";
-  const buyCount     = transactionSummary?.total?.[0] ? transactionSummary.total[0].buyCount                   : "0";
-  const sellCount    = transactionSummary?.total?.[0] ? transactionSummary.total[0].sellCount                  : "0";
-  const successRate  = transactionSummary?.total?.[0]
-    ? Math.round((Number(transactionSummary.total[0].buyCount) + Number(transactionSummary.total[0].sellCount)) /
-        Math.max(Number(transactionSummary.total[0].transactionCount), 1) * 100)
+  // overallTotals/overallTotalsThisMonth are true grand totals across every
+  // cryptocurrency the user has traded — total/thisMonth are grouped one row
+  // per crypto, so reading only their [0] row silently undercounted anyone
+  // who traded more than one coin.
+  const overallTotals = transactionSummary?.overallTotals;
+  const overallTotalsThisMonth = transactionSummary?.overallTotalsThisMonth;
+
+  const totalFiat     = overallTotals ? Number(overallTotals.totalFiatAmount) : 0;
+  const thisMonthFiat = overallTotalsThisMonth ? Number(overallTotalsThisMonth.totalFiatAmount) : 0;
+  const totalOrders   = overallTotals ? overallTotals.transactionCount : "0";
+  const buyCount      = overallTotals ? overallTotals.buyCount : "0";
+  const sellCount     = overallTotals ? overallTotals.sellCount : "0";
+  const completedCount = overallTotals ? Number(overallTotals.completedCount) : 0;
+  const pendingCount   = overallTotals ? Number(overallTotals.pendingCount) : 0;
+  // Success rate = completed / (completed + terminally failed) — pending/in-flight
+  // transactions haven't reached a final outcome yet, so they're excluded from
+  // both sides rather than counted against the rate.
+  const successRate = overallTotals
+    ? (() => {
+        const completed = Number(overallTotals.completedCount);
+        const terminallyFailed = Number(overallTotals.terminallyFailedCount);
+        const decided = completed + terminallyFailed;
+        return decided > 0 ? Math.round((completed / decided) * 100) : 100;
+      })()
     : 0;
 
   const handleLogout = () => {
@@ -193,7 +209,7 @@ const ProfilePage = () => {
                   <StatCard
                     label="Success Rate"
                     value={`${successRate}%`}
-                    sub={`${buyCount} of ${totalOrders} done`}
+                    sub={`${completedCount} completed · ${pendingCount} pending`}
                     loading={loading}
                   />
                 </div>
