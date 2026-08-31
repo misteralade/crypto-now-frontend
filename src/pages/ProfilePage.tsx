@@ -1,5 +1,5 @@
 import { Fragment, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { ChevronRight, ArrowLeft, Plus } from "lucide-react";
 import { useProfilePage } from "../hooks/pages/useProfilePage.ts";
 import ProfilePersonalInfoSection from "../components/pages/profile/ProfilePersonalInfoSection.tsx";
@@ -128,17 +128,14 @@ const ProfilePage = () => {
     <>
       <div style={{ background: "#FFFFFF", minHeight: "100dvh" }}>
 
-        <AnimatePresence mode="wait">
-
-          {/* ════════ MENU HOME ════════ */}
-          {activeSection === null && (
-            <motion.div
-              key="home"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.2 }}
-            >
+        {/* ════════ MENU HOME ════════ */}
+        {activeSection === null && (
+          <motion.div
+            key="home"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.14 }}
+          >
               {/* ── Avatar + name + badges ── */}
               <div className="flex flex-col items-center pt-10 pb-6 px-5 w-full lg:max-w-3xl lg:mx-auto">
                 {loadingUserProfile ? (
@@ -264,10 +261,9 @@ const ProfilePage = () => {
           {activeSection !== null && (
             <motion.div
               key={activeSection}
-              initial={{ opacity: 0, x: 24 }}
+              initial={{ opacity: 0, x: 16 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 24 }}
-              transition={{ duration: 0.22 }}
+              transition={{ duration: 0.16 }}
               className={`px-5 pb-10 w-full ${activeSection === 'bank' ? 'lg:max-w-2xl' : 'lg:max-w-3xl'}`}
             >
               {/* Back header */}
@@ -282,7 +278,7 @@ const ProfilePage = () => {
                         setActiveSection(null);
                       }
                     }}
-                    className="w-9 h-9 rounded-full flex items-center justify-center transition-colors hover:bg-gray-100"
+                    className="w-9 h-9 rounded-full flex items-center justify-center transition-colors hover:bg-gray-100 active:scale-95"
                     style={{ border: "1px solid #F0F0F0" }}
                   >
                     <ArrowLeft size={16} style={{ color: "#0E0F0C" }} />
@@ -366,8 +362,6 @@ const ProfilePage = () => {
               )}
             </motion.div>
           )}
-
-        </AnimatePresence>
       </div>
 
       <NewBankAccountModal
