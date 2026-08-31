@@ -79,7 +79,44 @@ export const useTransactionQuery = () => {
     staleTime: TIME_IN_MILLISECONDS.ONE_HUNDRED_TWENTY_SECONDS,
     retry: 1,
   });
-  
+
+  // BOUGHT/SOLD stat pills on the Transaction History page — scoped to the
+  // SAME filter payload as the search-history query above (minus page/size,
+  // which don't affect the totals, so they're excluded from the query key to
+  // avoid an extra refetch on "View more"), so the pills move with the
+  // active tab/filter instead of always showing unfiltered lifetime totals.
+  const filteredSummaryPayload = searchTransactionPayload
+    ? JSON.stringify(
+        Object.fromEntries(
+          Object.entries(searchTransactionPayload).filter(
+            ([key]) => key !== "page" && key !== "size",
+          ),
+        ),
+      )
+    : "";
+  const {
+    data: filteredTransactionSummary,
+    isLoading: loadingFilteredTransactionSummary,
+  } = useQuery({
+    queryKey: [QUERY_KEYS.TRANSACTION.USER_FILTERED_TRANSACTION_SUMMARY, filteredSummaryPayload],
+    queryFn: async () => {
+      if (!searchTransactionPayload) {
+        return;
+      }
+
+      const { data, success } = await transactionServiceApi.getFilteredUserTransactionSummary(searchTransactionPayload);
+
+      if (success) {
+        return data;
+      }
+
+      return null;
+    },
+    enabled: !!searchTransactionPayload && isDashboardShell,
+    staleTime: TIME_IN_MILLISECONDS.ONE_HUNDRED_TWENTY_SECONDS,
+    retry: 1,
+  });
+
   // Return Transaction Summary
   const { data: transactionSummary, isLoading: loadingTransactionSummary } = useQuery({
     queryKey: [QUERY_KEYS.TRANSACTION.USER_TRANSACTION_SUMMARY],
@@ -567,6 +604,8 @@ export const useTransactionQuery = () => {
     userTransactionHistory,
     loadingUserTransactionHistory,
     fetchingUserTransactionHistory,
+    filteredTransactionSummary,
+    loadingFilteredTransactionSummary,
     transactionSummary,
     loadingTransactionSummary,
     incompleteTransactionsCount,

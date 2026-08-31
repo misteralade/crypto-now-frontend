@@ -13,6 +13,7 @@ import { useState, useEffect, type ReactNode } from "react";
 import { Copy, Check, ArrowLeft, ArrowRight, Upload, Search, Radio, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-toastify";
+import { useNavigate } from "@tanstack/react-router";
 import ManualDepositRecheckAction from "../../../components/global/ManualDepositRecheckAction.tsx";
 import type {
   SupportedCryptoOrCurrencyResponse,
@@ -25,7 +26,7 @@ import type {
 } from "../../../types/trade.types.ts";
 import { useTradeStepTwo } from "../../../hooks/components/trade/useTradeStepTwo.ts";
 import TradePaymentUpload from "../../trade-crypto/TradePaymentUpload.tsx";
-import { SESSION_STORAGE_KEYS } from "../../../util/constants.util.ts";
+import { ROUTES, SESSION_STORAGE_KEYS } from "../../../util/constants.util.ts";
 import type { BuyRateInfo } from "./DashboardTradeStep1.tsx";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../../store.ts";
@@ -612,15 +613,22 @@ export default function DashboardTradeStep2({
   setTransactionSessionId,
 }: DashboardTradeStep2Props) {
   const isBuy = tradeType === "buy";
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { useTransactionStatus, manualSellDepositRecheckMutation } = useTransactionQuery();
-  const { data: txData } = useTransactionStatus(transactionRef);
+  const { data: txData, isFetched: txStatusFetched } = useTransactionStatus(transactionRef);
   const txStatus = txData?.status;
   // A receipt was already submitted (txStatus moved past AWAITING_PAYMENT) —
   // the "pay into this account" screen/fetch is no longer relevant, the user
   // should only see the verifying view.
   const receiptAlreadySubmitted =
     isBuy && !!txStatus && txStatus !== "AWAITING_PAYMENT";
+  // On remount (e.g. back-navigating into an in-progress trade), txStatus
+  // starts undefined until this query resolves — during that gap
+  // receiptAlreadySubmitted is falsely false, which used to flash the stale
+  // "Make Payment" screen for an already-submitted (IN_REVIEW) transaction
+  // before snapping to the correct verifying view a moment later.
+  const txStatusStillResolving = isBuy && !!transactionRef && !txStatusFetched;
   // amountFiat can be USD-denominated (display-currency choice), never NGN
   // settlement — only amountFiatNGN is safe to show as "Expected NGN".
   const sellTxAmountFiat =
@@ -701,6 +709,20 @@ export default function DashboardTradeStep2({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [receiptAlreadySubmitted]);
+
+  // There's nothing left to do on this page once the receipt is in review —
+  // intercept the browser/hardware back button while on the verifying view
+  // and send the user to the dashboard instead of letting default history
+  // navigation resurface this stale trade-flow screen (which used to flash
+  // the wrong "Make Payment" state while txStatus was re-resolving).
+  useEffect(() => {
+    if (!receiptAlreadySubmitted) return;
+    const handlePopState = () => {
+      navigate({ to: ROUTES.DASHBOARD, replace: true });
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [receiptAlreadySubmitted, navigate]);
 
   const bankDetails = hookBankDetails;
 
@@ -817,6 +839,25 @@ export default function DashboardTradeStep2({
       setTimeout(() => setCopyToastVisible(false), 2200);
     });
   };
+
+  // While we genuinely don't know yet whether a receipt was already
+  // submitted, show a neutral spinner rather than defaulting to the
+  // "Make Payment" view — receiptAlreadySubmitted only flips true once
+  // txStatus resolves, and rendering the bank/upload view in the meantime
+  // is what caused the stale "Make Payment" flash on back-navigation.
+  if (isBuy && txStatusStillResolving) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 gap-3">
+        <div
+          className="w-10 h-10 rounded-full border-2 border-t-transparent animate-spin"
+          style={{ borderColor: "#948EEE", borderTopColor: "transparent" }}
+        />
+        <p className="text-sm" style={{ color: "#9A9A9A" }}>
+          Loading your transaction…
+        </p>
+      </div>
+    );
+  }
 
   /* ── loading / error ──
    * None of this applies once a receipt is already submitted — bank-payment

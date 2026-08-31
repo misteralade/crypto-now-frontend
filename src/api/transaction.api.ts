@@ -10,6 +10,7 @@ import type {
 } from "../types/request.payload.types.ts";
 import type {
   BaseApiResponse,
+  FilteredTransactionSummaryResponse,
   GetTransactionDetailsAPIResponse,
   InitiateTransactionAPIResponse,
   ManualSellDepositRecheckResponse,
@@ -166,7 +167,16 @@ class TransactionServiceApi {
 
     return { data, message, success };
   }
-  
+
+  // Same filters as searchUserTransactions — BOUGHT/SOLD totals scoped to
+  // whatever status/type/date-range/search is currently applied, so the
+  // Transaction History page's stat pills move with the active filter tab.
+  async getFilteredUserTransactionSummary(payload: SearchTransactionsRequestPayload) {
+    const { data, message, success }: { data: FilteredTransactionSummaryResponse, message: string, success: boolean } = await axiosPostRequestHandler("/transaction/user/search-history/summary", payload);
+
+    return { data, message, success };
+  }
+
   async getUserTransactionSummary() {
     const { data, message, success }: { data: TransactionSummaryResponse, message: string, success: boolean } = await axiosGetRequestHandler("/transaction/user/summary");
 

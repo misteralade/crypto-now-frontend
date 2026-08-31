@@ -501,6 +501,14 @@ export type TransactionSummaryResponse = {
   overallTotals: OverallTransactionTotalsEntity;
   overallTotalsThisMonth: OverallTransactionTotalsEntity;
 };
+
+// BOUGHT/SOLD totals scoped to the same filters as a search-history request —
+// backs the Transaction History page's stat pills.
+export type FilteredTransactionSummaryResponse = {
+  transactionCount: string;
+  fiatSpentOnBuying: string;
+  fiatReceivedFromSelling: string;
+};
 // End Transactions
 
 // Testimonials

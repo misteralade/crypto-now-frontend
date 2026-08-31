@@ -427,13 +427,14 @@ const TransactionDetailsPage = () => {
                 />
                 <InfoRow label="Type" value={isBuy ? "Buy" : "Sell"} align="right" />
                 {/* BUY transactions don't have a userCryptoWallet (that's SELL-only,
-                    rendered below in the "Your Crypto Wallet" card) — the network
-                    the crypto is released on lives on adminCryptoWallet instead, and
-                    nothing showed it, so BUY transactions displayed no network at all. */}
-                {isBuy && !transaction.userCryptoWallet && transaction.adminCryptoWallet?.network && (
+                    rendered below in the "Your Crypto Wallet" card) — the destination
+                    network the user typed in at checkout is stored directly on the
+                    transaction as walletNetwork (free-form, no FK), and nothing
+                    rendered it, so BUY transactions displayed no network at all. */}
+                {isBuy && !transaction.userCryptoWallet && transaction.walletNetwork && (
                   <InfoRow
                     label="Network"
-                    value={transaction.adminCryptoWallet.network}
+                    value={transaction.walletNetwork}
                     align="right"
                   />
                 )}

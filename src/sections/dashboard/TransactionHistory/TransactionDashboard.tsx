@@ -1,12 +1,19 @@
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useTransactionBoard } from "../../../hooks/components/dashboard/useTransactionBoard.ts";
 import type { TransactionResponseEntity } from "../../../types/response.payload.types.ts";
 import type { SearchTransactionsRequestPayload } from "../../../types/request.payload.types.ts";
 import type { RootState } from "../../../store.ts";
+import { setSearchUserTransactions } from "../../../redux/transaction.slice.ts";
 import { TransactionSearch } from "./TranactionSearch.tsx";
 import TransactionTable from "./TranactionTable.tsx";
 import { formatCompact } from "../../../util/asset-precision.ts";
+
+// userSearchTransactionInitialState.size (5) is sized for the dashboard's
+// small "Recent Orders" preview widget, which reuses that same object
+// directly. This page needs a real page size — matches
+// TRANSACTION_HISTORY_PAGE_SIZE in useTransactionBoard.ts.
+const TRANSACTION_HISTORY_PAGE_SIZE = 20;
 
 // Redux search payload without page — changes here mean a new result set (reset accumulated rows).
 function searchPayloadWithoutPageKey(
@@ -29,6 +36,7 @@ const STATUS_TABS: { label: string; value: TabValue }[] = [
 ];
 
 export function TransactionDashboard() {
+  const dispatch = useDispatch();
   const [activeTabIdx, setActiveTabIdx] = useState(0);
   const [accumulatedTransactions, setAccumulatedTransactions] = useState<
     TransactionResponseEntity[]
@@ -48,9 +56,25 @@ export function TransactionDashboard() {
     handleSearchChange,
     handleFiltersChange,
     handleLoadMore,
-    transactionSummary,
-    loadingTransactionSummary,
+    filteredTransactionSummary,
+    loadingFilteredTransactionSummary,
   } = useTransactionBoard();
+
+  // On first load, the Redux search payload may still carry the dashboard
+  // widget's size:5 default (nothing had dispatched a History-page-scoped
+  // size yet) — bump it once up front so the very first fetch already uses
+  // a real page size instead of only 5 rows.
+  useEffect(() => {
+    if (searchPayload?.size !== TRANSACTION_HISTORY_PAGE_SIZE) {
+      dispatch(
+        setSearchUserTransactions({
+          ...searchPayload,
+          size: TRANSACTION_HISTORY_PAGE_SIZE,
+        } as SearchTransactionsRequestPayload),
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // New filters/search → drop merged list so we don't flash stale rows while page 1 refetches.
   useEffect(() => {
@@ -83,13 +107,13 @@ export function TransactionDashboard() {
     handleFiltersChange({ ...filters, status: val.status, type: val.type });
   };
 
-  /* summary stats */
+  /* summary stats — all three scoped to the currently active filter/tab */
   const total = userTransactionHistory?.count ?? 0;
-  const bought = transactionSummary?.total
-    ? transactionSummary.total.reduce((sum, item) => sum + Number(item.fiatSpentOnBuying), 0)
+  const bought = filteredTransactionSummary
+    ? Number(filteredTransactionSummary.fiatSpentOnBuying)
     : 0;
-  const sold = transactionSummary?.total
-    ? transactionSummary.total.reduce((sum, item) => sum + Number(item.fiatReceivedFromSelling), 0)
+  const sold = filteredTransactionSummary
+    ? Number(filteredTransactionSummary.fiatReceivedFromSelling)
     : 0;
 
   return (
@@ -118,8 +142,8 @@ export function TransactionDashboard() {
       >
         {[
           { label: "TOTAL", val: String(total), loading: loadingUserTransactionHistory },
-          { label: "BOUGHT", val: `₦${formatCompact(bought, "NGN", 0)}`, loading: loadingTransactionSummary },
-          { label: "SOLD", val: `₦${formatCompact(sold, "NGN", 0)}`, loading: loadingTransactionSummary },
+          { label: "BOUGHT", val: `₦${formatCompact(bought, "NGN", 0)}`, loading: loadingFilteredTransactionSummary },
+          { label: "SOLD", val: `₦${formatCompact(sold, "NGN", 0)}`, loading: loadingFilteredTransactionSummary },
         ].map(({ label, val, loading }) => (
           <div
             key={label}
