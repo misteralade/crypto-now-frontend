@@ -181,7 +181,7 @@ export function TransactionDashboard() {
 
         {/* Pending — amount still in flight, broken out by BUY/SELL */}
         <div
-          className="flex flex-col items-center justify-center px-5 py-3 rounded-2xl shrink-0"
+          className="flex flex-col items-center justify-center px-4 py-2.5 rounded-2xl shrink-0"
           style={{
             background: "#F7F7F9",
             border: "1px solid #EEEEEE",
@@ -195,13 +195,13 @@ export function TransactionDashboard() {
             PENDING
           </p>
           {loadingTransactionSummary ? (
-            <div className="mt-1 h-8 w-16 rounded animate-pulse bg-gray-200" />
+            <div className="mt-1 h-6 w-14 rounded animate-pulse bg-gray-200" />
           ) : (
-            <div className="mt-0.5 space-y-0.5">
-              <p className="text-[11px] font-semibold" style={{ color: "#0E0F0C" }}>
+            <div className="mt-0.5 space-y-0.5 text-center">
+              <p className="text-[11px] font-semibold whitespace-nowrap" style={{ color: "#0E0F0C" }}>
                 Buy ₦{formatCompact(pendingBuying, "NGN", 0)}
               </p>
-              <p className="text-[11px] font-semibold" style={{ color: "#0E0F0C" }}>
+              <p className="text-[11px] font-semibold whitespace-nowrap" style={{ color: "#0E0F0C" }}>
                 Sell ₦{formatCompact(pendingSelling, "NGN", 0)}
               </p>
             </div>
