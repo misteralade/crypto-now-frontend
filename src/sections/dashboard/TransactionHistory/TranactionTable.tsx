@@ -13,6 +13,7 @@ export interface FilterState {
   cryptocurrency: string | undefined;
   status: string | undefined;
   type: string | undefined;
+  pending?: boolean;
 }
 
 interface TransactionTableProps {

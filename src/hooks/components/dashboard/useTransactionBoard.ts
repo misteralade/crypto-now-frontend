@@ -72,6 +72,7 @@ export const useTransactionBoard = () => {
       size: TRANSACTION_HISTORY_PAGE_SIZE,
       status: (newFilters.status || undefined) as any,
       type: (newFilters.type || undefined) as any,
+      pending: newFilters.pending || undefined,
     };
 
     dispatch(setSearchUserTransactions(updatedPayload));

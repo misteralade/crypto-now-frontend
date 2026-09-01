@@ -25,12 +25,13 @@ function searchPayloadWithoutPageKey(
   return JSON.stringify(rest);
 }
 
-type TabValue = { status?: string; type?: string };
+type TabValue = { status?: string; type?: string; pending?: boolean };
 
 const STATUS_TABS: { label: string; value: TabValue }[] = [
   { label: "All", value: {} },
   { label: "Buys", value: { type: "BUY" } },
   { label: "Sells", value: { type: "SELL" } },
+  { label: "Pending", value: { pending: true } },
   { label: "Completed", value: { status: "COMPLETED" } },
   { label: "Failed", value: { status: "FAILED" } },
 ];
@@ -56,8 +57,8 @@ export function TransactionDashboard() {
     handleSearchChange,
     handleFiltersChange,
     handleLoadMore,
-    filteredTransactionSummary,
-    loadingFilteredTransactionSummary,
+    transactionSummary,
+    loadingTransactionSummary,
   } = useTransactionBoard();
 
   // On first load, the Redux search payload may still carry the dashboard
@@ -104,17 +105,22 @@ export function TransactionDashboard() {
 
   const handleTab = (val: TabValue, idx: number) => {
     setActiveTabIdx(idx);
-    handleFiltersChange({ ...filters, status: val.status, type: val.type });
+    handleFiltersChange({ ...filters, status: val.status, type: val.type, pending: val.pending });
   };
 
-  /* summary stats — all three scoped to the currently active filter/tab */
-  const total = userTransactionHistory?.count ?? 0;
-  const bought = filteredTransactionSummary
-    ? Number(filteredTransactionSummary.fiatSpentOnBuying)
+  // Summary stats are fixed lifetime totals — same numbers as the Dashboard —
+  // and deliberately do NOT move when the Buys/Sells/Completed/Failed tabs
+  // below are used to filter the transaction list. Only the list changes.
+  const overallTotals = transactionSummary?.overallTotals;
+  const total = overallTotals ? Number(overallTotals.transactionCount) : 0;
+  const bought = transactionSummary?.total
+    ? transactionSummary.total.reduce((sum, item) => sum + Number(item.fiatSpentOnBuying || 0), 0)
     : 0;
-  const sold = filteredTransactionSummary
-    ? Number(filteredTransactionSummary.fiatReceivedFromSelling)
+  const sold = transactionSummary?.total
+    ? transactionSummary.total.reduce((sum, item) => sum + Number(item.fiatReceivedFromSelling || 0), 0)
     : 0;
+  const pendingBuying = overallTotals ? Number(overallTotals.pendingFiatBuying) : 0;
+  const pendingSelling = overallTotals ? Number(overallTotals.pendingFiatSelling) : 0;
 
   return (
     <div style={{ background: "#FFFFFF", minHeight: "100dvh" }}>
@@ -135,15 +141,15 @@ export function TransactionDashboard() {
         </p>
       </div>
 
-      {/* ── summary pills ── */}
+      {/* ── summary pills — fixed lifetime totals, independent of the active tab below ── */}
       <div
         className="px-5 lg:px-0 mb-5 flex gap-2.5 overflow-x-auto"
         style={{ scrollbarWidth: "none" }}
       >
         {[
-          { label: "TOTAL", val: String(total), loading: loadingUserTransactionHistory },
-          { label: "BOUGHT", val: `₦${formatCompact(bought, "NGN", 0)}`, loading: loadingFilteredTransactionSummary },
-          { label: "SOLD", val: `₦${formatCompact(sold, "NGN", 0)}`, loading: loadingFilteredTransactionSummary },
+          { label: "TOTAL", val: String(total), loading: loadingTransactionSummary },
+          { label: "BOUGHT", val: `₦${formatCompact(bought, "NGN", 0)}`, loading: loadingTransactionSummary },
+          { label: "SOLD", val: `₦${formatCompact(sold, "NGN", 0)}`, loading: loadingTransactionSummary },
         ].map(({ label, val, loading }) => (
           <div
             key={label}
@@ -172,6 +178,35 @@ export function TransactionDashboard() {
             )}
           </div>
         ))}
+
+        {/* Pending — amount still in flight, broken out by BUY/SELL */}
+        <div
+          className="flex flex-col items-center justify-center px-5 py-3 rounded-2xl shrink-0"
+          style={{
+            background: "#F7F7F9",
+            border: "1px solid #EEEEEE",
+            minWidth: "110px",
+          }}
+        >
+          <p
+            className="text-[10px] font-bold tracking-widest uppercase"
+            style={{ color: "#9A9A9A" }}
+          >
+            PENDING
+          </p>
+          {loadingTransactionSummary ? (
+            <div className="mt-1 h-8 w-16 rounded animate-pulse bg-gray-200" />
+          ) : (
+            <div className="mt-0.5 space-y-0.5">
+              <p className="text-[11px] font-semibold" style={{ color: "#0E0F0C" }}>
+                Buy ₦{formatCompact(pendingBuying, "NGN", 0)}
+              </p>
+              <p className="text-[11px] font-semibold" style={{ color: "#0E0F0C" }}>
+                Sell ₦{formatCompact(pendingSelling, "NGN", 0)}
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ── filter tabs ── */}

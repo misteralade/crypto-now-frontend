@@ -28,6 +28,7 @@ export const userSearchTransactionInitialState: SearchTransactionsRequestPayload
     stableToCryptoRate: undefined,
     currency: undefined,
     status: undefined,
+    pending: undefined,
     priority: undefined,
     userBankAccountId: undefined,
     adminBankAccountId: undefined,

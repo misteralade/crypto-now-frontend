@@ -492,6 +492,8 @@ export type OverallTransactionTotalsEntity = {
   terminallyFailedCount: string;
   pendingCount: string;
   totalFiatAmount: string;
+  pendingFiatBuying: string;
+  pendingFiatSelling: string;
 };
 
 export type TransactionSummaryResponse = {
