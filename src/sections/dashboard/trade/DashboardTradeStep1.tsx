@@ -1143,8 +1143,7 @@ export default function DashboardTradeStep1({
       <div className="grid grid-cols-2 gap-3">
         {availableTokens.map((token) => {
           const selected = selectedToken?.id === token.id;
-          const usdtToken = availableTokens.find((t) => t.symbol.toUpperCase() === "USDT") || token;
-          const rate = isBuy ? usdtToken.buyRate : usdtToken.sellRate;
+          const rate = isBuy ? token.buyRate : token.sellRate;
           const rateLabel = rate
             ? `${isBuy ? "Buy" : "Sell"}: ₦${Number(rate).toLocaleString()}/$`
             : "";
