@@ -175,14 +175,6 @@ const ProfilePage = () => {
                   }
                 </h2>
                 <p className="text-sm mt-0.5" style={{ color: "#9A9A9A" }}>{userProfileData?.email ?? ""}</p>
-
-                {/* Badges */}
-                <div className="flex items-center gap-2 mt-3">
-                  <span className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold"
-                    style={{ background: "#FFFBF0", color: "#A07000" }}>
-                    Non-Custodial
-                  </span>
-                </div>
               </div>
 
               {/* ── 2×2 Stats grid ── */}

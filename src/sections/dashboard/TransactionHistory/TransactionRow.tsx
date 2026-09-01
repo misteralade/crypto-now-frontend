@@ -36,6 +36,7 @@ const TransactionRow = ({ transaction: tx, isLast, isMobileCard = false }: Trans
   const canDispute = tx.status === "DISPUTED";
   const fiatAmt = formatCompact(getTransactionAmountFiatNGN(tx), "NGN", 0);
   const statusColors = getStatusColors(tx.status);
+  const cryptoAmt = Number(tx.amountCrypto).toFixed(4).replace(/\.?0+$/, "");
 
   const handleView     = () => navigate({ to: `${ROUTES.TRANSACTION}/${tx.sessionId}` });
   const handleDispute  = () => tx.dispute?.id && navigate({ to: "/dispute/$id", params: { id: tx.dispute.id } });
@@ -60,11 +61,9 @@ const TransactionRow = ({ transaction: tx, isLast, isMobileCard = false }: Trans
             {/* Middle */}
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold leading-snug" style={{ color: "#0E0F0C" }}>
-                {isBuy ? "Buy" : "Sell"} {tx.cryptocurrency.name}
+                {isBuy ? "Buy" : "Sell"} {cryptoAmt} {tx.cryptocurrency.symbol}
               </p>
               <p className="text-[11px] leading-snug mt-0.5" style={{ color: "#9A9A9A" }}>
-                REF: {tx.sessionId.slice(0, 10).toUpperCase()}
-                {" · "}
                 {momentClient.formatToTransactionInitiationDate(tx.createdAt)}
               </p>
             </div>
@@ -81,10 +80,9 @@ const TransactionRow = ({ transaction: tx, isLast, isMobileCard = false }: Trans
             </div>
           </div>
 
-          {/* Row 2: CRYPTO | NETWORK | RATE */}
-          <div className="mt-2.5 ml-14 grid grid-cols-3 gap-2">
+          {/* Row 2: NETWORK | RATE — CRYPTO amount now lives in the heading above */}
+          <div className="mt-2.5 ml-14 grid grid-cols-2 gap-2">
             {[
-              { label: "CRYPTO",  val: `${Number(tx.amountCrypto).toFixed(4).replace(/\.?0+$/, "")} ${tx.cryptocurrency.symbol}` },
               { label: "NETWORK", val: tx.userCryptoWallet?.network ?? tx.adminCryptoWallet?.network ?? "—" },
               { label: "RATE",    val: `₦${formatCompact(Number(tx.stableToFiatRate), "NGN", 0)}/${tx.cryptocurrency.symbol}` },
             ].map(({ label, val }) => (

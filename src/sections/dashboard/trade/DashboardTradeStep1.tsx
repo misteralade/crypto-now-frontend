@@ -861,14 +861,6 @@ function SellDepositWalletSection({
               Only send {selectedToken.symbol} on{" "}
               {NETWORK_LABELS[depositWallet.network] ?? depositWallet.network}.
             </p>
-            {depositWallet.note && (
-              <p
-                className="mt-2 text-[10px] leading-relaxed"
-                style={{ color: "#9A9A9A" }}
-              >
-                {depositWallet.note}
-              </p>
-            )}
 
           </>
         ) : (

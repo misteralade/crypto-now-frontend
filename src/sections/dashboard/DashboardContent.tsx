@@ -134,13 +134,12 @@ function RecentOrderRow({ tx }: { tx: TransactionResponseEntity }) {
           className="text-sm font-semibold leading-snug"
           style={{ color: "#0E0F0C" }}
         >
-          {isBuy ? "Buy" : "Sell"} {tx.cryptocurrency.name}
+          {isBuy ? "Buy" : "Sell"} {Number(tx.amountCrypto).toFixed(4).replace(/\.?0+$/, "")} {tx.cryptocurrency.symbol}
         </p>
         <p
           className="text-[11px] leading-snug mt-0.5 truncate"
           style={{ color: "#9A9A9A" }}
         >
-          REF: {tx.sessionId.slice(0, 12).toUpperCase()} ·{" "}
           {momentClient.formatToTransactionInitiationDate(tx.createdAt)}
         </p>
       </div>
