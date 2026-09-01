@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import {
   clearUserSessionStorage,
   loadTradeProgress,
@@ -238,6 +238,7 @@ function WalletMiniCard({
 /* ═══════════════════════ MAIN DASHBOARD ═════════════════════════ */
 export default function DashboardContent() {
   const navigate = useNavigate();
+  const router = useRouter();
   const { transactionSummary, loadingTransactionSummary } =
     useDashboardContent();
   const {
@@ -287,6 +288,18 @@ export default function DashboardContent() {
     clearUserSessionStorage();
     navigate({ to: option === "buy" ? ROUTES.DASHBOARD_BUY : ROUTES.DASHBOARD_SELL });
   };
+
+  // Buy/Sell are the two highest-traffic destinations from this screen, but
+  // the quick-action buttons below fire navigate() directly rather than
+  // rendering a <Link>, so they never benefit from the router's hover/touch
+  // "intent" preload — on mobile there's no hover at all, so the tap and the
+  // chunk fetch would otherwise race each other every time. Preloading both
+  // as soon as this screen mounts means the chunk is normally already in
+  // memory by the time either button is pressed.
+  useEffect(() => {
+    void router.preloadRoute({ to: ROUTES.DASHBOARD_BUY });
+    void router.preloadRoute({ to: ROUTES.DASHBOARD_SELL });
+  }, [router]);
 
   // Check for in-progress trade to offer "Continue" banner
   const [pendingTrade, setPendingTrade] = useState<TradeProgress | null>(null);
