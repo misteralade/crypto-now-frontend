@@ -16,6 +16,18 @@ export const useNotificationQuery = () => {
 
   // Lightweight unread check. Must never block the rest of the dashboard from
   // loading, so failures resolve to "no new notifications" instead of throwing.
+  //
+  // Deliberately NOT polled — this was refetching every 10s regardless of
+  // whether anything could plausibly have changed. It now only fetches at the
+  // three moments that can actually produce a new notification:
+  //  1. First load of any dashboard-shell page (React Query's default
+  //     refetchOnMount behavior, since `enabled` flips true on mount there).
+  //  2. Visiting the dedicated Notifications page — NotificationsContent.tsx
+  //     fires markAllNotificationsReadMutation on mount, whose onSuccess below
+  //     invalidates this same query key.
+  //  3. Right after a transaction is submitted/completes — the relevant
+  //     mutations in transaction.query.ts and the completion effect in
+  //     DashboardTradeStep2.tsx invalidate this query key directly.
   const { data: hasNewNotifications, isLoading: loadingHasNewNotifications } = useQuery({
     queryKey: [QUERY_KEYS.NOTIFICATION.HAS_NEW],
     queryFn: async () => {
@@ -27,7 +39,6 @@ export const useNotificationQuery = () => {
       }
     },
     enabled: isDashboardShell,
-    refetchInterval: TIME_IN_MILLISECONDS.TEN_SECONDS,
     staleTime: TIME_IN_MILLISECONDS.TEN_SECONDS,
     retry: 1,
   });

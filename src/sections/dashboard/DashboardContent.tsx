@@ -404,15 +404,7 @@ export default function DashboardContent() {
         <p className="text-[11px] leading-relaxed" style={{ color: "#7A6000" }}>
           <strong>Non-custodial platform.</strong> CryptoNow never holds your
           crypto. All assets go directly to your personal bank account or
-          wallet. We only facilitate the exchange.{" "}
-          <button
-            type="button"
-            onClick={() => navigate({ to: ROUTES.DASHBOARD })}
-            className="font-semibold underline hover:no-underline transition-all"
-            style={{ color: "#7A6000", background: "none", border: "none", cursor: "pointer" }}
-          >
-            See terms and conditions for more details
-          </button>
+          wallet.
         </p>
       </div>
 

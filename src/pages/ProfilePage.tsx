@@ -180,7 +180,7 @@ const ProfilePage = () => {
                 <div className="flex items-center gap-2 mt-3">
                   <span className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold"
                     style={{ background: "#FFFBF0", color: "#A07000" }}>
-                    🤝 Non-Custodial
+                    Non-Custodial
                   </span>
                 </div>
               </div>

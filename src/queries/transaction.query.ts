@@ -53,6 +53,12 @@ export const useTransactionQuery = () => {
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.TRANSACTION.USER_INCOMPLETE_TRANSACTIONS_COUNT],
       }),
+      // A completed transaction can produce a new bell notification — refetch
+      // it here instead of relying on a poll interval (removed) or the user
+      // happening to open the dedicated Notifications page.
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.NOTIFICATION.HAS_NEW],
+      }),
     ]);
   };
 

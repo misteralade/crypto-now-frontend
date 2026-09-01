@@ -663,9 +663,13 @@ export default function DashboardTradeStep2({
       // Transaction history/summary queries are cached for minutes and never
       // invalidated by the submit call — refresh them now so the dashboard
       // reflects this transaction immediately instead of on next stale-refetch.
+      // The bell's "has new notifications" check is no longer polled, so a
+      // completed transaction is one of the few moments it needs to refetch too.
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.TRANSACTION.USER_SEARCH_TRANSACTION_HISTORY] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.TRANSACTION.USER_RECENT_TRANSACTIONS] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.TRANSACTION.USER_TRANSACTION_SUMMARY] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.TRANSACTION.USER_INCOMPLETE_TRANSACTIONS_COUNT] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.NOTIFICATION.HAS_NEW] });
       onBuySubmitSuccess?.();
     }
   }, [txStatus, onBuySubmitSuccess, queryClient]);
