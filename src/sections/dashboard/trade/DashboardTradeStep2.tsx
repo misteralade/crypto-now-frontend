@@ -1104,10 +1104,10 @@ export default function DashboardTradeStep2({
           </div>
           <div className="px-4 py-5">
             <p
-              className="text-lg font-extrabold mb-1"
+              className="text-lg font-extrabold mb-1 uppercase tracking-wide"
               style={{ color: "#4A4D9E" }}
             >
-              {bankName || "—"}
+              {bankName?.toUpperCase() || "—"}
             </p>
             <p
               className="text-4xl sm:text-[40px] font-black font-mono tracking-tight my-1.5"
