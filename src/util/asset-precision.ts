@@ -96,6 +96,21 @@ export function roundForCalculation(
  * (e.g. NGN shows no decimals, BTC shows up to 8 with trailing zeros trimmed).
  * This is presentation only — do not feed the result back into further math.
  */
+export function formatPlainDecimalString(
+  val: string | number | undefined | null,
+  maxDecimals = 8,
+): string {
+  if (val === undefined || val === null || val === "") return "";
+  const str = String(val);
+  if (str.includes("e") || str.includes("E")) {
+    const num = Number(val);
+    if (!isNaN(num)) {
+      return num.toFixed(maxDecimals).replace(/\.?0+$/, "");
+    }
+  }
+  return str;
+}
+
 export function formatForDisplay(amount: number, symbolOrCode: string): string {
   if (typeof amount !== "number" || Number.isNaN(amount)) amount = 0;
   const { displayDecimals, trimTrailingZeros } = getRule(symbolOrCode);

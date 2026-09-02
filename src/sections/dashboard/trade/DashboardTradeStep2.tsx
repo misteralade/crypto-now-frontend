@@ -1102,22 +1102,22 @@ export default function DashboardTradeStep2({
               <Copy size={10} /> Copy Acct
             </button>
           </div>
-          <div className="px-4 py-4">
+          <div className="px-4 py-5">
             <p
-              className="text-xs font-semibold mb-0.5"
-              style={{ color: "#5B5EA6" }}
+              className="text-lg font-extrabold mb-1"
+              style={{ color: "#4A4D9E" }}
             >
               {bankName || "—"}
             </p>
             <p
-              className="text-3xl font-black font-mono"
+              className="text-4xl sm:text-[40px] font-black font-mono tracking-tight my-1.5"
               style={{ color: "#0E0F0C" }}
             >
               {accountNumber || "—"}
             </p>
             <p
-              className="text-xs mt-0.5 font-medium"
-              style={{ color: "#9A9A9A" }}
+              className="text-base sm:text-lg font-bold mt-1"
+              style={{ color: "#0E0F0C" }}
             >
               {accountName}
             </p>

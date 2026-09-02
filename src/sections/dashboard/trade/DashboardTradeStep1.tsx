@@ -14,14 +14,14 @@ import type {
 import { useDispatch } from "react-redux";
 import { setInitiateTransactionField } from "../../../redux/transaction.slice.ts";
 import { setSelectedCryptoId } from "../../../redux/crypto.slice.ts";
-import { ROUTES } from "../../../util/constants.util.ts";
+import { ROUTES, LOCAL_STORAGE_KEYS } from "../../../util/constants.util.ts";
 import { exchangeRateServiceApi } from "../../../api/rate.api.ts";
 import {
   TRADE_FIAT_AMOUNT_PRESETS,
   formatTradeFiatPreset,
   roundTokenAmountUp,
 } from "../../../constants/tradeAmounts.ts";
-import { roundForCalculation, formatForDisplayLocalized } from "../../../util/asset-precision.ts";
+import { roundForCalculation, formatForDisplayLocalized, formatPlainDecimalString } from "../../../util/asset-precision.ts";
 
 export interface BuyRateInfo {
   rate: number; // NGN per 1 crypto (fiatRate from API)
@@ -156,6 +156,20 @@ function BuyFields({
   const fetchingRef = useRef<number | null>(null);
   const [activePreset, setActivePreset] = useState<number | "custom" | null>(null);
   const [customAmount, setCustomAmount] = useState("");
+  // Set only when a keystroke was rejected for pushing the amount past the
+  // admin max — cleared as soon as the user edits back within range.
+  const [maxLimitMessage, setMaxLimitMessage] = useState<string | null>(null);
+
+  // Guests and authenticated users have separate admin-configured max —
+  // never mix the two up. This is the single source of truth for trade
+  // amount bounds; there is no separate global cap. (The min side is
+  // enforced by the parent, which has the resolved rate to compare against.)
+  const isAnonymous = !localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+  const maxTokenLimit = Number(
+    isAnonymous
+      ? selectedToken.maxTradeAmountForAnonymous
+      : selectedToken.maxTransactionLimit,
+  );
 
   const handleWalletChange = (val: string) => {
     onWalletAddressChange?.(val);
@@ -207,6 +221,7 @@ function BuyFields({
       onRateResolved?.(null);
       setActivePreset(null);
       setCustomAmount("");
+      setMaxLimitMessage(null);
     }
   };
 
@@ -267,7 +282,43 @@ function BuyFields({
   };
 
   const handleAmountChange = (val: string) => {
-    setAmountToBuy?.(val);
+    // Keep raw input well-formed (digits + at most one decimal point, so it
+    // can never round-trip through scientific notation).
+    let cleaned = val.replace(/[^0-9.]/g, "");
+    const firstDot = cleaned.indexOf(".");
+    if (firstDot !== -1) {
+      cleaned =
+        cleaned.slice(0, firstDot + 1) +
+        cleaned.slice(firstDot + 1).replace(/\./g, "");
+    }
+
+    // Silently ignore decimal keystrokes past 8 places (1e-8 — satoshi-level,
+    // more than enough precision for any supported asset). This is a pure
+    // precision/overflow guard, independent of the admin min/max below — a
+    // value can sit well within the admin range while still growing an
+    // unbounded run of decimal digits (e.g. "2.339394934939...").
+    const dotIndex = cleaned.indexOf(".");
+    if (dotIndex !== -1 && cleaned.length - dotIndex - 1 > 8) {
+      cleaned = cleaned.slice(0, dotIndex + 1 + 8);
+    }
+
+    // Check the PROSPECTIVE value before appending it — if this keystroke
+    // would push the amount past the admin-configured max, reject it (keep
+    // the previous, still-valid value) and surface the max as red text
+    // instead of silently rewriting what the user typed.
+    if (
+      cleaned !== "" &&
+      cleaned !== "." &&
+      Number.isFinite(maxTokenLimit) &&
+      maxTokenLimit > 0 &&
+      Number(cleaned) > maxTokenLimit
+    ) {
+      setMaxLimitMessage(`Maximum buy amount is ${maxTokenLimit} ${selectedToken.symbol}`);
+      return;
+    }
+
+    setMaxLimitMessage(null);
+    setAmountToBuy?.(cleaned);
     onRateResolved?.(null); // clear rate when user edits amount
     setActivePreset(null);
   };
@@ -326,6 +377,15 @@ function BuyFields({
         targetFiatAmount / divisor,
         selectedToken.symbol,
       );
+      // Check the resolved amount against the admin-configured max before
+      // applying it — reject the preset/custom chip outright (leave the
+      // field as it was) and surface the max as red text, rather than
+      // silently rewriting the chip's amount down to the max.
+      if (Number.isFinite(maxTokenLimit) && maxTokenLimit > 0 && cryptoAmount > maxTokenLimit) {
+        setMaxLimitMessage(`Maximum buy amount is ${maxTokenLimit} ${selectedToken.symbol}`);
+        return;
+      }
+      setMaxLimitMessage(null);
       // The platform only settles in NGN — USD is shown for interpretation only.
       const ngnAmount = roundForCalculation(
         cryptoAmount * rateData.coinGeckoRate * Number(rateData.platformRate),
@@ -357,8 +417,21 @@ function BuyFields({
   };
 
   const handleCustomAmountChange = (value: string) => {
+    let cleaned = value.replace(/[^0-9.]/g, "");
+    const firstDot = cleaned.indexOf(".");
+    if (firstDot !== -1) {
+      cleaned =
+        cleaned.slice(0, firstDot + 1) +
+        cleaned.slice(firstDot + 1).replace(/\./g, "");
+    }
+    // Same precision guard as handleAmountChange — ignore decimal keystrokes
+    // past 8 places rather than letting the fiat input grow an unbounded run.
+    const dotIndex = cleaned.indexOf(".");
+    if (dotIndex !== -1 && cleaned.length - dotIndex - 1 > 8) {
+      cleaned = cleaned.slice(0, dotIndex + 1 + 8);
+    }
     setActivePreset("custom");
-    setCustomAmount(value);
+    setCustomAmount(cleaned);
   };
 
   useEffect(() => {
@@ -392,18 +465,6 @@ function BuyFields({
   // what's actually charged, so it reads ngnAmount even when isUSD is true.
   const fiatPreview = rateMatchesCurrentAmount
     ? `₦${formatForDisplayLocalized(buyRateInfo!.ngnAmount, "NGN")}`
-    : null;
-
-  // Admin-configured min/max are token-denominated, so validate against the
-  // resolved crypto amount rather than the raw fiat input.
-  const minTokenLimit = Number(selectedToken.minTransactionLimit);
-  const maxTokenLimit = Number(selectedToken.maxTransactionLimit);
-  const limitErrorMessage = rateMatchesCurrentAmount
-    ? buyRateInfo!.cryptoAmount < minTokenLimit
-      ? `Minimum buy amount is ${minTokenLimit} ${selectedToken.symbol}`
-      : buyRateInfo!.cryptoAmount > maxTokenLimit
-        ? `Maximum buy amount is ${maxTokenLimit} ${selectedToken.symbol}`
-        : null
     : null;
 
   return (
@@ -453,7 +514,7 @@ function BuyFields({
           <input
             type="text"
             inputMode="decimal"
-            value={String(amountToBuy ?? "")}
+            value={formatPlainDecimalString(amountToBuy ?? "")}
             onChange={(e) => handleAmountChange(e.target.value)}
             onFocus={handleFocusAmountToBuy}
             onBlur={handleBlur}
@@ -471,8 +532,19 @@ function BuyFields({
           )}
         </div>
 
+        {/* Max amount error — shown when a keystroke or preset was rejected
+            for exceeding the admin-configured max (see handleAmountChange /
+            applyFiatPresetAmount above). */}
+        {maxLimitMessage && !isFetchingRate && (
+          <div className="px-4 pb-2 -mt-1">
+            <p className="text-xs font-semibold" style={{ color: "#EB5757" }}>
+              {maxLimitMessage}
+            </p>
+          </div>
+        )}
+
         {/* Fiat cost preview */}
-        {fiatPreview && !isFetchingRate && !limitErrorMessage && (
+        {fiatPreview && !isFetchingRate && !maxLimitMessage && (
           <div className="px-4 pb-2 -mt-1">
             <p className="text-xs" style={{ color: "#9A9A9A" }}>
               ≈{" "}
@@ -485,15 +557,6 @@ function BuyFields({
                   (live rate)
                 </span>
               )}
-            </p>
-          </div>
-        )}
-
-        {/* Min/max amount error (admin-configured, token-denominated) */}
-        {limitErrorMessage && !isFetchingRate && (
-          <div className="px-4 pb-2 -mt-1">
-            <p className="text-xs font-semibold" style={{ color: "#EB5757" }}>
-              {limitErrorMessage}
             </p>
           </div>
         )}
@@ -1027,40 +1090,39 @@ export default function DashboardTradeStep1({
   // Admin-configured min/max are token-denominated (see SupportedCryptoEntity),
   // so compare against buyRateInfo.cryptoAmount, not the fiat amount typed in —
   // and only once the rate for the CURRENT amount has actually resolved.
+  // Guests and authenticated users have separate admin-configured limits —
+  // never mix the two up.
+  const isAnonymousUser = !localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
   const rateMatchesCurrentAmount =
     !!buyRateInfo && buyRateInfo.fiatAmount === Number(amountToBuy ?? 0);
   const minTokenLimit = selectedToken
-    ? Number(selectedToken.minTransactionLimit)
+    ? Number(
+        isAnonymousUser
+          ? selectedToken.minTradeAmountForAnonymous
+          : selectedToken.minTransactionLimit,
+      )
     : 0;
-  const maxTokenLimit = selectedToken
-    ? Number(selectedToken.maxTransactionLimit)
-    : Infinity;
+  // Only the min can still be violated here — BuyFields already rejects
+  // keystrokes/presets that would exceed the admin max, so max is never
+  // exceeded by the time a rate resolves.
   const amountBelowMin =
     isBuy &&
     rateMatchesCurrentAmount &&
     buyRateInfo!.cryptoAmount < minTokenLimit;
-  const amountAboveMax =
-    isBuy &&
-    rateMatchesCurrentAmount &&
-    buyRateInfo!.cryptoAmount > maxTokenLimit;
-  const amountOutOfRange = amountBelowMin || amountAboveMax;
-  const limitErrorMessage =
-    selectedToken &&
-    (amountBelowMin
+  const minLimitMessage =
+    isBuy && selectedToken && amountBelowMin
       ? `Minimum buy amount is ${minTokenLimit} ${selectedToken.symbol}`
-      : amountAboveMax
-        ? `Maximum buy amount is ${maxTokenLimit} ${selectedToken.symbol}`
-        : null);
+      : null;
 
-  // For BUY: require amount, wallet, a fetched rate, AND that amount fall
-  // within the admin-configured min/max before allowing proceed
+  // For BUY: require amount, wallet, a fetched rate, AND that amount meet
+  // the admin-configured minimum before allowing proceed.
   const buySubmitDisabled =
     isBuy &&
     (!amountToBuy ||
       Number(amountToBuy) <= 0 ||
       !walletAddress?.trim() ||
       !buyRateInfo ||
-      amountOutOfRange);
+      amountBelowMin);
 
   const isCtaBusy = isInitiatingTrade || (!!selectedToken && isRateLoading);
   const ctaLabel = isInitiatingTrade
@@ -1072,8 +1134,8 @@ export default function DashboardTradeStep1({
           walletAddress?.trim() &&
           !buyRateInfo
         ? "Fetching rate…"
-        : limitErrorMessage
-          ? limitErrorMessage
+        : minLimitMessage
+          ? minLimitMessage
           : selectedToken
             ? "Buy — Continue"
             : "Select a Crypto to Continue";
