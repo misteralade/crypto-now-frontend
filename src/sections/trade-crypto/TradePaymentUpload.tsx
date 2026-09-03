@@ -30,9 +30,9 @@ const TradePaymentUpload = ({
   }, [filePreviewUrl]);
 
   const handleFileUpload = (file: File) => {
-    const MAX_FILE_SIZE = 2 * 1024 * 1024;
+    const MAX_FILE_SIZE = 5 * 1024 * 1024;
     if (file.size > MAX_FILE_SIZE) {
-      toast.error("File size exceeds 2MB. Please upload a smaller image.");
+      toast.error("File size exceeds 5MB. Please upload a smaller image.");
       return;
     }
 
@@ -45,13 +45,13 @@ const TradePaymentUpload = ({
 
   const handleFileSelect = (selectedFiles: FileList | null) => {
     if (!selectedFiles) return;
-    const MAX_FILE_SIZE = 2 * 1024 * 1024;
+    const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
     const newFiles = Array.from(selectedFiles).filter((file) => {
       const extension = "." + file.name.split(".").pop()?.toLowerCase();
       if (!acceptedTypes.includes(extension)) return false;
       if (file.size > MAX_FILE_SIZE) {
-        toast.error(`${file.name} exceeds 2MB. Please upload a smaller image.`);
+        toast.error(`${file.name} exceeds 5MB. Please upload a smaller image.`);
         return false;
       }
       return true;
@@ -158,7 +158,7 @@ const TradePaymentUpload = ({
       </div>
 
       <p className="text-sm text-gray-500">
-        Only support {acceptedTypes.join(", ")} files (max 2MB)
+        Only support {acceptedTypes.join(", ")} files (max 5MB)
       </p>
     </div>
   );

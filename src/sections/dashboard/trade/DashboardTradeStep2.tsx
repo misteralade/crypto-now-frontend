@@ -714,19 +714,23 @@ export default function DashboardTradeStep2({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [receiptAlreadySubmitted]);
 
-  // There's nothing left to do on this page once the receipt is in review —
-  // intercept the browser/hardware back button while on the verifying view
-  // and send the user to the dashboard instead of letting default history
-  // navigation resurface this stale trade-flow screen (which used to flash
-  // the wrong "Make Payment" state while txStatus was re-resolving).
+  // Once a BUY transaction has an active session (a bank-transfer reference
+  // was already created for it — whether or not the receipt has been
+  // uploaded yet), there's no sane "previous screen" to return to: Step 1's
+  // crypto-picker doesn't reconstruct the in-flight session and used to
+  // render broken/stale state when the browser/hardware back button fell
+  // through to default history navigation. Intercept it here and send the
+  // user to the dashboard instead — the in-app back ARROW (onBack prop /
+  // setBuyView) is unaffected and still steps between this screen's own
+  // sub-views normally.
   useEffect(() => {
-    if (!receiptAlreadySubmitted) return;
+    if (!isBuy || !transactionRef) return;
     const handlePopState = () => {
       navigate({ to: ROUTES.DASHBOARD, replace: true });
     };
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, [receiptAlreadySubmitted, navigate]);
+  }, [isBuy, transactionRef, navigate]);
 
   const bankDetails = hookBankDetails;
 
@@ -930,7 +934,12 @@ export default function DashboardTradeStep2({
     return (
       <div className="flex flex-col gap-4">
         <BackHeader
-          onBack={() => setBuyView("bank")}
+          // The receipt is already submitted — "bank" (Make Payment) is a
+          // dead screen at this point, there's nothing left to pay. Going
+          // there just to bounce back was the stale-screen bug; go straight
+          // to the dashboard instead, matching the hardware/browser back
+          // button's behavior for this same state.
+          onBack={() => navigate({ to: ROUTES.DASHBOARD, replace: true })}
           title="Verifying Payment"
           sub="Listening for confirmations"
         />
