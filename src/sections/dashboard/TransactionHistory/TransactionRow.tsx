@@ -83,7 +83,7 @@ const TransactionRow = ({ transaction: tx, isLast, isMobileCard = false }: Trans
           {/* Row 2: NETWORK | RATE — CRYPTO amount now lives in the heading above */}
           <div className="mt-2.5 ml-14 grid grid-cols-2 gap-2">
             {[
-              { label: "NETWORK", val: tx.userCryptoWallet?.network ?? tx.adminCryptoWallet?.network ?? "—" },
+              { label: "NETWORK", val: tx.userCryptoWallet?.network ?? tx.adminCryptoWallet?.network ?? tx.walletNetwork ?? "—" },
               { label: "RATE",    val: `₦${formatCompact(Number(tx.stableToFiatRate), "NGN", 0)}/${tx.cryptocurrency.symbol}` },
             ].map(({ label, val }) => (
               <div key={label}>
@@ -159,7 +159,7 @@ const TransactionRow = ({ transaction: tx, isLast, isMobileCard = false }: Trans
         ₦{formatCompact(Number(tx.stableToFiatRate), "NGN", 0)}
       </td>
       <td className="px-5 py-4 text-[14px] font-medium text-[#667085] whitespace-nowrap">
-        {tx.userCryptoWallet?.network ?? tx.adminCryptoWallet?.network ?? "—"}
+        {tx.userCryptoWallet?.network ?? tx.adminCryptoWallet?.network ?? tx.walletNetwork ?? "—"}
       </td>
       <td className="px-5 py-4">
         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12px] font-semibold ${statusColors.background} ${statusColors.text}`}>
