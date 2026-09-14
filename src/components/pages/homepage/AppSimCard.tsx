@@ -1521,55 +1521,10 @@ const AppSimCard = () => {
                 className="rounded-xl overflow-hidden"
                 style={{ background: "white", border: "1.5px solid #E8E8E8" }}
               >
-                <div className="flex items-center justify-between pt-3 pb-1 px-4">
+                <div className="pt-3 pb-1 px-4">
                   <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
                     {cryptoSymbol || "Crypto"} to {isBuy ? "buy" : "sell"}
                   </p>
-                  {/* NGN / USD toggle — controls the currency of the preset chips & preview */}
-                  {(!loadingSupportedCurrencies || supportedCurrencies?.length) && usdCurrencyObj && (
-                    <div
-                      className="flex rounded-lg overflow-hidden"
-                      style={{ border: "1px solid #E8E8E8" }}
-                    >
-                      {(["NGN", "USD"] as const).map((cur) => {
-                        const activeCur = isBuy
-                          ? buyInputCurrency
-                          : sellReceiveCurrency;
-                        return (
-                          <button
-                            key={cur}
-                        onClick={() => {
-                          if (cur === activeCur) return;
-                          if (isBuy) {
-                            setBuyInputCurrency(cur);
-                          } else {
-                            setSellReceiveCurrency(cur);
-                          }
-                          setAmount("");
-                          setReceiveAmount("");
-                          setGuestError(null);
-                          setActiveBuyPreset(null);
-                          setActiveSellPreset(null);
-                          setCustomBuyAmount("");
-                          setCustomSellAmount("");
-                        }}
-                            className="px-2.5 py-1 text-[10px] font-bold cursor-pointer transition-colors"
-                            style={{
-                              background:
-                                activeCur === cur
-                                  ? isBuy
-                                    ? "#948EEE"
-                                    : "#22c55e"
-                                  : "transparent",
-                              color: activeCur === cur ? "white" : "#9CA3AF",
-                            }}
-                          >
-                            {cur}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
                 </div>
                 <div className="flex items-center px-4 pb-3 gap-2">
                   <span className="text-2xl font-bold text-gray-300">
@@ -1611,6 +1566,56 @@ const AppSimCard = () => {
                     )}
                   </div>
                 )}
+                {/* NGN / USD toggle — sits right above the preset chips it controls, so
+                    it reads as "this switch picks the currency of the row below" rather
+                    than a generic header control. */}
+                {(!loadingSupportedCurrencies || supportedCurrencies?.length) && usdCurrencyObj && (
+                  <div className="flex items-center justify-end px-4 pb-2">
+                    <div
+                      className="flex rounded-lg overflow-hidden"
+                      style={{ border: "1px solid #E8E8E8" }}
+                    >
+                      {(["NGN", "USD"] as const).map((cur) => {
+                        const activeCur = isBuy
+                          ? buyInputCurrency
+                          : sellReceiveCurrency;
+                        return (
+                          <button
+                            key={cur}
+                            onClick={() => {
+                              if (cur === activeCur) return;
+                              if (isBuy) {
+                                setBuyInputCurrency(cur);
+                              } else {
+                                setSellReceiveCurrency(cur);
+                              }
+                              setAmount("");
+                              setReceiveAmount("");
+                              setGuestError(null);
+                              setActiveBuyPreset(null);
+                              setActiveSellPreset(null);
+                              setCustomBuyAmount("");
+                              setCustomSellAmount("");
+                            }}
+                            className="px-2.5 py-1 text-[10px] font-bold cursor-pointer transition-colors"
+                            style={{
+                              background:
+                                activeCur === cur
+                                  ? isBuy
+                                    ? "#948EEE"
+                                    : "#22c55e"
+                                  : "transparent",
+                              color: activeCur === cur ? "white" : "#9CA3AF",
+                            }}
+                          >
+                            {cur}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {/* Quick chips */}
                 <div className="grid grid-cols-5 border-t border-gray-100">
                   {[

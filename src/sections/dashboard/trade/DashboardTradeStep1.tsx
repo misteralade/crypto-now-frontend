@@ -474,38 +474,13 @@ function BuyFields({
         className="rounded-2xl overflow-hidden"
         style={{ background: "#F7F7F9", border: "1px solid #EEEEEE" }}
       >
-        <div className="flex items-center justify-between px-4 pt-3 pb-1">
+        <div className="px-4 pt-3 pb-1">
           <p
             className="text-[10px] font-bold tracking-widest uppercase"
             style={{ color: "#9A9A9A" }}
           >
             {selectedToken.symbol} to buy
           </p>
-          {/* Currency toggle — controls the currency of the preset chips & preview */}
-          {availableCurrencies && availableCurrencies.length > 1 && (
-            <div
-              className="flex rounded-lg overflow-hidden"
-              style={{ border: "1px solid #E0E0E0" }}
-            >
-              {(["NGN", "USD"] as const).map((code) => {
-                const active = isUSD ? code === "USD" : code === "NGN";
-                return (
-                  <button
-                    key={code}
-                    type="button"
-                    onClick={() => handleCurrencySwitch(code)}
-                    className="px-2.5 py-1 text-[10px] font-bold transition-colors"
-                    style={{
-                      background: active ? accentColor : "#FFFFFF",
-                      color: active ? "#FFFFFF" : "#9A9A9A",
-                    }}
-                  >
-                    {code}
-                  </button>
-                );
-              })}
-            </div>
-          )}
         </div>
         <div className="flex items-center gap-3 px-4 pb-3">
           <span className="text-3xl font-black" style={{ color: "#BDBDBD" }}>
@@ -558,6 +533,36 @@ function BuyFields({
                 </span>
               )}
             </p>
+          </div>
+        )}
+
+        {/* Currency toggle — sits right above the preset chips it controls, so
+            it reads as "this switch picks the currency of the row below" rather
+            than a generic header control. */}
+        {availableCurrencies && availableCurrencies.length > 1 && (
+          <div className="flex items-center justify-end px-4 pb-2">
+            <div
+              className="flex rounded-lg overflow-hidden"
+              style={{ border: "1px solid #E0E0E0" }}
+            >
+              {(["NGN", "USD"] as const).map((code) => {
+                const active = isUSD ? code === "USD" : code === "NGN";
+                return (
+                  <button
+                    key={code}
+                    type="button"
+                    onClick={() => handleCurrencySwitch(code)}
+                    className="px-2.5 py-1 text-[10px] font-bold transition-colors"
+                    style={{
+                      background: active ? accentColor : "#FFFFFF",
+                      color: active ? "#FFFFFF" : "#9A9A9A",
+                    }}
+                  >
+                    {code}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         )}
 
