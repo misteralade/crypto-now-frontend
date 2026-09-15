@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "packageManager": "pnpm@10.34.5",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -15,16 +16,6 @@
     "test:debug-anonymous": "playwright test tests/anonymous-trading.spec.ts --debug --grep \"Complete Transaction Flow\"",
     "test:headed-anonymous": "playwright test tests/anonymous-trading.spec.ts --headed --grep \"Complete Transaction Flow\"",
     "prepare": "husky"
-  },
-  "pnpm": {
-    "overrides": {
-      "flatted": "3.4.2",
-      "lodash": "4.18.1",
-      "lodash-es": "4.18.1",
-      "minimatch": "9.0.7",
-      "picomatch": "4.0.4",
-      "rollup": "4.59.0"
-    }
   },
   "dependencies": {
     "@material-tailwind/react": "^2.1.10",
