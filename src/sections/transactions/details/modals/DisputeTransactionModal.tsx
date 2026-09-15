@@ -9,7 +9,7 @@ import {
   Image,
   Check,
 } from "lucide-react";
-import { type ChangeEvent, Fragment, useState } from "react";
+import { type ChangeEvent, Fragment, useEffect, useState } from "react";
 import { formatFileSize } from "../../../../util/index.util";
 import type { FileTypeConfig, MessageAttachment, AttachmentType } from "../../../../types/transaction.types.ts";
 import { ATTACHMENT_TYPE } from "../../../../util/constants.util.ts";
@@ -52,6 +52,15 @@ const DisputeTransactionModal = ({ transactionId, onClose, onSubmit }: DisputeTr
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
   const [uploadedAttachments, setUploadedAttachments] = useState<MessageAttachment[]>([]);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
+  // Lock the background page's scroll while this modal is mounted — without
+  // this, dragging inside the modal's scrollable body on mobile scrolled the
+  // page behind it instead (the overlay is `fixed`, but that alone doesn't
+  // stop background scroll on touch devices).
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = "unset"; };
+  }, []);
 
   const getAttachmentType = (file: File): AttachmentType => {
     if (file.type.startsWith("image/")) return ATTACHMENT_TYPE.IMAGE;

@@ -435,7 +435,6 @@ const TransactionDetailsPage = () => {
                   <InfoRow
                     label="Network"
                     value={transaction.walletNetwork}
-                    align="right"
                   />
                 )}
               </div>
