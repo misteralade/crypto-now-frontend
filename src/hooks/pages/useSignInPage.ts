@@ -26,7 +26,6 @@ export const useSignInPage = () => {
     const payload:AuthRequestSchema = {
       email: values.email,
       password: values.password,
-      keepLoggedIn: values.rememberMe,
     }
 
     const { success, data } = await userSignInMutation.mutateAsync(payload);
