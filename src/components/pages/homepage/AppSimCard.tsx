@@ -526,7 +526,7 @@ const AppSimCard = () => {
     return () => document.removeEventListener("pointerdown", onPointerDown);
   }, [showNetworkPicker]);
 
-  const [bankName, setBankName] = useState(saved.bankName || "");
+  const [bankName, setBankName] = useState(saved.bank?.name || "");
   const [accountNumber, setAccountNumber] = useState(saved.accountNumber || "");
   const [accountName, setAccountName] = useState(saved.accountName || "");
   const [bankLookupError, setBankLookupError] = useState<string | null>(null);
@@ -2104,7 +2104,7 @@ const AppSimCard = () => {
                     Copy
                   </button>
                   <p className="text-center text-white font-bold text-base mb-1">
-                    {platformBank.bankName}
+                    {platformBank.bank?.name}
                   </p>
                   <p
                     className="text-center text-white font-bold text-3xl tracking-wider mb-1"

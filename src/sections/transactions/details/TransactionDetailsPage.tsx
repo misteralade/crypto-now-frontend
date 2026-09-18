@@ -451,9 +451,6 @@ const TransactionDetailsPage = () => {
               />
             )}
 
-            {/* ── Transaction Context Flow ── */}
-            <TransactionContextCard transaction={transaction} />
-
             {/* ── Crypto wallet ── */}
             {transaction.userCryptoWallet && (
               <Card>
@@ -496,7 +493,7 @@ const TransactionDetailsPage = () => {
                   />
                   <InfoRow
                     label="Bank"
-                    value={transaction.userBankAccount.bankName}
+                    value={transaction.userBankAccount.bank?.name}
                   />
                 </div>
               </Card>

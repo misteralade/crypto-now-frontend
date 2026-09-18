@@ -203,7 +203,7 @@ export const useTradeStepTwo = ({
         },
         {
           title: "Bank Name",
-          value: bankDetails.bankName,
+          value: bankDetails.bank?.name,
         },
         {
           title: "Amount to Pay",
@@ -252,7 +252,7 @@ export const useTradeStepTwo = ({
         {
           title:
             `Bank Name`.trim(),
-          value: bankDetails.bankName,
+          value: bankDetails.bank?.name,
         },
         {
           title: "Amount to Pay",

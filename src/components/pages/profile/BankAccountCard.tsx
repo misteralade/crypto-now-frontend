@@ -59,7 +59,7 @@ const BankAccountCard = ({
           <div>
             <div className="text-[10px] uppercase tracking-wide text-[#828282] mb-0.5">Bank Name</div>
             <div className="text-sm text-[#101828] font-semibold">
-              {account.bankName || '--'}
+              {account.bank?.name || '--'}
             </div>
           </div>
         </div>

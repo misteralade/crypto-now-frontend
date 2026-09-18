@@ -80,9 +80,7 @@ export type SupportedExchangeRateResponse = {
 
 export type SupportedPlatformBankAccountResponse = {
   id: string;
-  bankName: string;
-  bankLogo: string;
-  type: string;
+  bank: AllBanksResponse;
   accountNumber: string;
   accountHolderName: string;
 };
@@ -107,8 +105,7 @@ export type AllBanksResponse = {
 
 export type UserBankAccountResponse = {
   id: string;
-  bankName: string;
-  bankLogo: string;
+  bank: AllBanksResponse;
   label: string;
   isDefault: boolean;
   accountNumber: string;
@@ -225,8 +222,7 @@ export type UserBankAccountResponseEntity = {
   userId: string;
   accountNumber: string;
   accountName: string;
-  bankName: string;
-  bankLogo: string;
+  bank: AllBanksResponse;
   createdAt: string;
 };
 
@@ -234,6 +230,7 @@ export type AdminBankAccountResponseEntity = {
   id: string;
   accountNumber: string;
   accountHolderName: string;
+  bank: AllBanksResponse;
   isActive: boolean;
   bankName: string;
   bankLogo: string;

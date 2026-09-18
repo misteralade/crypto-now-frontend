@@ -1013,7 +1013,7 @@ function SellPayoutBank({
           {defaultAccount.bank?.logoUrl ? (
             <img
               src={defaultAccount.bank?.logoUrl}
-              alt={defaultAccount.bankName}
+              alt={defaultAccount.bank?.name}
               className="w-8 h-8 rounded-lg object-cover shrink-0"
             />
           ) : (
@@ -1022,13 +1022,13 @@ function SellPayoutBank({
               style={{ background: "#F0F0F0" }}
             >
               <span className="text-[10px] font-black" style={{ color: "#9A9A9A" }}>
-                {defaultAccount.bankName.slice(0, 2).toUpperCase()}
+                {defaultAccount.bank?.name.slice(0, 2).toUpperCase()}
               </span>
             </div>
           )}
           <div className="flex-1 min-w-0">
             <p className="text-xs font-bold truncate" style={{ color: "#0E0F0C" }}>
-              {defaultAccount.bankName}
+              {defaultAccount.bank?.name}
             </p>
             <p className="text-[11px] font-mono" style={{ color: "#6B6E6B" }}>
               ****{defaultAccount.accountNumber.slice(-4)} · {defaultAccount.accountName}

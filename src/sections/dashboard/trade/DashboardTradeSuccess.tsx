@@ -56,7 +56,7 @@ export default function DashboardTradeSuccess({
       ? txData.userCryptoWallet.network
       : walletNetwork;
   const resolvedBankName =
-    !isBuy && txData?.userBankAccount?.bankName ? txData.userBankAccount.bankName : bankName;
+    !isBuy && txData?.userBankAccount?.bank?.name ? txData.userBankAccount.bank?.name : bankName;
   const resolvedAccountNumber =
     !isBuy && txData?.userBankAccount?.accountNumber
       ? txData.userBankAccount.accountNumber

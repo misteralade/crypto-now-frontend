@@ -53,7 +53,7 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, bankAccount
               <div className="flex-shrink-0">
                 <img
                   src={bank.bank?.logoUrl}
-                  alt={`${bank.bankName} logo`}
+                  alt={`${bank.bank?.name} logo`}
                   className="w-12 h-12 rounded-full object-cover bg-gray-100"
                   onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
                     const target = e.currentTarget;
@@ -65,7 +65,7 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, bankAccount
                   }}
                 />
                 <div className="w-12 h-12 rounded-full bg-blue-100 items-center justify-center text-blue-600 font-semibold text-sm hidden">
-                  {bank.bankName.substring(0, 2).toUpperCase()}
+                  {bank.bank?.name.substring(0, 2).toUpperCase()}
                 </div>
               </div>
 
@@ -73,7 +73,7 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, bankAccount
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
                   <h4 className="text-sm font-semibold text-gray-900 truncate">
-                    {bank.bankName}
+                    {bank.bank?.name}
                   </h4>
                   {selectedBankId === bank.id && (
                     <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
@@ -146,14 +146,14 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, bankAccount
               <div className="flex items-center space-x-3 mb-3">
                 <img
                   src={selectedBank.bank?.logoUrl}
-                  alt={`${selectedBank.bankName} logo`}
+                  alt={`${selectedBank.bank?.name} logo`}
                   className="w-10 h-10 rounded-full object-cover"
                   onError={(e) => {
                     e.currentTarget.style.display = "none";
                   }}
                 />
                 <h4 className="font-semibold text-gray-900">
-                  {selectedBank.bankName}
+                  {selectedBank.bank?.name}
                 </h4>
               </div>
               <div className="space-y-2 text-sm">
@@ -389,7 +389,7 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, bankAccount
                   <div className="flex items-center space-x-3">
                     <img
                       src={selectedBank.bank?.logoUrl}
-                      alt={`${selectedBank.bankName} logo`}
+                      alt={`${selectedBank.bank?.name} logo`}
                       className="w-8 h-8 rounded-full object-cover"
                       onError={(e) => {
                         e.currentTarget.style.display = "none";
@@ -397,7 +397,7 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, bankAccount
                     />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-blue-900">
-                        Selected: {selectedBank.bankName}
+                        Selected: {selectedBank.bank?.name}
                       </p>
                       <p className="text-xs text-blue-700 truncate">
                         {selectedBank.accountName} -{" "}

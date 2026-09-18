@@ -1,8 +1,13 @@
 import { ArrowDown } from "lucide-react";
-import type { SearchTransactionsResponse } from "../../../types/response.payload.types";
 
 interface TransactionContextCardProps {
-  transaction: SearchTransactionsResponse;
+  transaction: {
+    type: string;
+    userBankAccount?: { bank?: { name?: string } | null; accountName?: string } | null;
+    adminBankAccount?: { bank?: { name?: string } | null; accountHolderName?: string } | null;
+    userCryptoWallet?: { network?: string; walletAddress?: string } | null;
+    adminCryptoWallet?: { network?: string; walletAddress?: string } | null;
+  };
 }
 
 const TransactionContextCard = ({ transaction }: TransactionContextCardProps) => {

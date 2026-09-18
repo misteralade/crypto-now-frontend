@@ -592,8 +592,8 @@ export default function DashboardTrade({
                 walletNetwork={activeTab === "sell" ? sellDepositWallet?.network : undefined}
                 bankName={
                   activeTab === "sell"
-                    ? userBankAccounts?.find((b) => b.id === sellPayoutAccountId)?.bankName ??
-                      userBankAccounts?.[0]?.bankName
+                    ? userBankAccounts?.find((b) => b.id === sellPayoutAccountId)?.bank?.name ??
+                      userBankAccounts?.[0]?.bank?.name
                     : undefined
                 }
                 accountNumber={
