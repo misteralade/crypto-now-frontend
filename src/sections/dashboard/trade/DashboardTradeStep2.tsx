@@ -179,8 +179,8 @@ function PayingToRow({ payoutBank }: { payoutBank: UserBankAccountResponse | und
   return (
     <div className="flex items-center gap-3 rounded-2xl border border-[#ECECEC] bg-[#F9FAFB] px-4 py-3">
       <div className="w-10 h-10 rounded-full bg-white border border-[#ECECEC] flex items-center justify-center overflow-hidden">
-        {payoutBank.bankLogo ? (
-          <img src={payoutBank.bankLogo} alt={payoutBank.bankName} className="w-6 h-6 object-contain" />
+        {payoutBank.bank?.logoUrl ? (
+          <img src={payoutBank.bank?.logoUrl} alt={payoutBank.bankName} className="w-6 h-6 object-contain" />
         ) : (
           <span className="text-xs font-bold text-[#03034D]">{payoutBank.bankName?.slice(0, 2)}</span>
         )}

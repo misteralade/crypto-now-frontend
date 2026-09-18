@@ -18,11 +18,11 @@ const BankAccountCard = ({
   return (
     <section className="relative p-5 rounded-2xl border border-[#ECECEC] bg-white shadow-sm overflow-hidden flex flex-col h-full w-full max-w-[330px] mx-auto sm:mx-0">
       {/* Translucent Bank Logo Background */}
-      {account.bankLogo && (
+      {account.bank?.logoUrl && (
         <div
           className="absolute inset-0 opacity-5 bg-no-repeat bg-right bg-contain pointer-events-none"
           style={{
-            backgroundImage: `url(${account.bankLogo})`,
+            backgroundImage: `url(${account.bank?.logoUrl})`,
             backgroundPosition: 'right 16px center',
           }}
         />

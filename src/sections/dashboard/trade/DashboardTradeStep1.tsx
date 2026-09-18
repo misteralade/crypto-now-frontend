@@ -1010,9 +1010,9 @@ function SellPayoutBank({
         style={{ background: "#FAFAFA", border: "1.5px solid #F0F0F0" }}
       >
         <div className="flex items-center gap-3">
-          {defaultAccount.bankLogo ? (
+          {defaultAccount.bank?.logoUrl ? (
             <img
-              src={defaultAccount.bankLogo}
+              src={defaultAccount.bank?.logoUrl}
               alt={defaultAccount.bankName}
               className="w-8 h-8 rounded-lg object-cover shrink-0"
             />

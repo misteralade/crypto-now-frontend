@@ -52,7 +52,7 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, bankAccount
               {/* Bank Logo */}
               <div className="flex-shrink-0">
                 <img
-                  src={bank.bankLogo}
+                  src={bank.bank?.logoUrl}
                   alt={`${bank.bankName} logo`}
                   className="w-12 h-12 rounded-full object-cover bg-gray-100"
                   onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
@@ -145,7 +145,7 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, bankAccount
             <div className="p-4 border border-gray-200 rounded-lg bg-gray-50">
               <div className="flex items-center space-x-3 mb-3">
                 <img
-                  src={selectedBank.bankLogo}
+                  src={selectedBank.bank?.logoUrl}
                   alt={`${selectedBank.bankName} logo`}
                   className="w-10 h-10 rounded-full object-cover"
                   onError={(e) => {
@@ -388,7 +388,7 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, bankAccount
                 <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
                   <div className="flex items-center space-x-3">
                     <img
-                      src={selectedBank.bankLogo}
+                      src={selectedBank.bank?.logoUrl}
                       alt={`${selectedBank.bankName} logo`}
                       className="w-8 h-8 rounded-full object-cover"
                       onError={(e) => {

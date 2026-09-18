@@ -109,7 +109,7 @@ const BankAccountForm = ({
                   );
                   if (selectedBank) {
                     handleChangeField("bankLogo", selectedBank.logoUrl);
-                    handleChangeField("bankCode", selectedBank.bankCode);
+                    handleChangeField("bankCode", selectedBank.bank?.bankCode);
                     handleChangeField("bankName", selectedBank.name);
 
                     if (values.accountNumber.length === 10) {

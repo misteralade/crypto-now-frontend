@@ -219,7 +219,7 @@ export default function DashboardTradeStep3({
 
         <div className="rounded-2xl p-5" style={{ border: "1px solid #EEEEEE" }}>
           <div className="flex items-center gap-3 mb-4">
-            <img src={selectedBank.bankLogo} alt={selectedBank.bankName}
+            <img src={selectedBank.bank?.logoUrl} alt={selectedBank.bankName}
               className="w-10 h-10 rounded-full object-cover"
               onError={(e) => { e.currentTarget.style.display = "none"; }} />
             <p className="font-bold" style={{ color: "#0E0F0C" }}>{selectedBank.bankName}</p>
@@ -282,7 +282,7 @@ export default function DashboardTradeStep3({
                 background: selected ? "#E8F8F0" : "#FAFAFA",
                 border: `2px solid ${selected ? accentColor : "#F0F0F0"}`,
               }}>
-              <img src={bank.bankLogo} alt={bank.bankName}
+              <img src={bank.bank?.logoUrl} alt={bank.bankName}
                 className="w-10 h-10 rounded-full object-cover shrink-0"
                 onError={(e) => { e.currentTarget.style.display = "none"; }} />
               <div className="flex-1 min-w-0">

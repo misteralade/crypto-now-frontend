@@ -20,6 +20,7 @@ import {
 import momentClient from "../../../lib/moment.ts";
 import DisputeTransactionModal from "./modals/DisputeTransactionModal.tsx";
 import TransactionReceiptsSection from "./TransactionReceiptsSection.tsx";
+import TransactionContextCard from "./TransactionContextCard.tsx";
 import { getStatusDisplayName } from "../../../util/transaction.util.ts";
 
 const TransactionDetailsPage = () => {
@@ -449,6 +450,9 @@ const TransactionDetailsPage = () => {
                 }
               />
             )}
+
+            {/* ── Transaction Context Flow ── */}
+            <TransactionContextCard transaction={transaction} />
 
             {/* ── Crypto wallet ── */}
             {transaction.userCryptoWallet && (
