@@ -451,6 +451,9 @@ const TransactionDetailsPage = () => {
               />
             )}
 
+            {/* ── Transaction Context Flow ── */}
+            {transaction && <TransactionContextCard transaction={transaction} />}
+
             {/* ── Crypto wallet ── */}
             {transaction.userCryptoWallet && (
               <Card>

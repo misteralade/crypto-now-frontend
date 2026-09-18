@@ -5,8 +5,8 @@ interface TransactionContextCardProps {
     type: string;
     userBankAccount?: { bank?: { name?: string } | null; accountName?: string } | null;
     adminBankAccount?: { bank?: { name?: string } | null; accountHolderName?: string } | null;
-    userCryptoWallet?: { network?: string; walletAddress?: string } | null;
-    adminCryptoWallet?: { network?: string; walletAddress?: string } | null;
+    walletAddress?: string | null;
+    walletNetwork?: string | null;
   };
 }
 
@@ -79,12 +79,12 @@ const TransactionContextCard = ({ transaction }: TransactionContextCardProps) =>
           </div>
 
           {/* To: User's Crypto Wallet */}
-          {transaction.userCryptoWallet && (
+          {transaction.walletAddress && (
             <div className="space-y-2">
               <p className="text-xs font-medium" style={{ color: "#9A9A9A" }}>
                 YOUR CRYPTO WALLET
               </p>
-              <InfoRow label="Network" value={transaction.userCryptoWallet.network || "—"} />
+              <InfoRow label="Network" value={transaction.walletNetwork || "—"} />
               <div className="pt-2">
                 <p className="text-[10px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "#9A9A9A" }}>
                   Wallet Address
@@ -93,7 +93,7 @@ const TransactionContextCard = ({ transaction }: TransactionContextCardProps) =>
                   className="text-xs break-all font-mono"
                   style={{ color: "#0E0F0C" }}
                 >
-                  {transaction.userCryptoWallet.walletAddress || "—"}
+                  {transaction.walletAddress || "—"}
                 </p>
               </div>
             </div>
@@ -110,12 +110,12 @@ const TransactionContextCard = ({ transaction }: TransactionContextCardProps) =>
 
         <div className="space-y-4">
           {/* From: User's Crypto Wallet */}
-          {transaction.userCryptoWallet && (
+          {transaction.walletAddress && (
             <div className="space-y-2 pb-4 border-b border-[#F0F0F0]">
               <p className="text-xs font-medium" style={{ color: "#9A9A9A" }}>
                 FROM (Your Crypto)
               </p>
-              <InfoRow label="Network" value={transaction.userCryptoWallet.network || "—"} />
+              <InfoRow label="Network" value={transaction.walletNetwork || "—"} />
               <div className="pt-2">
                 <p className="text-[10px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "#9A9A9A" }}>
                   Wallet Address
@@ -124,33 +124,7 @@ const TransactionContextCard = ({ transaction }: TransactionContextCardProps) =>
                   className="text-xs break-all font-mono"
                   style={{ color: "#0E0F0C" }}
                 >
-                  {transaction.userCryptoWallet.walletAddress || "—"}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Arrow */}
-          <div className="flex justify-center py-2">
-            <ArrowDown className="w-4 h-4" style={{ color: "#D0D0D0" }} />
-          </div>
-
-          {/* To: Admin Wallet (custodial) */}
-          {transaction.adminCryptoWallet && (
-            <div className="space-y-2 pb-4 border-b border-[#F0F0F0]">
-              <p className="text-xs font-medium" style={{ color: "#9A9A9A" }}>
-                RECEIVED AT (Platform Custodial)
-              </p>
-              <InfoRow label="Network" value={transaction.adminCryptoWallet.network || "—"} />
-              <div className="pt-2">
-                <p className="text-[10px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "#9A9A9A" }}>
-                  Wallet Address
-                </p>
-                <p
-                  className="text-xs break-all font-mono"
-                  style={{ color: "#0E0F0C" }}
-                >
-                  {transaction.adminCryptoWallet.walletAddress || "—"}
+                  {transaction.walletAddress || "—"}
                 </p>
               </div>
             </div>
