@@ -1,156 +1,96 @@
-import { ArrowDown } from "lucide-react";
-
 interface TransactionContextCardProps {
   transaction: {
     type: string;
     userBankAccount?: { bank?: { name?: string } | null; accountName?: string } | null;
     adminBankAccount?: { bank?: { name?: string } | null; accountHolderName?: string } | null;
     walletAddress?: string | null;
-    walletNetwork?: string | null;
   };
 }
 
 const TransactionContextCard = ({ transaction }: TransactionContextCardProps) => {
-  const Card = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-    <div
-      className={`rounded-3xl p-5 ${className}`}
-      style={{ background: "#FFFFFF", border: "1px solid #F0F0F0" }}
-    >
-      {children}
-    </div>
-  );
-
-  const CardTitle = ({ children }: { children: React.ReactNode }) => (
-    <p
-      className="text-[10px] font-bold tracking-widest uppercase mb-4"
-      style={{ color: "#9A9A9A" }}
-    >
-      {children}
-    </p>
-  );
-
-  const InfoRow = ({ label, value }: { label: string; value: string }) => (
-    <div>
-      <p className="text-[10px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "#9A9A9A" }}>
+  const InfoRow = ({ label, value }: { label: string; value?: string }) => (
+    <div className="py-2">
+      <p className="text-[10px] font-bold tracking-widest uppercase" style={{ color: "#9A9A9A" }}>
         {label}
       </p>
-      <p className="text-sm font-semibold" style={{ color: "#0E0F0C" }}>
-        {value}
+      <p className="text-sm font-semibold mt-0.5" style={{ color: "#0E0F0C" }}>
+        {value || "—"}
       </p>
     </div>
   );
 
-  if (transaction.type === "BUY") {
-    return (
-      <Card>
-        <CardTitle>Transaction Flow</CardTitle>
+  const WalletRow = ({ address }: { address?: string }) => (
+    <div className="py-2">
+      <p className="text-[10px] font-bold tracking-widest uppercase" style={{ color: "#9A9A9A" }}>
+        Wallet Address
+      </p>
+      <p className="text-xs break-all font-mono mt-0.5" style={{ color: "#0E0F0C" }}>
+        {address || "—"}
+      </p>
+    </div>
+  );
 
-        <div className="space-y-4">
-          {/* From: User's Bank */}
-          {transaction.userBankAccount && (
-            <div className="space-y-2 pb-4 border-b border-[#F0F0F0]">
-              <p className="text-xs font-medium" style={{ color: "#9A9A9A" }}>
-                FROM (Your Bank)
+  const isBuy = transaction.type === "BUY";
+
+  return (
+    <div className="rounded-3xl p-5" style={{ background: "#FFFFFF", border: "1px solid #F0F0F0" }}>
+      <div className="space-y-4">
+        {isBuy && transaction.userBankAccount && (
+          <>
+            <div className="pb-3 border-b border-[#F0F0F0]">
+              <p className="text-xs font-medium mb-2" style={{ color: "#9A9A9A" }}>
+                MONEY FROM
               </p>
-              <InfoRow label="Bank Name" value={transaction.userBankAccount.bank?.name || "—"} />
-              <InfoRow label="Account Name" value={transaction.userBankAccount.accountName || "—"} />
+              <InfoRow label="Bank" value={transaction.userBankAccount.bank?.name} />
+              <InfoRow label="Account" value={transaction.userBankAccount.accountName} />
             </div>
-          )}
+          </>
+        )}
 
-          {/* Arrow */}
-          <div className="flex justify-center py-2">
-            <ArrowDown className="w-4 h-4" style={{ color: "#D0D0D0" }} />
+        {isBuy && transaction.adminBankAccount && (
+          <>
+            <div className="pb-3 border-b border-[#F0F0F0]">
+              <p className="text-xs font-medium mb-2" style={{ color: "#9A9A9A" }}>
+                RECEIVED AT
+              </p>
+              <InfoRow label="Bank" value={transaction.adminBankAccount.bank?.name} />
+              <InfoRow label="Account" value={transaction.adminBankAccount.accountHolderName} />
+            </div>
+          </>
+        )}
+
+        {isBuy && transaction.walletAddress && (
+          <div>
+            <p className="text-xs font-medium mb-2" style={{ color: "#9A9A9A" }}>
+              CRYPTO TO
+            </p>
+            <WalletRow address={transaction.walletAddress} />
           </div>
+        )}
 
-          {/* To: Admin Bank (where user sent fiat) */}
-          {transaction.adminBankAccount && (
-            <div className="space-y-2 pb-4 border-b border-[#F0F0F0]">
-              <p className="text-xs font-medium" style={{ color: "#9A9A9A" }}>
-                RECEIVED AT (Platform Bank)
+        {!isBuy && transaction.walletAddress && (
+          <>
+            <div className="pb-3 border-b border-[#F0F0F0]">
+              <p className="text-xs font-medium mb-2" style={{ color: "#9A9A9A" }}>
+                CRYPTO FROM
               </p>
-              <InfoRow label="Bank Name" value={transaction.adminBankAccount.bank?.name || "—"} />
-              <InfoRow label="Account Holder" value={transaction.adminBankAccount.accountHolderName || "—"} />
+              <WalletRow address={transaction.walletAddress} />
             </div>
-          )}
+          </>
+        )}
 
-          {/* Arrow */}
-          <div className="flex justify-center py-2">
-            <ArrowDown className="w-4 h-4" style={{ color: "#D0D0D0" }} />
+        {!isBuy && transaction.userBankAccount && (
+          <div>
+            <p className="text-xs font-medium mb-2" style={{ color: "#9A9A9A" }}>
+              PAID TO
+            </p>
+            <InfoRow label="Bank" value={transaction.userBankAccount.bank?.name} />
+            <InfoRow label="Account" value={transaction.userBankAccount.accountName} />
           </div>
-
-          {/* To: User's Crypto Wallet */}
-          {transaction.walletAddress && (
-            <div className="space-y-2">
-              <p className="text-xs font-medium" style={{ color: "#9A9A9A" }}>
-                YOUR CRYPTO WALLET
-              </p>
-              <InfoRow label="Network" value={transaction.walletNetwork || "—"} />
-              <div className="pt-2">
-                <p className="text-[10px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "#9A9A9A" }}>
-                  Wallet Address
-                </p>
-                <p
-                  className="text-xs break-all font-mono"
-                  style={{ color: "#0E0F0C" }}
-                >
-                  {transaction.walletAddress || "—"}
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-      </Card>
-    );
-  }
-
-  if (transaction.type === "SELL") {
-    return (
-      <Card>
-        <CardTitle>Transaction Flow</CardTitle>
-
-        <div className="space-y-4">
-          {/* From: User's Crypto Wallet */}
-          {transaction.walletAddress && (
-            <div className="space-y-2 pb-4 border-b border-[#F0F0F0]">
-              <p className="text-xs font-medium" style={{ color: "#9A9A9A" }}>
-                FROM (Your Crypto)
-              </p>
-              <InfoRow label="Network" value={transaction.walletNetwork || "—"} />
-              <div className="pt-2">
-                <p className="text-[10px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "#9A9A9A" }}>
-                  Wallet Address
-                </p>
-                <p
-                  className="text-xs break-all font-mono"
-                  style={{ color: "#0E0F0C" }}
-                >
-                  {transaction.walletAddress || "—"}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Arrow */}
-          <div className="flex justify-center py-2">
-            <ArrowDown className="w-4 h-4" style={{ color: "#D0D0D0" }} />
-          </div>
-
-          {/* To: User's Bank (where they receive fiat) */}
-          {transaction.userBankAccount && (
-            <div className="space-y-2">
-              <p className="text-xs font-medium" style={{ color: "#9A9A9A" }}>
-                PAID TO (Your Bank)
-              </p>
-              <InfoRow label="Bank Name" value={transaction.userBankAccount.bank?.name || "—"} />
-              <InfoRow label="Account Name" value={transaction.userBankAccount.accountName || "—"} />
-            </div>
-          )}
-        </div>
-      </Card>
-    );
-  }
-
-  return null;
+        )}
+      </div>
+    </div>
+  );
 };
 
 export default TransactionContextCard;
