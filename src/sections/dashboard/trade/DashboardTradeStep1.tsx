@@ -154,6 +154,20 @@ function BuyFields({
   const [isFetchingRate, setIsFetchingRate] = useState(false);
   // Track the fiatAmount that's currently being fetched to avoid duplicate in-flight requests
   const fetchingRef = useRef<number | null>(null);
+  // Rate is prefetched the instant a crypto/currency is selected (see the
+  // prefetch effect below), independent of any amount — the backend already
+  // caches per (cryptoId, currencyId, action) for 30s (see
+  // exchange-rate-cache.ts CACHE_TTL_SECONDS), so reusing it here just skips
+  // the network round-trip the user would otherwise wait through after typing
+  // an amount. RATE_CACHE_TTL_MS is kept a little under that so we never
+  // reuse a rate the backend itself would already be refreshing.
+  const RATE_CACHE_TTL_MS = 25_000;
+  const rateCacheRef = useRef<{
+    cryptoId: string;
+    currencyId: string;
+    data: Awaited<ReturnType<typeof exchangeRateServiceApi.getExchangeRate>>["data"];
+    fetchedAt: number;
+  } | null>(null);
   const [activePreset, setActivePreset] = useState<number | "custom" | null>(null);
   const [customAmount, setCustomAmount] = useState("");
   // Set only when a keystroke was rejected for pushing the amount past the
@@ -225,16 +239,20 @@ function BuyFields({
     }
   };
 
-  // `amountToBuy` is now the CRYPTO quantity the user types/picks (mirrors the
-  // guest flow). Fetch the live rate and derive the NGN/USD fiat cost from it.
-  const fetchRate = async (cryptoAmount: number, currencyId: string) => {
-    const cryptoId = selectedToken.id;
-    if (!cryptoAmount || cryptoAmount <= 0 || !currencyId || !cryptoId) return;
-    if (fetchingRef.current === cryptoAmount) return; // already fetching this amount
-
-    fetchingRef.current = cryptoAmount;
-    onRateResolved?.(null); // clear old rate while fetching
-    setIsFetchingRate(true);
+  // Fetch (and cache) the raw rate for the given crypto/currency pair,
+  // independent of any amount. Called immediately on selection so the rate
+  // is already resolved by the time the user types an amount.
+  const prefetchRate = async (cryptoId: string, currencyId: string) => {
+    if (!cryptoId || !currencyId) return;
+    const cached = rateCacheRef.current;
+    if (
+      cached &&
+      cached.cryptoId === cryptoId &&
+      cached.currencyId === currencyId &&
+      Date.now() - cached.fetchedAt < RATE_CACHE_TTL_MS
+    ) {
+      return; // still fresh
+    }
     try {
       const { data: rateData, success: rateOk } =
         await exchangeRateServiceApi.getExchangeRate(
@@ -243,6 +261,60 @@ function BuyFields({
           "BUY",
         );
       if (!rateOk || !rateData) return;
+      rateCacheRef.current = {
+        cryptoId,
+        currencyId,
+        data: rateData,
+        fetchedAt: Date.now(),
+      };
+    } catch {
+      // Silent — this is a background prefetch. fetchRate/applyFiatPresetAmount
+      // fall back to a normal network fetch if the cache never populates.
+    }
+  };
+
+  // Prefetch the rate the instant a crypto/currency is selected, well before
+  // the user has typed an amount — this is what removes the lag the user
+  // used to hit only after entering an amount.
+  useEffect(() => {
+    const currencyId = selectedCurrency?.id;
+    if (!currencyId) return;
+    void prefetchRate(selectedToken.id, currencyId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedToken.id, selectedCurrency?.id]);
+
+  // `amountToBuy` is now the CRYPTO quantity the user types/picks (mirrors the
+  // guest flow). Use the prefetched rate when it's fresh; otherwise fetch live
+  // and derive the NGN/USD fiat cost from it.
+  const fetchRate = async (cryptoAmount: number, currencyId: string) => {
+    const cryptoId = selectedToken.id;
+    if (!cryptoAmount || cryptoAmount <= 0 || !currencyId || !cryptoId) return;
+    if (fetchingRef.current === cryptoAmount) return; // already fetching this amount
+
+    fetchingRef.current = cryptoAmount;
+    onRateResolved?.(null); // clear old rate while fetching
+
+    const cached = rateCacheRef.current;
+    const cacheIsFresh =
+      cached &&
+      cached.cryptoId === cryptoId &&
+      cached.currencyId === currencyId &&
+      Date.now() - cached.fetchedAt < RATE_CACHE_TTL_MS;
+
+    try {
+      let rateData = cacheIsFresh ? cached!.data : null;
+      if (!rateData) {
+        setIsFetchingRate(true);
+        const { data, success: rateOk } =
+          await exchangeRateServiceApi.getExchangeRate(
+            cryptoId,
+            currencyId,
+            "BUY",
+          );
+        if (!rateOk || !data) return;
+        rateData = data;
+        rateCacheRef.current = { cryptoId, currencyId, data, fetchedAt: Date.now() };
+      }
 
       // coinGeckoRate is always USD-per-token. platformRate is the platform's
       // NGN-per-USD markup, so it only applies when the quote currency is NGN —
@@ -359,15 +431,28 @@ function BuyFields({
     if (!targetFiatAmount || !currencyId || !cryptoId) return;
 
     onRateResolved?.(null);
-    setIsFetchingRate(true);
+
+    const cached = rateCacheRef.current;
+    const cacheIsFresh =
+      cached &&
+      cached.cryptoId === cryptoId &&
+      cached.currencyId === currencyId &&
+      Date.now() - cached.fetchedAt < RATE_CACHE_TTL_MS;
+
     try {
-      const { data: rateData, success: rateOk } =
-        await exchangeRateServiceApi.getExchangeRate(
-          cryptoId,
-          currencyId,
-          "BUY",
-        );
-      if (!rateOk || !rateData) return;
+      let rateData = cacheIsFresh ? cached!.data : null;
+      if (!rateData) {
+        setIsFetchingRate(true);
+        const { data, success: rateOk } =
+          await exchangeRateServiceApi.getExchangeRate(
+            cryptoId,
+            currencyId,
+            "BUY",
+          );
+        if (!rateOk || !data) return;
+        rateData = data;
+        rateCacheRef.current = { cryptoId, currencyId, data, fetchedAt: Date.now() };
+      }
 
       const isNgnQuote = rateData.currency === "NGN";
       const divisor = isNgnQuote
