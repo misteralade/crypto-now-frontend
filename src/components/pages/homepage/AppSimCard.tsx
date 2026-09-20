@@ -987,6 +987,21 @@ const AppSimCard = () => {
     }
   }, [buyInputCurrency, isBuy, selectedCrypto, sellReceiveCurrency]);
 
+  // Prefetch the rate the instant a crypto is selected (or the buy/sell tab
+  // or quote currency changes) — well before the user types an amount. This
+  // just warms getExchangeRateWithCache's cache, so the amount-driven
+  // fetchRate() below resolves instantly off cache instead of waiting on a
+  // network round-trip once the user starts typing.
+  useEffect(() => {
+    if (!selectedCrypto || !quoteCurrencyObj?.id) return;
+    void getExchangeRateWithCache(
+      selectedCrypto,
+      quoteCurrencyObj.id,
+      isBuy ? "BUY" : "SELL",
+    ).catch(() => undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCrypto, quoteCurrencyObj?.id, isBuy]);
+
   useEffect(() => {
     if (!selectedCrypto || !quoteCurrencyObj?.id || !amount) {
       setReceiveAmount("");
