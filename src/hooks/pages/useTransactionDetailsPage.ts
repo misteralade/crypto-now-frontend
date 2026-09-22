@@ -10,6 +10,9 @@ import { useTransactionQuery } from "../../queries/transaction.query.ts";
 import type { MessageAttachment } from "../../types/transaction.types.ts";
 // trigger pr 2
 import { formatCompact } from "../../util/asset-precision.ts";
+import { toast } from "react-toastify";
+
+const DISPUTE_WINDOW_HOURS = 24;
 
 export const useTransactionDetailsPage = () => {
   const dispatch = useDispatch();
@@ -115,8 +118,20 @@ export const useTransactionDetailsPage = () => {
     window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
 
-  const toggleDisputeTransaction = () =>
+  const toggleDisputeTransaction = () => {
+    if (!showDisputeTransaction && transactionDetails?.createdAt) {
+      const hoursElapsed =
+        (Date.now() - new Date(transactionDetails.createdAt).getTime()) /
+        (1000 * 60 * 60);
+      if (hoursElapsed > DISPUTE_WINDOW_HOURS) {
+        toast.error(
+          "The 24-hour dispute window for this transaction has closed. Please contact support for help.",
+        );
+        return;
+      }
+    }
     setShowDisputeTransaction(!showDisputeTransaction);
+  };
 
   return {
     // 🧩 Values
