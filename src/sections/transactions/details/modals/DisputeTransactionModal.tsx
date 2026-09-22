@@ -10,6 +10,7 @@ import {
   Check,
 } from "lucide-react";
 import { type ChangeEvent, Fragment, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { formatFileSize } from "../../../../util/index.util";
 import type { FileTypeConfig, MessageAttachment, AttachmentType } from "../../../../types/transaction.types.ts";
 import { ATTACHMENT_TYPE } from "../../../../util/constants.util.ts";
@@ -188,7 +189,7 @@ const DisputeTransactionModal = ({ transactionId, onClose, onSubmit }: DisputeTr
 
   const totalFiles = uploadingFiles.length + uploadedAttachments.length;
 
-  return (
+  return createPortal(
     <Fragment>
       {/* Overlay */}
       <div
@@ -432,7 +433,8 @@ const DisputeTransactionModal = ({ transactionId, onClose, onSubmit }: DisputeTr
 
         </div>
       </div>
-    </Fragment>
+    </Fragment>,
+    document.body
   );
 };
 
