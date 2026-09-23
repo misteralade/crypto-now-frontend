@@ -118,15 +118,15 @@ const HeroSectionNew = () => {
             className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight tracking-tight"
             style={{ fontFamily: "'DM Sans', sans-serif", color: "#0E0F0C" }}
           >
-            Buy &amp; Sell Crypto
+            Trade Crypto for Naira.
             <br />
-            with <span style={{ color: "#948EEE" }}>Naira</span>
+            <span style={{ color: "#948EEE" }}>Instantly.</span>
           </h1>
           <p
             className="text-sm sm:text-base text-gray-400 font-normal max-w-xs"
             style={{ fontFamily: "'DM Sans', sans-serif" }}
           >
-            Fast, simple, secure.
+            Rate locks the second you start — no re-quotes, no waiting on slow exchanges.
             <br /> Try a guest trade right now.
           </p>
         </motion.div>
@@ -153,7 +153,7 @@ const HeroSectionNew = () => {
             letterSpacing: "0.02em",
           }}
         >
-          fast simple and secure
+rate-locked. reviewed. paid out fast
         </p>
       </div>
     </section>

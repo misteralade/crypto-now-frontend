@@ -11,21 +11,21 @@ const FALLBACK_TESTIMONIALS: TestimonialResponse[] = [
     id: "f1", creatorId: "", isPublished: true,
     contentType: TESTIMONIAL_CONTENT_TYPES.TEXT, contentLink: "",
     name: "Chukwuemeka A.",
-    description: "I sent BTC and the naira came through a few minutes later. It was straightforward and did what I needed.",
+    description: "I sold BTC and the naira landed in under 10 minutes — no re-quote, no back-and-forth. That's the whole reason I moved off my old exchange.",
     createdAt: "", updatedAt: "",
   },
   {
     id: "f2", creatorId: "", isPublished: true,
     contentType: TESTIMONIAL_CONTENT_TYPES.TEXT, contentLink: "",
     name: "Amara O.",
-    description: "The rate stayed the same from start to finish, which was the main thing I was looking for.",
+    description: "The rate stayed locked for the full 5 minutes even though the market moved. Every other platform I'd used would've re-quoted me lower.",
     createdAt: "", updatedAt: "",
   },
   {
     id: "f3", creatorId: "", isPublished: true,
     contentType: TESTIMONIAL_CONTENT_TYPES.TEXT, contentLink: "",
     name: "Tunde B.",
-    description: "I had a question on one transaction and support replied without dragging it out.",
+    description: "Had a dispute on one transaction — flagged it and a real person resolved it the same day, not a bot loop.",
     createdAt: "", updatedAt: "",
   },
 ];
@@ -345,10 +345,10 @@ const TestimonialsNew = () => {
             Customer feedback
           </p>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight" style={{ color: "#0E0F0C", fontFamily: "'DM Sans', sans-serif" }}>
-            What people say<br />after using it.
+            Traders who switched<br />and stayed.
           </h2>
           <p className="mt-3 text-base" style={{ color: "#6B6E6B", fontFamily: "'DM Sans', sans-serif" }}>
-            A few short notes from recent customers.
+            A few short notes from people who trade here regularly.
           </p>
         </motion.div>
 

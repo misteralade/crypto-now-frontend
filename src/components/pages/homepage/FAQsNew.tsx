@@ -143,11 +143,11 @@ const FAQsNew = () => {
               className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight mb-5"
               style={{ color: "#ffffff", fontFamily: "'DM Sans', sans-serif" }}
             >
-              Everything
+              Before you
               <br />
-              you need
+              trade with
               <br />
-              to know.
+              us.
             </h2>
             <p
               className="text-sm mb-8"

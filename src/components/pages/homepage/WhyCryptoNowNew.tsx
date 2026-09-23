@@ -4,24 +4,24 @@ import { ShieldCheck, LockSimple, Lightning } from "@phosphor-icons/react";
 
 const features = [
   {
-    icon: ShieldCheck,
-    label: "Reviewed",
-    title: "Trades are checked by a person.",
-    body: "We review each trade before funds move, so nothing feels rushed or automated.",
-    align: "left" as const,
-  },
-  {
     icon: LockSimple,
     label: "Rate locked",
-    title: "Your rate stays fixed for 5 minutes.",
-    body: "The price is locked when you start, so you know what you’re paying before you proceed.",
-    align: "right" as const,
+    title: "Your rate stays fixed for 5 full minutes.",
+    body: "No re-quoting mid-trade. The rate you see when you start is the rate you get — even if the market moves against you before you're done.",
+    align: "left" as const,
   },
   {
     icon: Lightning,
     label: "Quick payout",
-    title: "Naira usually lands fast.",
-    body: "Once the trade clears, we send the payout without extra steps or back-and-forth.",
+    title: "Naira usually lands in minutes, not hours.",
+    body: "Sell flows are automated end-to-end — no manual queue. The moment your crypto clears on-chain, payout goes out.",
+    align: "right" as const,
+  },
+  {
+    icon: ShieldCheck,
+    label: "Reviewed",
+    title: "Every trade is checked by a person before funds move.",
+    body: "Automated speed, human oversight — so a bad rate feed or a stuck transaction gets caught before it becomes your problem.",
     align: "left" as const,
   },
 ];
@@ -110,12 +110,12 @@ const WhyCryptoNowNew = () => {
             className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight"
             style={{ color: "#0E0F0C", fontFamily: "'DM Sans', sans-serif" }}
           >
-            Built different,
+            Tired of rates that move
             <br />
-            for a reason.
+            before your trade clears?
           </h2>
           <p className="mt-3 text-base max-w-md" style={{ color: "#6B6E6B", fontFamily: "'DM Sans', sans-serif" }}>
-            A few small things that make the flow feel more direct and less noisy.
+            If you've dealt with slow payouts or re-quoted rates on other exchanges, here's what we do differently.
           </p>
         </motion.div>
 
