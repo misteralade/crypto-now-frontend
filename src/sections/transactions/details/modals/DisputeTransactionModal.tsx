@@ -9,7 +9,7 @@ import {
   Image,
   Check,
 } from "lucide-react";
-import { type ChangeEvent, Fragment, useEffect, useState } from "react";
+import { type ChangeEvent, Fragment, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { formatFileSize } from "../../../../util/index.util";
 import type { FileTypeConfig, MessageAttachment, AttachmentType } from "../../../../types/transaction.types.ts";
@@ -53,6 +53,14 @@ const DisputeTransactionModal = ({ transactionId, onClose, onSubmit }: DisputeTr
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
   const [uploadedAttachments, setUploadedAttachments] = useState<MessageAttachment[]>([]);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  // Uploaded attachments live in a private bucket — att.url isn't signed and
+  // 404s if rendered directly. The image is already sitting in the browser
+  // from the local file the user picked, so keep that blob preview alive
+  // (keyed by the attachment's final url) instead of trying to (re)fetch a
+  // URL that was never viewable to begin with.
+  const [attachmentPreviews, setAttachmentPreviews] = useState<Record<string, string>>({});
+  const attachmentPreviewsRef = useRef(attachmentPreviews);
+  attachmentPreviewsRef.current = attachmentPreviews;
 
   // Lock the background page's scroll while this modal is mounted — without
   // this, dragging inside the modal's scrollable body on mobile scrolled the
@@ -61,6 +69,13 @@ const DisputeTransactionModal = ({ transactionId, onClose, onSubmit }: DisputeTr
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = "unset"; };
+  }, []);
+
+  // Revoke every remaining blob preview when the modal unmounts.
+  useEffect(() => {
+    return () => {
+      Object.values(attachmentPreviewsRef.current).forEach((previewUrl) => URL.revokeObjectURL(previewUrl));
+    };
   }, []);
 
   const getAttachmentType = (file: File): AttachmentType => {
@@ -148,7 +163,13 @@ const DisputeTransactionModal = ({ transactionId, onClose, onSubmit }: DisputeTr
 
         setUploadedAttachments((prev) => [...prev, attachment]);
         setUploadingFiles((prev) => prev.filter((f) => f.id !== uploadingFile.id));
-        if (uploadingFile.localPreview) URL.revokeObjectURL(uploadingFile.localPreview);
+        // Hand the blob preview off to the "uploaded" list under its final
+        // url instead of revoking it — att.url points at a private bucket
+        // object with no signed access, so this blob is the only viewable
+        // copy of the image there ever will be in this modal.
+        if (uploadingFile.localPreview) {
+          setAttachmentPreviews((prev) => ({ ...prev, [url]: uploadingFile.localPreview as string }));
+        }
       } catch {
         setUploadingFiles((prev) =>
           prev.map((f) => f.id === uploadingFile.id ? { ...f, isUploading: false, error: "Upload failed" } : f)
@@ -167,6 +188,13 @@ const DisputeTransactionModal = ({ transactionId, onClose, onSubmit }: DisputeTr
 
   const removeAttachment = (url: string): void => {
     setUploadedAttachments((prev) => prev.filter((a) => a.url !== url));
+    setAttachmentPreviews((prev) => {
+      if (!prev[url]) return prev;
+      URL.revokeObjectURL(prev[url]);
+      const rest = { ...prev };
+      delete rest[url];
+      return rest;
+    });
   };
 
   const handleDisputeSubmit = async (): Promise<void> => {
@@ -356,11 +384,12 @@ const DisputeTransactionModal = ({ transactionId, onClose, onSubmit }: DisputeTr
                   {uploadedAttachments.map((att) => {
                     const FileIcon = fileTypeConfig[att.type].icon;
                     const isImage = att.type === ATTACHMENT_TYPE.IMAGE;
+                    const preview = attachmentPreviews[att.url];
                     return (
                       <div key={att.url} className="flex items-center gap-3 px-3 py-2.5 rounded-2xl"
                         style={{ background: "#E8F8F0", border: "1px solid #A8E6C8" }}>
-                        {isImage ? (
-                          <img src={att.url} alt={att.filename} className="w-10 h-10 rounded-xl object-cover shrink-0" />
+                        {isImage && preview ? (
+                          <img src={preview} alt={att.filename} className="w-10 h-10 rounded-xl object-cover shrink-0" />
                         ) : (
                           <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "#FFFFFF" }}>
                             <FileIcon size={16} style={{ color: fileTypeConfig[att.type].color }} />
