@@ -34,6 +34,13 @@ export const useTransactionDetailsPage = () => {
 
   const { id } = useParams({ from: "/dashboard/transactions/$id" });
 
+  // Past the 24-hour dispute window — the button stays clickable (so the
+  // toast in toggleDisputeTransaction still fires) but is rendered blurred
+  // to visually read as inactive.
+  const isDisputeExpired = !!transactionDetails?.createdAt &&
+    Date.now() - new Date(transactionDetails.createdAt).getTime() >
+      DISPUTE_WINDOW_HOURS * 60 * 60 * 1000;
+
   useEffect(() => {
     if (id) {
       dispatch(setTransactionDetailSessionId(id));
@@ -141,6 +148,7 @@ export const useTransactionDetailsPage = () => {
     copiedField,
     disputeCountdown,
     canDispute,
+    isDisputeExpired,
 
     // ⚙️ Functions 2222
     toggleDisputeTransaction,

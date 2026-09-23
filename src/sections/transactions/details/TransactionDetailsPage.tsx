@@ -32,6 +32,7 @@ const TransactionDetailsPage = () => {
     copiedField,
     disputeCountdown,
     canDispute,
+    isDisputeExpired,
     toggleDisputeTransaction,
     copyToClipboard,
     handleSubmitDispute,
@@ -221,28 +222,38 @@ const TransactionDetailsPage = () => {
                 </div>
               </div>
 
-              {/* Dispute button */}
+              {/* Dispute button — stays clickable even past the 24h window so
+                  toggleDisputeTransaction's toast still fires; blurred here
+                  purely to read as visually inactive. */}
               <button
                 onClick={toggleDisputeTransaction}
-                disabled={!canDispute}
+                disabled={!canDispute && !isDisputeExpired}
                 className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-2xl text-xs font-bold transition-all"
                 style={
-                  canDispute
+                  isDisputeExpired
                     ? {
                         background: "#FEECEC",
                         color: "#EB5757",
                         border: "1px solid #F5C0C0",
+                        filter: "blur(1.5px)",
+                        opacity: 0.5,
                       }
-                    : {
-                        background: "#F7F7F9",
-                        color: "#9A9A9A",
-                        border: "1px solid #EEEEEE",
-                        cursor: "not-allowed",
-                      }
+                    : canDispute
+                      ? {
+                          background: "#FEECEC",
+                          color: "#EB5757",
+                          border: "1px solid #F5C0C0",
+                        }
+                      : {
+                          background: "#F7F7F9",
+                          color: "#9A9A9A",
+                          border: "1px solid #EEEEEE",
+                          cursor: "not-allowed",
+                        }
                 }
               >
                 <AlertTriangle size={13} />
-                {canDispute ? (
+                {isDisputeExpired || canDispute ? (
                   "Dispute"
                 ) : (
                   <span className="flex items-center gap-1">
