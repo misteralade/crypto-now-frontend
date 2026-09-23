@@ -33,6 +33,9 @@ const TransactionDetailsPage = () => {
     disputeCountdown,
     canDispute,
     isDisputeExpired,
+    disputeForTransaction,
+    disputeStatusLabel,
+    isDisputeClosed,
     toggleDisputeTransaction,
     copyToClipboard,
     handleSubmitDispute,
@@ -222,38 +225,50 @@ const TransactionDetailsPage = () => {
                 </div>
               </div>
 
-              {/* Dispute button — stays clickable even past the 24h window so
-                  toggleDisputeTransaction's toast still fires; blurred here
-                  purely to read as visually inactive. */}
+              {/* Dispute button — stays clickable in every state so
+                  toggleDisputeTransaction's toast/navigation still fires;
+                  visual styling only communicates whether it's "inactive". */}
               <button
                 onClick={toggleDisputeTransaction}
-                disabled={!canDispute && !isDisputeExpired}
+                disabled={!disputeForTransaction && !canDispute && !isDisputeExpired}
                 className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-2xl text-xs font-bold transition-all"
                 style={
-                  isDisputeExpired
-                    ? {
-                        background: "#FEECEC",
-                        color: "#EB5757",
-                        border: "1px solid #F5C0C0",
-                        filter: "blur(1.5px)",
-                        opacity: 0.5,
-                      }
-                    : canDispute
+                  disputeForTransaction
+                    ? isDisputeClosed
                       ? {
-                          background: "#FEECEC",
-                          color: "#EB5757",
-                          border: "1px solid #F5C0C0",
+                          background: "#F0F0F0",
+                          color: "#BDBDBD",
+                          border: "1px solid #EEEEEE",
                         }
                       : {
-                          background: "#F7F7F9",
-                          color: "#9A9A9A",
-                          border: "1px solid #EEEEEE",
-                          cursor: "not-allowed",
+                          background: "#F0EFFD",
+                          color: "#575AE5",
+                          border: "1px solid #C7C4F5",
                         }
+                    : isDisputeExpired
+                      ? {
+                          background: "#F0F0F0",
+                          color: "#BDBDBD",
+                          border: "1px solid #EEEEEE",
+                        }
+                      : canDispute
+                        ? {
+                            background: "#FEECEC",
+                            color: "#EB5757",
+                            border: "1px solid #F5C0C0",
+                          }
+                        : {
+                            background: "#F7F7F9",
+                            color: "#9A9A9A",
+                            border: "1px solid #EEEEEE",
+                            cursor: "not-allowed",
+                          }
                 }
               >
                 <AlertTriangle size={13} />
-                {isDisputeExpired || canDispute ? (
+                {disputeForTransaction ? (
+                  disputeStatusLabel
+                ) : isDisputeExpired || canDispute ? (
                   "Dispute"
                 ) : (
                   <span className="flex items-center gap-1">

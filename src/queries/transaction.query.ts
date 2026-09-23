@@ -175,6 +175,24 @@ export const useTransactionQuery = () => {
     enabled: !!store.getState().transaction.details.sessionId && !!matchRoute({ to: ROUTES.TRANSACTION_DETAILS }),
   });
 
+  // A transaction can only ever carry one dispute — look it up by the
+  // transaction's own id (not sessionId) so the Dispute button on the
+  // details page can reflect an existing dispute's status instead of
+  // always offering to create a new one.
+  const { data: disputeForTransaction, isLoading: loadingDisputeForTransaction } = useQuery({
+    queryKey: [QUERY_KEYS.DISPUTE.GET_DISPUTE_BY_TRANSACTION, transactionDetails?.id],
+    queryFn: async () => {
+      if (!transactionDetails?.id) {
+        return null;
+      }
+
+      const { data, success } = await disputeServiceApi.getDisputeByTransactionId(transactionDetails.id);
+
+      return success ? data : null;
+    },
+    enabled: !!transactionDetails?.id && !!matchRoute({ to: ROUTES.TRANSACTION_DETAILS }),
+  });
+
   // Live transaction status stream with SSE fallback to polling
   const useTransactionStatus = (sessionId?: string) => {
     return useTransactionLiveStatus(sessionId);
@@ -618,6 +636,8 @@ export const useTransactionQuery = () => {
     loadingIncompleteTransactionsCount,
     transactionDetails,
     loadingTransactionDetails,
+    disputeForTransaction,
+    loadingDisputeForTransaction,
     disputeMessages,
     loadingDisputeMessages,
     disputeDetails,

@@ -355,19 +355,33 @@ export type GetDisputeMessagesAPIResponse = BaseApiResponse<
 export type GetDisputeDetailsAPIResponse =
   BaseApiResponse<DisputeDetailsResponse>;
 
+export type DisputeStatus =
+  | "OPEN"
+  | "UNDER_REVIEW"
+  | "AWAITING_EVIDENCE"
+  | "AWAITING_USER_RESPONSE"
+  | "AWAITING_ADMIN_RESPONSE"
+  | "ESCALATED"
+  | "RESOLVED"
+  | "REJECTED"
+  | "CLOSED";
+
+// A transaction can only ever carry one dispute — this is a lookup (not a
+// search), so `data` is null when the transaction has never been disputed.
+export type DisputeByTransactionResponse = {
+  id: string;
+  status: DisputeStatus;
+  resolution: string | null;
+  createdAt: Date;
+} | null;
+
+export type GetDisputeByTransactionAPIResponse =
+  BaseApiResponse<DisputeByTransactionResponse>;
+
 export type DisputeDetailsResponse = {
   id: string;
   disputeReason: string;
-  status:
-    | "OPEN"
-    | "UNDER_REVIEW"
-    | "AWAITING_EVIDENCE"
-    | "AWAITING_USER_RESPONSE"
-    | "AWAITING_ADMIN_RESPONSE"
-    | "ESCALATED"
-    | "RESOLVED"
-    | "REJECTED"
-    | "CLOSED";
+  status: DisputeStatus;
   priority: "LOW" | "NORMAL" | "HIGH" | "URGENT";
   lastMessageAt: Date;
   attachments: MessageAttachment[];

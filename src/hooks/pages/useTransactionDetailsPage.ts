@@ -1,4 +1,4 @@
-import { useParams } from "@tanstack/react-router";
+import { useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useState, useRef } from "react";
 import { useDispatch } from "react-redux";
 import {
@@ -8,17 +8,41 @@ import {
 } from "../../redux/transaction.slice.ts";
 import { useTransactionQuery } from "../../queries/transaction.query.ts";
 import type { MessageAttachment } from "../../types/transaction.types.ts";
+import type { DisputeStatus } from "../../types/response.payload.types.ts";
 // trigger pr 2
 import { formatCompact } from "../../util/asset-precision.ts";
+import { ROUTES } from "../../util/constants.util.ts";
 import { toast } from "react-toastify";
 
 const DISPUTE_WINDOW_HOURS = 24;
 
+// A transaction can only ever carry one dispute — once it exists, the button
+// reflects its status instead of offering to create another one.
+const DISPUTE_STATUS_LABELS: Record<DisputeStatus, string> = {
+  OPEN: "Dispute: open",
+  UNDER_REVIEW: "Dispute: under review",
+  AWAITING_EVIDENCE: "Dispute: awaiting evidence",
+  AWAITING_USER_RESPONSE: "Dispute: awaiting you",
+  AWAITING_ADMIN_RESPONSE: "Dispute: awaiting reply",
+  ESCALATED: "Dispute: escalated",
+  RESOLVED: "Dispute: resolved",
+  REJECTED: "Dispute: rejected",
+  CLOSED: "Dispute: closed",
+};
+
+const CLOSED_DISPUTE_STATUSES = new Set<DisputeStatus>([
+  "RESOLVED",
+  "REJECTED",
+  "CLOSED",
+]);
+
 export const useTransactionDetailsPage = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const {
     transactionDetails,
     loadingTransactionDetails,
+    disputeForTransaction,
     disputeTransactionInitiationMutation,
   } = useTransactionQuery();
 
@@ -126,15 +150,32 @@ export const useTransactionDetailsPage = () => {
   };
 
   const toggleDisputeTransaction = () => {
-    if (!showDisputeTransaction && transactionDetails?.createdAt) {
-      const hoursElapsed =
-        (Date.now() - new Date(transactionDetails.createdAt).getTime()) /
-        (1000 * 60 * 60);
-      if (hoursElapsed > DISPUTE_WINDOW_HOURS) {
-        toast.error(
-          "The 24-hour dispute window for this transaction has closed. Please contact support for help.",
+    if (!showDisputeTransaction) {
+      // A dispute already exists for this transaction — never open the create
+      // flow (the backend would reject it anyway); tell the user its status
+      // and take them straight to the existing thread instead.
+      if (disputeForTransaction) {
+        const isClosed = CLOSED_DISPUTE_STATUSES.has(disputeForTransaction.status);
+        const statusLabel = DISPUTE_STATUS_LABELS[disputeForTransaction.status];
+        toast[isClosed ? "error" : "info"](
+          isClosed
+            ? `This transaction's dispute is already closed (${statusLabel.replace("Dispute: ", "")}). Taking you to it.`
+            : `You already have an open dispute for this transaction (${statusLabel.replace("Dispute: ", "")}). Taking you to it.`,
         );
+        navigate({ to: ROUTES.DISPUTE_DETAILS, params: { id: disputeForTransaction.id } });
         return;
+      }
+
+      if (transactionDetails?.createdAt) {
+        const hoursElapsed =
+          (Date.now() - new Date(transactionDetails.createdAt).getTime()) /
+          (1000 * 60 * 60);
+        if (hoursElapsed > DISPUTE_WINDOW_HOURS) {
+          toast.error(
+            "The 24-hour dispute window for this transaction has closed. Please contact support for help.",
+          );
+          return;
+        }
       }
     }
     setShowDisputeTransaction(!showDisputeTransaction);
@@ -149,6 +190,13 @@ export const useTransactionDetailsPage = () => {
     disputeCountdown,
     canDispute,
     isDisputeExpired,
+    disputeForTransaction,
+    disputeStatusLabel: disputeForTransaction
+      ? DISPUTE_STATUS_LABELS[disputeForTransaction.status]
+      : null,
+    isDisputeClosed: disputeForTransaction
+      ? CLOSED_DISPUTE_STATUSES.has(disputeForTransaction.status)
+      : false,
 
     // ⚙️ Functions 2222
     toggleDisputeTransaction,

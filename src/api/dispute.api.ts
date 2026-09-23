@@ -5,6 +5,7 @@ import {
 import type {CreateDisputeRequestType} from "../schemas/dispute.schema.ts";
 import type {
   BaseApiResponse,
+  GetDisputeByTransactionAPIResponse,
   GetDisputeDetailsAPIResponse,
   GetDisputeMessagesAPIResponse
 } from "../types/response.payload.types.ts";
@@ -33,6 +34,10 @@ class DisputeServiceApi {
   
   async getDisputeDetails(disputeId: string) {
     return await axiosGetRequestHandler(`/dispute/${disputeId}`) as GetDisputeDetailsAPIResponse;
+  }
+
+  async getDisputeByTransactionId(transactionId: string) {
+    return await axiosGetRequestHandler(`/dispute/by-transaction/${transactionId}`) as GetDisputeByTransactionAPIResponse;
   }
   
   async sendDisputeMessage(disputeId: string, message: string, attachments: Array<MessageAttachment>) {
