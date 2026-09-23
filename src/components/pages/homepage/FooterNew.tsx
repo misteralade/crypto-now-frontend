@@ -135,7 +135,7 @@ const FooterNew = () => (
         {/* Support */}
         <div>
           <p style={colHead}>Support</p>
-          <FooterLink href={`${ROUTES.HOMEPAGE}#${ROUTES.HOMEPAGE_TAG_IDS.HOW_IT_WORKS}`}>How it works</FooterLink>
+          <FooterLink to={ROUTES.HOW_IT_WORKS}>How it works</FooterLink>
           <FooterLink to={ROUTES.CONTACT}>Contact</FooterLink>
           <FooterLink href={ROUTES.SOCIALS.WHATSAPP}>WhatsApp</FooterLink>
         </div>

@@ -30,6 +30,7 @@ export const ROUTES = {
 
 
   ABOUT: "/about",
+  HOW_IT_WORKS: "/how-it-works",
   CONTACT: "/contact",
   TERMS_OF_SERVICES: "/terms-of-service",
   PRIVACY_POLICY: "/privacy-policy",

@@ -18,7 +18,7 @@ const FALLBACK_TESTIMONIALS: TestimonialResponse[] = [
     id: "f2", creatorId: "", isPublished: true,
     contentType: TESTIMONIAL_CONTENT_TYPES.TEXT, contentLink: "",
     name: "Amara O.",
-    description: "The rate stayed locked for the full 5 minutes even though the market moved. Every other platform I'd used would've re-quoted me lower.",
+    description: "The rate stayed locked for the full 3 minutes even though the market moved. Every other platform I'd used would've re-quoted me lower.",
     createdAt: "", updatedAt: "",
   },
   {

@@ -6,7 +6,7 @@ const features = [
   {
     icon: LockSimple,
     label: "Rate locked",
-    title: "Your rate stays fixed for 5 full minutes.",
+    title: "Your rate stays fixed for 3 full minutes.",
     body: "No re-quoting mid-trade. The rate you see when you start is the rate you get — even if the market moves against you before you're done.",
     align: "left" as const,
   },
