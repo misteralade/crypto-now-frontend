@@ -17,19 +17,9 @@ import { toast } from "react-toastify";
 const DISPUTE_WINDOW_HOURS = 24;
 
 // A transaction can only ever carry one dispute — once it exists, the button
-// reflects its status instead of offering to create another one.
-const DISPUTE_STATUS_LABELS: Record<DisputeStatus, string> = {
-  OPEN: "Dispute: open",
-  UNDER_REVIEW: "Dispute: under review",
-  AWAITING_EVIDENCE: "Dispute: awaiting evidence",
-  AWAITING_USER_RESPONSE: "Dispute: awaiting you",
-  AWAITING_ADMIN_RESPONSE: "Dispute: awaiting reply",
-  ESCALATED: "Dispute: escalated",
-  RESOLVED: "Dispute: resolved",
-  REJECTED: "Dispute: rejected",
-  CLOSED: "Dispute: closed",
-};
-
+// reflects its status instead of offering to create another one. Kept to
+// three plain labels, not a per-substatus message: "Dispute" (none yet),
+// "Ongoing dispute" (still active), "Disputed" (closed/resolved/rejected).
 const CLOSED_DISPUTE_STATUSES = new Set<DisputeStatus>([
   "RESOLVED",
   "REJECTED",
@@ -156,11 +146,10 @@ export const useTransactionDetailsPage = () => {
       // and take them straight to the existing thread instead.
       if (disputeForTransaction) {
         const isClosed = CLOSED_DISPUTE_STATUSES.has(disputeForTransaction.status);
-        const statusLabel = DISPUTE_STATUS_LABELS[disputeForTransaction.status];
         toast[isClosed ? "error" : "info"](
           isClosed
-            ? `This transaction's dispute is already closed (${statusLabel.replace("Dispute: ", "")}). Taking you to it.`
-            : `You already have an open dispute for this transaction (${statusLabel.replace("Dispute: ", "")}). Taking you to it.`,
+            ? "This transaction has already been disputed. Taking you to it."
+            : "This transaction has an ongoing dispute. Taking you to it.",
         );
         navigate({ to: ROUTES.DISPUTE_DETAILS, params: { id: disputeForTransaction.id } });
         return;
@@ -192,7 +181,9 @@ export const useTransactionDetailsPage = () => {
     isDisputeExpired,
     disputeForTransaction,
     disputeStatusLabel: disputeForTransaction
-      ? DISPUTE_STATUS_LABELS[disputeForTransaction.status]
+      ? CLOSED_DISPUTE_STATUSES.has(disputeForTransaction.status)
+        ? "Disputed"
+        : "Ongoing dispute"
       : null,
     isDisputeClosed: disputeForTransaction
       ? CLOSED_DISPUTE_STATUSES.has(disputeForTransaction.status)

@@ -106,7 +106,7 @@ export const transactionStatusMessages: Record<string, { title: string, message:
   },
   DISPUTED: {
     title: 'Transaction Disputed',
-    message: 'Your transaction is currently under dispute. Our support team will review the case and the reason will be shown with the transaction details.'
+    message: ''
   },
   REFUNDED: {
     title: 'Refund Completed',

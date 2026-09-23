@@ -478,9 +478,20 @@ export const useTransactionQuery = () => {
       toast.loading(`Initiating dispute...`, { toastId: QUERY_KEYS.DISPUTE.INITIATE_DISPUTE_TRANSACTION });
       return await disputeServiceApi.initiateDisputeTransaction(sessionId, { reason, attachments: attachments as any });
     },
-    onSuccess: ({ message, data }) => {
+    onSuccess: async ({ message, data }) => {
       toast.dismiss(QUERY_KEYS.DISPUTE.INITIATE_DISPUTE_TRANSACTION);
       toast.success(message);
+      // The transaction just flipped to DISPUTED server-side, and a dispute
+      // now exists for it — refetch both so the title/status and the Dispute
+      // button reflect that immediately instead of needing a manual refresh.
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.TRANSACTION.USER_TRANSACTION_DETAILS],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.DISPUTE.GET_DISPUTE_BY_TRANSACTION],
+        }),
+      ]);
       return data;
     },
     onError: ( error: AxiosServerError ) => {
@@ -489,7 +500,7 @@ export const useTransactionQuery = () => {
       toast.error(message);
     },
   })
-  
+
   const userSendDisputeMutation = useMutation({
     mutationKey: [QUERY_KEYS.DISPUTE.USER_SEND_DISPUTE_MESSAGE],
     mutationFn: async () => {

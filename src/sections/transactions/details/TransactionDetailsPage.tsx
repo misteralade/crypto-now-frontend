@@ -83,7 +83,6 @@ const TransactionDetailsPage = () => {
   };
 
   const isBuy = transaction?.type?.toUpperCase() === "BUY";
-  const isDisputed = transaction?.status === "DISPUTED";
 
   /* ── Reusable copy row ── */
   const CopyRow = ({
@@ -634,36 +633,33 @@ const TransactionDetailsPage = () => {
             <div
               className="rounded-3xl px-5 py-4 flex items-center gap-4"
               style={{
-                background: isDisputed ? "#FFF1F1" : "#F0EFFD",
-                border: `1px solid ${isDisputed ? "#F3BABA" : "#C7C4F5"}`,
+                background: "#F0EFFD",
+                border: "1px solid #C7C4F5",
               }}
             >
               <div
                 className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
-                style={{ background: isDisputed ? "#EB5757" : "#948EEE" }}
+                style={{ background: "#948EEE" }}
               >
                 <Headphones size={18} className="text-white" />
               </div>
               <div className="flex-1">
                 <p className="text-sm font-bold" style={{ color: "#0E0F0C" }}>
-                  {isDisputed ? "This transaction needs support" : "Need help?"}
+                  Need help?
                 </p>
                 <p className="text-xs mt-0.5" style={{ color: "#6B6E6B" }}>
-                  {isDisputed
-                    ? "Please contact support so we can review the amount mismatch for this order."
-                    : "Our support team is here for you"}
+                  Our support team is here for you
                 </p>
               </div>
               <button
                 onClick={() => window.open(ROUTES.CONTACT, "_blank")}
                 className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-2xl text-xs font-bold"
                 style={{
-                  background: isDisputed ? "#EB5757" : "#948EEE",
+                  background: "#948EEE",
                   color: "#FFFFFF",
                 }}
               >
-                {isDisputed ? "Contact support" : "Contact"}{" "}
-                <ExternalLink size={11} />
+                Contact <ExternalLink size={11} />
               </button>
             </div>
           </div>
