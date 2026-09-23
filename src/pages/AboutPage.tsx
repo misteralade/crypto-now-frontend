@@ -1,16 +1,15 @@
 import PublicNavbar from "../components/global/navbar/PublicNavbar.tsx";
-import Footer from "../components/global/Footer.tsx";
+import FooterNew from "../components/pages/homepage/FooterNew.tsx";
 import aboutImage from "../assets/backgrounds/crypto-about.png";
 import { WhatWeDo, WhyChooseUs } from "../components/pages/about/about.data.ts";
 import CustomButton from "../components/global/Button.tsx";
-import {Fragment} from "react";
 import {useTradeCryptoCurrenciesButton} from "../hooks/components/useTradeCryptoCurrenciesButton.ts";
 
 const AboutPage = () => {
   const { handleTradeCrypto } = useTradeCryptoCurrenciesButton();
-  
+
   return (
-    <Fragment>
+    <div style={{ background: "#FAF9F7", minHeight: "100vh", fontFamily: "'DM Sans', sans-serif" }}>
       <PublicNavbar />
       <main className="w-full md:w-[90%] 2xl:max-w-7xl mx-auto px-4 md:px-0 mt-[64px] mb-[30px] lg:mb-[121px] text-lg text-[#454745]">
         <aside className="xl:pr-56">
@@ -126,8 +125,8 @@ const AboutPage = () => {
           />
         </aside>
       </main>
-      <Footer />
-    </Fragment>
+      <FooterNew />
+    </div>
   )
 };
 

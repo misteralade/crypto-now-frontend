@@ -1,12 +1,11 @@
 import PublicNavbar from "../../components/global/navbar/PublicNavbar.tsx";
-import Footer from "../../components/global/Footer.tsx";
-import { Fragment } from "react";
+import FooterNew from "../../components/pages/homepage/FooterNew.tsx";
 
 const PrivacyPolicyPage = () => {
   const formattedDate = "24 November 2025";
 
   return (
-    <Fragment>
+    <div style={{ background: "#FAF9F7", minHeight: "100vh", fontFamily: "'DM Sans', sans-serif" }}>
       <PublicNavbar />
       <section className="w-full md:w-[90%] 2xl:max-w-8xl mx-auto mt-[34px] mb-[30px] lg:mb-[143px] px-4 text-lg text-[#454745] flex flex-col lg:grid lg:grid-cols-[30%_70%] lg:gap-8 items-start gap-x-6 lg:gap-x-24">
         {/* LHS Table of Content */}
@@ -877,8 +876,8 @@ const PrivacyPolicyPage = () => {
           </aside>
         </div>
       </section>
-      <Footer />
-    </Fragment>
+      <FooterNew />
+    </div>
   );
 };
 

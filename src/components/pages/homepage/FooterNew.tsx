@@ -127,7 +127,6 @@ const FooterNew = () => (
         {/* Product */}
         <div>
           <p style={colHead}>Product</p>
-          <FooterLink to={ROUTES.DASHBOARD}>Trade</FooterLink>
           <FooterLink to={ROUTES.RATES}>Rates</FooterLink>
           <FooterLink to={ROUTES.SIGNUP}>Sign Up</FooterLink>
           <FooterLink to={ROUTES.SIGNIN}>Login</FooterLink>
@@ -136,7 +135,6 @@ const FooterNew = () => (
         {/* Support */}
         <div>
           <p style={colHead}>Support</p>
-          <FooterLink href={`${ROUTES.HOMEPAGE}#${ROUTES.HOMEPAGE_TAG_IDS.FAQ}`}>FAQs</FooterLink>
           <FooterLink href={`${ROUTES.HOMEPAGE}#${ROUTES.HOMEPAGE_TAG_IDS.HOW_IT_WORKS}`}>How it works</FooterLink>
           <FooterLink to={ROUTES.CONTACT}>Contact</FooterLink>
           <FooterLink href={ROUTES.SOCIALS.WHATSAPP}>WhatsApp</FooterLink>
