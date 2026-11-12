@@ -456,12 +456,26 @@ export default function DashboardTrade({
                   if (activeTab === "buy") {
                     // BUY: local-first — no server call yet, just advance to step 2
                     if (!pendingBuyToken || !buyRateInfo) return;
+                    // amountToBuy is the crypto quantity; fiatAmount is its
+                    // calculated quote and must not be used to validate that
+                    // the resolved rate belongs to the current input.
+                    if (buyRateInfo.cryptoAmount !== Number(amountToBuy ?? 0)) return;
                     // Defense-in-depth: the CTA is already disabled while the
                     // resolved amount is outside the admin-configured
                     // min/max, but guard here too in case onProceed is ever
                     // reachable through another path.
-                    const min = Number(pendingBuyToken.minTransactionLimit);
-                    const max = Number(pendingBuyToken.maxTransactionLimit);
+                    const isAnonymous =
+                      !localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+                    const min = Number(
+                      isAnonymous
+                        ? pendingBuyToken.minTradeAmountForAnonymous
+                        : pendingBuyToken.minTransactionLimit,
+                    );
+                    const max = Number(
+                      isAnonymous
+                        ? pendingBuyToken.maxTradeAmountForAnonymous
+                        : pendingBuyToken.maxTransactionLimit,
+                    );
                     if (buyRateInfo.cryptoAmount < min || buyRateInfo.cryptoAmount > max) {
                       return;
                     }
