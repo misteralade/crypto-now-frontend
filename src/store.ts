@@ -1,3 +1,4 @@
+import { ENVIRONMENTS } from "./config/index.config";
 import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import bankReducer from "./redux/bank.slice.ts";
 import cryptoSlice from "./redux/crypto.slice";
@@ -83,7 +84,7 @@ export const store = configureStore({
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
     }),
-  devTools: BASIC.NODE_ENV !== "production",
+  devTools: BASIC.NODE_ENV !== ENVIRONMENTS.PRODUCTION,
 });
 
 // persistor for PersistGate
