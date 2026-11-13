@@ -387,8 +387,8 @@ export default function DashboardContent() {
           className="relative overflow-hidden"
           style={{
             background:
-              "linear-gradient(145deg, #2D1CB0 0%, #4A2DBF 35%, #6B45D0 65%, #3A1FA8 100%) padding-box, linear-gradient(325deg, #2D1CB0 0%, #4A2DBF 35%, #A58BF0 65%, #6D57C7 100%) border-box",
-            border: "2px solid transparent",
+              "linear-gradient(180deg, rgba(255,255,255,0.12), transparent 45%), linear-gradient(145deg, #2D1CB0 0%, #4A2DBF 35%, #6B45D0 65%, #3A1FA8 100%) padding-box, linear-gradient(145deg, rgba(255,255,255,0.65), rgba(255,255,255,0.1) 65%, rgba(255,255,255,0.25)) border-box",
+            border: "1px solid transparent",
             borderRadius: "22px",
             padding: "22px 20px 18px",
           }}
@@ -446,7 +446,7 @@ export default function DashboardContent() {
               <div
                 key={label}
                 className="px-3 py-2.5 rounded-2xl"
-                style={{ background: "rgba(255,255,255,0.10)" }}
+                style={{ background: "rgba(255,255,255,0.10)", border: "1px solid rgba(255,255,255,0.08)" }}
               >
                 <p
                   className="text-[9px] font-bold tracking-widest uppercase"
@@ -475,8 +475,8 @@ export default function DashboardContent() {
           className="relative overflow-hidden rounded-3xl p-7"
           style={{
             background:
-              "linear-gradient(145deg, #2D1CB0, #4A2DBF 40%, #6B45D0 70%, #3A1FA8) padding-box, linear-gradient(325deg, #2D1CB0, #4A2DBF 40%, #A58BF0 70%, #6D57C7) border-box",
-            border: "2px solid transparent",
+              "linear-gradient(180deg, rgba(255,255,255,0.12), transparent 45%), linear-gradient(145deg, #2D1CB0, #4A2DBF 40%, #6B45D0 70%, #3A1FA8) padding-box, linear-gradient(145deg, rgba(255,255,255,0.65), rgba(255,255,255,0.1) 65%, rgba(255,255,255,0.25)) border-box",
+            border: "1px solid transparent",
           }}
         >
           <div
@@ -517,7 +517,7 @@ export default function DashboardContent() {
                 <div
                   key={l}
                   className="px-4 py-3 rounded-2xl text-center min-w-[80px]"
-                  style={{ background: "rgba(255,255,255,0.10)" }}
+                  style={{ background: "rgba(255,255,255,0.10)", border: "1px solid rgba(255,255,255,0.08)" }}
                 >
                   <p
                     className="text-[9px] font-bold tracking-widest uppercase"
