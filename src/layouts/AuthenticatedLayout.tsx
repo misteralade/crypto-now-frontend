@@ -1,4 +1,4 @@
-import { type ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { LayoutDashboard, User, LogOut, Settings, Wallet, History, Bell } from "lucide-react";
 import { ROUTES } from "../util/constants.util.ts";
@@ -7,6 +7,7 @@ import { useUserQuery } from "../queries/user.query.ts";
 import { useNotificationQuery } from "../queries/notification.query.ts";
 import { clearUserSessionStorage } from "../util/tradeProgress.storage.util.ts";
 import Logo from "../assets/logo/logo.svg";
+import LogoutConfirmation from "../components/global/LogoutConfirmation.tsx";
 import PageTransition from "../components/global/PageTransition.tsx";
 
 interface AuthenticatedLayoutProps {
@@ -42,6 +43,7 @@ const getInitials = (firstName?: string, lastName?: string) => {
 };
 
 export default function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
+  const [confirmLogout, setConfirmLogout] = useState(false);
   const location  = useLocation();
   const navigate  = useNavigate();
   const { userProfileData } = useUserQuery();
@@ -68,6 +70,7 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
 
   return (
     <div style={{ background: "#FFFFFF", minHeight: "100dvh" }}>
+      {confirmLogout && <LogoutConfirmation onCancel={() => setConfirmLogout(false)} onConfirm={handleLogout} />}
 
       {/* ══════════════════════════════════════
           DESKTOP — fixed sidebar (chrome only — content renders once, below)
@@ -114,7 +117,7 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
               <p className="text-[10px] truncate" style={{ color: "rgba(255,255,255,0.38)" }}>{email}</p>
             </div>
           </div>
-          <button onClick={handleLogout}
+          <button onClick={() => setConfirmLogout(true)}
             className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl text-sm transition-all active:scale-[0.98]"
             style={{ color: "rgba(255,255,255,0.45)" }}
             onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = "#EB5757"; (e.currentTarget as HTMLButtonElement).style.background = "rgba(235,87,87,0.08)"; }}

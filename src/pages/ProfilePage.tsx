@@ -1,10 +1,11 @@
-import { Fragment, useEffect } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ChevronRight, ArrowLeft, Plus } from "lucide-react";
 import { useProfilePage } from "../hooks/pages/useProfilePage.ts";
 import ProfilePersonalInfoSection from "../components/pages/profile/ProfilePersonalInfoSection.tsx";
 import ProfileBankDetailsSection from "../components/pages/profile/ProfileBankDetailsSection.tsx";
 import ProfileSecuritySettingsSection from "../components/pages/profile/ProfileSecuritySection.tsx";
+import LogoutConfirmation from "../components/global/LogoutConfirmation.tsx";
 import CustomButton from "../components/global/Button.tsx";
 import { LoadingSpinner } from "../components/global/LoadingSpinner.tsx";
 import NewBankAccountModal from "../components/pages/profile/modals/NewBankAccountModal.tsx";
@@ -68,6 +69,7 @@ function MenuRow({
 ══════════════════════════════════════════════════════════ */
 const ProfilePage = () => {
   const navigate = useNavigate();
+  const [confirmLogout, setConfirmLogout] = useState(false);
   const { section } = useSearch({ strict: false }) as { section?: ProfileSection };
   const activeSection: Section = section ?? null;
 
@@ -258,7 +260,7 @@ const ProfilePage = () => {
                     label="Log Out"
                     sub="Sign out of account"
                     color="#EB5757"
-                    onClick={handleLogout}
+                    onClick={() => setConfirmLogout(true)}
                     danger
                   />
                 </div>
@@ -372,6 +374,8 @@ const ProfilePage = () => {
             </motion.div>
           )}
       </div>
+
+      {confirmLogout && <LogoutConfirmation onCancel={() => setConfirmLogout(false)} onConfirm={handleLogout} />}
 
       <NewBankAccountModal
         isOpen={showCreateNewBankAccount}
