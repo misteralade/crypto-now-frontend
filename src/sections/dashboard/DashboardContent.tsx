@@ -387,10 +387,10 @@ export default function DashboardContent() {
           className="relative overflow-hidden"
           style={{
             background:
-              "linear-gradient(145deg, #2D1CB0 0%, #4A2DBF 35%, #6B45D0 65%, #3A1FA8 100%)",
+              "linear-gradient(145deg, #2D1CB0 0%, #4A2DBF 35%, #6B45D0 65%, #3A1FA8 100%) padding-box, linear-gradient(325deg, #2D1CB0 0%, #4A2DBF 35%, #A58BF0 65%, #6D57C7 100%) border-box",
+            border: "2px solid transparent",
             borderRadius: "22px",
             padding: "22px 20px 18px",
-            boxShadow: "0 12px 40px rgba(45,28,176,0.35)",
           }}
         >
           {/* Volume */}
@@ -475,8 +475,8 @@ export default function DashboardContent() {
           className="relative overflow-hidden rounded-3xl p-7"
           style={{
             background:
-              "linear-gradient(145deg,#2D1CB0,#4A2DBF 40%,#6B45D0 70%,#3A1FA8)",
-            boxShadow: "0 8px 32px rgba(45,28,176,0.28)",
+              "linear-gradient(145deg, #2D1CB0, #4A2DBF 40%, #6B45D0 70%, #3A1FA8) padding-box, linear-gradient(325deg, #2D1CB0, #4A2DBF 40%, #A58BF0 70%, #6D57C7) border-box",
+            border: "2px solid transparent",
           }}
         >
           <div

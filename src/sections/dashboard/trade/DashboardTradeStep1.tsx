@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Check, CheckCircle, ChevronDown, Copy, X, ArrowLeft, WalletCards } from "lucide-react";
+import { Check, CheckCircle, ChevronDown, Copy, X, ArrowLeft, WalletCards, HandCoins } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "@tanstack/react-router";
 import type {
@@ -1294,15 +1294,17 @@ export default function DashboardTradeStep1({
             <WalletCards size={16} strokeWidth={1.8} aria-hidden="true" />
           </span>
         ) : (
-          <span className="text-base leading-none mt-0.5">&#128228;</span>
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#FFF0CC] text-[#A07000]">
+            <HandCoins size={16} strokeWidth={1.8} aria-hidden="true" />
+          </span>
         )}
         <p
-          className="text-xs leading-relaxed"
+          className="text-[11px] leading-relaxed"
           style={{ color: isBuy ? "#5B5EA6" : "#A07000" }}
         >
           {isBuy
             ? "Buy crypto. We verify your payment and send crypto directly to your wallet."
-            : "Send crypto to your wallet address. We will detect your deposit and process your bank transfer."}
+            : "Sell crypto. Send it to your deposit address. We confirm your deposit and process your bank transfer."}
         </p>
       </div>
 
