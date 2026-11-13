@@ -2,8 +2,9 @@
 import axios, { type AxiosRequestHeaders } from "axios";
 import * as Sentry from "@sentry/react";
 import {BASIC} from "../config/index.config.ts";
-import {LOCAL_STORAGE_KEYS, ROUTES} from "../util/constants.util.ts";
+import {ROUTES} from "../util/constants.util.ts";
 import {clearUserSessionStorage} from "../util/tradeProgress.storage.util.ts";
+import {clearAccessToken, getAccessToken, setAccessToken} from "../util/auth-session.util.ts";
 import type {BaseApiResponse} from "../types/response.payload.types.ts";
 
 export const API_KIT = axios.create({
@@ -13,7 +14,7 @@ export const API_KIT = axios.create({
 });
 
 API_KIT.interceptors.request.use(async (config) => {
-  const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+  const token = getAccessToken();
   const traceData =
     typeof Sentry.getTraceData === "function" ? Sentry.getTraceData() : undefined;
 
@@ -42,7 +43,7 @@ API_KIT.interceptors.response.use(
       typeof accessToken === "string" &&
       accessToken.trim() !== ""
     ) {
-      localStorage.setItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN, accessToken);
+      setAccessToken(accessToken);
     }
     return response;
   },
@@ -53,7 +54,7 @@ API_KIT.interceptors.response.use(
 
       if (status === 401 || message === "jwt token error") {
         clearUserSessionStorage();
-        localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+        clearAccessToken();
         window.location.href = ROUTES.SIGNIN;
       }
     }

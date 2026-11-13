@@ -1,11 +1,11 @@
 import { createFileRoute, isRedirect, redirect } from '@tanstack/react-router'
-import { LOCAL_STORAGE_KEYS, ROUTES } from "../util/constants.util.ts";
+import { ROUTES } from "../util/constants.util.ts";
 import { userServiceApi } from "../api/user.api.ts";
+import { isAuthenticated } from "../util/auth-session.util.ts";
 
 export const Route = createFileRoute('/onboarding')({
   beforeLoad: async () => {
-    const accessToken = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
-    if (!accessToken) {
+    if (!isAuthenticated()) {
       throw redirect({ to: ROUTES.SIGNIN });
     }
 

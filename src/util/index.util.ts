@@ -1,5 +1,5 @@
-import {LOCAL_STORAGE_KEYS} from "./constants.util.ts";
 import {clearUserSessionStorage} from "./tradeProgress.storage.util.ts";
+import {clearAccessToken} from "./auth-session.util.ts";
 import type {AxiosServerError} from "../types/response.payload.types.ts";
 import {ZodError} from "zod";
 
@@ -11,7 +11,7 @@ export const formatTime = (seconds: number) => {
 
 export const handleLogout = () => {
   clearUserSessionStorage();
-  localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+  clearAccessToken();
   window.location.href = "/sign-in";
 }
 

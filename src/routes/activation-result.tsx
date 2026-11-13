@@ -1,6 +1,7 @@
 import {createFileRoute, redirect} from '@tanstack/react-router'
 import {toast} from "react-toastify";
-import {LOCAL_STORAGE_KEYS, ROUTES} from "../util/constants.util.ts";
+import {ROUTES} from "../util/constants.util.ts";
+import {setAccessToken} from "../util/auth-session.util.ts";
 
 export const Route = createFileRoute('/activation-result')({
   beforeLoad: ({ search }) => {
@@ -11,7 +12,7 @@ export const Route = createFileRoute('/activation-result')({
     // Freshly verified: a token means the user is now logged in — send
     // them straight to onboarding, same as the OAuth success flow does.
     if (success && token) {
-      localStorage.setItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN, token)
+      setAccessToken(token)
       throw redirect({
         to: ROUTES.ONBOARDING,
       })

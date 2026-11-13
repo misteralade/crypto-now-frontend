@@ -1,6 +1,7 @@
 import { createFileRoute, isRedirect, redirect } from '@tanstack/react-router'
-import {LOCAL_STORAGE_KEYS, ROUTES} from "../../util/constants.util.ts";
+import { ROUTES } from "../../util/constants.util.ts";
 import {userServiceApi} from "../../api/user.api.ts";
+import {setAccessToken} from "../../util/auth-session.util.ts";
 
 export const Route = createFileRoute('/oauth/success')({
   beforeLoad: async ({ search }) => {
@@ -16,7 +17,7 @@ export const Route = createFileRoute('/oauth/success')({
     }
 
     // Save token to localStorage
-    localStorage.setItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN, token)
+    setAccessToken(token)
 
     try {
       const { success, data } = await userServiceApi.getOnboardingStatus()

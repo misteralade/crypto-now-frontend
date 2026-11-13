@@ -8,7 +8,8 @@ import ProfileSecuritySettingsSection from "../components/pages/profile/ProfileS
 import CustomButton from "../components/global/Button.tsx";
 import { LoadingSpinner } from "../components/global/LoadingSpinner.tsx";
 import NewBankAccountModal from "../components/pages/profile/modals/NewBankAccountModal.tsx";
-import { LOCAL_STORAGE_KEYS, ROUTES } from "../util/constants.util.ts";
+import { ROUTES } from "../util/constants.util.ts";
+import { clearAccessToken } from "../util/auth-session.util.ts";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useTransactionQuery } from "../queries/transaction.query.ts";
 import { formatCompact } from "../util/asset-precision.ts";
@@ -134,7 +135,7 @@ const ProfilePage = () => {
 
   const handleLogout = () => {
     clearUserSessionStorage();
-    localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+    clearAccessToken();
     navigate({ to: ROUTES.HOMEPAGE });
   };
 

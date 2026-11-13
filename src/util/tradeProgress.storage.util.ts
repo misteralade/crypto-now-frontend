@@ -1,11 +1,12 @@
 import type { TradeType } from "../types/trade.types";
 import {LOCAL_STORAGE_KEYS, SESSION_STORAGE_KEYS} from "./constants.util.ts";
+import {getAccessToken} from "./auth-session.util.ts";
 
 // Best-effort decode of the JWT payload, used only to namespace localStorage
 // per-user — never trusted for auth (that's the backend's job).
 function currentUserKey(): string {
   try {
-    const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+    const token = getAccessToken();
     if (!token) return "guest";
     const payload = token.split(".")[1];
     if (!payload) return "guest";
