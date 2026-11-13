@@ -29,7 +29,7 @@ self.addEventListener("activate", (event) => {
 // ─── Kill Switch ─────────────────────────────────────────────────────────────
 //
 // The app sends { type: "CLEAR_CACHE", cacheNames?: string[] } to clear caches
-// without nuking the SW itself. If cacheNames is omitted, ALL caches are cleared.
+// without nuking the SW itself. If cacheNames is omitted, runtime caches are cleared.
 // Activate by bumping CACHE_BUST_VERSION in src/lib/sw-version.ts.
 //
 self.addEventListener("message", (event) => {
@@ -39,9 +39,10 @@ self.addEventListener("message", (event) => {
     (async () => {
       const targetNames: string[] | undefined = event.data.cacheNames;
       const allKeys = await caches.keys();
-      const toDelete = targetNames
-        ? allKeys.filter((k) => targetNames.some((t) => k.includes(t)))
-        : allKeys;
+      const toDelete = allKeys.filter((name) =>
+        !name.includes("-precache-") &&
+        (!targetNames || targetNames.some((target) => name.includes(target)))
+      );
 
       await Promise.all(toDelete.map((name) => caches.delete(name)));
 

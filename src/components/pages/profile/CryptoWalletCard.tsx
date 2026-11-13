@@ -1,3 +1,4 @@
+import ResponsiveText from "../../global/ResponsiveText.tsx";
 import {getNetworkConfig} from "../../../util/crypto.util.ts";
 import momentClient from "../../../lib/moment.ts";
 
@@ -16,12 +17,6 @@ interface CryptoWalletCardProps {
 }
 
 const CryptoWalletCard = ({ id, symbol, network, walletLabel, isPrimary, isVerified, walletAddress, createdAt, index, onMakePrimary, onDelete }: CryptoWalletCardProps) => {
-  // Truncate wallet address for display (show first 6 and last 4 characters)
-  const truncateAddress = (address: string) => {
-    if (address.length <= 10) return address;
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
-  };
-  
   // Get network configuration based on network name
   const networkConfig = getNetworkConfig(network);
   
@@ -68,7 +63,7 @@ const CryptoWalletCard = ({ id, symbol, network, walletLabel, isPrimary, isVerif
           <div>
             <div className="text-xs text-[#828282] mb-1">Wallet Address</div>
             <div className="text-sm text-[#101828] font-medium font-mono">
-              {truncateAddress(walletAddress)}
+              <ResponsiveText text={walletAddress} />
             </div>
           </div>
           

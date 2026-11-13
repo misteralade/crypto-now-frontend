@@ -3,6 +3,7 @@
  * Wraps the existing ConfirmBankDetailsModal logic inline (no modal — full-page view)
  */
 import { useState } from "react";
+import ResponsiveText from "../../../components/global/ResponsiveText.tsx";
 import { useDispatch } from "react-redux";
 import type { TradeType } from "../../../types/trade.types.ts";
 import type { SupportedCryptoOrCurrencyResponse, UserBankAccountResponse } from "../../../types/response.payload.types.ts";
@@ -51,10 +52,6 @@ export default function DashboardTradeStep3({
 
   /* ── BUY: full order summary + wallet confirmation ── */
   if (isBuy) {
-    const shortAddr = buyWalletAddress && buyWalletAddress.length > 20
-      ? `${buyWalletAddress.slice(0, 14)}…${buyWalletAddress.slice(-10)}`
-      : (buyWalletAddress ?? "—");
-
     const currencyCode = selectedCurrency?.code ?? "NGN";
     const amountNum = Number(amountToBuy) || 0;
     const tokenNum = Number(numberOfToken) || 0;
@@ -75,7 +72,7 @@ export default function DashboardTradeStep3({
       { label: "You Pay", val: amountNum > 0 ? `${amountNum.toLocaleString()} ${currencyCode}` : "—" },
       { label: "You Receive", val: tokenNum > 0 ? `${tokenNum} ${selectedToken?.symbol ?? ""}` : "—" },
       { label: "Network", val: buyNetwork ?? "—" },
-      { label: "Wallet Address", val: shortAddr, mono: true, full: buyWalletAddress },
+      { label: "Wallet Address", val: buyWalletAddress ?? "?", mono: true, full: buyWalletAddress },
     ];
 
     return (
@@ -131,11 +128,11 @@ export default function DashboardTradeStep3({
               style={{ borderBottom: "1px solid #F7F7F9" }}>
               <span className="text-xs shrink-0" style={{ color: "#9A9A9A" }}>{label}</span>
               <span
-                className={`text-xs font-semibold text-right break-all leading-relaxed ${mono ? "font-mono" : ""}`}
+                className={`text-xs font-semibold text-right min-w-0 flex-1 max-w-[75%] leading-relaxed ${mono ? "font-mono" : ""}`}
                 style={{ color: "#0E0F0C" }}
                 title={full}
               >
-                {val}
+                {mono && full ? <ResponsiveText text={full} /> : val}
               </span>
             </div>
           ))}

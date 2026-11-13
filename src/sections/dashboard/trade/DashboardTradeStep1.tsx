@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Check, CheckCircle, ChevronDown, Copy, X, ArrowLeft } from "lucide-react";
+import { Check, CheckCircle, ChevronDown, Copy, X, ArrowLeft, WalletCards } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "@tanstack/react-router";
 import type {
@@ -1246,7 +1246,7 @@ export default function DashboardTradeStep1({
         : minLimitMessage
           ? minLimitMessage
           : selectedToken
-            ? "Buy — Continue"
+            ? "Continue"
             : "Select a Crypto to Continue";
 
   const ctaDisabled = !selectedToken || isCtaBusy || buySubmitDisabled;
@@ -1289,16 +1289,20 @@ export default function DashboardTradeStep1({
           border: `1px solid ${isBuy ? "#C7CAFF" : "#FFE4A0"}`,
         }}
       >
-        <span className="text-base leading-none mt-0.5">
-          {isBuy ? "💳" : "📤"}
-        </span>
+        {isBuy ? (
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#DFE1FF] text-[#575AE5]">
+            <WalletCards size={16} strokeWidth={1.8} aria-hidden="true" />
+          </span>
+        ) : (
+          <span className="text-base leading-none mt-0.5">&#128228;</span>
+        )}
         <p
           className="text-xs leading-relaxed"
           style={{ color: isBuy ? "#5B5EA6" : "#A07000" }}
         >
           {isBuy
-            ? "Pay with NGN bank transfer. We verify your payment and send crypto directly to your wallet"
-            : "Send crypto to your unique wallet. We auto-detect receipt and instantly send NGN to your bank. Zero action needed after sending."}
+            ? "Buy crypto. We verify your payment and send crypto directly to your wallet."
+            : "Send crypto to your wallet address. We will detect your deposit and process your bank transfer."}
         </p>
       </div>
 

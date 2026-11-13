@@ -28,6 +28,7 @@ import { formatCompact } from "../../util/asset-precision.ts";
 import { getStatusDisplayName, getTransactionAmountFiatNGN } from "../../util/transaction.util.ts";
 import momentClient from "../../lib/moment.ts";
 import { ROUTES } from "../../util/constants.util.ts";
+import ResponsiveText from "../../components/global/ResponsiveText.tsx";
 
 /* ─────────────────────────── helpers ────────────────────────────── */
 const getInitials = (first?: string, last?: string) =>
@@ -175,8 +176,6 @@ function WalletMiniCard({
   };
 
   const addr = wallet.walletAddress;
-  const short =
-    addr.length > 16 ? `${addr.slice(0, 8)}…${addr.slice(-6)}` : addr;
 
   return (
     <div className="flex items-center gap-3 px-4 py-3">
@@ -207,7 +206,7 @@ function WalletMiniCard({
           className="text-[11px] font-mono leading-snug mt-0.5 truncate"
           style={{ color: "#9A9A9A" }}
         >
-          {short}
+          <ResponsiveText text={addr} />
         </p>
       </div>
       <button

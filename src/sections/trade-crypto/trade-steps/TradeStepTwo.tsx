@@ -779,7 +779,6 @@ const TradeStepTwo = ({ amountToBuy, tradeType, numberOfToken, additionalInfo, h
             </div>
             <TradePaymentUpload
               maxFiles={1}
-              acceptedTypes={[".jpg", ".jpeg", ".png", ".webp", ".gif"]}
               onFileSelected={async (file) => {
                 const fd = new FormData();
                 fd.append("file", file);

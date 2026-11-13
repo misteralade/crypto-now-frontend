@@ -90,7 +90,7 @@ export const transactionStatusMessages: Record<string, { title: string, message:
   },
   COMPLETED: {
     title: 'Transaction Completed',
-    message: 'Your transaction has been successfully completed. Thank you for using our service!'
+    message: ''
   },
   FAILED: {
     title: 'Transaction Failed',

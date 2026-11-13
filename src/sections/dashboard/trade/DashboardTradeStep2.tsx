@@ -25,6 +25,7 @@ import type {
   TradeType,
 } from "../../../types/trade.types.ts";
 import { useTradeStepTwo } from "../../../hooks/components/trade/useTradeStepTwo.ts";
+import ResponsiveText from "../../../components/global/ResponsiveText.tsx";
 import TradePaymentUpload from "../../trade-crypto/TradePaymentUpload.tsx";
 import { ROUTES, SESSION_STORAGE_KEYS } from "../../../util/constants.util.ts";
 import type { BuyRateInfo } from "./DashboardTradeStep1.tsx";
@@ -487,9 +488,7 @@ function BuyUploadView({
     },
     {
       label: "Wallet",
-      value: walletAddress
-        ? `${walletAddress.slice(0, 8)}…${walletAddress.slice(-6)}`
-        : "—",
+      value: walletAddress ? <ResponsiveText text={walletAddress} /> : "-",
     },
     { label: "Network", value: network || "—" },
   ];
@@ -500,10 +499,10 @@ function BuyUploadView({
     <div className="flex flex-col gap-4">
       <div className="mb-1">
         <p className="text-base font-extrabold" style={{ color: "#0E0F0C" }}>
-          Upload a Screenshot
+          Upload receipt
         </p>
         <p className="text-[11px] mt-0.5" style={{ color: "#9A9A9A" }}>
-          Of your transfer receipt
+          Choose your transfer receipt
         </p>
       </div>
 
@@ -533,7 +532,7 @@ function BuyUploadView({
               {label}
             </span>
             <span
-              className="text-xs font-semibold"
+              className="text-xs font-semibold min-w-0 flex-1 max-w-[75%] text-right"
               style={{ color: "#0E0F0C" }}
             >
               {value}
@@ -563,7 +562,6 @@ function BuyUploadView({
         <TradePaymentUpload
           maxFiles={1}
           compact
-          acceptedTypes={[".jpg", ".jpeg", ".png", ".webp", ".gif", ".pdf"]}
           onFileSelected={onFileSelected}
           onFileCleared={onFileCleared}
         />
@@ -1059,24 +1057,10 @@ export default function DashboardTradeStep2({
           </p>
           <p className="text-xs text-white/50 mt-1.5">
             {isLocalBuyFlow && buyRateInfo ? (
-              <>
-                at ₦{formatForDisplayLocalized(buyRateInfo.rate, "NGN")}/
-                {selectedToken?.symbol}
-              </>
-            ) : (
-              <>
-                ={" "}
-                {formatSendAmount(
-                  amountToBuy.toLocaleString(),
-                  selectedCurrency?.code
-                )}{" "}
-                at ₦
-                {selectedToken?.buyRate
-                  ? formatForDisplayLocalized(Number(selectedToken.buyRate), "NGN")
-                  : "—"}
-                /{selectedToken?.symbol}
-              </>
-            )}
+              <>Platform rate: NGN {formatForDisplayLocalized(buyRateInfo.platformRate, "NGN")}/USD</>
+            ) : selectedToken?.buyRate ? (
+              <>Platform rate: NGN {formatForDisplayLocalized(Number(selectedToken.buyRate), "NGN")}/USD</>
+            ) : null}
           </p>
           <p className="text-xs text-white/70 mt-1">
             You'll receive{" "}

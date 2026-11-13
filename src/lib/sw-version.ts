@@ -7,7 +7,7 @@
  *
  * What happens automatically:
  *   - On next page load the app sends { type: "CLEAR_CACHE" } to the active SW
- *   - The SW deletes ALL runtime caches
+ *   - The SW deletes runtime caches, preserving the app's precached assets
  *   - The page reloads once, fresh
  *   - The version is stored in localStorage so the message is only sent once
  *     per version bump — not on every page load

@@ -1,5 +1,7 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, type ReactNode } from "react";
 import { toast } from "react-toastify";
+import ResponsiveText from "../../global/ResponsiveText.tsx";
+import { RECEIPT_ACCEPT, receiptFileError } from "../../../util/receiptFile.ts";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   CreditCard,
@@ -326,13 +328,13 @@ const SRow = ({
   green,
 }: {
   label: string;
-  value: string;
+  value: ReactNode;
   green?: boolean;
 }) => (
   <div className="flex justify-between items-center text-sm py-0.5">
     <span className="text-gray-400">{label}</span>
     <span
-      className={`font-semibold ${green ? "text-[#22c55e]" : "text-[#0E0F0C]"}`}
+      className={`font-semibold min-w-0 flex-1 max-w-[70%] text-right ${green ? "text-[#22c55e]" : "text-[#0E0F0C]"}`}
     >
       {value}
     </span>
@@ -2241,7 +2243,7 @@ const AppSimCard = () => {
                 <SRow
                   label="To Wallet"
                   value={
-                    walletAddress.slice(0, 8) + "…" + walletAddress.slice(-6)
+                    <ResponsiveText text={walletAddress} />
                   }
                 />
                 <SRow label="Network" value={networkLabel} />
@@ -2289,9 +2291,15 @@ const AppSimCard = () => {
               <input
                 ref={fileRef}
                 type="file"
-                accept="image/*,.pdf"
+                accept={RECEIPT_ACCEPT}
                 className="hidden"
-                onChange={(e) => setReceiptFile(e.target.files?.[0] || null)}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  const error = receiptFileError(file);
+                  if (error) { toast.error(error); e.target.value = ""; return; }
+                  setReceiptFile(file);
+                }}
               />
 
               <div className="flex gap-2">
