@@ -37,7 +37,7 @@ import { formatForDisplay, formatForDisplayLocalized } from "../../../util/asset
 import { emailValidation } from "../../../util/constants.regex.util.ts";
 import { useTransactionLiveStatus } from "../../../hooks/components/trade/useTransactionLiveStatus.ts";
 
-const GUEST_QUOTE_CACHE_TTL_MS = 60_000;
+const GUEST_QUOTE_CACHE_TTL_MS = 30_000;
 const GUEST_RATE_FETCH_TIMEOUT_MS = 12_000;
 const GUEST_RATE_FETCH_TIMEOUT_MESSAGE =
   "Rate preview is taking longer than expected. Please try again.";
@@ -776,7 +776,7 @@ const AppSimCard = () => {
     const cacheKey = buildGuestQuoteCacheKey(cryptoId, currencyId, action);
     const cachedEntry = quoteCacheRef.current[cacheKey];
     if (!cachedEntry) return null;
-    if (Date.now() - cachedEntry.cachedAt > GUEST_QUOTE_CACHE_TTL_MS) {
+    if (!Number.isFinite(cachedEntry.cachedAt) || Date.now() - cachedEntry.cachedAt >= GUEST_QUOTE_CACHE_TTL_MS) {
       delete quoteCacheRef.current[cacheKey];
       return null;
     }
@@ -791,7 +791,7 @@ const AppSimCard = () => {
     quoteCacheRef.current[buildGuestQuoteCacheKey(cryptoId, currencyId, action)] =
       {
         data,
-        cachedAt: Date.now(),
+        cachedAt: Date.parse(data.cachedAt),
       };
   };
   const isRateLimitedError = (error: unknown) =>

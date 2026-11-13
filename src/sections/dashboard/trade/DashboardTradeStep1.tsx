@@ -133,6 +133,7 @@ function BuyFields({
   onNetworkChange,
   buyRateInfo,
   onRateResolved,
+  onRateErrorChange,
 }: {
   selectedToken: SupportedCryptoOrCurrencyResponse;
   availableCurrencies?: SupportedCryptoOrCurrencyResponse[];
@@ -147,12 +148,16 @@ function BuyFields({
   onNetworkChange?: (v: string) => void;
   buyRateInfo?: BuyRateInfo | null;
   onRateResolved?: (info: BuyRateInfo | null) => void;
+  onRateErrorChange: (failed: boolean) => void;
 }) {
   const dispatch = useDispatch();
   const accentColor = "#948EEE";
   const tokenNetworks: string[] = selectedToken.networks ?? [];
   const [networkDropdownOpen, setNetworkDropdownOpen] = useState(false);
   const [isFetchingRate, setIsFetchingRate] = useState(false);
+  const [rateError, setRateError] = useState(false);
+  const retryRateRef = useRef<(() => void) | null>(null);
+  useEffect(() => onRateErrorChange(rateError), [rateError, onRateErrorChange]);
   // Track the fiatAmount that's currently being fetched to avoid duplicate in-flight requests
   const fetchingRef = useRef<number | null>(null);
   // Rate is prefetched the instant a crypto/currency is selected (see the
@@ -160,9 +165,8 @@ function BuyFields({
   // caches per (cryptoId, currencyId, action) for 30s (see
   // exchange-rate-cache.ts CACHE_TTL_SECONDS), so reusing it here just skips
   // the network round-trip the user would otherwise wait through after typing
-  // an amount. RATE_CACHE_TTL_MS is kept a little under that so we never
-  // reuse a rate the backend itself would already be refreshing.
-  const RATE_CACHE_TTL_MS = 25_000;
+  // an amount. Cache age is measured from when the backend fetched the rate.
+  const RATE_CACHE_TTL_MS = 30_000;
   const rateCacheRef = useRef<{
     cryptoId: string;
     currencyId: string;
@@ -266,7 +270,7 @@ function BuyFields({
         cryptoId,
         currencyId,
         data: rateData,
-        fetchedAt: Date.now(),
+        fetchedAt: Date.parse(rateData.cachedAt),
       };
     } catch {
       // Silent — this is a background prefetch. fetchRate/applyFiatPresetAmount
@@ -293,6 +297,7 @@ function BuyFields({
     if (fetchingRef.current === cryptoAmount) return; // already fetching this amount
 
     fetchingRef.current = cryptoAmount;
+    setRateError(false);
     onRateResolved?.(null); // clear old rate while fetching
 
     const cached = rateCacheRef.current;
@@ -312,9 +317,9 @@ function BuyFields({
             currencyId,
             "BUY",
           );
-        if (!rateOk || !data) return;
+        if (!rateOk || !data) throw new Error("Rate unavailable");
         rateData = data;
-        rateCacheRef.current = { cryptoId, currencyId, data, fetchedAt: Date.now() };
+        rateCacheRef.current = { cryptoId, currencyId, data, fetchedAt: Date.parse(data.cachedAt) };
       }
 
       // coinGeckoRate is always USD-per-token. platformRate is the platform's
@@ -348,6 +353,9 @@ function BuyFields({
         currencyId,
         fetchedAt: Date.now(),
       });
+    } catch {
+      retryRateRef.current = () => void fetchRate(cryptoAmount, currencyId);
+      setRateError(true);
     } finally {
       fetchingRef.current = null;
       setIsFetchingRate(false);
@@ -431,6 +439,7 @@ function BuyFields({
     const cryptoId = selectedToken.id;
     if (!targetFiatAmount || !currencyId || !cryptoId) return;
 
+    setRateError(false);
     onRateResolved?.(null);
 
     const cached = rateCacheRef.current;
@@ -450,9 +459,9 @@ function BuyFields({
             currencyId,
             "BUY",
           );
-        if (!rateOk || !data) return;
+        if (!rateOk || !data) throw new Error("Rate unavailable");
         rateData = data;
-        rateCacheRef.current = { cryptoId, currencyId, data, fetchedAt: Date.now() };
+        rateCacheRef.current = { cryptoId, currencyId, data, fetchedAt: Date.parse(data.cachedAt) };
       }
 
       const isNgnQuote = rateData.currency === "NGN";
@@ -492,6 +501,9 @@ function BuyFields({
         fetchedAt: Date.now(),
       });
       setActivePreset(preset);
+    } catch {
+      retryRateRef.current = () => void applyFiatPresetAmount(targetFiatAmount, preset);
+      setRateError(true);
     } finally {
       setIsFetchingRate(false);
     }
@@ -555,6 +567,11 @@ function BuyFields({
 
   return (
     <div className="flex flex-col gap-3 mt-1">
+      {rateError && (
+        <div role="alert" className="text-sm text-red-600">
+          We couldn’t get the rate. <button type="button" className="underline" onClick={() => retryRateRef.current?.()}>Try again</button>
+        </div>
+      )}
       {/* Amount input */}
       <div
         className="rounded-2xl overflow-hidden"
@@ -1176,6 +1193,7 @@ export default function DashboardTradeStep1({
   onBack, // Added onBack prop
 }: DashboardTradeStep1Props & { onBack?: () => void }) {
   const isBuy = tradeType === "buy";
+  const [rateError, setRateError] = useState(false);
   const accentColor = isBuy ? "#948EEE" : "#F7A600";
 
   // Admin-configured min/max are token-denominated (see SupportedCryptoEntity),
@@ -1223,8 +1241,8 @@ export default function DashboardTradeStep1({
       : amountToBuy &&
           Number(amountToBuy) > 0 &&
           walletAddress?.trim() &&
-          !buyRateInfo
-        ? "Fetching rate…"
+          !buyRateInfo && !rateError
+        ? "Waiting for rate…"
         : minLimitMessage
           ? minLimitMessage
           : selectedToken
@@ -1356,6 +1374,7 @@ export default function DashboardTradeStep1({
           onNetworkChange={onNetworkChange}
           buyRateInfo={buyRateInfo}
           onRateResolved={onRateResolved}
+          onRateErrorChange={setRateError}
         />
       )}
 

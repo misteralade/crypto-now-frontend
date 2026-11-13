@@ -71,6 +71,7 @@ export type SupportedCryptoOrCurrencyResponse = {
 };
 
 export type SupportedExchangeRateResponse = {
+  cachedAt: string;
   fiatRate: number;
   coinGeckoRate: number;
   currency: string; // "NGN" or "USD"

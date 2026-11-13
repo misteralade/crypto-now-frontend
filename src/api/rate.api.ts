@@ -1,4 +1,4 @@
-import {axiosGetRequestHandler} from "./index.ts";
+import {API_KIT} from "./index.ts";
 import type { SupportedExchangeRateResponse } from "../types/response.payload.types.ts";
 
 class ExchangeRateServiceApi {
@@ -15,7 +15,9 @@ class ExchangeRateServiceApi {
   }
 
   async getExchangeRate(cryptoId: string, currencyId: string, action: "BUY" | "SELL") {
-    const { data, message, success }: { data: SupportedExchangeRateResponse, message: string, success: boolean} = await axiosGetRequestHandler(`/rate/crypto-rate/${cryptoId}/${currencyId}/${action}`);
+    const { data: { data, message, success } } = await API_KIT.get<{
+      data: SupportedExchangeRateResponse; message: string; success: boolean;
+    }>(`/rate/crypto-rate/${cryptoId}/${currencyId}/${action}`, { timeout: 20000 });
 
     return { data, message, success };
   }
