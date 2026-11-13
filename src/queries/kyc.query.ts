@@ -4,7 +4,7 @@ import { useDispatch } from "react-redux";
 import { QUERY_KEYS } from "./query.keys.ts";
 import { kycServiceApi } from "../api/kyc.api.ts";
 import { setKycSession } from "../redux/kyc.slice.ts";
-import { LOCAL_STORAGE_KEYS } from "../util/constants.util.ts";
+import { getAccessToken } from "../util/auth-session.util.ts";
 import type { AxiosServerError } from "../types/response.payload.types.ts";
 
 function extractErrorMessage(error: AxiosServerError): string {
@@ -30,7 +30,7 @@ export const useKycQuery = () => {
       }
       return data ?? null;
     },
-    enabled: !!localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN),
+    enabled: !!getAccessToken(),
     staleTime: 0,
     retry: 1,
   });

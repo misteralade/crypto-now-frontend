@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { QUERY_KEYS } from "./query.keys.ts";
-import { LOCAL_STORAGE_KEYS } from "../util/constants.util.ts";
+import { getAccessToken } from "../util/auth-session.util.ts";
 import { userServiceApi } from "../api/user.api.ts";
 
 export const useOnboardingQuery = () => {
   const { data: onboardingStatus, isLoading: loadingOnboardingStatus, refetch: refetchOnboardingStatus } = useQuery({
-    queryKey: [QUERY_KEYS.USER.ONBOARDING_STATUS, localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN)],
+    queryKey: [QUERY_KEYS.USER.ONBOARDING_STATUS, getAccessToken()],
     queryFn: async () => {
       const { data, success, message } = await userServiceApi.getOnboardingStatus();
 
@@ -15,7 +15,7 @@ export const useOnboardingQuery = () => {
 
       return data;
     },
-    enabled: !!localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN),
+    enabled: !!getAccessToken(),
     staleTime: 0,
   });
 

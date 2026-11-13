@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { Link } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import Logo from "../../../assets/logo/logo.svg";
-import { LOCAL_STORAGE_KEYS, ROUTES } from "../../../util/constants.util.ts";
+import { ROUTES } from "../../../util/constants.util.ts";
+import { isAuthenticated } from "../../../util/auth-session.util.ts";
 
 const NAVBAR_H = 56;
 
@@ -53,8 +54,7 @@ export default function PublicNavbar({ innerClassName }: { innerClassName?: stri
   }, []);
 
   useEffect(() => {
-    const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
-    setIsLoggedIn(!!token);
+    setIsLoggedIn(isAuthenticated());
   }, []);
 
   return (

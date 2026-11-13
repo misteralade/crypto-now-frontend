@@ -15,6 +15,7 @@ import { useDispatch } from "react-redux";
 import { setInitiateTransactionField } from "../../../redux/transaction.slice.ts";
 import { setSelectedCryptoId } from "../../../redux/crypto.slice.ts";
 import { ROUTES, LOCAL_STORAGE_KEYS } from "../../../util/constants.util.ts";
+import { isAuthenticated } from "../../../util/auth-session.util.ts";
 import { exchangeRateServiceApi } from "../../../api/rate.api.ts";
 import {
   TRADE_FIAT_AMOUNT_PRESETS,
@@ -178,7 +179,7 @@ function BuyFields({
   // never mix the two up. This is the single source of truth for trade
   // amount bounds; there is no separate global cap. (The min side is
   // enforced by the parent, which has the resolved rate to compare against.)
-  const isAnonymous = !localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+  const isAnonymous = !isAuthenticated();
   const maxTokenLimit = Number(
     isAnonymous
       ? selectedToken.maxTradeAmountForAnonymous
@@ -1182,7 +1183,7 @@ export default function DashboardTradeStep1({
   // and only once the rate for the CURRENT amount has actually resolved.
   // Guests and authenticated users have separate admin-configured limits —
   // never mix the two up.
-  const isAnonymousUser = !localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+  const isAnonymousUser = !isAuthenticated();
   const rateMatchesCurrentAmount =
     !!buyRateInfo && buyRateInfo.fiatAmount === Number(amountToBuy ?? 0);
   const minTokenLimit = selectedToken

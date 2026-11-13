@@ -7,6 +7,7 @@ import {ROUTES} from "../util/constants.util.ts";
 import {useMatchRoute} from "@tanstack/react-router";
 import type {AxiosServerError} from "../types/response.payload.types.ts";
 import {extractErrorMessage} from "../util/index.util.ts";
+import {getAnonymousEmail} from "../util/auth-session.util.ts";
 
 export const useBankQuery = () => {
   const queryClient = useQueryClient();
@@ -31,10 +32,9 @@ export const useBankQuery = () => {
     queryKey: [QUERY_KEYS.BANK.USER_BANK_ACCOUNTS],
     queryFn: async () => {
       const rootState = store.getState() as RootState;
-      const userEmail = rootState.user.trade.anonymous.email;
-      const isAnonymous = rootState.user.trade.anonymous.isAnonymousUser;
+      const userEmail = getAnonymousEmail(rootState.user.trade.anonymous.email);
       
-      if (userEmail && isAnonymous) {
+      if (userEmail) {
         const { data, success } = await bankServiceApi.getAnonymousUserBankAccounts(userEmail);
 
         if (success) {
@@ -67,8 +67,7 @@ export const useBankQuery = () => {
     mutationFn: async () => {
       toast.loading(`Creating bank account...`, { toastId: QUERY_KEYS.BANK.CREATE_USER_BANK_ACCOUNT });
       const rootState = store.getState() as RootState;
-      const userEmail = rootState.user.trade.anonymous.email;
-      const isAnonymous = rootState.user.trade.anonymous.isAnonymousUser;
+      const userEmail = getAnonymousEmail(rootState.user.trade.anonymous.email);
       const bank = rootState.bank;
 
       if (!bank.createBankAccount.bankId || !bank.createBankAccount.accountName || !bank.createBankAccount.accountNumber) {
@@ -83,7 +82,7 @@ export const useBankQuery = () => {
         isDefault: bank.createBankAccount.isDefault,
       }
       
-      if (userEmail && isAnonymous) {
+      if (userEmail) {
         return bankServiceApi.createAnonymousUserBankAccount({...payload, email: userEmail});
       }
 

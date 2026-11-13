@@ -2,21 +2,16 @@ import {useNavigate} from "@tanstack/react-router";
 import {useCryptoQuery} from "../../queries/crypto.query.ts";
 import {useCurrencyQuery} from "../../queries/currency.query.ts";
 import {useEffect, useState} from "react";
-import {LOCAL_STORAGE_KEYS, ROUTES} from "../../util/constants.util.ts";
-import { useUserQuery } from "../../queries/user.query.ts";
-import { type RootState, store } from "../../store.ts";
+import {ROUTES} from "../../util/constants.util.ts";
 
 export const useTradeCryptoCurrenciesButton = () => {
   const navigate = useNavigate();
-  useUserQuery();
   const { supportedCryptoCurrencies, loadingSupportedCryptocurrencies, errorSupportedCryptocurrencies } = useCryptoQuery();
   const { supportedCurrencies, loadingSupportedCurrencies } = useCurrencyQuery();
-  const rootState = store.getState() as RootState;
   
   const [selectedCrypto, setSelectedCrypto] = useState<string>("");
   const [supportedCurrency, setSupportedCurrency] = useState("");
   const [selectedAction, setSelectedAction] = useState<"BUY" | "SELL">("BUY");
-  const [isRegisteredUser, setIsRegisteredUser] = useState(false);
   
   useEffect(() => {
     if (supportedCryptoCurrencies && supportedCryptoCurrencies.length > 0) {
@@ -24,12 +19,6 @@ export const useTradeCryptoCurrenciesButton = () => {
     }
   }, [loadingSupportedCryptocurrencies, supportedCryptoCurrencies]);
 
-  useEffect(() => {
-    if ((rootState.user.trade.anonymous.isAnonymousUser !== undefined && rootState.user.trade.anonymous.isAnonymousUser) || (localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN) === undefined)) {
-      setIsRegisteredUser(true);
-    }
-  }, [rootState.user.trade.anonymous.isAnonymousUser])
-  
   useEffect(() => {
     if (supportedCurrencies && supportedCurrencies.length > 0) {
       setSupportedCurrency(supportedCurrencies[0].id);
@@ -52,8 +41,6 @@ export const useTradeCryptoCurrenciesButton = () => {
     selectedCrypto,
     supportedCurrency,
     selectedAction,
-    isRegisteredUser,
-    
     // Functions
     setSelectedCrypto,
     setSupportedCurrency,

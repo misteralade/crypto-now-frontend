@@ -17,6 +17,7 @@ import { setInitiateTransactionField } from "../redux/transaction.slice.ts";
 import { useTransactionLiveStatus } from "../hooks/components/trade/useTransactionLiveStatus.ts";
 import { userSearchTransactionInitialState } from "../redux/states/initial-transaction.state.ts";
 import type { SearchTransactionsRequestPayload } from "../types/request.payload.types.ts";
+import { getAnonymousEmail } from "../util/auth-session.util.ts";
 
 export const useTransactionQuery = () => {
   const queryClient = useQueryClient();
@@ -250,7 +251,7 @@ export const useTransactionQuery = () => {
       toast.loading(`Initiating transaction...`, { toastId: QUERY_KEYS.TRANSACTION.INITIATE_TRANSACTION });
       const rootState = store.getState() as RootState;
       const transactionForm = rootState.transaction.initiate.initiateTransaction;
-      const userEmail = rootState.user.trade.anonymous.email;
+      const userEmail = getAnonymousEmail(rootState.user.trade.anonymous.email);
       const selectedTradeBankAccountId = rootState.bank.tradeCrypto.selectedBankAccountId;
       const accountId = transactionForm?.accountId ?? selectedTradeBankAccountId ?? undefined;
 
@@ -312,7 +313,7 @@ export const useTransactionQuery = () => {
       const transactionForm = rootState.transaction.initiate.initiateTransaction;
       const transactionSessionId = sessionStorage.getItem(SESSION_STORAGE_KEYS.SESSION_ID);
       
-      const userEmail = rootState.user.trade.anonymous.email;
+      const userEmail = getAnonymousEmail(rootState.user.trade.anonymous.email);
       
       if (!transactionSessionId || !transactionForm) return;
       
@@ -429,7 +430,7 @@ export const useTransactionQuery = () => {
       const rootState = store.getState() as RootState;
       const transactionSessionId = sessionStorage.getItem(SESSION_STORAGE_KEYS.SESSION_ID);
       const accountId = rootState.bank.tradeCrypto?.selectedBankAccountId;
-      const userEmail = rootState.user.trade.anonymous.email;
+      const userEmail = getAnonymousEmail(rootState.user.trade.anonymous.email);
 
       if (!accountId) {
         throw new Error("accountId must be provided, and sessionId must exist");
@@ -544,7 +545,7 @@ export const useTransactionQuery = () => {
       toast.loading(`Submitting transaction...`, { toastId: QUERY_KEYS.TRANSACTION.CREATE_AND_SUBMIT_TRANSACTION });
       const rootState = store.getState() as RootState;
       const transactionForm = rootState.transaction.initiate.initiateTransaction;
-      const userEmail = rootState.user.trade.anonymous.email;
+      const userEmail = getAnonymousEmail(rootState.user.trade.anonymous.email);
 
       if (!transactionForm) throw new Error("Transaction form data missing");
 

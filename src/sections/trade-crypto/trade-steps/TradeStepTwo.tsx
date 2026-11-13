@@ -10,7 +10,8 @@ import type {
 import TradePaymentUpload from "../TradePaymentUpload.tsx";
 import CopyAccountDetails from "../CopyAccountDetails.tsx";
 import ManualDepositRecheckAction from "../../../components/global/ManualDepositRecheckAction.tsx";
-import {LOCAL_STORAGE_KEYS, SESSION_STORAGE_KEYS} from "../../../util/constants.util.ts";
+import {SESSION_STORAGE_KEYS} from "../../../util/constants.util.ts";
+import {isAuthenticated} from "../../../util/auth-session.util.ts";
 import {useState, useEffect} from "react";
 import type React from "react";
 import {transactionServiceApi} from "../../../api/transaction.api.ts";
@@ -539,7 +540,7 @@ const TradeStepTwo = ({ amountToBuy, tradeType, numberOfToken, additionalInfo, h
   const { useTransactionStatus, manualSellDepositRecheckMutation } = useTransactionQuery();
   const { data: transactionDetails } = useTransactionStatus(transactionRef);
   const transactionStatus = transactionDetails?.status as TransactionStatus | undefined;
-  const isAuthenticated = !!localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+  const authenticated = isAuthenticated();
   const {
     // Values
     // files,
@@ -622,7 +623,7 @@ const TradeStepTwo = ({ amountToBuy, tradeType, numberOfToken, additionalInfo, h
             ? () =>
                 manualSellDepositRecheckMutation.mutate({
                   sessionId: transactionRef,
-                  isAnonymous: !isAuthenticated,
+                  isAnonymous: !authenticated,
                 })
             : undefined
         }

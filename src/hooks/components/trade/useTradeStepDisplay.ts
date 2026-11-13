@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 import type {
   TradeAdditionalInfoInterface,
@@ -27,9 +27,10 @@ import {
   saveTradeProgress,
 } from "../../../util/tradeProgress.storage.util.ts";
 import {type RootState, store} from "../../../store.ts";
-import {clearAnonymousUserEmail, setAnonymousUserEmail, setIsAnonymousUser} from "../../../redux/user.slice.ts";
+import {clearAnonymousUserEmail, setAnonymousUserEmail} from "../../../redux/user.slice.ts";
 import { formatForDisplay, formatForDisplayLocalized, formatCompact } from "../../../util/asset-precision.ts";
 import { isExchangeRateExpiryError } from "../../../util/index.util.ts";
+import { getAnonymousEmail, isAuthenticated } from "../../../util/auth-session.util.ts";
 import { toast } from "react-toastify";
 
 // Debounce
@@ -61,6 +62,9 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   const countdownIntervalRef = useRef<any>();
   const queryClient = useQueryClient();
   const dispatch = useDispatch();
+  const storedAnonymousEmail = useSelector(
+    (state: RootState) => state.user.trade.anonymous.email,
+  );
   const { userBankAccounts, loadingUserBankAccounts } = useBankQuery();
   const { supportedCurrencies } = useCurrencyQuery();
   const { supportedCryptoCurrencies, loadingSupportedCryptocurrencies, custodialWallets, generateCustodialWalletMutation } = useCryptoQuery();
@@ -127,15 +131,10 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   const [sellDepositWallet, setSellDepositWallet] = useState<CustodialWalletResponse | null>(null);
 
   // Determine if the user is anonymous based on presence of access token
-  const hasAccessToken = !!localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+  const hasAccessToken = isAuthenticated();
 
   useEffect(() => {
-    if (hasAccessToken) {
-      dispatch(setIsAnonymousUser(false));
-      dispatch(clearAnonymousUserEmail());
-    } else {
-      dispatch(setIsAnonymousUser(true));
-    }
+    if (hasAccessToken) dispatch(clearAnonymousUserEmail());
   }, [hasAccessToken, dispatch]);
 
   // Amount to send
@@ -158,17 +157,8 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       return;
     }
 
-    const currentState = store.getState() as RootState;
-    const isAnonymous = currentState.user.trade.anonymous.isAnonymousUser;
-    const hasEmail = currentState.user.trade.anonymous.email;
-
-    // Only show email modal if user is confirmed as anonymous AND doesn't already have an email
-    if (isAnonymous === true && !hasEmail) {
-      setShowUserEnterEmail(true);
-    } else {
-      setShowUserEnterEmail(false);
-    }
-  }, [hasAccessToken]);
+    setShowUserEnterEmail(!storedAnonymousEmail);
+  }, [hasAccessToken, storedAnonymousEmail]);
 
   const generationLockRef = useRef<string | null>(null);
 
@@ -181,8 +171,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       return;
     }
 
-    const isAuthenticated = !!localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
-    if (!isAuthenticated) return;
+    if (!isAuthenticated()) return;
 
     // Ensure a valid network is configured; never fall back to symbol
     if (!selectedToken.networks || selectedToken.networks.length === 0) {
@@ -474,8 +463,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     sessionStorage.setItem(SESSION_STORAGE_KEYS.SESSION_ID, sessionId);
     saveTradeProgress({ transactionSessionId: sessionId });
 
-    const isAuthenticated = !!localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
-    if (!isAuthenticated && transaction.user?.email) {
+    if (!isAuthenticated() && transaction.user?.email) {
       dispatch(setAnonymousUserEmail(transaction.user.email));
       saveTradeProgress({ anonymousEmail: transaction.user.email });
     }
@@ -886,8 +874,9 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       }
     }
 
-    if (saved.anonymousEmail) {
-      dispatch(setAnonymousUserEmail(saved.anonymousEmail));
+    const anonymousEmail = getAnonymousEmail(saved.anonymousEmail);
+    if (anonymousEmail) {
+      dispatch(setAnonymousUserEmail(anonymousEmail));
     }
     if (saved.sellNetwork) {
       setResolvedSellNetwork(saved.sellNetwork);
@@ -1279,7 +1268,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
   const handleAnonymousUserEmailInput = (value: string) => {
     dispatch(setAnonymousUserEmail(value));
     saveTradeProgress({ anonymousEmail: value });
-    toggleShowUserEnterEmail();
+    setShowUserEnterEmail(false);
   }
 
   // ---------- Persist deltas (guarded by hydration) ----------

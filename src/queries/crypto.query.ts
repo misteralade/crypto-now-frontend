@@ -3,7 +3,7 @@ import {cryptoServiceApi} from "../api/crypto.api.ts";
 import {QUERY_KEYS} from "./query.keys.ts";
 import {type RootState, store} from "../store.ts";
 import {toast} from "react-toastify";
-import {LOCAL_STORAGE_KEYS} from "../util/constants.util.ts";
+import {isAuthenticated} from "../util/auth-session.util.ts";
 import type {AxiosServerError} from "../types/response.payload.types.ts";
 import {extractErrorMessage} from "../util/index.util.ts";
 
@@ -46,7 +46,7 @@ export const useCryptoQuery = () => {
   })
 
   // Fetch authenticated user's custodial wallets (deposit addresses)
-  const isAuthenticated = !!localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+  const authenticated = isAuthenticated();
 
   const { data: custodialWallets, isLoading: loadingCustodialWallets, refetch: refetchCustodialWallets } = useQuery({
     queryKey: [QUERY_KEYS.CRYPTO.GET_CUSTODIAL_WALLETS],
@@ -55,7 +55,7 @@ export const useCryptoQuery = () => {
       if (success) return data;
       return [];
     },
-    enabled: isAuthenticated,
+    enabled: authenticated,
     staleTime: 60_000,
   });
 

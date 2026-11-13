@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "./query.keys.ts";
-import { LOCAL_STORAGE_KEYS } from "../util/constants.util.ts";
+import { getAccessToken } from "../util/auth-session.util.ts";
 import { userServiceApi } from "../api/user.api.ts";
 import { type RootState, store } from "../store.ts";
 import { toast } from "react-toastify";
@@ -11,7 +11,7 @@ export const useUserQuery = () => {
   const queryClient = useQueryClient();
   
   const { data: userProfileData, isLoading: loadingUserProfile } = useQuery({
-    queryKey: [QUERY_KEYS.USER.GET_PROFILE, localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN)],
+    queryKey: [QUERY_KEYS.USER.GET_PROFILE, getAccessToken()],
     queryFn: async () => {
       const { data, success, message} = await userServiceApi.getUserProfile()
 
@@ -21,7 +21,7 @@ export const useUserQuery = () => {
 
       return data;
     },
-    enabled: !!localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN),
+    enabled: !!getAccessToken(),
     staleTime: 1000 * 60 * 5, // 5 minutes
   })
 

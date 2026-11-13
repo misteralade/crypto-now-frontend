@@ -35,6 +35,7 @@ import {
   LOCAL_STORAGE_KEYS,
   SESSION_STORAGE_KEYS,
 } from "../../../util/constants.util.ts";
+import { isAuthenticated } from "../../../util/auth-session.util.ts";
 
 type DashboardTradeProps = {
   sessionId?: string;
@@ -464,8 +465,7 @@ export default function DashboardTrade({
                     // resolved amount is outside the admin-configured
                     // min/max, but guard here too in case onProceed is ever
                     // reachable through another path.
-                    const isAnonymous =
-                      !localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+                    const isAnonymous = !isAuthenticated();
                     const min = Number(
                       isAnonymous
                         ? pendingBuyToken.minTradeAmountForAnonymous

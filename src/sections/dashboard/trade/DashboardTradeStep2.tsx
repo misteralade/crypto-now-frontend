@@ -29,6 +29,7 @@ import TradePaymentUpload from "../../trade-crypto/TradePaymentUpload.tsx";
 import { ROUTES, SESSION_STORAGE_KEYS } from "../../../util/constants.util.ts";
 import type { BuyRateInfo } from "./DashboardTradeStep1.tsx";
 import { useSelector } from "react-redux";
+import { getAnonymousEmail } from "../../../util/auth-session.util.ts";
 import type { RootState } from "../../../store.ts";
 import { useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "../../../queries/query.keys.ts";
@@ -674,7 +675,10 @@ export default function DashboardTradeStep2({
     }
   }, [txStatus, onBuySubmitSuccess, queryClient]);
 
-  const userEmail = useSelector((s: RootState) => s.user.trade.anonymous.email);
+  const storedAnonymousEmail = useSelector(
+    (s: RootState) => s.user.trade.anonymous.email,
+  );
+  const userEmail = getAnonymousEmail(storedAnonymousEmail);
   // buyRateInfo is transient parent (Step 1) component state — it does NOT
   // survive a back-navigation/remount, so it must never gate which bank-details
   // fetch/loading-state is trusted (that previously caused a permanent "Loading…"

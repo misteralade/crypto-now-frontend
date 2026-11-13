@@ -7,7 +7,6 @@ const userSlice = createSlice({
   initialState: {
     trade: {
       anonymous: {
-        isAnonymousUser: false as boolean | undefined,
         email: undefined as string | undefined,
       }
     },
@@ -22,9 +21,6 @@ const userSlice = createSlice({
   },
   reducers: {
     // Sets
-    setIsAnonymousUser: (state, action:PayloadAction<boolean>) => {
-      state.trade.anonymous.isAnonymousUser = action.payload;
-    },
     setAnonymousUserEmail: (state, action:PayloadAction<string>) => {
       state.trade.anonymous.email = action.payload;
     },
@@ -47,9 +43,6 @@ const userSlice = createSlice({
     },
 
     // Clears
-    clearIsAnonymousUser: (state) => {
-      state.trade.anonymous.isAnonymousUser = undefined;
-    },
     clearAnonymousUserEmail: (state) => {
       state.trade.anonymous.email = undefined;
     },
@@ -70,7 +63,6 @@ const userSlice = createSlice({
 
 export const {
   // Sets
-  setIsAnonymousUser,
   setAnonymousUserEmail,
   setProfilePersonalInfoField,
   setCreateUserField,
@@ -79,7 +71,6 @@ export const {
   setSignInEmail,
   
   // Clears
-  clearIsAnonymousUser,
   clearAnonymousUserEmail,
   clearProfilePersonalInfoField,
   clearCreateUserField,

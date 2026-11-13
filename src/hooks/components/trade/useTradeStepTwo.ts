@@ -15,10 +15,11 @@ import {
   loadTradeProgress,
   saveTradeProgress,
 } from "../../../util/tradeProgress.storage.util.ts";
-import { LOCAL_STORAGE_KEYS, SESSION_STORAGE_KEYS } from "../../../util/constants.util.ts";
+import { SESSION_STORAGE_KEYS } from "../../../util/constants.util.ts";
 import {type RootState, store} from "../../../store.ts";
 import {toast} from "react-toastify";
 import { useRateQuery } from "../../../queries/rate.query.ts";
+import { isAuthenticated } from "../../../util/auth-session.util.ts";
 
 interface UseTradeStepTwoProps {
   tradeType: TradeType;
@@ -61,7 +62,7 @@ export const useTradeStepTwo = ({
   const rootState = store.getState() as RootState;
   const cryptoId = rootState.crypto.tradeCrypto.selectedCryptoId;
   const currencyId = selectedCurrency?.id;
-  const isAuthenticated = !!localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+  const authenticated = isAuthenticated();
 
   // Fetch exchange rate to convert USD to NGN
   const { exchangeRate } = useRateQuery(
@@ -134,7 +135,7 @@ export const useTradeStepTwo = ({
             throw new Error("Invalid network for selected crypto");
           }
 
-          if (!isAuthenticated) {
+          if (!authenticated) {
             const sessionId =
               transactionRef ||
               sessionStorage.getItem(SESSION_STORAGE_KEYS.SESSION_ID);
@@ -164,7 +165,7 @@ export const useTradeStepTwo = ({
       enabled:
         tradeType === "buy"
           ? !skipPaymentDetails
-          : !sellDepositWallet || !isAuthenticated,
+          : !sellDepositWallet || !authenticated,
     });
 
   // Validation based on trade type - only require uploaded file for BUY transactions
