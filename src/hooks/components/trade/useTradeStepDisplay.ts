@@ -21,7 +21,7 @@ import {
   setAmountToSend, setInitiateTransactionField,
 } from "../../../redux/transaction.slice.ts";
 import { setSelectedCryptoId } from "../../../redux/crypto.slice.ts";
-import {LOCAL_STORAGE_KEYS, SESSION_STORAGE_KEYS} from "../../../util/constants.util.ts";
+import {SESSION_STORAGE_KEYS} from "../../../util/constants.util.ts";
 import {
   loadTradeProgress,
   saveTradeProgress,

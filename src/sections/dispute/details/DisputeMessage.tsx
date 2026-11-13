@@ -154,7 +154,6 @@ const DisputeMessage = ({ loading, messages, sendMessageMutation }: DisputeMessa
           // Upload file
           const url = await uploadFileMutation.mutateAsync(formData);
           toast.dismiss(toastId);
-          toast.success(`${uploadingFile.name} uploaded successfully`);
           
           // Get metadata
           const metadata: MessageAttachment["metadata"] = {};

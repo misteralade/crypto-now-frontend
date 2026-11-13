@@ -376,6 +376,7 @@ const ProfilePage = () => {
       <NewBankAccountModal
         isOpen={showCreateNewBankAccount}
         banks={!loadingAllBanks && allBanks ? allBanks : []}
+        existingAccounts={userBankAccounts ?? []}
         selectedBankId={selectedBank}
         handleChangeField={handleNewBankAccountField}
         onClose={toggleShowCreateNewBankAccount}

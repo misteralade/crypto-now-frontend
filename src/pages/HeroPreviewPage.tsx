@@ -10,6 +10,7 @@ const HeroPreviewPage = () => {
     <div style={{ background: "#FAF9F7" }}>
       <PublicNavbar />
       <HeroSectionNew />
+      <p className="mx-auto max-w-3xl px-6 py-6 text-center text-sm text-[#454745]">CryptoNow never holds your crypto. Your assets go directly to your bank account or wallet.</p>
       <WhyCryptoNowNew />
       <TestimonialsNew />
       <FAQsNew />

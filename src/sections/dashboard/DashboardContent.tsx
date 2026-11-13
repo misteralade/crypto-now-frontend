@@ -30,13 +30,6 @@ import momentClient from "../../lib/moment.ts";
 import { ROUTES } from "../../util/constants.util.ts";
 
 /* ─────────────────────────── helpers ────────────────────────────── */
-const greeting = () => {
-  const h = new Date().getHours();
-  if (h < 12) return "GOOD MORNING";
-  if (h < 17) return "GOOD AFTERNOON";
-  return "GOOD EVENING";
-};
-
 const getInitials = (first?: string, last?: string) =>
   ((first?.[0] ?? "") + (last?.[0] ?? "")).toUpperCase() || "U";
 
@@ -351,12 +344,6 @@ export default function DashboardContent() {
       ════════════════════════════════════════════ */}
       <div className="lg:hidden px-5 pt-6 pb-3 flex items-start justify-between">
         <div>
-          <p
-            className="text-[10px] font-bold tracking-[0.12em] uppercase"
-            style={{ color: "#9A9A9A" }}
-          >
-            {greeting()} 🇳🇬
-          </p>
           {loadingUserProfile ? (
             <SkelDark w="140px" h={6} />
           ) : (
@@ -390,18 +377,6 @@ export default function DashboardContent() {
         </button>
       </div>
 
-      {/* Non-custodial banner */}
-      <div
-        className="lg:hidden mx-5 mb-4 flex items-start gap-2.5 px-3.5 py-2.5 rounded-2xl"
-        style={{ background: "#FFFBF0", border: "1px solid #FFE9A0" }}
-      >
-        <p className="text-[11px] leading-relaxed" style={{ color: "#7A6000" }}>
-          <strong>Non-custodial platform.</strong> CryptoNow never holds your
-          crypto. All assets go directly to your personal bank account or
-          wallet.
-        </p>
-      </div>
-
       {/* ═══════════════════════════════════════════
           HERO PURPLE CARD — floating with side margin
       ════════════════════════════════════════════ */}
@@ -419,16 +394,6 @@ export default function DashboardContent() {
             boxShadow: "0 12px 40px rgba(45,28,176,0.35)",
           }}
         >
-          {/* Decorative blobs */}
-          <div
-            className="absolute -top-8 -right-8 w-32 h-32 rounded-full pointer-events-none"
-            style={{ background: "rgba(255,255,255,0.06)" }}
-          />
-          <div
-            className="absolute -bottom-10 -left-6 w-40 h-40 rounded-full pointer-events-none"
-            style={{ background: "rgba(148,142,238,0.12)" }}
-          />
-
           {/* Volume */}
           <p
             className="text-[10px] font-bold tracking-[0.14em] uppercase mb-1"
@@ -679,14 +644,14 @@ export default function DashboardContent() {
             {/* Buy Crypto */}
             <button
               onClick={() => goTrade("buy")}
-              className="flex items-center gap-3 px-4 py-4 rounded-3xl text-left transition-all active:scale-[0.97] cursor-pointer"
+              className="flex items-center gap-2 px-3 py-3 rounded-3xl text-left transition-all active:scale-[0.97] cursor-pointer"
               style={{
                 background: "#F0EFFD",
                 border: "1px solid rgba(148,142,238,0.2)",
               }}
             >
               <div
-                className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
+                className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
                 style={{ background: "#948EEE" }}
               >
                 {/* Down arrow icon */}
@@ -717,14 +682,14 @@ export default function DashboardContent() {
             {/* Sell Crypto */}
             <button
               onClick={() => goTrade("sell")}
-              className="flex items-center gap-3 px-4 py-4 rounded-3xl text-left transition-all active:scale-[0.97] cursor-pointer"
+              className="flex items-center gap-2 px-3 py-3 rounded-3xl text-left transition-all active:scale-[0.97] cursor-pointer"
               style={{
                 background: "#FFF4F0",
                 border: "1px solid rgba(247,166,0,0.2)",
               }}
             >
               <div
-                className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
+                className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
                 style={{ background: "#F7A600" }}
               >
                 {/* Up arrow icon */}
@@ -825,7 +790,7 @@ export default function DashboardContent() {
                 style={{ border: "1px dashed #EEEEEE" }}
               >
                 <div
-                  className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
+                  className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
                   style={{ background: "#F0EFFD" }}
                 >
                   <svg

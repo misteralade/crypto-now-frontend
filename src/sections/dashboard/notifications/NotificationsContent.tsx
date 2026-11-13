@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import moment from "moment";
 import { Bell, ChevronLeft } from "lucide-react";
@@ -6,9 +6,9 @@ import { useNotificationQuery } from "../../../queries/notification.query.ts";
 import { ROUTES } from "../../../util/constants.util.ts";
 import type { NotificationResponseEntity } from "../../../types/response.payload.types.ts";
 
-function NotificationRow({ notification }: { notification: NotificationResponseEntity }) {
+function NotificationRow({ notification, onClick }: { notification: NotificationResponseEntity; onClick: () => void }) {
   return (
-    <div className="w-full px-4 py-3.5 flex items-start gap-3">
+    <button type="button" onClick={onClick} className="w-full px-4 py-3.5 flex items-start gap-3 text-left hover:bg-gray-50">
       <div
         className="w-9 h-9 rounded-2xl flex items-center justify-center shrink-0"
         style={{ background: "#F0EFFD" }}
@@ -26,12 +26,13 @@ function NotificationRow({ notification }: { notification: NotificationResponseE
           {moment(notification.createdAt).fromNow()}
         </p>
       </div>
-    </div>
+    </button>
   );
 }
 
 export default function NotificationsContent() {
   const navigate = useNavigate();
+  const [selected, setSelected] = useState<NotificationResponseEntity | null>(null);
   const {
     userNotifications,
     loadingUserNotifications,
@@ -52,6 +53,25 @@ export default function NotificationsContent() {
 
   return (
     <div style={{ background: "#FFFFFF", minHeight: "100dvh" }}>
+      {selected && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setSelected(null)}>
+          <div role="dialog" aria-modal="true" aria-labelledby="notification-title" className="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl" onClick={(event) => event.stopPropagation()}>
+            <h2 id="notification-title" className="text-lg font-bold">{selected.title}</h2>
+            <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-[#454745]">{selected.message}</p>
+            <div className="mt-6 flex justify-end gap-2">
+              <button type="button" className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold" onClick={() => setSelected(null)}>Close</button>
+              {(selected.disputeId || selected.transactionId) && (
+                <button type="button" className="rounded-xl bg-[#03034D] px-4 py-2 text-sm font-semibold text-white" onClick={() => {
+                  if (selected.disputeId) navigate({ to: ROUTES.DISPUTE_DETAILS, params: { id: selected.disputeId } });
+                  else if (selected.transactionId) navigate({ to: ROUTES.TRANSACTION_DETAILS, params: { id: selected.transactionId } });
+                }}>
+                  {selected.disputeId ? "View dispute" : "View transaction"}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       <div className="px-5 pt-6 pb-3 flex items-center gap-3">
         <button
           type="button"
@@ -109,7 +129,7 @@ export default function NotificationsContent() {
             <div className="rounded-3xl overflow-hidden" style={{ border: "1px solid #F0F0F0" }}>
               {notifications.map((notification, i) => (
                 <div key={notification.id}>
-                  <NotificationRow notification={notification} />
+                  <NotificationRow notification={notification} onClick={() => setSelected(notification)} />
                   {i < notifications.length - 1 && (
                     <div style={{ height: "1px", background: "#F7F7F9", margin: "0 16px" }} />
                   )}

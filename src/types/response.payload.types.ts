@@ -326,6 +326,7 @@ export type NotificationResponseEntity = {
   id: string;
   userId: string;
   transactionId: string | null;
+  disputeId: string | null;
   type: string;
   title: string;
   message: string;

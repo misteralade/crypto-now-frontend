@@ -10,17 +10,10 @@ export const useUploadQuery = () => {
   const uploadProfilePictureMutation = useMutation({
     mutationKey: [QUERY_KEYS.USER.UPLOAD_PROFILE_PICTURE],
     mutationFn: async (formData: FormData) => {
-      const file:any = formData.get("file");
-      toast.loading(`Upload picture: ${file["name"]}`);
       const { url } = await userServiceApi.uploadProfilePicture(formData);
       return url;
     },
-    onSuccess: () => {
-      toast.dismiss();
-      toast.success(`Upload picture successfully uploaded`);
-    },
     onError: (error: AxiosServerError) => {
-      toast.dismiss();
       const message = extractErrorMessage(error) || 'Failed to upload file';
       toast.error(message);
     },
@@ -28,24 +21,10 @@ export const useUploadQuery = () => {
 
   const uploadFileMutation = useMutation({
     mutationFn: async (formData: FormData) => {
-      const toastId = toast.loading("Uploading file...");
-      try {
-        const { url } = await transactionServiceApi.uploadDisputeAttachment(formData);
-        toast.dismiss(toastId);
-        toast.success("File uploaded successfully");
-        return url;
-      } catch (error) {
-        toast.dismiss(toastId);
-        toast.error("Failed to upload file");
-        throw error;
-      }
-    },
-    onSuccess: () => {
-      toast.dismiss();
-      toast.success(`Upload picture successfully uploaded`);
+      const { url } = await transactionServiceApi.uploadDisputeAttachment(formData);
+      return url;
     },
     onError: ( error: AxiosServerError ) => {
-      toast.dismiss();
       const message = extractErrorMessage(error) || "Failed to upload file. Please try again."
       toast.error(message);
     },

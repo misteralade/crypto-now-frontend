@@ -1,12 +1,14 @@
 import { Fragment, useEffect } from "react";
+import { toast } from "react-toastify";
 import { X } from "lucide-react";
-import type { AllBanksResponse } from "../../../../types/response.payload.types.ts";
+import type { AllBanksResponse, UserBankAccountResponse } from "../../../../types/response.payload.types.ts";
 import type { CreateBankAccountRequestPayload } from "../../../../types/request.payload.types.ts";
 import BankAccountForm from "../../bank/BankAccountForm.tsx";
 
 interface NewBankAccountModalProps {
   isOpen: boolean;
   banks: AllBanksResponse[];
+  existingAccounts: UserBankAccountResponse[];
   selectedBankId: string;
   onClose: () => void;
   onSubmit: () => void;
@@ -19,6 +21,7 @@ interface NewBankAccountModalProps {
 const NewBankAccountModal = ({
   isOpen,
   banks,
+  existingAccounts,
   onClose,
   onSubmit,
   handleChangeField,
@@ -76,6 +79,14 @@ const NewBankAccountModal = ({
               banks={banks}
               onSubmit={onSubmit}
               onCancel={onClose}
+              onDuplicate={(bankId, accountNumber) => {
+                const exists = existingAccounts.some((account) => !account.isDeleted && account.bank.id === bankId && account.accountNumber === accountNumber);
+                if (exists) {
+                  onClose();
+                  toast.error("This bank account has already been added.");
+                }
+                return exists;
+              }}
               handleChangeField={handleChangeField}
               submitLabel="Save Bank Account"
               showCancelButton

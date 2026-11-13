@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { AllBanksResponse } from "../../../types/response.payload.types.ts";
 import type { CreateBankAccountRequestPayload } from "../../../types/request.payload.types.ts";
 import BankSelector from "../../global/BankSelector.tsx";
@@ -9,6 +9,7 @@ interface BankAccountFormProps {
   banks: AllBanksResponse[];
   onSubmit: () => void;
   onCancel?: () => void;
+  onDuplicate?: (bankId: string, accountNumber: string) => boolean;
   handleChangeField: (
     field: keyof CreateBankAccountRequestPayload,
     value: any,
@@ -21,10 +22,12 @@ const BankAccountForm = ({
   banks,
   onSubmit,
   onCancel,
+  onDuplicate,
   handleChangeField,
   submitLabel = "Save Bank Account",
   showCancelButton = true,
 }: BankAccountFormProps) => {
+  const lookupVersion = useRef(0);
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [lookupError, setLookupError] = useState<string | null>(null);
 
@@ -41,6 +44,8 @@ const BankAccountForm = ({
     bankId: string,
     setFieldValue: any,
   ) => {
+    const version = ++lookupVersion.current;
+    if (onDuplicate?.(bankId, accountNumber)) return "";
     setIsLookingUp(true);
     setLookupError(null);
     try {
@@ -49,6 +54,7 @@ const BankAccountForm = ({
         accountNumber,
         bankId,
       );
+      if (version !== lookupVersion.current) return "";
       if (success && data.accountName) {
         setFieldValue("accountName", data.accountName);
         handleChangeField("accountName", data.accountName);
@@ -60,12 +66,13 @@ const BankAccountForm = ({
         return "";
       }
     } catch {
+      if (version !== lookupVersion.current) return "";
       setLookupError("Couldn't find an account with this bank. Please check and try again.");
       setFieldValue("accountName", "");
       handleChangeField("accountName", "");
       return "";
     } finally {
-      setIsLookingUp(false);
+      if (version === lookupVersion.current) setIsLookingUp(false);
     }
   };
 
@@ -100,6 +107,11 @@ const BankAccountForm = ({
                 options={banks}
                 value={values.bankId}
                 onValueChange={(value) => {
+                  lookupVersion.current++;
+                  setIsLookingUp(false);
+                  setFieldValue("accountName", "");
+                  handleChangeField("accountName", "");
+                  setLookupError(null);
                   setFieldValue("bankId", value);
                   handleChangeField("bankId", value);
 
@@ -143,6 +155,11 @@ const BankAccountForm = ({
                   const val = e.target.value
                     .replace(/\D/g, "")
                     .slice(0, 10);
+                  lookupVersion.current++;
+                  setIsLookingUp(false);
+                  setFieldValue("accountName", "");
+                  handleChangeField("accountName", "");
+                  setLookupError(null);
                   setFieldValue("accountNumber", val);
                   handleChangeField("accountNumber", val);
 
@@ -171,7 +188,7 @@ const BankAccountForm = ({
             </div>
 
             {/* Derived Account Holder Name */}
-            <div className="flex flex-col gap-1 md:col-span-2">
+            {(isLookingUp || values.accountName || lookupError) && <div className="flex flex-col gap-1 md:col-span-2">
               <div
                 className={`
                 w-full h-14 px-4 flex flex-col justify-center
@@ -188,11 +205,7 @@ const BankAccountForm = ({
                       Verifying details...
                     </span>
                   ) : (
-                    values.accountName || (
-                      <span className="text-[#9A9A9A] italic">
-                        Enter bank and account number to verify
-                      </span>
-                    )
+                    values.accountName
                   )}
                 </div>
               </div>
@@ -204,7 +217,7 @@ const BankAccountForm = ({
                   {lookupError}
                 </p>
               )}
-            </div>
+            </div>}
 
           </div>
 
@@ -214,7 +227,7 @@ const BankAccountForm = ({
               <button
                 onClick={onCancel}
                 type="button"
-                className="flex-1 h-12 rounded-2xl text-[#6B6E6B] font-semibold text-sm bg-white border border-gray-200 hover:bg-gray-50 transition-colors"
+                className="flex-1 h-10 rounded-xl text-[#6B6E6B] font-semibold text-sm bg-white border border-gray-200 hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>
@@ -227,7 +240,7 @@ const BankAccountForm = ({
                 isLookingUp
               }
               type="submit"
-              className="flex-1 h-12 rounded-2xl font-semibold text-sm bg-[#03034D] transition-all text-white disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-[#02022d] shadow-sm"
+              className="flex-1 h-10 rounded-xl font-semibold text-sm bg-[#03034D] transition-all text-white disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-[#02022d] shadow-sm"
             >
               {isSubmitting ? "Saving..." : submitLabel}
             </button>

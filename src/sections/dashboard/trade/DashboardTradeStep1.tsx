@@ -14,7 +14,7 @@ import type {
 import { useDispatch } from "react-redux";
 import { setInitiateTransactionField } from "../../../redux/transaction.slice.ts";
 import { setSelectedCryptoId } from "../../../redux/crypto.slice.ts";
-import { ROUTES, LOCAL_STORAGE_KEYS } from "../../../util/constants.util.ts";
+import { ROUTES } from "../../../util/constants.util.ts";
 import { isAuthenticated } from "../../../util/auth-session.util.ts";
 import { exchangeRateServiceApi } from "../../../api/rate.api.ts";
 import {
@@ -1203,7 +1203,7 @@ export default function DashboardTradeStep1({
   // never mix the two up.
   const isAnonymousUser = !isAuthenticated();
   const rateMatchesCurrentAmount =
-    !!buyRateInfo && buyRateInfo.fiatAmount === Number(amountToBuy ?? 0);
+    !!buyRateInfo && buyRateInfo.cryptoAmount === Number(amountToBuy ?? 0);
   const minTokenLimit = selectedToken
     ? Number(
         isAnonymousUser
@@ -1230,7 +1230,7 @@ export default function DashboardTradeStep1({
     (!amountToBuy ||
       Number(amountToBuy) <= 0 ||
       !walletAddress?.trim() ||
-      !buyRateInfo ||
+      !rateMatchesCurrentAmount ||
       amountBelowMin);
 
   const isCtaBusy = isInitiatingTrade || (!!selectedToken && isRateLoading);
