@@ -1,3 +1,4 @@
+import { isEmailVerificationRequired } from "../../util/auth-error.util.ts";
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { BASIC } from "../../config/index.config.ts";
@@ -28,15 +29,20 @@ export const useSignInPage = () => {
       password: values.password,
     }
 
-    const { success, data } = await userSignInMutation.mutateAsync(payload);
-
-    if (success) {
-      const target = data?.twoFactorRequired ? ROUTES.TWO_FACTOR_VERIFY : ROUTES.DASHBOARD;
-      console.log(`Login successful, navigating to: ${target}`);
-      navigate({
-        to: target,
-        replace: true,
-      });
+    try {
+      const { success, data } = await userSignInMutation.mutateAsync(payload);
+      if (success) {
+        const target = data?.twoFactorRequired ? ROUTES.TWO_FACTOR_VERIFY : ROUTES.DASHBOARD;
+        await navigate({ to: target, replace: true });
+      }
+    } catch (error) {
+      if (isEmailVerificationRequired(error)) {
+        await navigate({
+          to: ROUTES.CHECK_EMAIL,
+          search: { email: values.email, send: crypto.randomUUID() },
+          replace: true,
+        });
+      }
     }
   };
 

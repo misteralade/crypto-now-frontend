@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useSearch } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "react-toastify";
@@ -9,8 +9,10 @@ import { ArrowRight, MailCheck } from "lucide-react";
 import AuthLayout from "../../layouts/AuthLayout.tsx";
 import { ROUTES } from "../../util/constants.util.ts";
 
+const VERIFICATION_REQUEST_PREFIX = "cryptonow.verificationRequest.";
+
 export default function CheckEmailPage() {
-  const { email: initialEmail } = useSearch({ from: "/check-email" });
+  const { email: initialEmail, send } = useSearch({ from: "/check-email" });
   const [email, setEmail] = useState(initialEmail);
   const resend = useMutation({
     mutationFn: (address: string) => authServiceApi.resendSignupVerification(address),
@@ -21,6 +23,14 @@ export default function CheckEmailPage() {
     onError: (error) => toast.error(extractErrorMessage(error) || "Couldn't resend the link. Try again."),
   });
   const validEmail = EmailSchema.safeParse(email).success;
+  useEffect(() => {
+    if (!send || !EmailSchema.safeParse(initialEmail).success) return;
+    const requestKey = `${VERIFICATION_REQUEST_PREFIX}${send}`;
+    if (sessionStorage.getItem(requestKey) !== null) return;
+    sessionStorage.setItem(requestKey, "sent");
+    resend.mutate(initialEmail);
+  }, [initialEmail, send, resend.mutate]);
+
   return (
     <AuthLayout layoutType={1}>
       <main className="mx-auto flex w-full max-w-md flex-col items-center px-1 py-8 text-center sm:py-12">
@@ -31,7 +41,7 @@ export default function CheckEmailPage() {
         <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.16em] text-[#7772D9]">One more step</p>
         <h1 className="text-3xl font-bold tracking-tight text-[#0E0F0C] sm:text-4xl">Check your email</h1>
         <p className="mt-4 max-w-sm text-base leading-7 text-[#454745]">
-          We sent you a verification link. Open it to activate your CryptoNow account.
+          Open the verification link in your email to activate your CryptoNow account.
         </p>
         <form className="mt-7 w-full space-y-3 text-left" onSubmit={(event) => { event.preventDefault(); if (validEmail) resend.mutate(email); }}>
           <label htmlFor="verification-email" className="block text-sm font-semibold text-[#454745]">Email address</label>

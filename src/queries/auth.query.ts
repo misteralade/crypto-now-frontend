@@ -1,3 +1,4 @@
+import { isEmailVerificationRequired } from "../util/auth-error.util.ts";
 import {useMutation, useQueryClient} from "@tanstack/react-query";
 import {authServiceApi} from "../api/auth.api.ts";
 import {useState} from "react";
@@ -137,8 +138,10 @@ export const useAuthQuery = () => {
     },
     onError: ( error: AxiosServerError ) => {
       toast.dismiss();
-      const message = extractErrorMessage(error) || "Failed to login"
-      toast.error(message);
+      if (!isEmailVerificationRequired(error)) {
+        const message = extractErrorMessage(error) || "Failed to login";
+        toast.error(message);
+      }
     },
   });
 
