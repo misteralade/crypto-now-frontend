@@ -166,58 +166,37 @@ const DisputeMessage = ({
 
   return (
     <div
-      className="rounded-3xl flex flex-col h-[640px] sm:h-[700px] overflow-hidden"
+      className="rounded-3xl flex flex-col overflow-hidden"
       style={{ background: "#FFFFFF", border: "1px solid #F0F0F0" }}
     >
       {/* Chat Header */}
       <div
-        className="px-5 py-4 flex items-center justify-between shrink-0"
+        className="px-5 py-4 shrink-0"
         style={{ borderBottom: "1px solid #F0F0F0" }}
       >
-        <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
-            style={{ background: "#F0EFFD", color: "#575AE5" }}
-          >
-            <Shield size={18} />
-          </div>
-          <div>
-            <h2 className="text-sm font-bold" style={{ color: "#0E0F0C" }}>
-              Support Conversation
-            </h2>
-            <p className="text-xs" style={{ color: "#9A9A9A" }}>
-              CryptoNow Resolution Desk
-            </p>
-          </div>
-        </div>
-
-        {/* Live indicator */}
-        <div className="flex items-center gap-2">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-          </span>
-          <span className="text-[11px] font-semibold" style={{ color: "#6B6E6B" }}>
-            Live
-          </span>
-        </div>
+        <h2 className="text-sm font-bold" style={{ color: "#0E0F0C" }}>
+          Support Conversation
+        </h2>
+        <p className="text-xs" style={{ color: "#9A9A9A" }}>
+          CryptoNow Resolution Desk
+        </p>
       </div>
 
       {/* Messages Scroll Area */}
       <div
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4"
+        className="overflow-y-auto p-4 sm:p-5 space-y-4 max-h-[460px] sm:max-h-[520px]"
         style={{ background: "#FAFAFA" }}
       >
         {loading && messages.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center py-12 text-center">
+          <div className="flex flex-col items-center justify-center py-10 text-center">
             <Loader2 className="w-6 h-6 animate-spin text-[#948EEE] mb-2" />
             <p className="text-xs font-semibold" style={{ color: "#9A9A9A" }}>
               Loading conversation...
             </p>
           </div>
         ) : messages.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center py-12 text-center px-4">
+          <div className="flex flex-col items-center justify-center py-10 text-center px-4">
             <div
               className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3"
               style={{ background: "#F0EFFD", color: "#575AE5" }}
@@ -239,11 +218,7 @@ const DisputeMessage = ({
               ? moment(msg.createdAt).format("h:mm A")
               : moment(msg.createdAt).format("MMM D, h:mm A");
 
-            const senderLabel = isUser
-              ? "You"
-              : msg.admin?.firstName
-              ? `${msg.admin.firstName} (Support)`
-              : "CryptoNow Support";
+            const senderLabel = isUser ? "You" : "CryptoNow Support";
 
             return (
               <div

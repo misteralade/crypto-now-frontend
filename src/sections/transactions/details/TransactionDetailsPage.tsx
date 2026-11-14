@@ -22,7 +22,7 @@ import momentClient from "../../../lib/moment.ts";
 import DisputeTransactionModal from "./modals/DisputeTransactionModal.tsx";
 import TransactionReceiptsSection from "./TransactionReceiptsSection.tsx";
 import TransactionContextCard from "./TransactionContextCard.tsx";
-import { getStatusDisplayName, TRANSACTION_STATUS } from "../../../util/transaction.util.ts";
+import { getStatusDisplayName, TRANSACTION_STATUS, TRANSACTION_TYPE } from "../../../util/transaction.util.ts";
 
 const TransactionDetailsPage = () => {
   const navigate = useNavigate();
@@ -83,7 +83,7 @@ const TransactionDetailsPage = () => {
     return "-";
   };
 
-  const isBuy = transaction?.type?.toUpperCase() === "BUY";
+  const isBuy = transaction?.type?.toUpperCase() === TRANSACTION_TYPE.BUY;
 
   /* ── Reusable copy row ── */
   const CopyRow = ({
@@ -281,7 +281,7 @@ const TransactionDetailsPage = () => {
 
             {/* ── Hero status card ── */}
             <div
-              className="rounded-3xl p-5 flex items-start gap-4"
+              className="rounded-3xl p-5"
               style={{
                 background: transactionColorScheme?.bg?.includes("green")
                   ? "#E8F8F0"
@@ -301,25 +301,9 @@ const TransactionDetailsPage = () => {
                 }`,
               }}
             >
-              {/* Crypto icon */}
-              <div
-                className="w-12 h-12 rounded-2xl shrink-0 overflow-hidden flex items-center justify-center"
-                style={{
-                  background: isBuy
-                    ? "rgba(3,120,71,0.10)"
-                    : "rgba(148,142,238,0.12)",
-                }}
-              >
-                <img
-                  src={transaction.cryptocurrency?.logoUrl}
-                  alt={transaction.cryptocurrency?.symbol}
-                  className="w-8 h-8 object-contain"
-                />
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
                     <p
                       className="text-base font-extrabold"
                       style={{
@@ -330,88 +314,94 @@ const TransactionDetailsPage = () => {
                       {isBuy ? "Buy" : "Sell"}{" "}
                       {transaction.cryptocurrency?.name}
                     </p>
-                    <p className="text-xs mt-0.5" style={{ color: "#9A9A9A" }}>
-                      {momentClient.formatToTransactionInitiationDate(
-                        transaction.createdAt
-                      )}
-                    </p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p
-                      className="text-lg font-black"
-                      style={{
-                        color: isBuy ? "#037847" : "#0E0F0C",
-                        fontFamily: "'DM Sans', sans-serif",
-                      }}
-                    >
-                      {formatFiatAmount()}
-                    </p>
-                    <p
-                      className="text-xs font-semibold mt-0.5"
-                      style={{ color: "#6B6E6B" }}
-                    >
-                      {formatForDisplay(Number(transaction.amountCrypto), transaction.cryptocurrency?.symbol ?? "")}{" "}
-                      {transaction.cryptocurrency?.symbol}
-                    </p>
-                  </div>
-                </div>
-                <div className="mt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span
-                      className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold whitespace-nowrap self-start shrink-0"
-                      style={{
-                        background: transactionColorScheme?.bg?.includes("green")
-                          ? "#E8F8F0"
-                          : transactionColorScheme?.bg?.includes("red")
-                          ? "#FEECEC"
-                          : transactionColorScheme?.bg?.includes("yellow")
-                          ? "#FFF3D0"
-                          : "#F0EFFD",
-                        color: transactionColorScheme?.bg?.includes("green")
-                          ? "#037847"
-                          : transactionColorScheme?.bg?.includes("red")
-                          ? "#EB5757"
-                          : transactionColorScheme?.bg?.includes("yellow")
-                          ? "#A07000"
-                          : "#575AE5",
-                      }}
-                    >
-                      {getStatusDisplayName(transaction.status)}
-                    </span>
-
-                    {(transaction.status === TRANSACTION_STATUS.DISPUTED || !!disputeForTransaction) && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (disputeForTransaction?.id) {
-                            navigate({
-                              to: ROUTES.DISPUTE_DETAILS,
-                              params: { id: disputeForTransaction.id },
-                            });
-                          } else {
-                            toggleDisputeTransaction();
-                          }
-                        }}
-                        className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold transition-all active:scale-95 cursor-pointer hover:opacity-90 shadow-sm"
-                        style={{
-                          background: "#03034D",
-                          color: "#FFFFFF",
-                        }}
-                      >
-                        <span>View Dispute</span>
-                        <ChevronRight size={12} strokeWidth={2.5} />
-                      </button>
+                    {transaction.cryptocurrency?.logoUrl && (
+                      <img
+                        src={transaction.cryptocurrency.logoUrl}
+                        alt={transaction.cryptocurrency.symbol}
+                        className="w-4 h-4 sm:w-5 sm:h-5 object-contain inline-block shrink-0"
+                      />
                     )}
                   </div>
-                  {transactionMessage?.message && (
-                    <p className="text-xs leading-normal sm:text-right" style={{ color: "#6B6E6B" }}>
-                      {transactionMessage.message}
-                    </p>
-                  )}
+                  <p className="text-xs mt-0.5" style={{ color: "#9A9A9A" }}>
+                    {momentClient.formatToTransactionInitiationDate(
+                      transaction.createdAt
+                    )}
+                  </p>
                 </div>
+                <div className="text-right shrink-0">
+                  <p
+                    className="text-lg font-black"
+                    style={{
+                      color: isBuy ? "#037847" : "#0E0F0C",
+                      fontFamily: "'DM Sans', sans-serif",
+                    }}
+                  >
+                    {formatFiatAmount()}
+                  </p>
+                  <p
+                    className="text-xs font-semibold mt-0.5"
+                    style={{ color: "#6B6E6B" }}
+                  >
+                    {formatForDisplay(Number(transaction.amountCrypto), transaction.cryptocurrency?.symbol ?? "")}{" "}
+                    {transaction.cryptocurrency?.symbol}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-4 flex items-center justify-between gap-2.5">
+                <span
+                  className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold whitespace-nowrap shrink-0"
+                  style={{
+                    background: transactionColorScheme?.bg?.includes("green")
+                      ? "#E8F8F0"
+                      : transactionColorScheme?.bg?.includes("red")
+                      ? "#FEECEC"
+                      : transactionColorScheme?.bg?.includes("yellow")
+                      ? "#FFF3D0"
+                      : "#F0EFFD",
+                    color: transactionColorScheme?.bg?.includes("green")
+                      ? "#037847"
+                      : transactionColorScheme?.bg?.includes("red")
+                      ? "#EB5757"
+                      : transactionColorScheme?.bg?.includes("yellow")
+                      ? "#A07000"
+                      : "#575AE5",
+                  }}
+                >
+                  {getStatusDisplayName(transaction.status)}
+                </span>
+
+                {(transaction.status === TRANSACTION_STATUS.DISPUTED || !!disputeForTransaction) ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (disputeForTransaction?.id) {
+                        navigate({
+                          to: ROUTES.DISPUTE_DETAILS,
+                          params: { id: disputeForTransaction.id },
+                        });
+                      } else {
+                        toggleDisputeTransaction();
+                      }
+                    }}
+                    className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold transition-all active:scale-95 cursor-pointer hover:opacity-90 shadow-sm shrink-0"
+                    style={{
+                      background: "#03034D",
+                      color: "#FFFFFF",
+                    }}
+                  >
+                    <span>View Dispute</span>
+                    <ChevronRight size={12} strokeWidth={2.5} />
+                  </button>
+                ) : transactionMessage?.message ? (
+                  <p className="text-xs leading-normal sm:text-right" style={{ color: "#6B6E6B" }}>
+                    {transactionMessage.message}
+                  </p>
+                ) : null}
+              </div>
 
                 {/* ── Payout Failure Alert & Action ── */}
-                {transaction.status === "PAYOUT_FAILED" && (
+                {transaction.status === TRANSACTION_STATUS.PAYOUT_FAILED && (
                   <div
                     className="mt-4 rounded-2xl p-4 space-y-3"
                     style={{
@@ -460,7 +450,6 @@ const TransactionDetailsPage = () => {
                     )}
                   </div>
                 )}
-              </div>
             </div>
 
             {/* ── Overview grid ── */}
@@ -494,7 +483,7 @@ const TransactionDetailsPage = () => {
             </Card>
 
             {/* ── Receipts ── */}
-            {transaction.type === "BUY" && (
+            {transaction.type === TRANSACTION_TYPE.BUY && (
               <TransactionReceiptsSection
                 receiptImageUrl={transaction.receiptImageUrl}
                 adminPaymentReceiptUrl={

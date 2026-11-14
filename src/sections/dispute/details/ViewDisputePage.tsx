@@ -141,36 +141,18 @@ const ViewDisputePage = () => {
 
           {/* ── Status Explanation Banner ── */}
           <div
-            className="rounded-3xl p-4 sm:p-5 flex items-start gap-3.5 border"
+            className="rounded-2xl px-4 py-3 sm:px-5 sm:py-3.5 border"
             style={{
               background: statusConfig.bg,
               borderColor: statusConfig.border,
             }}
           >
-            <div
-              className="w-9 h-9 rounded-2xl flex items-center justify-center shrink-0"
-              style={{
-                background: "#FFFFFF",
-                color: statusConfig.text,
-              }}
+            <p
+              className="text-xs sm:text-sm leading-relaxed font-medium"
+              style={{ color: statusConfig.text }}
             >
-              <StatusIcon size={18} strokeWidth={2.2} />
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <h4
-                className="text-xs sm:text-sm font-bold mb-0.5"
-                style={{ color: statusConfig.text }}
-              >
-                Status: {statusConfig.label}
-              </h4>
-              <p
-                className="text-xs sm:text-sm leading-relaxed"
-                style={{ color: "#0E0F0C", opacity: 0.88 }}
-              >
-                {statusConfig.description}
-              </p>
-            </div>
+              {statusConfig.description}
+            </p>
           </div>
 
           {/* ── 2-Column Responsive Grid ── */}

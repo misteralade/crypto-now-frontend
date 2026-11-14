@@ -26,6 +26,14 @@ export const TRANSACTION_STATUS = {
 export type TransactionStatusType =
   (typeof TRANSACTION_STATUS)[keyof typeof TRANSACTION_STATUS];
 
+export const TRANSACTION_TYPE = {
+  BUY: "BUY",
+  SELL: "SELL",
+} as const;
+
+export type TransactionTypeValue =
+  (typeof TRANSACTION_TYPE)[keyof typeof TRANSACTION_TYPE];
+
 /**
  * `amountFiat` is stored in the transaction's settlement `currency`, which is
  * USD for stablecoin trades : not always NGN. Anywhere the amount is shown
