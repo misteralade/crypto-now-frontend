@@ -1,6 +1,11 @@
 import type { TransactionResponseEntity } from "../../../types/response.payload.types.ts";
 import momentClient from "../../../lib/moment.ts";
-import { getStatusColors, getStatusDisplayName, getTransactionAmountFiatNGN } from "../../../util/transaction.util.ts";
+import {
+  getStatusConfig,
+  getTransactionAmountFiatNGN,
+  TRANSACTION_STATUS,
+  TRANSACTION_TYPE,
+} from "../../../util/transaction.util.ts";
 import { useNavigate } from "@tanstack/react-router";
 import { ROUTES } from "../../../util/constants.util.ts";
 import { formatCompact } from "../../../util/asset-precision.ts";
@@ -14,28 +19,20 @@ interface TransactionRowProps {
 const TransactionRow = ({ transaction: tx, isLast, isMobileCard = false }: TransactionRowProps) => {
   const navigate = useNavigate();
 
-  const isBuy = tx.type.toUpperCase() === "BUY";
-  const isCompleted = tx.status === "COMPLETED";
-  const isFailed = ["FAILED", "EXPIRED", "CANCELLED"].includes(tx.status);
-
-  const badgeStyle = isCompleted
-    ? { background: "#E8F8F0", color: "#037847" }
-    : isFailed
-    ? { background: "#FEECEC", color: "#EB5757" }
-    : { background: "#F0EFFD", color: "#575AE5" };
-
-  const badgeLabel = isCompleted
-    ? "✓ Done"
-    : isFailed
-    ? "✗ " + getStatusDisplayName(tx.status)
-    : getStatusDisplayName(tx.status);
+  const isBuy = tx.type.toUpperCase() === TRANSACTION_TYPE.BUY;
+  const statusConfig = getStatusConfig(tx.status);
+  const badgeStyle = statusConfig.style;
+  const badgeLabel = statusConfig.displayName;
 
   const canContinue =
-    ["INITIATED", "AWAITING_CRYPTO", "AWAITING_PAYMENT"].includes(tx.status) &&
+    ([
+      TRANSACTION_STATUS.INITIATED,
+      TRANSACTION_STATUS.AWAITING_CRYPTO,
+      TRANSACTION_STATUS.AWAITING_PAYMENT,
+    ] as string[]).includes(tx.status) &&
     momentClient.isWithinDuration(tx.createdAt, 1, "hour");
-  const canDispute = tx.status === "DISPUTED";
+  const canDispute = tx.status === TRANSACTION_STATUS.DISPUTED;
   const fiatAmt = formatCompact(getTransactionAmountFiatNGN(tx), "NGN", 0);
-  const statusColors = getStatusColors(tx.status);
   const cryptoAmt = Number(tx.amountCrypto).toFixed(4).replace(/\.?0+$/, "");
 
   const handleView     = () => navigate({ to: `${ROUTES.TRANSACTION}/${tx.sessionId}` });
@@ -162,9 +159,9 @@ const TransactionRow = ({ transaction: tx, isLast, isMobileCard = false }: Trans
         {tx.userCryptoWallet?.network ?? tx.adminCryptoWallet?.network ?? tx.walletNetwork ?? "-"}
       </td>
       <td className="px-5 py-4">
-        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12px] font-semibold ${statusColors.background} ${statusColors.text}`}>
-          <span className={`w-1.5 h-1.5 rounded-full ${statusColors.dot}`} />
-          {getStatusDisplayName(tx.status)}
+        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12px] font-semibold ${statusConfig.bgColor} ${statusConfig.textColor}`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${statusConfig.dotColor}`} />
+          {statusConfig.displayName}
         </span>
       </td>
     </tr>

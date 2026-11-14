@@ -9,59 +9,58 @@ import {
   Timer,
   XCircle,
 } from "lucide-react";
-import {Fragment} from "react";
-import {transactionStatusStyles} from "../../../util/constants.util.ts";
+import { Fragment } from "react";
+import {
+  getStatusConfig,
+  TRANSACTION_STATUS,
+} from "../../../util/transaction.util.ts";
 
 export const TransactionStatus = ({ status }: { status: string }) => {
   const transactionIcon = (status: string) => {
-    const color = transactionStatusStyles[status as keyof typeof transactionStatusStyles]?.textColor || "text-gray-600";
-    
+    const color = getStatusConfig(status).textColor;
+
     switch (status) {
-      case "INITIATED":
+      case TRANSACTION_STATUS.INITIATED:
         return <Clock className={`w-5 h-5 ${color}`} />;
-      case "AWAITING_PAYMENT":
+      case TRANSACTION_STATUS.AWAITING_PAYMENT:
         return <AlertCircle className={`w-5 h-5 ${color}`} />;
-      case "IN_REVIEW":
+      case TRANSACTION_STATUS.IN_REVIEW:
         return <Clock className={`w-5 h-5 ${color}`} />;
-      case "PROCESSING":
+      case TRANSACTION_STATUS.PROCESSING:
         return <Loader className={`w-5 h-5 ${color}`} />;
-      case "AWAITING_CRYPTO":
+      case TRANSACTION_STATUS.AWAITING_CRYPTO:
         return <Coins className={`w-5 h-5 ${color}`} />;
-      case "COMPLETED":
+      case TRANSACTION_STATUS.COMPLETED:
         return <CheckCircle className={`w-5 h-5 ${color}`} />;
-      case "FAILED":
+      case TRANSACTION_STATUS.FAILED:
         return <XCircle className={`w-5 h-5 ${color}`} />;
-      case "EXPIRED":
+      case TRANSACTION_STATUS.EXPIRED:
         return <Timer className={`w-5 h-5 ${color}`} />;
-      case "CANCELLED":
+      case TRANSACTION_STATUS.CANCELLED:
         return <Ban className={`w-5 h-5 ${color}`} />;
-      case "DISPUTED":
+      case TRANSACTION_STATUS.DISPUTED:
         return <AlertTriangle className={`w-5 h-5 ${color}`} />;
-      case "REFUNDED":
+      case TRANSACTION_STATUS.REFUNDED:
         return <CheckCircle className={`w-5 h-5 ${color}`} />;
-      case "DEPOSIT_DETECTED":
-      case "PENDING_CONFIRMATION":
+      case TRANSACTION_STATUS.DEPOSIT_DETECTED:
+      case TRANSACTION_STATUS.PENDING_CONFIRMATION:
         return <AlertCircle className={`w-5 h-5 ${color}`} />;
-      case "DEPOSIT_PENDING_MINIMUM":
+      case TRANSACTION_STATUS.DEPOSIT_PENDING_MINIMUM:
         return <AlertCircle className={`w-5 h-5 ${color}`} />;
-      case "DEPOSIT_CONFIRMED":
+      case TRANSACTION_STATUS.DEPOSIT_CONFIRMED:
         return <CheckCircle className={`w-5 h-5 ${color}`} />;
-      case "NO_OWNER":
+      case TRANSACTION_STATUS.NO_OWNER:
         return <AlertTriangle className={`w-5 h-5 ${color}`} />;
-      case "PAYOUT_INITIATED":
+      case TRANSACTION_STATUS.PAYOUT_INITIATED:
         return <CheckCircle className={`w-5 h-5 ${color}`} />;
-      case "PENDING_PAYOUT":
+      case TRANSACTION_STATUS.PENDING_PAYOUT:
         return <Clock className={`w-5 h-5 ${color}`} />;
-      case "PAYOUT_FAILED":
+      case TRANSACTION_STATUS.PAYOUT_FAILED:
         return <XCircle className={`w-5 h-5 ${color}`} />;
       default:
         return <AlertCircle className={`w-5 h-5 ${color}`} />;
     }
-  }
-  
-  return (
-    <Fragment>
-      {transactionIcon(status)}
-    </Fragment>
-  )
-}
+  };
+
+  return <Fragment>{transactionIcon(status)}</Fragment>;
+};

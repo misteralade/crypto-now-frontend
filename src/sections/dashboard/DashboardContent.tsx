@@ -25,7 +25,11 @@ import type {
 } from "../../types/response.payload.types.ts";
 import { formatCurrency } from "../../util/index.util.ts";
 import { formatCompact } from "../../util/asset-precision.ts";
-import { getStatusDisplayName, getTransactionAmountFiatNGN } from "../../util/transaction.util.ts";
+import {
+  getStatusConfig,
+  getTransactionAmountFiatNGN,
+  TRANSACTION_TYPE,
+} from "../../util/transaction.util.ts";
 import momentClient from "../../lib/moment.ts";
 import { ROUTES } from "../../util/constants.util.ts";
 import ResponsiveText from "../../components/global/ResponsiveText.tsx";
@@ -81,25 +85,8 @@ function RateChip({
 /* ──────────────────── Recent Order Row ──────────────────────────── */
 function RecentOrderRow({ tx }: { tx: TransactionResponseEntity }) {
   const navigate = useNavigate();
-  const isBuy = tx.type.toUpperCase() === "BUY";
-  const isCompleted = tx.status === "COMPLETED";
-  const isFailed =
-    tx.status === "FAILED" ||
-    tx.status === "EXPIRED" ||
-    tx.status === "CANCELLED" ||
-    tx.status === "DISPUTED";
-
-  const badgeStyle = isCompleted
-    ? { background: "#E8F8F0", color: "#037847" }
-    : isFailed
-      ? { background: "#FEECEC", color: "#EB5757" }
-      : { background: "#F0EFFD", color: "#575AE5" };
-
-  const badgeLabel = isCompleted
-    ? "✓ Done"
-    : isFailed
-      ? "✗ Failed"
-      : getStatusDisplayName(tx.status);
+  const isBuy = tx.type.toUpperCase() === TRANSACTION_TYPE.BUY;
+  const statusConfig = getStatusConfig(tx.status);
 
   return (
     <button
@@ -145,10 +132,10 @@ function RecentOrderRow({ tx }: { tx: TransactionResponseEntity }) {
           ₦{formatCompact(getTransactionAmountFiatNGN(tx), "NGN", 0)}
         </p>
         <span
-          className="inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded-full mt-0.5"
-          style={badgeStyle}
+          className="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full mt-0.5"
+          style={statusConfig.style}
         >
-          {badgeLabel}
+          {statusConfig.displayName}
         </span>
       </div>
     </button>

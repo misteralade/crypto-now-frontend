@@ -3,8 +3,6 @@ import { useTransactionDetailsPage } from "../../../hooks/pages/useTransactionDe
 import { LoadingSpinner } from "../../../components/global/LoadingSpinner.tsx";
 import {
   ROUTES,
-  transactionStatusMessages,
-  transactionStatusStyles,
 } from "../../../util/constants.util.ts";
 import { formatForDisplay, formatForDisplayLocalized, formatCompact } from "../../../util/asset-precision.ts";
 import { useNavigate } from "@tanstack/react-router";
@@ -22,7 +20,11 @@ import momentClient from "../../../lib/moment.ts";
 import DisputeTransactionModal from "./modals/DisputeTransactionModal.tsx";
 import TransactionReceiptsSection from "./TransactionReceiptsSection.tsx";
 import TransactionContextCard from "./TransactionContextCard.tsx";
-import { getStatusDisplayName, TRANSACTION_STATUS, TRANSACTION_TYPE } from "../../../util/transaction.util.ts";
+import {
+  getStatusConfig,
+  TRANSACTION_STATUS,
+  TRANSACTION_TYPE,
+} from "../../../util/transaction.util.ts";
 
 const TransactionDetailsPage = () => {
   const navigate = useNavigate();
@@ -42,14 +44,7 @@ const TransactionDetailsPage = () => {
     handleSubmitDispute,
   } = useTransactionDetailsPage();
 
-  const transactionColorScheme =
-    transactionStatusStyles[
-      transaction?.status as keyof typeof transactionStatusStyles
-    ];
-  const transactionMessage =
-    transactionStatusMessages[
-      transaction?.status as keyof typeof transactionStatusStyles
-    ];
+  const statusConfig = getStatusConfig(transaction?.status);
 
   const getAmountFiatNGN = () => {
     const amountFiat = Number(transaction?.amountFiat ?? 0);
@@ -283,22 +278,8 @@ const TransactionDetailsPage = () => {
             <div
               className="rounded-3xl p-5"
               style={{
-                background: transactionColorScheme?.bg?.includes("green")
-                  ? "#E8F8F0"
-                  : transactionColorScheme?.bg?.includes("red")
-                  ? "#FEECEC"
-                  : transactionColorScheme?.bg?.includes("yellow")
-                  ? "#FFFBF0"
-                  : "#F0EFFD",
-                border: `1px solid ${
-                  transactionColorScheme?.bg?.includes("green")
-                    ? "#A8E6C8"
-                    : transactionColorScheme?.bg?.includes("red")
-                    ? "#F5C0C0"
-                    : transactionColorScheme?.bg?.includes("yellow")
-                    ? "#FFE4A0"
-                    : "#C7C4F5"
-                }`,
+                background: statusConfig.style.background,
+                border: `1px solid ${statusConfig.style.border}`,
               }}
             >
               <div className="flex items-start justify-between gap-3">
@@ -352,23 +333,11 @@ const TransactionDetailsPage = () => {
                 <span
                   className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold whitespace-nowrap shrink-0"
                   style={{
-                    background: transactionColorScheme?.bg?.includes("green")
-                      ? "#E8F8F0"
-                      : transactionColorScheme?.bg?.includes("red")
-                      ? "#FEECEC"
-                      : transactionColorScheme?.bg?.includes("yellow")
-                      ? "#FFF3D0"
-                      : "#F0EFFD",
-                    color: transactionColorScheme?.bg?.includes("green")
-                      ? "#037847"
-                      : transactionColorScheme?.bg?.includes("red")
-                      ? "#EB5757"
-                      : transactionColorScheme?.bg?.includes("yellow")
-                      ? "#A07000"
-                      : "#575AE5",
+                    background: statusConfig.style.background,
+                    color: statusConfig.style.color,
                   }}
                 >
-                  {getStatusDisplayName(transaction.status)}
+                  {statusConfig.displayName}
                 </span>
 
                 {(transaction.status === TRANSACTION_STATUS.DISPUTED || !!disputeForTransaction) ? (
@@ -393,9 +362,9 @@ const TransactionDetailsPage = () => {
                     <span>View Dispute</span>
                     <ChevronRight size={12} strokeWidth={2.5} />
                   </button>
-                ) : transactionMessage?.message ? (
+                ) : statusConfig.message ? (
                   <p className="text-xs leading-normal sm:text-right" style={{ color: "#6B6E6B" }}>
-                    {transactionMessage.message}
+                    {statusConfig.message}
                   </p>
                 ) : null}
               </div>

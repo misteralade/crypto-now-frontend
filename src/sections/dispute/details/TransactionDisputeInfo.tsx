@@ -2,7 +2,11 @@ import { Check, Copy, ExternalLink, ArrowUpRight, ArrowDownLeft } from "lucide-r
 import { Link } from "@tanstack/react-router";
 import { ROUTES } from "../../../util/constants.util.ts";
 import { formatCompact, formatForDisplayLocalized } from "../../../util/asset-precision.ts";
-import { getStatusDisplayName, getTransactionAmountFiatNGN, TRANSACTION_TYPE } from "../../../util/transaction.util.ts";
+import {
+  getStatusConfig,
+  getTransactionAmountFiatNGN,
+  TRANSACTION_TYPE,
+} from "../../../util/transaction.util.ts";
 import type { SearchTransactionsResponse } from "../../../types/response.payload.types.ts";
 
 interface TransactionDisputeInfoProps {
@@ -54,7 +58,7 @@ const TransactionDisputeInfo = ({
       ? snapshotPlatformRate
       : Number(transaction.stableToFiatRate ?? 0);
 
-  const statusLabel = getStatusDisplayName(transaction.status);
+  const statusConfig = getStatusConfig(transaction.status);
 
   return (
     <div
@@ -134,13 +138,9 @@ const TransactionDisputeInfo = ({
 
           <div
             className="shrink-0 px-2.5 py-1 rounded-full text-[11px] font-semibold"
-            style={{
-              background: "#FFFFFF",
-              border: "1px solid #EEEEEE",
-              color: "#0E0F0C",
-            }}
+            style={statusConfig.style}
           >
-            {statusLabel}
+            {statusConfig.displayName}
           </div>
         </div>
 
