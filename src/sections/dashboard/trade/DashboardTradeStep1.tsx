@@ -630,11 +630,6 @@ function BuyFields({
                 {fiatPreview}
               </span>{" "}
               you will pay
-              {buyRateInfo && buyRateInfo.cryptoAmount === inputValue && (
-                <span className="ml-1 text-[10px]" style={{ color: "#BDBDBD" }}>
-                  (live rate)
-                </span>
-              )}
             </p>
           </div>
         )}

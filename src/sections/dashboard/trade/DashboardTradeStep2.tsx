@@ -555,9 +555,6 @@ function BuyUploadView({
           <p className="text-xs font-semibold" style={{ color: "#6B6E6B" }}>
             Tap to Upload Receipt
           </p>
-          <p className="text-[10px] mt-0.5" style={{ color: "#BDBDBD" }}>
-            PNG, JPG or PDF accepted
-          </p>
         </div>
         <TradePaymentUpload
           maxFiles={1}

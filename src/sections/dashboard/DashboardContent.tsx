@@ -718,7 +718,7 @@ export default function DashboardContent() {
           </div>
         </section>
 
-        {/* LIVE RATES */}
+        {/* RATES */}
         {!loadingSupportedCryptocurrencies &&
           supportedCryptoCurrencies &&
           supportedCryptoCurrencies.length > 0 && (
@@ -727,7 +727,7 @@ export default function DashboardContent() {
                 className="text-[11px] font-extrabold tracking-[0.12em] uppercase mb-3"
                 style={{ color: "#9A9A9A" }}
               >
-                Live Rates
+                Rates
               </p>
               <div
                 className="flex gap-2 overflow-x-auto pb-1"
