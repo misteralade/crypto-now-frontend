@@ -166,7 +166,6 @@ function BuyFields({
   // exchange-rate-cache.ts CACHE_TTL_SECONDS), so reusing it here just skips
   // the network round-trip the user would otherwise wait through after typing
   // an amount. Cache age is measured from when the backend fetched the rate.
-  const RATE_CACHE_TTL_MS = 30_000;
   const rateCacheRef = useRef<{
     cryptoId: string;
     currencyId: string;
@@ -253,8 +252,7 @@ function BuyFields({
     if (
       cached &&
       cached.cryptoId === cryptoId &&
-      cached.currencyId === currencyId &&
-      Date.now() - cached.fetchedAt < RATE_CACHE_TTL_MS
+      cached.currencyId === currencyId
     ) {
       return; // still fresh
     }
@@ -304,8 +302,7 @@ function BuyFields({
     const cacheIsFresh =
       cached &&
       cached.cryptoId === cryptoId &&
-      cached.currencyId === currencyId &&
-      Date.now() - cached.fetchedAt < RATE_CACHE_TTL_MS;
+      cached.currencyId === currencyId;
 
     try {
       let rateData = cacheIsFresh ? cached!.data : null;
@@ -446,8 +443,7 @@ function BuyFields({
     const cacheIsFresh =
       cached &&
       cached.cryptoId === cryptoId &&
-      cached.currencyId === currencyId &&
-      Date.now() - cached.fetchedAt < RATE_CACHE_TTL_MS;
+      cached.currencyId === currencyId;
 
     try {
       let rateData = cacheIsFresh ? cached!.data : null;
