@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useRef } from "react";
+﻿import React, { useEffect, useState, useMemo, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -224,7 +224,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       sellDepositWallet?.cryptocurrencyId === selectedToken.id &&
       sellDepositWallet?.network === preferredNetwork
     ) {
-      // We already resolved/generated this exact wallet locally — the
+      // We already resolved/generated this exact wallet locally : the
       // `custodialWallets` cache just hasn't caught up with the invalidated
       // query's refetch yet. Keep showing it instead of re-triggering
       // generation, which would otherwise flash "Getting wallet…" again
@@ -590,7 +590,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     }
   }, [exchangeRate]);
 
-  // Countdown — 3 minutes TTL driven by rateReceivedAtRef
+  // Countdown : 3 minutes TTL driven by rateReceivedAtRef
   const RATE_TTL_MS = 3 * 60 * 1000;
   useEffect(() => {
     if (!rateReceivedAtRef.current || isCountdownLocked) return;
@@ -1162,7 +1162,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       if (!canInitiateTransaction()) return;
 
       if (activeTab === "buy") {
-        // BUY: no API call here — just advance to step 2 with amounts synced.
+        // BUY: no API call here : just advance to step 2 with amounts synced.
         // Transaction is created at IN_REVIEW when receipt is submitted.
         const tokenAmount = Number(numberOfToken || 0);
         const receiveAmount = Number(amountToBuy || 0);
@@ -1189,7 +1189,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
           custodialWalletId: sellDepositWallet.id,
           network: sellDepositWallet.network,
         };
-        // SELL: keep existing flow — create INITIATED transaction to lock the rate
+        // SELL: keep existing flow : create INITIATED transaction to lock the rate
         const { data: { sessionId }} = await initiateTransactionMutation.mutateAsync();
         setTransactionSessionId(sessionId);
         sessionStorage.setItem(SESSION_STORAGE_KEYS.SESSION_ID, sessionId);
@@ -1231,7 +1231,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
         return;
       }
     } else {
-      // SELL: existing flow — update INITIATED → AWAITING_CRYPTO + open bank modal
+      // SELL: existing flow : update INITIATED → AWAITING_CRYPTO + open bank modal
       try {
         await makePaymentTransactionMutation.mutateAsync();
         setIsCountdownLocked(true);

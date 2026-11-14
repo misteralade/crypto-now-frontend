@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import {
   clearUserSessionStorage,
@@ -269,7 +269,7 @@ export default function DashboardContent() {
 
   const goTrade = (option: "buy" | "sell") => {
     // Starting a new trade from these quick actions should never resume a
-    // stale in-progress one — any earlier trade is already recorded
+    // stale in-progress one : any earlier trade is already recorded
     // server-side, so the cache has nothing left to contribute here.
     clearUserSessionStorage();
     navigate({ to: option === "buy" ? ROUTES.DASHBOARD_BUY : ROUTES.DASHBOARD_SELL });
@@ -278,7 +278,7 @@ export default function DashboardContent() {
   // Buy/Sell are the two highest-traffic destinations from this screen, but
   // the quick-action buttons below fire navigate() directly rather than
   // rendering a <Link>, so they never benefit from the router's hover/touch
-  // "intent" preload — on mobile there's no hover at all, so the tap and the
+  // "intent" preload : on mobile there's no hover at all, so the tap and the
   // chunk fetch would otherwise race each other every time. Preloading both
   // as soon as this screen mounts means the chunk is normally already in
   // memory by the time either button is pressed.
@@ -309,7 +309,7 @@ export default function DashboardContent() {
       // If a transaction was already created (e.g. a BUY receipt was
       // submitted), route with its sessionId so useTradeStepDisplay's
       // restoration effect fetches the live transaction from the server and
-      // drops the user straight into Step 2's monitoring/waiting view —
+      // drops the user straight into Step 2's monitoring/waiting view :
       // rather than the "resume" flag's local-only path, which always
       // restarts BUY at Step 1 for a fresh rate since buyRateInfo is never
       // persisted.
@@ -339,7 +339,7 @@ export default function DashboardContent() {
   return (
     <div style={{ background: "#FFFFFF", minHeight: "100dvh" }}>
       {/* ═══════════════════════════════════════════
-          TOP BAR — greeting + bell (mobile only)
+          TOP BAR : greeting + bell (mobile only)
       ════════════════════════════════════════════ */}
       <div className="lg:hidden px-5 pt-6 pb-3 flex items-start justify-between">
         <div>
@@ -377,7 +377,7 @@ export default function DashboardContent() {
       </div>
 
       {/* ═══════════════════════════════════════════
-          HERO PURPLE CARD — floating with side margin
+          HERO PURPLE CARD : floating with side margin
       ════════════════════════════════════════════ */}
       <div className="lg:hidden px-5 mb-6">
         <motion.div
@@ -557,7 +557,7 @@ export default function DashboardContent() {
               ? Number(pendingTrade.numberOfToken)
               : null;
             // Once a receipt/deposit has already been submitted, there's
-            // nothing left to "complete" — the user is just checking status.
+            // nothing left to "complete" : the user is just checking status.
             const alreadySubmitted = !!pendingTrade.transactionSessionId;
             const action = alreadySubmitted
               ? "Check Status"

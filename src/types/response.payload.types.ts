@@ -1,4 +1,4 @@
-import type { AxiosError } from "axios";
+﻿import type { AxiosError } from "axios";
 import type {
   TradeType,
   TransactionPriority,
@@ -373,7 +373,7 @@ export type DisputeStatus =
   | "REJECTED"
   | "CLOSED";
 
-// A transaction can only ever carry one dispute — this is a lookup (not a
+// A transaction can only ever carry one dispute : this is a lookup (not a
 // search), so `data` is null when the transaction has never been disputed.
 export type DisputeByTransactionResponse = {
   id: string;
@@ -497,7 +497,7 @@ export type TotalTransactionSummaryEntity = {
 };
 
 /**
- * A single grand-total row across ALL of the user's cryptocurrencies —
+ * A single grand-total row across ALL of the user's cryptocurrencies :
  * unlike TotalTransactionSummaryEntity, which is one row per crypto. Not
  * pre-filtered to COMPLETED: breaks completed/terminally-failed/pending out
  * so a genuine success rate can be computed.
@@ -522,7 +522,7 @@ export type TransactionSummaryResponse = {
   overallTotalsThisMonth: OverallTransactionTotalsEntity;
 };
 
-// BOUGHT/SOLD totals scoped to the same filters as a search-history request —
+// BOUGHT/SOLD totals scoped to the same filters as a search-history request :
 // backs the Transaction History page's stat pills.
 export type FilteredTransactionSummaryResponse = {
   transactionCount: string;

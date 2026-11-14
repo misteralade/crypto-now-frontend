@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useBankQuery } from "../../queries/bank.query.ts";
 import { useUserQuery } from "../../queries/user.query.ts";
@@ -14,7 +14,7 @@ interface OnboardingBankStepProps {
 }
 
 // Nigerian bank account names come back from the provider as
-// "SURNAME FIRSTNAME MIDDLENAME" — first token is the surname, second is
+// "SURNAME FIRSTNAME MIDDLENAME" : first token is the surname, second is
 // the first name. Any further middle names are dropped; we only keep the
 // two-word display name shown elsewhere in the app (greeting, initials).
 function splitAccountName(accountName: string): { firstName: string; lastName: string } {

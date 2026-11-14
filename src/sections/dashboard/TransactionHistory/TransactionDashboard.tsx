@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useTransactionBoard } from "../../../hooks/components/dashboard/useTransactionBoard.ts";
 import type { TransactionResponseEntity } from "../../../types/response.payload.types.ts";
@@ -11,11 +11,11 @@ import { formatCompact } from "../../../util/asset-precision.ts";
 
 // userSearchTransactionInitialState.size (5) is sized for the dashboard's
 // small "Recent Orders" preview widget, which reuses that same object
-// directly. This page needs a real page size — matches
+// directly. This page needs a real page size : matches
 // TRANSACTION_HISTORY_PAGE_SIZE in useTransactionBoard.ts.
 const TRANSACTION_HISTORY_PAGE_SIZE = 20;
 
-// Redux search payload without page — changes here mean a new result set (reset accumulated rows).
+// Redux search payload without page : changes here mean a new result set (reset accumulated rows).
 function searchPayloadWithoutPageKey(
   payload: SearchTransactionsRequestPayload | null,
 ): string {
@@ -63,7 +63,7 @@ export function TransactionDashboard() {
 
   // On first load, the Redux search payload may still carry the dashboard
   // widget's size:5 default (nothing had dispatched a History-page-scoped
-  // size yet) — bump it once up front so the very first fetch already uses
+  // size yet) : bump it once up front so the very first fetch already uses
   // a real page size instead of only 5 rows.
   useEffect(() => {
     if (searchPayload?.size !== TRANSACTION_HISTORY_PAGE_SIZE) {
@@ -108,7 +108,7 @@ export function TransactionDashboard() {
     handleFiltersChange({ ...filters, status: val.status, type: val.type, pending: val.pending });
   };
 
-  // Summary stats are fixed lifetime totals — same numbers as the Dashboard —
+  // Summary stats are fixed lifetime totals : same numbers as the Dashboard :
   // and deliberately do NOT move when the Buys/Sells/Completed/Failed tabs
   // below are used to filter the transaction list. Only the list changes.
   const overallTotals = transactionSummary?.overallTotals;
@@ -141,7 +141,7 @@ export function TransactionDashboard() {
         </p>
       </div>
 
-      {/* ── summary pills — fixed lifetime totals, independent of the active tab below ── */}
+      {/* ── summary pills : fixed lifetime totals, independent of the active tab below ── */}
       <div
         className="px-5 lg:px-0 mb-5 flex gap-2.5 overflow-x-auto"
         style={{ scrollbarWidth: "none" }}
@@ -179,7 +179,7 @@ export function TransactionDashboard() {
           </div>
         ))}
 
-        {/* Pending — amount still in flight, broken out by BUY/SELL */}
+        {/* Pending : amount still in flight, broken out by BUY/SELL */}
         <div
           className="flex flex-col items-center justify-center px-4 py-2.5 rounded-2xl shrink-0"
           style={{

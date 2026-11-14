@@ -1,6 +1,6 @@
 /**
- * Step 3 — Confirm receiving account (bank for sell, wallet for buy)
- * Wraps the existing ConfirmBankDetailsModal logic inline (no modal — full-page view)
+ * Step 3: Confirm receiving account (bank for sell, wallet for buy)
+ * Wraps the existing ConfirmBankDetailsModal logic inline (no modal: full-page view)
  */
 import { useState } from "react";
 import ResponsiveText from "../../../components/global/ResponsiveText.tsx";
@@ -68,10 +68,10 @@ export default function DashboardTradeStep3({
     };
 
     const summaryRows = [
-      { label: "Crypto", val: selectedToken?.name ? `${selectedToken.name} (${selectedToken.symbol})` : (selectedToken?.symbol ?? "—") },
-      { label: "You Pay", val: amountNum > 0 ? `${amountNum.toLocaleString()} ${currencyCode}` : "—" },
-      { label: "You Receive", val: tokenNum > 0 ? `${tokenNum} ${selectedToken?.symbol ?? ""}` : "—" },
-      { label: "Network", val: buyNetwork ?? "—" },
+      { label: "Crypto", val: selectedToken?.name ? `${selectedToken.name} (${selectedToken.symbol})` : (selectedToken?.symbol ?? "-") },
+      { label: "You Pay", val: amountNum > 0 ? `${amountNum.toLocaleString()} ${currencyCode}` : "-" },
+      { label: "You Receive", val: tokenNum > 0 ? `${tokenNum} ${selectedToken?.symbol ?? ""}` : "-" },
+      { label: "Network", val: buyNetwork ?? "-" },
       { label: "Wallet Address", val: buyWalletAddress ?? "?", mono: true, full: buyWalletAddress },
     ];
 
@@ -148,7 +148,7 @@ export default function DashboardTradeStep3({
           <div className="min-w-0">
             <p className="text-[10px] font-bold" style={{ color: "#9A9A9A" }}>Destination Wallet · {buyNetwork ?? ""}</p>
             <p className="text-xs font-mono truncate mt-0.5" style={{ color: "#0E0F0C" }}>
-              {buyWalletAddress ?? "—"}
+              {buyWalletAddress ?? "-"}
             </p>
           </div>
         </div>

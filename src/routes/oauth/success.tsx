@@ -1,4 +1,4 @@
-import { createFileRoute, isRedirect, redirect } from '@tanstack/react-router'
+﻿import { createFileRoute, isRedirect, redirect } from '@tanstack/react-router'
 import { ROUTES } from "../../util/constants.util.ts";
 import {userServiceApi} from "../../api/user.api.ts";
 import {setAccessToken} from "../../util/auth-session.util.ts";
@@ -29,7 +29,7 @@ export const Route = createFileRoute('/oauth/success')({
       if (isRedirect(error)) {
         throw error
       }
-      // Fail-safe: if the status check errors, default to onboarding —
+      // Fail-safe: if the status check errors, default to onboarding :
       // worst case an already-onboarded user sees it once and it
       // self-resolves via onboarding.tsx's own isComplete check.
       throw redirect({ to: ROUTES.ONBOARDING })

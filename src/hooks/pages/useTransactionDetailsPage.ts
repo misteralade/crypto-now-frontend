@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from "@tanstack/react-router";
+﻿import { useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useState, useRef } from "react";
 import { useDispatch } from "react-redux";
 import {
@@ -16,7 +16,7 @@ import { toast } from "react-toastify";
 
 const DISPUTE_WINDOW_HOURS = 24;
 
-// A transaction can only ever carry one dispute — once it exists, the button
+// A transaction can only ever carry one dispute : once it exists, the button
 // reflects its status instead of offering to create another one. Kept to
 // three plain labels, not a per-substatus message: "Dispute" (none yet),
 // "Ongoing dispute" (still active), "Disputed" (closed/resolved/rejected).
@@ -48,7 +48,7 @@ export const useTransactionDetailsPage = () => {
 
   const { id } = useParams({ from: "/dashboard/transactions/$id" });
 
-  // Past the 24-hour dispute window — the button stays clickable (so the
+  // Past the 24-hour dispute window : the button stays clickable (so the
   // toast in toggleDisputeTransaction still fires) but is rendered blurred
   // to visually read as inactive.
   const isDisputeExpired = !!transactionDetails?.createdAt &&
@@ -141,7 +141,7 @@ export const useTransactionDetailsPage = () => {
 
   const toggleDisputeTransaction = () => {
     if (!showDisputeTransaction) {
-      // A dispute already exists for this transaction — never open the create
+      // A dispute already exists for this transaction : never open the create
       // flow (the backend would reject it anyway); tell the user its status
       // and take them straight to the existing thread instead.
       if (disputeForTransaction) {

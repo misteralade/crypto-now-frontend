@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from "react";
+﻿import { Fragment, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ChevronRight, ArrowLeft, Plus } from "lucide-react";
 import { useProfilePage } from "../hooks/pages/useProfilePage.ts";
@@ -110,7 +110,7 @@ const ProfilePage = () => {
     : "";
 
   // overallTotals/overallTotalsThisMonth are true grand totals across every
-  // cryptocurrency the user has traded — total/thisMonth are grouped one row
+  // cryptocurrency the user has traded : total/thisMonth are grouped one row
   // per crypto, so reading only their [0] row silently undercounted anyone
   // who traded more than one coin.
   const overallTotals = transactionSummary?.overallTotals;
@@ -123,7 +123,7 @@ const ProfilePage = () => {
   const sellCount     = overallTotals ? overallTotals.sellCount : "0";
   const completedCount = overallTotals ? Number(overallTotals.completedCount) : 0;
   const pendingCount   = overallTotals ? Number(overallTotals.pendingCount) : 0;
-  // Success rate = completed / (completed + terminally failed) — pending/in-flight
+  // Success rate = completed / (completed + terminally failed) : pending/in-flight
   // transactions haven't reached a final outcome yet, so they're excluded from
   // both sides rather than counted against the rate.
   const successRate = overallTotals

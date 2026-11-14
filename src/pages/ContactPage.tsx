@@ -139,7 +139,7 @@ const ContactPage = () => {
 
           </aside>
 
-          {/* RHS — form */}
+          {/* RHS: form */}
           <div className="lg:col-span-3">
             <div
               className="rounded-3xl p-8 md:p-10"

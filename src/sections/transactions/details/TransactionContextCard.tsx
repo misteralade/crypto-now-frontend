@@ -14,7 +14,7 @@ const TransactionContextCard = ({ transaction }: TransactionContextCardProps) =>
         {label}
       </p>
       <p className="text-sm font-semibold mt-0.5" style={{ color: "#0E0F0C" }}>
-        {value || "—"}
+        {value || "-"}
       </p>
     </div>
   );
@@ -25,7 +25,7 @@ const TransactionContextCard = ({ transaction }: TransactionContextCardProps) =>
         Wallet Address
       </p>
       <p className="text-xs break-all font-mono mt-0.5" style={{ color: "#0E0F0C" }}>
-        {address || "—"}
+        {address || "-"}
       </p>
     </div>
   );

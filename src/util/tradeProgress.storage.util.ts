@@ -1,9 +1,9 @@
-import type { TradeType } from "../types/trade.types";
+﻿import type { TradeType } from "../types/trade.types";
 import {LOCAL_STORAGE_KEYS, SESSION_STORAGE_KEYS} from "./constants.util.ts";
 import {getAccessToken} from "./auth-session.util.ts";
 
 // Best-effort decode of the JWT payload, used only to namespace localStorage
-// per-user — never trusted for auth (that's the backend's job).
+// per-user : never trusted for auth (that's the backend's job).
 function currentUserKey(): string {
   try {
     const token = getAccessToken();
@@ -95,11 +95,11 @@ export function clearTradeProgress() {
 
 // Clears the *current* user's trade/session-scoped browser state (localStorage +
 // sessionStorage). Used both on logout and whenever the user explicitly starts a
-// new trade (e.g. tapping "Buy Crypto"/"Sell Crypto" from the dashboard) — a
+// new trade (e.g. tapping "Buy Crypto"/"Sell Crypto" from the dashboard) : a
 // prior in-progress trade is already recorded server-side, so there's no need
 // to resume it just because the cache still has it. TRADE_PROGRESS is
 // namespaced per-user (see tradeProgressKey), so this only ever touches the
-// current account — it never leaks into, and never wipes, another user's saved
+// current account : it never leaks into, and never wipes, another user's saved
 // progress on a shared device.
 export function clearUserSessionStorage() {
   try {

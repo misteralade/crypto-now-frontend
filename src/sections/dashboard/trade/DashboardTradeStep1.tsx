@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+﻿import { useState, useRef, useEffect } from "react";
 import { Check, CheckCircle, ChevronDown, Copy, X, ArrowLeft, WalletCards, HandCoins } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "@tanstack/react-router";
@@ -31,7 +31,7 @@ export interface BuyRateInfo {
   platformRate: number;
   cryptoAmount: number; // how much crypto they'll receive
   fiatAmount: number; // what they typed in (in currencyCode's units)
-  // What actually gets charged — the platform only settles in NGN. USD is shown
+  // What actually gets charged : the platform only settles in NGN. USD is shown
   // for interpretation only, so "you will pay" must always read this, never fiatAmount
   // when currencyCode is USD.
   ngnAmount: number;
@@ -107,7 +107,7 @@ interface DashboardTradeStep1Props {
   onNetworkChange?: (v: string) => void;
   orderDetails?: TradeAdditionalInfoInterface[];
 
-  // SELL-specific (payout bank — read-only, always the user's default account)
+  // SELL-specific (payout bank : read-only, always the user's default account)
   userBankAccounts?: UserBankAccountResponse[] | null;
   loadingUserBankAccounts?: boolean;
 
@@ -161,7 +161,7 @@ function BuyFields({
   // Track the fiatAmount that's currently being fetched to avoid duplicate in-flight requests
   const fetchingRef = useRef<number | null>(null);
   // Rate is prefetched the instant a crypto/currency is selected (see the
-  // prefetch effect below), independent of any amount — the backend already
+  // prefetch effect below), independent of any amount : the backend already
   // caches per (cryptoId, currencyId, action) for 30s (see
   // exchange-rate-cache.ts CACHE_TTL_SECONDS), so reusing it here just skips
   // the network round-trip the user would otherwise wait through after typing
@@ -175,10 +175,10 @@ function BuyFields({
   const [activePreset, setActivePreset] = useState<number | "custom" | null>(null);
   const [customAmount, setCustomAmount] = useState("");
   // Set only when a keystroke was rejected for pushing the amount past the
-  // admin max — cleared as soon as the user edits back within range.
+  // admin max : cleared as soon as the user edits back within range.
   const [maxLimitMessage, setMaxLimitMessage] = useState<string | null>(null);
 
-  // Guests and authenticated users have separate admin-configured max —
+  // Guests and authenticated users have separate admin-configured max :
   // never mix the two up. This is the single source of truth for trade
   // amount bounds; there is no separate global cap. (The min side is
   // enforced by the parent, which has the resolved rate to compare against.)
@@ -271,13 +271,13 @@ function BuyFields({
         fetchedAt: Date.parse(rateData.cachedAt),
       };
     } catch {
-      // Silent — this is a background prefetch. fetchRate/applyFiatPresetAmount
+      // Silent : this is a background prefetch. fetchRate/applyFiatPresetAmount
       // fall back to a normal network fetch if the cache never populates.
     }
   };
 
   // Prefetch the rate the instant a crypto/currency is selected, well before
-  // the user has typed an amount — this is what removes the lag the user
+  // the user has typed an amount : this is what removes the lag the user
   // used to hit only after entering an amount.
   useEffect(() => {
     const currencyId = selectedCurrency?.id;
@@ -320,7 +320,7 @@ function BuyFields({
       }
 
       // coinGeckoRate is always USD-per-token. platformRate is the platform's
-      // NGN-per-USD markup, so it only applies when the quote currency is NGN —
+      // NGN-per-USD markup, so it only applies when the quote currency is NGN :
       // for USD quotes, the fiat cost is already USD and must multiply by coinGeckoRate alone.
       const isNgnQuote = rateData.currency === "NGN";
       const multiplier = isNgnQuote
@@ -330,7 +330,7 @@ function BuyFields({
         cryptoAmount * multiplier,
         selectedCurrency?.code ?? "NGN",
       );
-      // The platform only settles in NGN — USD is shown for interpretation only.
+      // The platform only settles in NGN : USD is shown for interpretation only.
       // coinGeckoRate * platformRate is always the NGN-per-token rate, regardless
       // of which currency was actually quoted.
       const ngnAmount = roundForCalculation(
@@ -370,9 +370,9 @@ function BuyFields({
         cleaned.slice(firstDot + 1).replace(/\./g, "");
     }
 
-    // Silently ignore decimal keystrokes past 8 places (1e-8 — satoshi-level,
+    // Silently ignore decimal keystrokes past 8 places (1e-8 : satoshi-level,
     // more than enough precision for any supported asset). This is a pure
-    // precision/overflow guard, independent of the admin min/max below — a
+    // precision/overflow guard, independent of the admin min/max below : a
     // value can sit well within the admin range while still growing an
     // unbounded run of decimal digits (e.g. "2.339394934939...").
     const dotIndex = cleaned.indexOf(".");
@@ -380,7 +380,7 @@ function BuyFields({
       cleaned = cleaned.slice(0, dotIndex + 1 + 8);
     }
 
-    // Check the PROSPECTIVE value before appending it — if this keystroke
+    // Check the PROSPECTIVE value before appending it : if this keystroke
     // would push the amount past the admin-configured max, reject it (keep
     // the previous, still-valid value) and surface the max as red text
     // instead of silently rewriting what the user typed.
@@ -409,7 +409,7 @@ function BuyFields({
   };
 
   // fetchRate is normally kicked off by the amount input's onBlur or a quick-amount
-  // chip click — neither fires when amountToBuy is restored programmatically (e.g.
+  // chip click : neither fires when amountToBuy is restored programmatically (e.g.
   // resuming a saved trade), which left the UI stuck on "Fetching rate…" forever
   // with no request in flight. Catch that case here.
   useEffect(() => {
@@ -426,7 +426,7 @@ function BuyFields({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [amountToBuy, selectedCurrency?.id, selectedToken.id]);
 
-  // A fiat preset/custom chip is picked in NGN or USD — convert it into the
+  // A fiat preset/custom chip is picked in NGN or USD : convert it into the
   // crypto quantity that goes into the input, and resolve the rate for it.
   const applyFiatPresetAmount = async (
     targetFiatAmount: number,
@@ -469,7 +469,7 @@ function BuyFields({
         selectedToken.symbol,
       );
       // Check the resolved amount against the admin-configured max before
-      // applying it — reject the preset/custom chip outright (leave the
+      // applying it : reject the preset/custom chip outright (leave the
       // field as it was) and surface the max as red text, rather than
       // silently rewriting the chip's amount down to the max.
       if (Number.isFinite(maxTokenLimit) && maxTokenLimit > 0 && cryptoAmount > maxTokenLimit) {
@@ -477,7 +477,7 @@ function BuyFields({
         return;
       }
       setMaxLimitMessage(null);
-      // The platform only settles in NGN — USD is shown for interpretation only.
+      // The platform only settles in NGN : USD is shown for interpretation only.
       const ngnAmount = roundForCalculation(
         cryptoAmount * rateData.coinGeckoRate * Number(rateData.platformRate),
         "NGN",
@@ -518,7 +518,7 @@ function BuyFields({
         cleaned.slice(0, firstDot + 1) +
         cleaned.slice(firstDot + 1).replace(/\./g, "");
     }
-    // Same precision guard as handleAmountChange — ignore decimal keystrokes
+    // Same precision guard as handleAmountChange : ignore decimal keystrokes
     // past 8 places rather than letting the fiat input grow an unbounded run.
     const dotIndex = cleaned.indexOf(".");
     if (dotIndex !== -1 && cleaned.length - dotIndex - 1 > 8) {
@@ -545,16 +545,16 @@ function BuyFields({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePreset, customAmount, selectedCurrency?.id, selectedToken.id]);
 
-  // Preview: only from the backend live rate (server-cached) — never approximate client-side.
+  // Preview: only from the backend live rate (server-cached) : never approximate client-side.
   const inputValue = Number(amountToBuy ?? 0);
   const rateMatchesCurrentAmount =
     !!buyRateInfo && buyRateInfo.cryptoAmount === inputValue;
   // The live preview is an arbitrary computed decimal (e.g. 19999.94), not a
-  // clean preset value — use the full localized amount so it never abbreviates
+  // clean preset value : use the full localized amount so it never abbreviates
   // to "19.99994k". formatTradeFiatPreset's "k" suffix is only for the fixed
   // preset chip labels below (5000 -> "5k"), which are always round thousands.
   //
-  // Always shown in NGN — the platform only settles in Naira. USD is a display
+  // Always shown in NGN : the platform only settles in Naira. USD is a display
   // convenience for users who think in dollars, but "you will pay" must reflect
   // what's actually charged, so it reads ngnAmount even when isUSD is true.
   const fiatPreview = rateMatchesCurrentAmount
@@ -606,7 +606,7 @@ function BuyFields({
           )}
         </div>
 
-        {/* Max amount error — shown when a keystroke or preset was rejected
+        {/* Max amount error : shown when a keystroke or preset was rejected
             for exceeding the admin-configured max (see handleAmountChange /
             applyFiatPresetAmount above). */}
         {maxLimitMessage && !isFetchingRate && (
@@ -630,7 +630,7 @@ function BuyFields({
           </div>
         )}
 
-        {/* Currency toggle — sits right above the preset chips it controls, so
+        {/* Currency toggle : sits right above the preset chips it controls, so
             it reads as "this switch picks the currency of the row below" rather
             than a generic header control. */}
         {availableCurrencies && availableCurrencies.length > 1 && (
@@ -775,7 +775,7 @@ function BuyFields({
           {tokenNetworks.length <= 1 ? (
             <p className="text-sm font-semibold" style={{ color: "#0E0F0C" }}>
               {(NETWORK_LABELS[selectedNetwork ?? ""] ?? selectedNetwork) ||
-                "—"}
+                "-"}
             </p>
           ) : (
             <button
@@ -1035,7 +1035,7 @@ function SellDepositWalletSection({
   );
 }
 
-// ── SELL payout bank section (read-only — payouts always go to the default account) ──
+// ── SELL payout bank section (read-only : payouts always go to the default account) ──
 function SellPayoutBank({
   userBankAccounts,
   loadingUserBankAccounts,
@@ -1188,9 +1188,9 @@ export default function DashboardTradeStep1({
   const accentColor = isBuy ? "#948EEE" : "#F7A600";
 
   // Admin-configured min/max are token-denominated (see SupportedCryptoEntity),
-  // so compare against buyRateInfo.cryptoAmount, not the fiat amount typed in —
+  // so compare against buyRateInfo.cryptoAmount, not the fiat amount typed in :
   // and only once the rate for the CURRENT amount has actually resolved.
-  // Guests and authenticated users have separate admin-configured limits —
+  // Guests and authenticated users have separate admin-configured limits :
   // never mix the two up.
   const isAnonymousUser = !isAuthenticated();
   const rateMatchesCurrentAmount =
@@ -1202,7 +1202,7 @@ export default function DashboardTradeStep1({
           : selectedToken.minTransactionLimit,
       )
     : 0;
-  // Only the min can still be violated here — BuyFields already rejects
+  // Only the min can still be violated here : BuyFields already rejects
   // keystrokes/presets that would exceed the admin max, so max is never
   // exceeded by the time a rate resolves.
   const amountBelowMin =
@@ -1295,7 +1295,7 @@ export default function DashboardTradeStep1({
         </p>
       </div>
 
-      {/* Crypto grid — 2×2 */}
+      {/* Crypto grid : 2×2 */}
       <div className="grid grid-cols-2 gap-3">
         {availableTokens.map((token) => {
           const selected = selectedToken?.id === token.id;
@@ -1371,7 +1371,7 @@ export default function DashboardTradeStep1({
         />
       )}
 
-      {/* SELL: payout bank (read-only — always the default account) */}
+      {/* SELL: payout bank (read-only : always the default account) */}
       {!isBuy && (
         <SellPayoutBank
           userBankAccounts={userBankAccounts}
@@ -1379,7 +1379,7 @@ export default function DashboardTradeStep1({
         />
       )}
 
-      {/* SELL: deposit wallet address (shown when token selected) — this is
+      {/* SELL: deposit wallet address (shown when token selected) : this is
           the end of the SELL flow; there's no further step to advance to,
           deposits are picked up automatically once sent. */}
       {!isBuy && selectedToken && (
@@ -1392,7 +1392,7 @@ export default function DashboardTradeStep1({
         />
       )}
 
-      {/* CTA — BUY only; SELL has nothing left to confirm once the address is shown */}
+      {/* CTA : BUY only; SELL has nothing left to confirm once the address is shown */}
       {isBuy && (
         <button
           type="button"

@@ -209,7 +209,7 @@ export default function DashboardTradeSuccess({
   const tableRows = [
     {
       label: "Crypto Sent",
-      value: `${resolvedAmount ?? "—"} ${selectedTokenSymbol ?? ""}`,
+      value: `${resolvedAmount ?? "-"} ${selectedTokenSymbol ?? ""}`,
     },
     resolvedWalletAddress
       ? {

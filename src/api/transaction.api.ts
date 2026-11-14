@@ -1,4 +1,4 @@
-import {toast} from "react-toastify";
+﻿import {toast} from "react-toastify";
 import {
   axiosGetRequestHandler,
   axiosPatchRequestHandler,
@@ -166,7 +166,7 @@ class TransactionServiceApi {
     return { data, message, success };
   }
 
-  // Same filters as searchUserTransactions — BOUGHT/SOLD totals scoped to
+  // Same filters as searchUserTransactions : BOUGHT/SOLD totals scoped to
   // whatever status/type/date-range/search is currently applied, so the
   // Transaction History page's stat pills move with the active filter tab.
   async getFilteredUserTransactionSummary(payload: SearchTransactionsRequestPayload) {

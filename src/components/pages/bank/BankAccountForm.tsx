@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import type { AllBanksResponse } from "../../../types/response.payload.types.ts";
 import type { CreateBankAccountRequestPayload } from "../../../types/request.payload.types.ts";
 import BankSelector from "../../global/BankSelector.tsx";
@@ -31,7 +31,7 @@ const BankAccountForm = ({
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [lookupError, setLookupError] = useState<string | null>(null);
 
-  // Every bank account added here is the default — there's no per-account
+  // Every bank account added here is the default : there's no per-account
   // toggle, so make sure the parent's state reflects that explicitly rather
   // than relying on its own initial value matching.
   useEffect(() => {

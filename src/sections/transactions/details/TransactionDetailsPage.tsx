@@ -79,7 +79,7 @@ const TransactionDetailsPage = () => {
     if (platformRate > 0) {
       return `₦${formatForDisplayLocalized(platformRate, "NGN")}`;
     }
-    return "—";
+    return "-";
   };
 
   const isBuy = transaction?.type?.toUpperCase() === "BUY";
@@ -224,7 +224,7 @@ const TransactionDetailsPage = () => {
                 </div>
               </div>
 
-              {/* Dispute button — stays clickable in every state so
+              {/* Dispute button: stays clickable in every state so
                   toggleDisputeTransaction's toast/navigation still fires;
                   visual styling only communicates whether it's "inactive". */}
               <button
@@ -453,7 +453,7 @@ const TransactionDetailsPage = () => {
                 />
                 <InfoRow label="Type" value={isBuy ? "Buy" : "Sell"} align="right" />
                 {/* BUY transactions don't have a userCryptoWallet (that's SELL-only,
-                    rendered below in the "Your Crypto Wallet" card) — the destination
+                    rendered below in the "Your Crypto Wallet" card): the destination
                     network the user typed in at checkout is stored directly on the
                     transaction as walletNetwork (free-form, no FK), and nothing
                     rendered it, so BUY transactions displayed no network at all. */}
@@ -497,7 +497,7 @@ const TransactionDetailsPage = () => {
                     />
                     <InfoRow
                       label="Coin"
-                      value={transaction.cryptocurrency?.symbol ?? "—"}
+                      value={transaction.cryptocurrency?.symbol ?? "-"}
                     />
                   </div>
                 </div>

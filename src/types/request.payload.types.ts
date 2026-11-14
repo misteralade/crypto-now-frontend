@@ -1,4 +1,4 @@
-export type TradeType = "BUY" | "SELL";
+﻿export type TradeType = "BUY" | "SELL";
 export type OrderBy = "ASC" | "DESC";
 
 export type InitiateTransactionRequestPayload = {
@@ -54,7 +54,7 @@ export type SearchTransactionsRequestPayload = {
   stableToCryptoRate: number | undefined;
   currency: string | undefined;
   status: TransactionStatus | undefined;
-  // Presentation-only grouping filter for the "Pending" tab — not a real
+  // Presentation-only grouping filter for the "Pending" tab : not a real
   // transaction status, never persisted. Backend expands it into the actual
   // set of in-flight statuses.
   pending: boolean | undefined;

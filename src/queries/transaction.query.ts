@@ -1,4 +1,4 @@
-import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
+﻿import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {toast} from "react-toastify";
 import {useMatchRoute, useLocation} from "@tanstack/react-router";
 import {QUERY_KEYS} from "./query.keys.ts";
@@ -37,7 +37,7 @@ export const useTransactionQuery = () => {
 
   // A submitted transaction (new BUY receipt, or a payment marked as paid) should
   // show up immediately in the Transactions page, the dashboard's Recent Orders
-  // widget, and the Total/Bought/Sold stat cards — none of that happened before,
+  // widget, and the Total/Bought/Sold stat cards : none of that happened before,
   // so the newly created transaction was invisible until an unrelated refetch
   // (page reload, the 10s notification poll, etc.) happened to catch it.
   const refreshTransactionData = async () => {
@@ -54,7 +54,7 @@ export const useTransactionQuery = () => {
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.TRANSACTION.USER_INCOMPLETE_TRANSACTIONS_COUNT],
       }),
-      // A completed transaction can produce a new bell notification — refetch
+      // A completed transaction can produce a new bell notification : refetch
       // it here instead of relying on a poll interval (removed) or the user
       // happening to open the dedicated Notifications page.
       queryClient.invalidateQueries({
@@ -87,7 +87,7 @@ export const useTransactionQuery = () => {
     retry: 1,
   });
 
-  // BOUGHT/SOLD stat pills on the Transaction History page — scoped to the
+  // BOUGHT/SOLD stat pills on the Transaction History page : scoped to the
   // SAME filter payload as the search-history query above (minus page/size,
   // which don't affect the totals, so they're excluded from the query key to
   // avoid an extra refetch on "View more"), so the pills move with the
@@ -176,7 +176,7 @@ export const useTransactionQuery = () => {
     enabled: !!store.getState().transaction.details.sessionId && !!matchRoute({ to: ROUTES.TRANSACTION_DETAILS }),
   });
 
-  // A transaction can only ever carry one dispute — look it up by the
+  // A transaction can only ever carry one dispute : look it up by the
   // transaction's own id (not sessionId) so the Dispute button on the
   // details page can reflect an existing dispute's status instead of
   // always offering to create a new one.
@@ -408,7 +408,7 @@ export const useTransactionQuery = () => {
             "status",
           ],
         }),
-        // A recheck can complete the SELL, so refresh the list/summary too —
+        // A recheck can complete the SELL, so refresh the list/summary too :
         // not just this transaction's own detail view.
         refreshTransactionData(),
       ]);
@@ -480,7 +480,7 @@ export const useTransactionQuery = () => {
     onSuccess: async ({ data }) => {
       toast.dismiss(QUERY_KEYS.DISPUTE.INITIATE_DISPUTE_TRANSACTION);
       // The transaction just flipped to DISPUTED server-side, and a dispute
-      // now exists for it — refetch both so the title/status and the Dispute
+      // now exists for it : refetch both so the title/status and the Dispute
       // button reflect that immediately instead of needing a manual refresh.
       await Promise.all([
         queryClient.invalidateQueries({
@@ -665,7 +665,7 @@ export const useTransactionQuery = () => {
 };
 
 /**
- * Dashboard's "Recent Orders" widget — always the caller's 5 most recent
+ * Dashboard's "Recent Orders" widget : always the caller's 5 most recent
  * transactions, independent of whatever filters/pagination are active on the
  * Transaction History page. That page reuses the SAME Redux search payload
  * (state.transaction.dashboard.searchUserTransactions) for its own filtering,

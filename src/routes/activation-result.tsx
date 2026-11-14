@@ -1,4 +1,4 @@
-import {createFileRoute, redirect} from '@tanstack/react-router'
+﻿import {createFileRoute, redirect} from '@tanstack/react-router'
 import {toast} from "react-toastify";
 import {ROUTES} from "../util/constants.util.ts";
 import {setAccessToken} from "../util/auth-session.util.ts";
@@ -9,7 +9,7 @@ export const Route = createFileRoute('/activation-result')({
     // @ts-expect-error
     const { message, success, token } = search
 
-    // Freshly verified: a token means the user is now logged in — send
+    // Freshly verified: a token means the user is now logged in : send
     // them straight to onboarding, same as the OAuth success flow does.
     if (success && token) {
       setAccessToken(token)
@@ -18,7 +18,7 @@ export const Route = createFileRoute('/activation-result')({
       })
     }
 
-    // Already-verified (no token issued) or failed — unchanged behavior.
+    // Already-verified (no token issued) or failed : unchanged behavior.
     if (success) {
       toast.success(decodeURIComponent(message), { toastId: "activation-result-toast" })
     } else {

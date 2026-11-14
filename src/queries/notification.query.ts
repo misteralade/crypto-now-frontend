@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+﻿import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "@tanstack/react-router";
 import { QUERY_KEYS } from "./query.keys.ts";
 import { notificationServiceApi } from "../api/notification.api.ts";
@@ -17,15 +17,15 @@ export const useNotificationQuery = () => {
   // Lightweight unread check. Must never block the rest of the dashboard from
   // loading, so failures resolve to "no new notifications" instead of throwing.
   //
-  // Deliberately NOT polled — this was refetching every 10s regardless of
+  // Deliberately NOT polled : this was refetching every 10s regardless of
   // whether anything could plausibly have changed. It now only fetches at the
   // three moments that can actually produce a new notification:
   //  1. First load of any dashboard-shell page (React Query's default
   //     refetchOnMount behavior, since `enabled` flips true on mount there).
-  //  2. Visiting the dedicated Notifications page — NotificationsContent.tsx
+  //  2. Visiting the dedicated Notifications page : NotificationsContent.tsx
   //     fires markAllNotificationsReadMutation on mount, whose onSuccess below
   //     invalidates this same query key.
-  //  3. Right after a transaction is submitted/completes — the relevant
+  //  3. Right after a transaction is submitted/completes : the relevant
   //     mutations in transaction.query.ts and the completion effect in
   //     DashboardTradeStep2.tsx invalidate this query key directly.
   const { data: hasNewNotifications, isLoading: loadingHasNewNotifications } = useQuery({

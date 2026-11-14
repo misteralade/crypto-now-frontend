@@ -1,13 +1,13 @@
 /**
- * Step 2 — Make Payment (Buy) or Unique Wallet + Monitoring (Sell)
+ * Step 2: Make Payment (Buy) or Unique Wallet + Monitoring (Sell)
  *
  * BUY sub-views:
- *   "bank"   — purple hero card + blue bank card + warning + "I've Paid" CTA (frame 124)
- *   "upload" — YOUR ORDER table + dashed upload zone + Submit (frame 133)
+ *   "bank"   : purple hero card + blue bank card + warning + "I've Paid" CTA (frame 124)
+ *   "upload" : YOUR ORDER table + dashed upload zone + Submit (frame 133)
  *
  * SELL sub-views:
- *   "wallet"     — loading → wallet active (frames 156 / 158)
- *   "monitoring" — 4-step animated tracker (frames 172 / 203)
+ *   "wallet"     : loading → wallet active (frames 156 / 158)
+ *   "monitoring" : 4-step animated tracker (frames 172 / 203)
  */
 import { useState, useEffect, type ReactNode } from "react";
 import { Copy, ArrowLeft, ArrowRight, Upload, AlertTriangle, CheckCircle2 } from "lucide-react";
@@ -70,7 +70,7 @@ interface DashboardTradeStep2Props {
   payoutBank?: UserBankAccountResponse;
   /** Deposit wallet for sell flow */
   sellDepositWallet?: CustodialWalletResponse | null;
-  /** Live label from useTradeStepDisplay (e.g. "2m 15s", "Expired") — quotes expire after ~3 minutes server-side */
+  /** Live label from useTradeStepDisplay (e.g. "2m 15s", "Expired"): quotes expire after ~3 minutes server-side */
   rateLockCountdown?: string;
   /** Rate info from local-first BUY flow (fetched at Step 1) */
   buyRateInfo?: BuyRateInfo | null;
@@ -282,7 +282,7 @@ function TradeMonitoringView({
           className="rounded-xl p-3"
           style={{ background: "white", border: "1.5px solid #E8E8E8" }}
         >
-          <SummaryRow label="Network" value={walletNetwork || "—"} />
+          <SummaryRow label="Network" value={walletNetwork || "-"} />
           {showExpectedNgnRow && (
             <SummaryRow label="Expected NGN" value={`₦${amountToBuy!.toLocaleString()}`} />
           )}
@@ -301,7 +301,7 @@ function TradeMonitoringView({
               {walletNetwork ? ` (${walletNetwork})` : ""}
             </p>
             <p className="text-sm font-mono text-[#22c55e] break-all leading-relaxed">
-              {walletAddress || "—"}
+              {walletAddress || "-"}
             </p>
             <button
               onClick={() =>
@@ -369,7 +369,7 @@ function BuyUploadView({
   onSubmit: () => void;
 }) {
   const tableRows = [
-    { label: "Crypto", value: selectedToken?.symbol ?? "—" },
+    { label: "Crypto", value: selectedToken?.symbol ?? "-" },
     { label: "Amount Paid", value: fiatAmountPaidDisplay },
     {
       label: "You'll Receive",
@@ -379,7 +379,7 @@ function BuyUploadView({
       label: "Wallet",
       value: walletAddress ? <ResponsiveText text={walletAddress} /> : "-",
     },
-    { label: "Network", value: network || "—" },
+    { label: "Network", value: network || "-" },
   ];
 
   const ctaDisabled = submitInvalid;
@@ -503,7 +503,7 @@ export default function DashboardTradeStep2({
   const { useTransactionStatus, manualSellDepositRecheckMutation } = useTransactionQuery();
   const { data: txData, isFetched: txStatusFetched } = useTransactionStatus(transactionRef);
   const txStatus = txData?.status;
-  // A receipt was already submitted (txStatus moved past AWAITING_PAYMENT) —
+  // A receipt was already submitted (txStatus moved past AWAITING_PAYMENT):
   // the "pay into this account" screen/fetch is no longer relevant, the user
   // should only see the verifying view.
   const receiptAlreadySubmitted =
@@ -511,13 +511,13 @@ export default function DashboardTradeStep2({
     txStatus !== BUY_PAYMENT_PENDING_STATUSES.INITIATED &&
     txStatus !== BUY_PAYMENT_PENDING_STATUSES.AWAITING_PAYMENT;
   // On remount (e.g. back-navigating into an in-progress trade), txStatus
-  // starts undefined until this query resolves — during that gap
+  // starts undefined until this query resolves: during that gap
   // receiptAlreadySubmitted is falsely false, which used to flash the stale
   // "Make Payment" screen for an already-submitted (IN_REVIEW) transaction
   // before snapping to the correct verifying view a moment later.
   const txStatusStillResolving = isBuy && !!transactionRef && !txStatusFetched;
   // amountFiat can be USD-denominated (display-currency choice), never NGN
-  // settlement — only amountFiatNGN is safe to show as "Expected NGN".
+  // settlement: only amountFiatNGN is safe to show as "Expected NGN".
   const sellTxAmountFiat =
     txData?.amountFiatNGN && Number(txData.amountFiatNGN) > 0
       ? Number(txData.amountFiatNGN)
@@ -527,12 +527,12 @@ export default function DashboardTradeStep2({
     txData?.userCryptoWallet?.network ??
     sellDepositWallet?.network ??
     selectedToken?.networks?.[0] ??
-    "—";
+    "-";
   const sellDepositAddress =
     txData?.depositAddress ??
     txData?.userCryptoWallet?.walletAddress ??
     sellDepositWallet?.walletAddress ??
-    "—";
+    "-";
   const sellMonitoringWallet = txData
     ? {
         walletAddress: sellDepositAddress,
@@ -548,7 +548,7 @@ export default function DashboardTradeStep2({
   useEffect(() => {
     if (txStatus === "COMPLETED") {
       // Transaction history/summary queries are cached for minutes and never
-      // invalidated by the submit call — refresh them now so the dashboard
+      // invalidated by the submit call: refresh them now so the dashboard
       // reflects this transaction immediately instead of on next stale-refetch.
       // The bell's "has new notifications" check is no longer polled, so a
       // completed transaction is one of the few moments it needs to refetch too.
@@ -565,7 +565,7 @@ export default function DashboardTradeStep2({
     (s: RootState) => s.user.trade.anonymous.email,
   );
   const userEmail = getAnonymousEmail(storedAnonymousEmail);
-  // buyRateInfo is transient parent (Step 1) component state — it does NOT
+  // buyRateInfo is transient parent (Step 1) component state: it does NOT
   // survive a back-navigation/remount, so it must never gate which bank-details
   // fetch/loading-state is trusted (that previously caused a permanent "Loading…"
   // label with no spinner after navigating back into this screen). It's only
@@ -596,7 +596,7 @@ export default function DashboardTradeStep2({
   // Resuming a transaction whose receipt was already submitted (e.g. via the
   // dashboard's "Check Status" banner, which routes here with the existing
   // sessionId) should land directly on the verifying view instead of the
-  // bank-details screen — there's nothing left to pay/upload.
+  // bank-details screen: there's nothing left to pay/upload.
   useEffect(() => {
     if (receiptAlreadySubmitted) {
       setBuyView("upload");
@@ -605,12 +605,12 @@ export default function DashboardTradeStep2({
   }, [receiptAlreadySubmitted]);
 
   // Once a BUY transaction has an active session (a bank-transfer reference
-  // was already created for it — whether or not the receipt has been
+  // was already created for it: whether or not the receipt has been
   // uploaded yet), there's no sane "previous screen" to return to: Step 1's
   // crypto-picker doesn't reconstruct the in-flight session and used to
   // render broken/stale state when the browser/hardware back button fell
   // through to default history navigation. Intercept it here and send the
-  // user to the dashboard instead — the in-app back ARROW (onBack prop /
+  // user to the dashboard instead: the in-app back ARROW (onBack prop /
   // setBuyView) is unaffected and still steps between this screen's own
   // sub-views normally.
   useEffect(() => {
@@ -740,7 +740,7 @@ export default function DashboardTradeStep2({
 
   // While we genuinely don't know yet whether a receipt was already
   // submitted, show a neutral spinner rather than defaulting to the
-  // "Make Payment" view — receiptAlreadySubmitted only flips true once
+  // "Make Payment" view: receiptAlreadySubmitted only flips true once
   // txStatus resolves, and rendering the bank/upload view in the meantime
   // is what caused the stale "Make Payment" flash on back-navigation.
   if (isBuy && txStatusStillResolving) {
@@ -758,7 +758,7 @@ export default function DashboardTradeStep2({
   }
 
   /* ── loading / error ──
-   * None of this applies once a receipt is already submitted — bank-payment
+   * None of this applies once a receipt is already submitted: bank-payment
    * details are irrelevant at that point (skipPaymentDetails keeps the query
    * disabled), so don't treat their absence as an error/missing state.
    */
@@ -818,13 +818,13 @@ export default function DashboardTradeStep2({
    * `transactionRef` alone can already be truthy (e.g. an INITIATED/
    * AWAITING_PAYMENT transaction with no receipt yet), which used to
    * intercept the render here and skip straight past the real upload form
-   * below — this condition previously only checked `transactionRef`.
+   * below: this condition previously only checked `transactionRef`.
    */
   if (buyView === "upload" && receiptAlreadySubmitted) {
     return (
       <div className="flex flex-col gap-4">
         <BackHeader
-          // The receipt is already submitted — "bank" (Make Payment) is a
+          // The receipt is already submitted: "bank" (Make Payment) is a
           // dead screen at this point, there's nothing left to pay. Going
           // there just to bounce back was the stale-screen bug; go straight
           // to the dashboard instead, matching the hardware/browser back
@@ -994,13 +994,13 @@ export default function DashboardTradeStep2({
               className="text-lg font-extrabold mb-1 uppercase tracking-wide"
               style={{ color: "#4A4D9E" }}
             >
-              {bankName?.toUpperCase() || "—"}
+              {bankName?.toUpperCase() || "-"}
             </p>
             <p
               className="text-4xl sm:text-[40px] font-black font-mono tracking-tight my-1.5"
               style={{ color: "#0E0F0C" }}
             >
-              {accountNumber || "—"}
+              {accountNumber || "-"}
             </p>
             <p
               className="text-base sm:text-lg font-bold mt-1"
@@ -1051,7 +1051,7 @@ export default function DashboardTradeStep2({
           }}
         >
           <Upload size={16} />
-          <span>I've Paid — Upload Receipt</span>
+          <span>I've Paid: Upload Receipt</span>
           <ArrowRight size={16} />
         </button>
 

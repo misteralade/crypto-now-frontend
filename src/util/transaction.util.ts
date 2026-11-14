@@ -1,9 +1,9 @@
-// Status categories for semantic grouping
+﻿// Status categories for semantic grouping
 import type { TransactionStatus } from "../types/request.payload.types.ts";
 
 /**
  * `amountFiat` is stored in the transaction's settlement `currency`, which is
- * USD for stablecoin trades — not always NGN. Anywhere the amount is shown
+ * USD for stablecoin trades : not always NGN. Anywhere the amount is shown
  * with a ₦ symbol must convert through `stableToFiatRate` first.
  */
 export function getTransactionAmountFiatNGN(tx: {
@@ -60,7 +60,7 @@ const FAILED_CONFIG = {
   isActionable: true,
 };
 
-// All statuses map to Pending / Completed / Failed — the backend owns the label
+// All statuses map to Pending / Completed / Failed : the backend owns the label
 const statusConfig: Record<string, typeof PENDING_CONFIG> = {
   INITIATED: { ...PENDING_CONFIG, displayName: "Pending" },
   AWAITING_PAYMENT: { ...PENDING_CONFIG, displayName: "Pending" },

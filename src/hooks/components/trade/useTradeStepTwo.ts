@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { QUERY_KEYS } from "../../../queries/query.keys.ts";
 import type { TradeType } from "../../../types/trade.types.ts";
@@ -31,7 +31,7 @@ interface UseTradeStepTwoProps {
   sellNetwork?: string;
   transactionRef?: string;
   // BUY: a receipt was already submitted (txStatus past AWAITING_PAYMENT), so
-  // the "pay into this account" details are no longer relevant — skip fetching
+  // the "pay into this account" details are no longer relevant : skip fetching
   // them instead of racing/erroring while the caller shows the verifying view.
   skipPaymentDetails?: boolean;
 }
@@ -161,7 +161,7 @@ export const useTradeStepTwo = ({
         }
       },
       // For sell: only fetch platform wallet if no custodial wallet is available.
-      // For buy: skip once a receipt is already submitted — nothing to pay into anymore.
+      // For buy: skip once a receipt is already submitted : nothing to pay into anymore.
       enabled:
         tradeType === "buy"
           ? !skipPaymentDetails

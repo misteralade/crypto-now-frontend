@@ -1,4 +1,4 @@
-import { StrictMode } from "react";
+﻿import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { ToastContainer } from "react-toastify";
@@ -19,10 +19,10 @@ const router = createRouter({
   defaultPreloadStaleTime: 30000,
   // A route whose JS chunk isn't preloaded yet (no hover lead-time on touch,
   // or a link that never preloads at all) renders nothing until the chunk
-  // downloads — that dead time is what reads as "the app froze" on click.
+  // downloads : that dead time is what reads as "the app froze" on click.
   // pendingMs/pendingMinMs together mean: only show the spinner once a
   // transition has genuinely taken >150ms, and once shown, keep it for at
-  // least 200ms so it doesn't flash — an already-preloaded transition never
+  // least 200ms so it doesn't flash : an already-preloaded transition never
   // shows it at all.
   defaultPendingComponent: () => <LoadingSpinner fullScreen size="lg" />,
   defaultPendingMs: 150,

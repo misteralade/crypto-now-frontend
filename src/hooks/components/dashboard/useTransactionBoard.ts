@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import { useTransactionQuery } from "../../../queries/transaction.query.ts";
 import type { FilterState } from "../../../sections/dashboard/TransactionHistory/TranactionTable.tsx";
 import { useDispatch } from "react-redux";
@@ -10,7 +10,7 @@ import { TIME_IN_MILLISECONDS } from "../../../util/constants.util.ts";
 import { debounce } from "../../../util/debouce.util.ts";
 
 // userSearchTransactionInitialState.size (5) is sized for the dashboard's
-// small "Recent Orders" preview widget — the full Transaction History page
+// small "Recent Orders" preview widget : the full Transaction History page
 // needs a real page size, or filtering/paging through it only ever surfaces
 // a handful of rows per request.
 const TRANSACTION_HISTORY_PAGE_SIZE = 20;
@@ -81,7 +81,7 @@ export const useTransactionBoard = () => {
   };
 
   // Debounced function that only dispatches to Redux (triggers API call).
-  // Keeps the currently active status/type tab and page size — previously
+  // Keeps the currently active status/type tab and page size : previously
   // this reset to userSearchTransactionInitialState wholesale, which
   // silently dropped the active filter tab (and shrank back to size 5)
   // as soon as the user typed into search.

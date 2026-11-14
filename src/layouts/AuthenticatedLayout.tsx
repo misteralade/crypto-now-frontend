@@ -1,4 +1,4 @@
-import { type ReactNode, useState } from "react";
+﻿import { type ReactNode, useState } from "react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { LayoutDashboard, User, LogOut, Settings, Wallet, History, Bell } from "lucide-react";
 import { ROUTES } from "../util/constants.util.ts";
@@ -74,7 +74,7 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
       {confirmLogout && <LogoutConfirmation onCancel={() => setConfirmLogout(false)} onConfirm={handleLogout} />}
 
       {/* ══════════════════════════════════════
-          DESKTOP — fixed sidebar (chrome only — content renders once, below)
+          DESKTOP : fixed sidebar (chrome only : content renders once, below)
       ══════════════════════════════════════ */}
       <aside className="hidden lg:flex fixed inset-y-0 left-0 w-60 flex-col"
         style={{ background: "#03034D", zIndex: 50 }}>
@@ -131,7 +131,7 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
       </aside>
 
       {/* ══════════════════════════════════════
-          DESKTOP — sticky top bar (chrome only)
+          DESKTOP : sticky top bar (chrome only)
       ══════════════════════════════════════ */}
       <div className="hidden lg:block lg:pl-60">
         {!shouldHideDesktopPageHeader && (
@@ -167,7 +167,7 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
       </div>
 
       {/* ══════════════════════════════════════
-          CONTENT — rendered exactly once wrapped in PageTransition.
+          CONTENT : rendered exactly once wrapped in PageTransition.
       ══════════════════════════════════════ */}
       <main className="pb-[72px] lg:pb-8 lg:pl-[272px] lg:pt-8 lg:pr-8 overflow-hidden">
         <PageTransition>
@@ -176,7 +176,7 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
       </main>
 
       {/* ══════════════════════════════════════
-          MOBILE — bottom tab bar (chrome only)
+          MOBILE : bottom tab bar (chrome only)
       ══════════════════════════════════════ */}
       <nav className="lg:hidden fixed bottom-0 inset-x-0 z-50 flex"
         style={{

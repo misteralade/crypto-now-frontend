@@ -1,4 +1,4 @@
-import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
+﻿import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {QUERY_KEYS} from "./query.keys.ts";
 import {bankServiceApi} from "../api/bank.api.ts";
 import {toast} from "react-toastify";
@@ -24,7 +24,7 @@ export const useBankQuery = () => {
 
       return [];
     },
-    staleTime: 1000 * 60 * 60 * 24, // 24 hours — bank list rarely changes
+    staleTime: 1000 * 60 * 60 * 24, // 24 hours : bank list rarely changes
     gcTime: 1000 * 60 * 60 * 24,
   });
 
@@ -59,7 +59,7 @@ export const useBankQuery = () => {
       matchRoute({ to: ROUTES.DASHBOARD_BUY }) ||
       matchRoute({ to: ROUTES.DASHBOARD_SELL })
     ),
-    staleTime: 1000 * 60 * 5, // 5 minutes — bank accounts don't change often
+    staleTime: 1000 * 60 * 5, // 5 minutes : bank accounts don't change often
   });
 
   const createUserBankAccountMutation = useMutation({

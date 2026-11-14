@@ -1,4 +1,4 @@
-/// <reference lib="WebWorker" />
+﻿/// <reference lib="WebWorker" />
 /// <reference types="vite-plugin-pwa/client" />
 import { cleanupOutdatedCaches, precacheAndRoute } from "workbox-precaching";
 import { registerRoute } from "workbox-routing";
@@ -8,14 +8,14 @@ import { CacheableResponsePlugin } from "workbox-cacheable-response";
 
 declare const self: ServiceWorkerGlobalScope;
 
-// Injected by VitePWA at build time — do not remove
+// Injected by VitePWA at build time : do not remove
 precacheAndRoute(self.__WB_MANIFEST);
 
 // Clean up precache entries from older SW versions on activation
 cleanupOutdatedCaches();
 
 // With the injectManifest strategy, registerType: "autoUpdate" in vite.config.ts
-// does NOT inject skipWaiting/clientsClaim automatically (unlike generateSW) — a
+// does NOT inject skipWaiting/clientsClaim automatically (unlike generateSW) : a
 // new SW would otherwise sit in "waiting" until every tab closes, so the kill
 // switch below could target a stale worker. Activate the new SW immediately.
 self.addEventListener("install", () => {
@@ -54,7 +54,7 @@ self.addEventListener("message", (event) => {
 });
 // ─────────────────────────────────────────────────────────────────────────────
 
-// ── NetworkOnly — declared FIRST so they match before any caching rule ────────
+// ── NetworkOnly : declared FIRST so they match before any caching rule ────────
 // Every money- or session-sensitive endpoint must always hit the network live.
 
 const NETWORK_ONLY_PATTERNS = [
@@ -79,7 +79,7 @@ registerRoute(
   new NetworkOnly()
 );
 
-// ── CacheFirst — long-lived static assets ─────────────────────────────────────
+// ── CacheFirst : long-lived static assets ─────────────────────────────────────
 
 registerRoute(
   ({ url }) => url.origin === "https://fonts.googleapis.com",
@@ -103,7 +103,7 @@ registerRoute(
   })
 );
 
-// ── StaleWhileRevalidate — reference data only (rarely changes) ──────────────
+// ── StaleWhileRevalidate : reference data only (rarely changes) ──────────────
 // 1 hour TTL: fast repeat loads without risking noticeably stale reference lists.
 
 registerRoute(

@@ -1,9 +1,9 @@
-/**
+﻿/**
  * Single source of truth for amount rounding/precision across every currency and token
  * the platform supports. This file is duplicated verbatim into cryptonow-backend,
  * cryptonow-frontend, and cryptonow-crm (no shared npm workspace exists between them).
  *
- * DO NOT let the copies drift — run `scripts/check-asset-precision-sync.sh` (or the
+ * DO NOT let the copies drift : run `scripts/check-asset-precision-sync.sh` (or the
  * equivalent CI check) before merging any change to this file in any of the three apps.
  *
  * Canonical source: cryptonow-backend/src/lib/asset-precision.ts
@@ -17,7 +17,7 @@ export type AssetClass = "FIAT" | "STABLECOIN" | "CRYPTO";
 export interface AssetPrecisionRule {
   /** Decimal places to keep for calculation/storage (before persisting or summing). */
   calcDecimals: number;
-  /** Decimal places to show in the UI (display only — never used for math). */
+  /** Decimal places to show in the UI (display only : never used for math). */
   displayDecimals: number;
   /** Whether trailing zeros should be stripped when displaying (e.g. 0.50000000 -> 0.5). */
   trimTrailingZeros: boolean;
@@ -25,7 +25,7 @@ export interface AssetPrecisionRule {
   /**
    * Smallest abbreviation tier formatCompact is allowed to use, as a power of 1000
    * (1 = K, 2 = M, 3 = B, ...). NGN amounts read fine with full digits into the
-   * hundreds of thousands, so it skips straight to M — showing "₦999,999" rather
+   * hundreds of thousands, so it skips straight to M : showing "₦999,999" rather
    * than "₦1000K", and "₦1.25M" once it crosses seven digits.
    */
   compactMinTier: number;
@@ -35,7 +35,7 @@ export interface AssetPrecisionRule {
 
 /**
  * Precision policy per asset symbol/currency code (uppercase).
- * Add every new supported fiat currency or token here — nowhere else.
+ * Add every new supported fiat currency or token here : nowhere else.
  */
 const ASSET_PRECISION: Record<string, AssetPrecisionRule> = {
   // Fiat
@@ -52,7 +52,7 @@ const ASSET_PRECISION: Record<string, AssetPrecisionRule> = {
   SOL: { calcDecimals: 8, displayDecimals: 5, trimTrailingZeros: true, assetClass: "CRYPTO", compactMinTier: 1, compactDecimals: 2 },
 };
 
-/** Fallback for any symbol not yet listed above — errs toward crypto-grade precision. */
+/** Fallback for any symbol not yet listed above : errs toward crypto-grade precision. */
 const DEFAULT_RULE: AssetPrecisionRule = {
   calcDecimals: 8,
   displayDecimals: 8,
@@ -74,9 +74,9 @@ export type RoundingDirection = "nearest" | "up";
 
 /**
  * Round an amount to the asset's calculation precision. Use before persisting,
- * summing, or sending an amount over the API — never round twice.
+ * summing, or sending an amount over the API : never round twice.
  *
- * Pass direction "up" when quoting how much crypto a user will receive — the
+ * Pass direction "up" when quoting how much crypto a user will receive : the
  * platform must never promise more than it can actually deliver on-chain.
  */
 export function roundForCalculation(
@@ -94,7 +94,7 @@ export function roundForCalculation(
 /**
  * Format an amount for display in the UI, per the asset's display policy
  * (e.g. NGN shows no decimals, BTC shows up to 8 with trailing zeros trimmed).
- * This is presentation only — do not feed the result back into further math.
+ * This is presentation only : do not feed the result back into further math.
  */
 export function formatPlainDecimalString(
   val: string | number | undefined | null,
@@ -140,14 +140,14 @@ const COMPACT_UNITS = ["", "K", "M", "B", "T", "P", "E"];
 
 /**
  * Abbreviate a large amount for compact display (e.g. dashboard totals, table
- * cells) — "₦1.25M", "0.05 BTC" for tiny crypto amounts stay unabbreviated.
+ * cells) : "₦1.25M", "0.05 BTC" for tiny crypto amounts stay unabbreviated.
  * Replaces every direct use of the `millify` package: each asset's
  * `compactMinTier` controls which abbreviation tier it's allowed to start at
- * (NGN skips "K" — see the comment on AssetPrecisionRule — everything else
+ * (NGN skips "K" : see the comment on AssetPrecisionRule : everything else
  * behaves like millify's default K/M/B/... ladder), and `compactDecimals`
  * controls the precision once abbreviated.
  *
- * This is presentation only — never feed the result back into further math.
+ * This is presentation only : never feed the result back into further math.
  */
 export function formatCompact(
   amount: number,
@@ -162,7 +162,7 @@ export function formatCompact(
   const tier = Math.max(0, Math.min(magnitude, COMPACT_UNITS.length - 1));
 
   if (tier < compactMinTier) {
-    // Below the asset's abbreviation floor — show full digits with separators.
+    // Below the asset's abbreviation floor : show full digits with separators.
     return new Intl.NumberFormat(locale, {
       minimumFractionDigits: 0,
       maximumFractionDigits: decimals,

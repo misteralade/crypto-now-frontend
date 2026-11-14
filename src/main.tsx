@@ -1,4 +1,4 @@
-import { initializeSentry } from "./config/sentry.ts";
+﻿import { initializeSentry } from "./config/sentry.ts";
 import { CACHE_BUST_VERSION } from "./lib/sw-version.ts";
 import "./pwa.ts";
 import { registerServiceWorker } from "./lib/service-worker.ts";
@@ -9,7 +9,7 @@ registerServiceWorker();
 // ── SW Kill Switch ────────────────────────────────────────────────────────────
 // If CACHE_BUST_VERSION has been bumped since the last page load, send a
 // CLEAR_CACHE message to the active SW so it wipes runtime caches.
-// Runs once per version bump (stored in localStorage) — not on every load.
+// Runs once per version bump (stored in localStorage) : not on every load.
 if ("serviceWorker" in navigator) {
   const SW_VERSION_KEY = "cryptonow_sw_cache_version";
   const storedVersion = localStorage.getItem(SW_VERSION_KEY);

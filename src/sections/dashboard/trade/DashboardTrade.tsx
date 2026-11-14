@@ -1,8 +1,8 @@
-/**
- * DashboardTrade — full buy/sell flow inside the dashboard AuthenticatedLayout.
+﻿/**
+ * DashboardTrade : full buy/sell flow inside the dashboard AuthenticatedLayout.
  *
  * BUY:  Step 1 (crypto grid + amount + wallet) → Step 2 (bank payment) → Step 3 (confirm wallet) → Step 4
- * SELL: Step 1 only — crypto grid + default payout bank (read-only) + deposit address.
+ * SELL: Step 1 only : crypto grid + default payout bank (read-only) + deposit address.
  *       There's no separate confirmation step: deposits are detected automatically
  *       once sent, so the flow ends as soon as the address is shown. Steps 2/4 remain
  *       reachable only when resuming an in-flight transaction via ?sessionId=.
@@ -43,7 +43,7 @@ type DashboardTradeProps = {
   initialStep?: number;
   prefetchedTransaction?: TransactionResponseEntity | null;
   // Called from Step 1's back button when initialTradeType is set (so
-  // there's no in-flow mode picker to fall back to) — e.g. dedicated
+  // there's no in-flow mode picker to fall back to) : e.g. dedicated
   // /dashboard/buy and /dashboard/sell pages navigate to /dashboard.
   onExit?: () => void;
 };
@@ -157,7 +157,7 @@ export default function DashboardTrade({
       hasInitializedRef.current = true;
       return;
     }
-    // Resume from dashboard "Continue" banner or page reload — restore saved state
+    // Resume from dashboard "Continue" banner or page reload : restore saved state
     if (isResume || isReload) {
       const restoredTab = (saved?.activeTab ?? "buy") as TradeType;
       const isBuyResume = restoredTab === "buy";
@@ -174,7 +174,7 @@ export default function DashboardTrade({
         setStep(1);
         if (saved?.buyWalletAddress) setBuyWalletAddress(saved.buyWalletAddress);
         if (saved?.buyNetwork) setBuyNetwork(saved.buyNetwork);
-        // Defer amount restore — setAmountToBuy comes from useTradeStepDisplay below
+        // Defer amount restore : setAmountToBuy comes from useTradeStepDisplay below
         if (saved?.amountToBuy) pendingAmountRestoreRef.current = String(saved.amountToBuy);
         dispatch(setInitiateTransactionField({ field: "amountToSend", value: undefined }));
       } else {
@@ -185,7 +185,7 @@ export default function DashboardTrade({
       hasInitializedRef.current = true;
       return;
     }
-    // Fresh navigation (no resume, no reload) — clear stale progress
+    // Fresh navigation (no resume, no reload) : clear stale progress
     clearTradeProgress();
     setStep(1);
     hasInitializedRef.current = true;
@@ -205,7 +205,7 @@ export default function DashboardTrade({
     saveTradeProgress({ buyWalletAddress, buyNetwork });
   }, [buyWalletAddress, buyNetwork, activeTab]);
 
-  // No unmount clear — let progress persist so the dashboard can show "Continue"
+  // No unmount clear : let progress persist so the dashboard can show "Continue"
 
   const {
     selectedToken,
@@ -268,7 +268,7 @@ export default function DashboardTrade({
     saveTradeProgress({ amountToBuy: amountToBuy ?? undefined });
   }, [amountToBuy, activeTab]);
 
-  // No auto-jump — we stay on step 2 to show the monitoring view for SELL trades.
+  // No auto-jump : we stay on step 2 to show the monitoring view for SELL trades.
   // The monitoring view will now poll the backend and move to step 4 only when COMPLETED.
   useEffect(() => {
     // if (step === 2 && activeTab === "sell") setStep(4);
@@ -406,7 +406,7 @@ export default function DashboardTrade({
     <div style={{ background: "#FFFFFF", minHeight: "100dvh" }}>
       <div className="px-5 pt-5 pb-32">
         <AnimatePresence mode="wait">
-          {/* STEP 1 — combined crypto grid + buy fields or sell payout bank */}
+          {/* STEP 1 : combined crypto grid + buy fields or sell payout bank */}
           {step === 1 && (
             <motion.div
               key="s1"
@@ -451,11 +451,11 @@ export default function DashboardTrade({
                   activeTab === "buy" ? setBuyRateInfo : undefined
                 }
                 onProceed={() => {
-                  // SELL has no separate "proceed" step anymore — the deposit
+                  // SELL has no separate "proceed" step anymore : the deposit
                   // address is shown directly on Step 1 and deposits are
                   // detected automatically, so this only fires for BUY.
                   if (activeTab === "buy") {
-                    // BUY: local-first — no server call yet, just advance to step 2
+                    // BUY: local-first : no server call yet, just advance to step 2
                     if (!pendingBuyToken || !buyRateInfo) return;
                     // amountToBuy is the crypto quantity; fiatAmount is its
                     // calculated quote and must not be used to validate that
@@ -507,7 +507,7 @@ export default function DashboardTrade({
             </motion.div>
           )}
 
-          {/* STEP 2 — payment / wallet */}
+          {/* STEP 2 : payment / wallet */}
           {step === 2 && (
             <motion.div
               key="s2"
@@ -561,7 +561,7 @@ export default function DashboardTrade({
             </motion.div>
           )}
 
-          {/* STEP 3 — confirm receiving wallet (BUY only) */}
+          {/* STEP 3 : confirm receiving wallet (BUY only) */}
           {step === 3 && isBuy && !loadingUserBankAccounts && (
             <motion.div
               key="s3"
@@ -589,7 +589,7 @@ export default function DashboardTrade({
             </motion.div>
           )}
 
-          {/* STEP 4 — success */}
+          {/* STEP 4 : success */}
           {step === 4 && (
             <motion.div
               key="s4"

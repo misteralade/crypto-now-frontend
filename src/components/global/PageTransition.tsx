@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+﻿import type { ReactNode } from "react";
 import { useLocation } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 
@@ -11,7 +11,7 @@ export default function PageTransition({ children }: PageTransitionProps) {
   // Key only by the top-level section (e.g. "dashboard", "profile") so
   // switching tabs still replays the enter animation once, but navigating
   // within a section (deeper routes, ?section= changes, etc.) doesn't
-  // unmount/remount the subtree — that was discarding React Query's cached
+  // unmount/remount the subtree : that was discarding React Query's cached
   // instant-render and re-triggering the fade/offset on every sub-navigation,
   // which is what read as "glitter".
   const topLevelSection = location.pathname.split("/")[1] || "root";
