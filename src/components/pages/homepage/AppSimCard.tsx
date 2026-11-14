@@ -455,6 +455,7 @@ const slide = {
 };
 
 const LS_KEY = "cryptonow_guest_trade";
+const GUEST_SESSION_QUERY_PARAM = "sessionId";
 
 function loadLS() {
   try {
@@ -542,6 +543,15 @@ const AppSimCard = () => {
     saved.platformBank || null
   );
   const [sessionId, setSessionId] = useState(saved.sessionId || "");
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (sessionId) {
+      url.searchParams.set(GUEST_SESSION_QUERY_PARAM, sessionId);
+    } else {
+      url.searchParams.delete(GUEST_SESSION_QUERY_PARAM);
+    }
+    window.history.replaceState(window.history.state, "", url);
+  }, [sessionId]);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const quoteRequestIdRef = useRef(0);
@@ -603,6 +613,7 @@ const AppSimCard = () => {
     }
 
     setGuestTransactionStatus(guestTransactionLiveQuery.data);
+    setReceiveAmount(String(guestTransactionLiveQuery.data.amountFiatNGN));
 
     if (
       !isBuy && GUEST_SELL_TERMINAL_STATUSES.has(guestTransactionLiveQuery.data.status)
@@ -1014,6 +1025,7 @@ const AppSimCard = () => {
   }, [selectedCrypto, quoteCurrencyObj?.id, isBuy]);
 
   useEffect(() => {
+    if (sessionId) return;
     if (!selectedCrypto || !quoteCurrencyObj?.id || !amount) {
       setReceiveAmount("");
       setQuoteLoading(false);
@@ -1031,6 +1043,7 @@ const AppSimCard = () => {
 
     return () => clearTimeout(timeout);
   }, [
+    sessionId,
     amount,
     buyInputCurrency,
     isBuy,
@@ -1870,8 +1883,6 @@ const AppSimCard = () => {
                 Step 2 of 3 · Enter your wallet
               </p>
 
-              <TransactionTimeline type="sell" status={guestTransactionStatus?.status} statusEvents={guestTransactionStatus?.statusEvents} />
-
               {/* Summary */}
               <div
                 className="rounded-xl p-3"
@@ -2430,6 +2441,8 @@ const AppSimCard = () => {
                 />
               ) : null}
 
+              <TransactionTimeline type="sell" status={guestTransactionStatus?.status} statusEvents={guestTransactionStatus?.statusEvents} />
+
               {/* Summary */}
               <div
                 className="rounded-xl p-3"
@@ -2694,7 +2707,7 @@ const AppSimCard = () => {
                     {receiveAmount && (
                       <SRow
                         label="You'll Get"
-                        value={`${formatReceiveCryptoDisplay(receiveAmount)} ${cryptoSymbol}`}
+                        value={`${formatReceiveCryptoDisplay(amount)} ${cryptoSymbol}`}
                         green
                       />
                     )}
