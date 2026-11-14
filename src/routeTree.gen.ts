@@ -22,6 +22,7 @@ import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as CheckEmailRouteImport } from './routes/check-email'
 import { Route as AmlPolicyRouteImport } from './routes/aml-policy'
 import { Route as ActivationResultRouteImport } from './routes/activation-result'
 import { Route as AboutRouteImport } from './routes/about'
@@ -105,6 +106,11 @@ const DashboardRoute = DashboardRouteImport.update({
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckEmailRoute = CheckEmailRouteImport.update({
+  id: '/check-email',
+  path: '/check-email',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AmlPolicyRoute = AmlPolicyRouteImport.update({
@@ -222,6 +228,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/activation-result': typeof ActivationResultRoute
   '/aml-policy': typeof AmlPolicyRoute
+  '/check-email': typeof CheckEmailRoute
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
@@ -256,6 +263,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/activation-result': typeof ActivationResultRoute
   '/aml-policy': typeof AmlPolicyRoute
+  '/check-email': typeof CheckEmailRoute
   '/contact': typeof ContactRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/how-it-works': typeof HowItWorksRoute
@@ -290,6 +298,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/activation-result': typeof ActivationResultRoute
   '/aml-policy': typeof AmlPolicyRoute
+  '/check-email': typeof CheckEmailRoute
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
@@ -326,6 +335,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/activation-result'
     | '/aml-policy'
+    | '/check-email'
     | '/contact'
     | '/dashboard'
     | '/forgot-password'
@@ -360,6 +370,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/activation-result'
     | '/aml-policy'
+    | '/check-email'
     | '/contact'
     | '/forgot-password'
     | '/how-it-works'
@@ -393,6 +404,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/activation-result'
     | '/aml-policy'
+    | '/check-email'
     | '/contact'
     | '/dashboard'
     | '/forgot-password'
@@ -428,6 +440,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   ActivationResultRoute: typeof ActivationResultRoute
   AmlPolicyRoute: typeof AmlPolicyRoute
+  CheckEmailRoute: typeof CheckEmailRoute
   ContactRoute: typeof ContactRoute
   DashboardRoute: typeof DashboardRouteWithChildren
   ForgotPasswordRoute: typeof ForgotPasswordRoute
@@ -539,6 +552,13 @@ declare module '@tanstack/react-router' {
       path: '/contact'
       fullPath: '/contact'
       preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/check-email': {
+      id: '/check-email'
+      path: '/check-email'
+      fullPath: '/check-email'
+      preLoaderRoute: typeof CheckEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/aml-policy': {
@@ -711,6 +731,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   ActivationResultRoute: ActivationResultRoute,
   AmlPolicyRoute: AmlPolicyRoute,
+  CheckEmailRoute: CheckEmailRoute,
   ContactRoute: ContactRoute,
   DashboardRoute: DashboardRouteWithChildren,
   ForgotPasswordRoute: ForgotPasswordRoute,

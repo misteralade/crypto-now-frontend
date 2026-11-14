@@ -49,9 +49,7 @@ export const useAuthQuery = () => {
     },
     onSuccess: ({ success, message }) => {
       toast.dismiss();
-      if (success) {
-        toast.success(message);
-      } else {
+      if (!success) {
         toast.error(message);
       }
     },

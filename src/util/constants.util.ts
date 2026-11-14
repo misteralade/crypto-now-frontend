@@ -13,6 +13,7 @@ export const ROUTES = {
   SIGNIN: "/sign-in",
   FORGOT_PASSWORD: "forgot-password",
   SIGNUP: "/sign-up",
+  CHECK_EMAIL: "/check-email",
   TWO_FACTOR_VERIFY: "/sign-in/verify",
   ONBOARDING: "/onboarding",
   DASHBOARD: "/dashboard",

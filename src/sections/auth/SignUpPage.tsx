@@ -1,10 +1,8 @@
 import CustomButton from "../../components/global/Button";
 import AuthLayout from "../../layouts/AuthLayout";
 import { Link } from "@tanstack/react-router";
-import OtpSent from "./forgot-password/OtpSent.tsx";
 import { useSignUpPage } from "../../hooks/pages/useSignUpPage.ts";
 import { ROUTES } from "../../util/constants.util.ts";
-import { Fragment } from "react";
 import {
   CreateUserRequestSchema,
   type CreateUserRequestType,
@@ -17,7 +15,6 @@ import { CustomInput } from "../../components/global/CustomInput.tsx";
 export default function SignUpPage() {
   const {
     // Values
-    otpSent,
     showPassword,
 
     // Functions
@@ -26,11 +23,7 @@ export default function SignUpPage() {
   } = useSignUpPage();
 
   return (
-    <Fragment>
-      {otpSent ? (
-        <OtpSent />
-      ) : (
-        <AuthLayout layoutType={2}>
+    <AuthLayout layoutType={2}>
           {/* Form Header */}
           <div className="mb-10">
             <h1 className="md:text-[40px] text-3xl md:leading-[48px] font-semibold text-[#0E0F0C] mb-1 md:mb-2">
@@ -166,8 +159,6 @@ export default function SignUpPage() {
               Sign in
             </Link>
           </p>
-        </AuthLayout>
-      )}
-    </Fragment>
+    </AuthLayout>
   );
 }
