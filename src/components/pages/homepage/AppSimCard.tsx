@@ -38,6 +38,7 @@ import { extractErrorMessage, isExchangeRateExpiryError } from "../../../util/in
 import { formatForDisplay, formatForDisplayLocalized } from "../../../util/asset-precision.ts";
 import { emailValidation } from "../../../util/constants.regex.util.ts";
 import { useTransactionLiveStatus } from "../../../hooks/components/trade/useTransactionLiveStatus.ts";
+import { TransactionTimeline } from "../../global/TransactionTimeline.tsx";
 
 const GUEST_RATE_FETCH_TIMEOUT_MS = 12_000;
 const GUEST_RATE_FETCH_TIMEOUT_MESSAGE =
@@ -554,7 +555,7 @@ const AppSimCard = () => {
   const skipNextAutoQuoteRef = useRef(false);
   const isBuy = tab === "BUY";
   const guestTransactionLiveQuery = useTransactionLiveStatus(sessionId, {
-    enabled: !isBuy && step === 3 && !done,
+    enabled: !!sessionId && step === 3 && (!isBuy || done),
   });
   const guestTransactionTerminalStatus = guestTransactionStatus?.status ?? null;
   const guestPayoutFailed = guestTransactionTerminalStatus === "PAYOUT_FAILED";
@@ -604,11 +605,11 @@ const AppSimCard = () => {
     setGuestTransactionStatus(guestTransactionLiveQuery.data);
 
     if (
-      GUEST_SELL_TERMINAL_STATUSES.has(guestTransactionLiveQuery.data.status)
+      !isBuy && GUEST_SELL_TERMINAL_STATUSES.has(guestTransactionLiveQuery.data.status)
     ) {
       setDone(true);
     }
-  }, [guestTransactionLiveQuery.data]);
+  }, [guestTransactionLiveQuery.data, isBuy]);
 
   const cryptoObj = supportedCryptoCurrencies?.find(
     (c) => c.id === selectedCrypto
@@ -1869,6 +1870,8 @@ const AppSimCard = () => {
                 Step 2 of 3 · Enter your wallet
               </p>
 
+              <TransactionTimeline type="sell" status={guestTransactionStatus?.status} statusEvents={guestTransactionStatus?.statusEvents} />
+
               {/* Summary */}
               <div
                 className="rounded-xl p-3"
@@ -2731,6 +2734,8 @@ const AppSimCard = () => {
                   </>
                 )}
               </div>
+
+              {sessionId && <TransactionTimeline type={isBuy ? "buy" : "sell"} status={guestTransactionStatus?.status} statusEvents={guestTransactionStatus?.statusEvents} />}
 
               {/* Upsell */}
               <div

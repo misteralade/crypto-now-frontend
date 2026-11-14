@@ -10,11 +10,14 @@
  *   "monitoring" — 4-step animated tracker (frames 172 / 203)
  */
 import { useState, useEffect, type ReactNode } from "react";
-import { Copy, Check, ArrowLeft, ArrowRight, Upload, Search, Radio, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Copy, ArrowLeft, ArrowRight, Upload, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-toastify";
 import { useNavigate } from "@tanstack/react-router";
 import ManualDepositRecheckAction from "../../../components/global/ManualDepositRecheckAction.tsx";
+import { TransactionTimeline } from "../../../components/global/TransactionTimeline.tsx";
+import { TransactionStatusIcon } from "../../../components/global/TransactionStatusIcon.tsx";
+import { isTerminalTransactionStatus } from "../../../hooks/components/trade/useTransactionLiveStatus.ts";
 import type {
   SupportedCryptoOrCurrencyResponse,
   CustodialWalletResponse,
@@ -152,29 +155,10 @@ function SummaryRow({
 }
 
 /* ── SELL: Monitoring screen ── */
-type MonitoringStep = {
-  label: string;
-  status: "done" | "active" | "pending";
-};
-
 type WalletSummary = {
   walletAddress: string;
   network: string;
 };
-
-const MONITORING_STEPS_SELL: MonitoringStep[] = [
-  { label: "Blockchain Monitoring Active", status: "done" },
-  { label: "Waiting for Crypto Detection", status: "active" },
-  { label: "Auto-Converting to NGN", status: "pending" },
-  { label: "Bank Transfer", status: "pending" },
-];
-
-const MONITORING_STEPS_BUY: MonitoringStep[] = [
-  { label: "Payment Receipt Submitted", status: "done" },
-  { label: "Payment In Review", status: "active" },
-  { label: "Releasing Crypto to Wallet", status: "pending" },
-  { label: "Transaction Completed", status: "pending" },
-];
 
 function PayingToRow({ payoutBank }: { payoutBank: UserBankAccountResponse | undefined }) {
   if (!payoutBank) return null;
@@ -206,6 +190,7 @@ function TradeMonitoringView({
   isBuy,
   onManualRecheck,
   manualRecheckPending,
+  statusEvents,
 }: {
   selectedToken?: SupportedCryptoOrCurrencyResponse;
   payoutBank?: UserBankAccountResponse;
@@ -215,71 +200,10 @@ function TradeMonitoringView({
   isBuy?: boolean;
   onManualRecheck?: () => void;
   manualRecheckPending?: boolean;
+  statusEvents?: Array<{ status: string; createdAt: string }>;
 }) {
-  const statusColors = {
-    done: {
-      bg: "#E8F8F0",
-      border: "#03784733",
-      dot: "#037847",
-      text: "#037847",
-    },
-    active: {
-      bg: "#FFFBF0",
-      border: "#FFE4A033",
-      dot: "#F7A600",
-      text: "#A07000",
-    },
-    pending: {
-      bg: "#FAFAFA",
-      border: "#EEEEEE",
-      dot: "#BDBDBD",
-      text: "#9A9A9A",
-    },
-  };
-
-  const getStepStatus = (i: number): "done" | "active" | "pending" => {
-    if (isBuy) {
-      switch (i) {
-        case 0: return "done"; // Receipt submitted
-        case 1: // Admin Verifying
-          if (status === "COMPLETED" || status === "REFUNDED") return "done";
-          if (status === "IN_REVIEW") return "active";
-          return "active"; // Default active after submission
-        case 2: // Releasing
-          if (status === "COMPLETED" || status === "REFUNDED") return "done";
-          if (status === "IN_REVIEW") return "pending";
-          return "pending";
-        case 3: // Completed
-          if (status === "COMPLETED" || status === "REFUNDED") return "done";
-          return "pending";
-        default: return "pending";
-      }
-    } else {
-      switch (i) {
-        case 0: return "done"; // Monitoring active
-        case 1: // Detection
-          if (status === "INITIATED" || !status) return "active";
-          return "done";
-        case 2: // Conversion
-          if (status === "DEPOSIT_DETECTED" || status === "PENDING_CONFIRMATION") return "active";
-          if (status === "DEPOSIT_CONFIRMED" || status === "PAYOUT_INITIATED" || status === "COMPLETED" || status === "NO_OWNER") return "done";
-          return "pending";
-        case 3: // Bank Transfer
-          if (status === "DEPOSIT_CONFIRMED" || status === "PAYOUT_INITIATED") return "active";
-          if (status === "COMPLETED" || status === "NO_OWNER") return "done";
-          return "pending";
-        default: return "pending";
-      }
-    }
-  };
-
-  const steps: MonitoringStep[] = (isBuy ? MONITORING_STEPS_BUY : MONITORING_STEPS_SELL).map((step, i) => ({
-    ...step,
-    status: getStepStatus(i),
-  }));
-
   const headline = isBuy ? "Verifying Payment" : "Monitoring Wallet";
-  const subHeadline = isBuy ? (status === "IN_REVIEW" ? "Your payment receipt is under review." : "Checking your receipt…") : "Listening for Transaction…";
+  const subHeadline = "Listening for Transaction…";
   const isNoOwnerStatus = status === "NO_OWNER";
   const showManualRecheck =
     !isBuy &&
@@ -313,9 +237,9 @@ function TradeMonitoringView({
           ) : isNoOwnerStatus ? (
             <AlertTriangle size={32} style={{ color: "#F59E0B" }} />
           ) : isBuy ? (
-            <Search size={32} style={{ color: "#6B45D0" }} />
+            <span className="text-[#6B45D0]"><TransactionStatusIcon type="buy" active={!isTerminalTransactionStatus(status)} /></span>
           ) : (
-            <Radio size={32} style={{ color: "#00BFA5" }} className="animate-pulse" />
+            <span className="text-[#00BFA5]"><TransactionStatusIcon type="sell" active={!isTerminalTransactionStatus(status)} /></span>
           )}
         </div>
         <div className="text-center">
@@ -326,15 +250,16 @@ function TradeMonitoringView({
                 ? "Deposit Recorded Without Owner"
                 : headline}
           </p>
-          <p className="text-xs mt-1" style={{ color: "#9A9A9A" }}>
-            {status === "COMPLETED" ? "Success!" : 
-             isBuy ? subHeadline :
-             (isNoOwnerStatus ? "We received a guest-wallet deposit without a linked transaction owner." :
-             (status === "DEPOSIT_DETECTED" ? "Deposit Detected - Confirming..." : 
-              status === "PENDING_CONFIRMATION" ? "Pending Confirmation - Rechecking..." :
-              status === "DEPOSIT_CONFIRMED" ? "Deposit Confirmed - Processing Payout..." :
-              status === "PAYOUT_INITIATED" ? "Payout Initiated - Checking Bank..." : subHeadline))}
-          </p>
+          {!isBuy && (
+            <p className="text-xs mt-1" style={{ color: "#9A9A9A" }}>
+              {status === "COMPLETED" ? "Success!" :
+               (isNoOwnerStatus ? "We received a guest-wallet deposit without a linked transaction owner." :
+               (status === "DEPOSIT_DETECTED" ? "Deposit Detected - Confirming..." :
+                status === "PENDING_CONFIRMATION" ? "Pending Confirmation - Rechecking..." :
+                status === "DEPOSIT_CONFIRMED" ? "Deposit Confirmed - Processing Payout..." :
+                status === "PAYOUT_INITIATED" ? "Payout Initiated - Checking Bank..." : subHeadline))}
+            </p>
+          )}
         </div>
         <p
           className="text-xs text-center px-4 leading-relaxed"
@@ -344,7 +269,7 @@ function TradeMonitoringView({
             (isBuy ? `Your payment was verified and ${selectedToken?.symbol} has been sent to your wallet.` : 
                     `Your ${selectedToken?.symbol} has been sold and NGN sent to your bank.`) :
             (isBuy ? (status === "IN_REVIEW"
-              ? "Your payment receipt has been submitted and is being reviewed."
+              ? "We're reviewing your payment receipt."
               : "We're verifying your bank transfer. Crypto will be released automatically once confirmed.") :
                     (isNoOwnerStatus
                       ? "We recorded a deposit on a guest wallet without a linked transaction owner. The wallet has been retired from reuse and the funds are held for manual accounting review."
@@ -416,43 +341,7 @@ function TradeMonitoringView({
         />
       )}
 
-      {/* 4-step progress */}
-      <div className="flex flex-col gap-2.5">
-        {steps.map(({ label, status }, i) => {
-          const c = statusColors[status];
-          return (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, x: -8 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.07 }}
-              className="flex items-center gap-3 rounded-2xl px-4 py-3.5"
-              style={{ background: c.bg, border: `1px solid ${c.border}` }}
-            >
-              <div
-                className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
-                style={{ background: status === "pending" ? "#EEEEEE" : c.dot }}
-              >
-                {status === "done" ? (
-                  <Check size={13} color="white" />
-                ) : status === "active" ? (
-                  <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                ) : (
-                  <span
-                    className="text-[11px] font-bold"
-                    style={{ color: "#9A9A9A" }}
-                  >
-                    {i + 1}
-                  </span>
-                )}
-              </div>
-              <span className="text-xs font-semibold" style={{ color: c.text }}>
-                {label}
-              </span>
-            </motion.div>
-          );
-        })}
-      </div>
+      <TransactionTimeline type={isBuy ? "buy" : "sell"} status={status} statusEvents={statusEvents} />
     </div>
   );
 }
@@ -948,6 +837,7 @@ export default function DashboardTradeStep2({
           isBuy={true}
           selectedToken={selectedToken}
           status={txStatus}
+          statusEvents={txData?.statusEvents}
         />
       </div>
     );
@@ -976,6 +866,7 @@ export default function DashboardTradeStep2({
             sellDepositWallet={sellMonitoringWallet}
             amountToBuy={sellTxAmountFiat}
             status={txStatus}
+            statusEvents={txData?.statusEvents}
             onManualRecheck={
               transactionRef
                 ? () =>

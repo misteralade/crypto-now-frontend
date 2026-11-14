@@ -37,7 +37,7 @@ type EventStatusState = {
   transactionUpdatedAt: string;
 };
 
-const isTerminalTransactionStatus = (status?: string | null) =>
+export const isTerminalTransactionStatus = (status?: string | null) =>
   !!status && TERMINAL_TRANSACTION_STATUSES.has(status);
 
 export const useTransactionLiveStatus = (

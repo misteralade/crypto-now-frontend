@@ -60,10 +60,10 @@ export default function NotificationsContent() {
             <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-[#454745]">{selected.message}</p>
             <div className="mt-6 flex justify-end gap-2">
               <button type="button" className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold" onClick={() => setSelected(null)}>Close</button>
-              {(selected.disputeId || selected.transactionId) && (
+              {(selected.disputeId || selected.transactionSessionId) && (
                 <button type="button" className="rounded-xl bg-[#03034D] px-4 py-2 text-sm font-semibold text-white" onClick={() => {
                   if (selected.disputeId) navigate({ to: ROUTES.DISPUTE_DETAILS, params: { id: selected.disputeId } });
-                  else if (selected.transactionId) navigate({ to: ROUTES.TRANSACTION_DETAILS, params: { id: selected.transactionId } });
+                  else if (selected.transactionSessionId) navigate({ to: ROUTES.TRANSACTION_DETAILS, params: { id: selected.transactionSessionId } });
                 }}>
                   {selected.disputeId ? "View dispute" : "View transaction"}
                 </button>

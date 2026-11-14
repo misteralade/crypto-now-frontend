@@ -266,6 +266,7 @@ export type InitiateTransactionAPIResponse = BaseApiResponse<{
 }>;
 
 export type TransactionResponseEntity = {
+  statusEvents?: Array<{ status: TransactionStatus; createdAt: string }>;
   adminPaymentReceiptUrl?: string | null;
   expectedCryptoAmount?: number | null;
   id: string;
@@ -327,6 +328,7 @@ export type NotificationResponseEntity = {
   id: string;
   userId: string;
   transactionId: string | null;
+  transactionSessionId: string | null;
   disputeId: string | null;
   type: string;
   title: string;
