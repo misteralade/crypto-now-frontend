@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState, type ChangeEvent, type KeyboardEvent } from "react";
 import type { DisputeMessageResponse } from "../../../types/response.payload.types.ts";
-import { ATTACHMENT_TYPE, MAX_FILES_PER_DISPUTE } from "../../../util/constants.util.ts";
+import { ATTACHMENT_TYPE, MAX_FILES_PER_DISPUTE, ROUTES } from "../../../util/constants.util.ts";
 import { formatFileSize, getFileType } from "../../../util/index.util.ts";
 import type { MessageAttachment, AttachmentType } from "../../../types/transaction.types.ts";
 import { toast } from "react-toastify";
@@ -24,6 +24,7 @@ import {
 } from "../../../redux/transaction.slice.ts";
 import { DISPUTE_SENDER_TYPE, isDisputeClosed } from "../../../util/dispute.util.ts";
 import moment from "moment";
+import { FaWhatsapp } from "react-icons/fa6";
 
 interface DisputeMessageProps {
   loading: boolean;
@@ -171,15 +172,29 @@ const DisputeMessage = ({
     >
       {/* Chat Header */}
       <div
-        className="px-5 py-4 shrink-0"
+        className="px-5 py-3.5 flex items-center justify-between gap-3 shrink-0"
         style={{ borderBottom: "1px solid #F0F0F0" }}
       >
-        <h2 className="text-sm font-bold" style={{ color: "#0E0F0C" }}>
-          Support Conversation
-        </h2>
-        <p className="text-xs" style={{ color: "#9A9A9A" }}>
-          CryptoNow Resolution Desk
-        </p>
+        <div>
+          <h2 className="text-sm font-bold" style={{ color: "#0E0F0C" }}>
+            Support Conversation
+          </h2>
+          <p className="text-xs" style={{ color: "#9A9A9A" }}>
+            CryptoNow Resolution Desk
+          </p>
+        </div>
+
+        <a
+          href={ROUTES.SOCIALS.WHATSAPP}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 hover:opacity-90 shrink-0"
+          style={{ background: "#25D366", color: "#FFFFFF" }}
+          title="Direct chat on WhatsApp: +234 701 6568 181"
+        >
+          <FaWhatsapp size={14} />
+          <span>Chat on WhatsApp</span>
+        </a>
       </div>
 
       {/* Messages Scroll Area */}
@@ -330,10 +345,20 @@ const DisputeMessage = ({
       >
         {closed ? (
           <div
-            className="rounded-2xl p-3 text-center text-xs"
+            className="rounded-2xl p-4 text-center space-y-2 text-xs"
             style={{ background: "#F7F7F9", color: "#6B6E6B" }}
           >
-            This dispute is closed. Messages cannot be sent.
+            <p>This dispute is closed. Messages cannot be sent.</p>
+            <a
+              href={ROUTES.SOCIALS.WHATSAPP}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold text-white transition-all active:scale-95 hover:opacity-90"
+              style={{ background: "#25D366" }}
+            >
+              <FaWhatsapp size={13} />
+              <span>Contact Support on WhatsApp (+234 701 6568 181)</span>
+            </a>
           </div>
         ) : (
           <div>
@@ -450,9 +475,21 @@ const DisputeMessage = ({
                 )}
               </button>
             </div>
-            <p className="text-[10px] mt-1.5 px-1" style={{ color: "#9A9A9A" }}>
-              Press Enter to send, Shift+Enter for new line
-            </p>
+            <div className="flex items-center justify-between mt-1.5 px-1 flex-wrap gap-2">
+              <p className="text-[10px]" style={{ color: "#9A9A9A" }}>
+                Press Enter to send, Shift+Enter for new line
+              </p>
+              <a
+                href={ROUTES.SOCIALS.WHATSAPP}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-[11px] font-semibold hover:underline"
+                style={{ color: "#1EBE5D" }}
+              >
+                <FaWhatsapp size={12} />
+                <span>Direct WhatsApp: +234 701 6568 181</span>
+              </a>
+            </div>
           </div>
         )}
       </div>

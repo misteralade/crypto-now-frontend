@@ -2,7 +2,7 @@ import { Check, Copy, ExternalLink, ArrowUpRight, ArrowDownLeft } from "lucide-r
 import { Link } from "@tanstack/react-router";
 import { ROUTES } from "../../../util/constants.util.ts";
 import { formatCompact, formatForDisplayLocalized } from "../../../util/asset-precision.ts";
-import { getStatusDisplayName, getTransactionAmountFiatNGN } from "../../../util/transaction.util.ts";
+import { getStatusDisplayName, getTransactionAmountFiatNGN, TRANSACTION_TYPE } from "../../../util/transaction.util.ts";
 import type { SearchTransactionsResponse } from "../../../types/response.payload.types.ts";
 
 interface TransactionDisputeInfoProps {
@@ -35,8 +35,10 @@ const TransactionDisputeInfo = ({
     );
   }
 
-  const isBuy = transaction.type?.toUpperCase() === "BUY";
-  const cryptoSymbol = transaction.cryptocurrency?.symbol || "Crypto";
+  const isBuy = transaction.type?.toUpperCase() === TRANSACTION_TYPE.BUY;
+  const cryptoSymbol = transaction.cryptocurrency?.symbol || "";
+  const cryptoName = transaction.cryptocurrency?.name || cryptoSymbol || "Crypto";
+  const cryptoLogo = transaction.cryptocurrency?.logoUrl;
   const cryptoAmount = Number(transaction.amountCrypto || 0);
 
   const amountFiatNGN = getTransactionAmountFiatNGN({
@@ -96,7 +98,7 @@ const TransactionDisputeInfo = ({
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <span
-              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold mb-2"
+              className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold mb-2"
               style={{
                 background: isBuy ? "#E8F8F0" : "#F0EFFD",
                 color: isBuy ? "#037847" : "#575AE5",
@@ -107,7 +109,14 @@ const TransactionDisputeInfo = ({
               ) : (
                 <ArrowUpRight size={12} strokeWidth={2.5} />
               )}
-              {isBuy ? "Buy Crypto" : "Sell Crypto"}
+              <span>{isBuy ? `Buy ${cryptoName}` : `Sell ${cryptoName}`}</span>
+              {cryptoLogo && (
+                <img
+                  src={cryptoLogo}
+                  alt={cryptoSymbol}
+                  className="w-3.5 h-3.5 object-contain inline-block shrink-0"
+                />
+              )}
             </span>
 
             <div className="flex items-baseline gap-2 flex-wrap">
@@ -118,7 +127,7 @@ const TransactionDisputeInfo = ({
                 ₦{formatCompact(amountFiatNGN, "NGN", 2)}
               </h3>
               <span className="text-xs font-semibold" style={{ color: "#6B6E6B" }}>
-                ≈ {cryptoAmount > 0 ? cryptoAmount : "0"} {cryptoSymbol}
+                ≈ {cryptoAmount > 0 ? cryptoAmount : "0"} {cryptoSymbol || "Crypto"}
               </span>
             </div>
           </div>
@@ -138,11 +147,11 @@ const TransactionDisputeInfo = ({
         {platformRate > 0 && (
           <div
             className="mt-3 pt-3 flex items-center justify-between text-xs"
-            style={{ borderTop: "1px solid #EAEAEA" }}
+            style={{ borderTop: "1px solid #EEEEEE" }}
           >
             <span style={{ color: "#9A9A9A" }}>Exchange rate</span>
             <span className="font-semibold" style={{ color: "#0E0F0C" }}>
-              ₦{formatForDisplayLocalized(platformRate, "NGN")} / {cryptoSymbol}
+              ₦{formatForDisplayLocalized(platformRate, "NGN")} / {cryptoSymbol || "token"}
             </span>
           </div>
         )}

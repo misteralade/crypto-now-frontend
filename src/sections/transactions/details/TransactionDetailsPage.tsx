@@ -187,8 +187,8 @@ const TransactionDetailsPage = () => {
         <Fragment>
           <div className="max-w-3xl mx-auto px-4 pb-12 pt-4 sm:px-5 lg:px-0 space-y-4">
             {/* ── Header ── */}
-            <div className="flex items-center justify-between gap-3 mb-2">
-              <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between gap-2 sm:gap-3 mb-2">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                 <button
                   type="button"
                   onClick={() => {
@@ -198,7 +198,7 @@ const TransactionDetailsPage = () => {
                       navigate({ to: ROUTES.TRANSACTION });
                     }
                   }}
-                  className="w-10 h-10 rounded-2xl flex items-center justify-center transition-all active:scale-[0.94]"
+                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl flex items-center justify-center transition-all active:scale-[0.94] shrink-0"
                   style={{
                     background: "#F7F7F9",
                     border: "1px solid #EEEEEE",
@@ -206,20 +206,20 @@ const TransactionDetailsPage = () => {
                   }}
                   aria-label="Back"
                 >
-                  <ArrowLeft size={18} />
+                  <ArrowLeft size={16} />
                 </button>
-                <div>
+                <div className="min-w-0">
                   <h1
-                    className="text-xl font-extrabold"
+                    className="text-sm sm:text-lg font-bold sm:font-extrabold whitespace-nowrap truncate"
                     style={{
                       color: "#0E0F0C",
                       fontFamily: "'DM Sans', sans-serif",
-                      letterSpacing: "-0.02em",
+                      letterSpacing: "-0.01em",
                     }}
                   >
                     Transaction Details
                   </h1>
-                  <p className="text-xs mt-0.5" style={{ color: "#9A9A9A" }}>
+                  <p className="text-[11px] sm:text-xs mt-0.5 truncate" style={{ color: "#9A9A9A" }}>
                     REF: {transaction.sessionId.slice(0, 14).toUpperCase()}
                   </p>
                 </div>
@@ -231,7 +231,7 @@ const TransactionDetailsPage = () => {
               <button
                 onClick={toggleDisputeTransaction}
                 disabled={!disputeForTransaction && !canDispute && !isDisputeExpired}
-                className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-2xl text-xs font-bold transition-all"
+                className="shrink-0 flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl sm:rounded-2xl text-[11px] sm:text-xs font-bold transition-all whitespace-nowrap"
                 style={
                   disputeForTransaction
                     ? isDisputeClosed

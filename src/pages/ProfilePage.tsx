@@ -16,11 +16,9 @@ import { useTransactionQuery } from "../queries/transaction.query.ts";
 import { formatCompact } from "../util/asset-precision.ts";
 import { clearUserSessionStorage } from "../util/tradeProgress.storage.util.ts";
 import type { ProfileSection } from "../routes/dashboard/profile.tsx";
+import UserAvatar from "../components/global/UserAvatar.tsx";
 
 type Section = ProfileSection | null;
-
-const getInitials = (first?: string, last?: string) =>
-  ((first?.[0] ?? "") + (last?.[0] ?? "")).toUpperCase() || "U";
 
 /* ─── 2×2 stat card ─── */
 function StatCard({ label, value, sub, loading }: { label: string; value: string; sub?: string; loading: boolean }) {
@@ -104,7 +102,6 @@ const ProfilePage = () => {
     }
   }, [loadingUserProfile]);
 
-  const initials  = getInitials(userProfileData?.profile?.firstName, userProfileData?.profile?.lastName);
   const fullName  = userProfileData?.profile?.firstName
     ? `${userProfileData.profile.firstName} ${userProfileData.profile.lastName ?? ""}`.trim()
     : "";
@@ -160,15 +157,13 @@ const ProfilePage = () => {
                 {loadingUserProfile ? (
                   <div className="w-20 h-20 rounded-full animate-pulse" style={{ background: "#EEEEEE" }} />
                 ) : (
-                  <div
-                    className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-black text-white"
-                    style={{
-                      background: "linear-gradient(135deg, #6DD5FA 0%, #2980B9 40%, #948EEE 75%, #575AE5 100%)",
-                      boxShadow: "0 8px 24px rgba(87,90,229,0.28)",
-                    }}
-                  >
-                    {initials}
-                  </div>
+                  <UserAvatar
+                    src={userProfileData?.profile?.profileImg}
+                    firstName={userProfileData?.profile?.firstName}
+                    lastName={userProfileData?.profile?.lastName}
+                    size="xl"
+                    shadow
+                  />
                 )}
 
                 <h2 className="text-xl font-extrabold mt-3" style={{ color: "#0E0F0C", fontFamily: "'DM Sans',sans-serif" }}>

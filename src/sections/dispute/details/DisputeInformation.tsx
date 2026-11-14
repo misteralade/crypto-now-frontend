@@ -1,9 +1,10 @@
 import { FileText, Download, CheckCircle } from "lucide-react";
 import momentClient from "../../../lib/moment.ts";
 import { formatFileSize } from "../../../util/index.util.ts";
-import { ATTACHMENT_TYPE } from "../../../util/constants.util.ts";
+import { ATTACHMENT_TYPE, ROUTES } from "../../../util/constants.util.ts";
 import { formatDisputeReason } from "../../../util/dispute.util.ts";
 import type { MessageAttachment } from "../../../types/transaction.types.ts";
+import { FaWhatsapp } from "react-icons/fa6";
 
 interface DisputeInformationProps {
   reason: string;
@@ -146,6 +147,39 @@ const DisputeInformation = ({
           </div>
         </div>
       )}
+
+      {/* Direct WhatsApp Contact */}
+      <div
+        className="rounded-2xl p-4 flex items-center justify-between gap-3"
+        style={{ background: "#F7FBF8", border: "1px solid #D6EFE0" }}
+      >
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+            style={{ background: "#25D366", color: "#FFFFFF" }}
+          >
+            <FaWhatsapp size={18} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-bold" style={{ color: "#0E0F0C" }}>
+              Direct Support on WhatsApp
+            </p>
+            <p className="text-[11px]" style={{ color: "#6B6E6B" }}>
+              +234 701 6568 181
+            </p>
+          </div>
+        </div>
+
+        <a
+          href={ROUTES.SOCIALS.WHATSAPP}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold text-white transition-all active:scale-95 hover:opacity-90 shrink-0"
+          style={{ background: "#03034D" }}
+        >
+          <span>Chat now</span>
+        </a>
+      </div>
 
       {/* Timestamps */}
       <div

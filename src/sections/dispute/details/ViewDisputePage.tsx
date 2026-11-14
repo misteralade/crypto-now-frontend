@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 import { useViewDisputeDetailsPage } from "../../../hooks/pages/useViewDisputeDetailsPage.ts";
 import { LoadingSpinner } from "../../../components/global/LoadingSpinner.tsx";
-import { ArrowLeft, Check, Copy, AlertTriangle } from "lucide-react";
+import { ArrowLeft, AlertTriangle } from "lucide-react";
 import TransactionDisputeInfo from "./TransactionDisputeInfo.tsx";
 import DisputeInformation from "./DisputeInformation.tsx";
 import DisputeMessage from "./DisputeMessage.tsx";
@@ -61,92 +61,71 @@ const ViewDisputePage = () => {
           </button>
         </div>
       ) : (
-        <div className="max-w-6xl mx-auto px-4 pb-12 pt-2 sm:px-6 space-y-6">
+        <div className="max-w-6xl mx-auto px-4 pb-12 pt-2 sm:px-6 space-y-4 sm:space-y-6">
           {/* ── Top Header ── */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
               <button
                 type="button"
                 onClick={onBack}
                 aria-label="Back"
-                className="w-10 h-10 rounded-2xl flex items-center justify-center transition-all active:scale-95 hover:bg-gray-100 shrink-0"
+                className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl flex items-center justify-center transition-all active:scale-95 hover:bg-gray-100 shrink-0"
                 style={{
                   background: "#F7F7F9",
                   border: "1px solid #EEEEEE",
                   color: "#0E0F0C",
                 }}
               >
-                <ArrowLeft size={18} />
+                <ArrowLeft size={16} />
               </button>
 
-              <div>
-                <h1
-                  className="text-xl sm:text-2xl font-extrabold"
-                  style={{
-                    color: "#0E0F0C",
-                    fontFamily: "'DM Sans', sans-serif",
-                    letterSpacing: "-0.02em",
-                  }}
-                >
-                  Dispute Details
-                </h1>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-xs font-mono" style={{ color: "#9A9A9A" }}>
-                    ID: {disputeDetails.id.slice(0, 14)}...
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => copyToClipboard(disputeDetails.id, "disputeId")}
-                    aria-label="Copy dispute ID"
-                    className="p-1 rounded-md text-gray-400 hover:text-gray-700 transition-colors"
-                  >
-                    {copiedField === "disputeId" ? (
-                      <Check size={12} className="text-emerald-600" />
-                    ) : (
-                      <Copy size={12} />
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Badges */}
-            <div className="flex items-center gap-2">
-              {priorityConfig && (
-                <span
-                  className="px-3 py-1 rounded-full text-xs font-bold border"
-                  style={{
-                    background: priorityConfig.bg,
-                    color: priorityConfig.text,
-                    borderColor: priorityConfig.border,
-                  }}
-                >
-                  Priority: {priorityConfig.label}
-                </span>
-              )}
-
-              <span
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold border"
+              <h1
+                className="text-sm sm:text-lg font-bold sm:font-extrabold truncate whitespace-nowrap"
                 style={{
-                  background: statusConfig.bg,
-                  color: statusConfig.text,
-                  borderColor: statusConfig.border,
+                  color: "#0E0F0C",
+                  fontFamily: "'DM Sans', sans-serif",
+                  letterSpacing: "-0.01em",
                 }}
               >
-                <StatusIcon size={13} strokeWidth={2.5} />
-                <span>{statusConfig.label}</span>
-              </span>
+                Dispute Details
+              </h1>
             </div>
           </div>
 
-          {/* ── Status Explanation Banner ── */}
+          {/* ── Status & Explanation Banner (Compressed) ── */}
           <div
-            className="rounded-2xl px-4 py-3 sm:px-5 sm:py-3.5 border"
+            className="rounded-2xl px-4 py-3 border flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-3"
             style={{
               background: statusConfig.bg,
               borderColor: statusConfig.border,
             }}
           >
+            <div className="flex items-center gap-2 shrink-0">
+              <span
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold"
+                style={{
+                  background: "#FFFFFF",
+                  color: statusConfig.text,
+                  border: `1px solid ${statusConfig.border}`,
+                }}
+              >
+                <StatusIcon size={12} strokeWidth={2.5} />
+                <span>{statusConfig.label}</span>
+              </span>
+              {priorityConfig && (
+                <span
+                  className="px-2.5 py-1 rounded-full text-[11px] font-bold"
+                  style={{
+                    background: priorityConfig.bg,
+                    color: priorityConfig.text,
+                    border: `1px solid ${priorityConfig.border}`,
+                  }}
+                >
+                  Priority: {priorityConfig.label}
+                </span>
+              )}
+            </div>
+
             <p
               className="text-xs sm:text-sm leading-relaxed font-medium"
               style={{ color: statusConfig.text }}

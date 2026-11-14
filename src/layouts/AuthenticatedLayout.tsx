@@ -9,6 +9,7 @@ import { clearUserSessionStorage } from "../util/tradeProgress.storage.util.ts";
 import Logo from "../assets/logo/logo.svg";
 import LogoutConfirmation from "../components/global/LogoutConfirmation.tsx";
 import PageTransition from "../components/global/PageTransition.tsx";
+import UserAvatar from "../components/global/UserAvatar.tsx";
 
 interface AuthenticatedLayoutProps {
   children: ReactNode;
@@ -37,12 +38,6 @@ const getPageTitle = (pathname: string) => {
   return "Home";
 };
 
-const getInitials = (firstName?: string, lastName?: string) => {
-  const f = firstName?.[0]?.toUpperCase() ?? "";
-  const l = lastName?.[0]?.toUpperCase() ?? "";
-  return (f + l) || "U";
-};
-
 export default function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
   const [confirmLogout, setConfirmLogout] = useState(false);
   const location  = useLocation();
@@ -50,7 +45,6 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
   const { userProfileData } = useUserQuery();
   const { hasNewNotifications } = useNotificationQuery();
 
-  const initials  = getInitials(userProfileData?.profile?.firstName, userProfileData?.profile?.lastName);
   const fullName  = userProfileData?.profile?.firstName
     ? `${userProfileData.profile.firstName} ${userProfileData.profile.lastName ?? ""}`.trim()
     : "Account";
@@ -109,10 +103,12 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
         {/* user + logout */}
         <div className="px-3 py-4" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
           <div className="flex items-center gap-2.5 px-2 py-2 mb-1">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
-              style={{ background: "linear-gradient(135deg,#948EEE,#575AE5)" }}>
-              {initials}
-            </div>
+            <UserAvatar
+              src={userProfileData?.profile?.profileImg}
+              firstName={userProfileData?.profile?.firstName}
+              lastName={userProfileData?.profile?.lastName}
+              size="sm"
+            />
             <div className="min-w-0">
               <p className="text-xs font-semibold text-white truncate">{fullName}</p>
               <p className="text-[10px] truncate" style={{ color: "rgba(255,255,255,0.38)" }}>{email}</p>
@@ -156,10 +152,13 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
               </button>
 
               <Link to={ROUTES.PROFILE} preload="intent">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white transition-opacity hover:opacity-90 active:scale-[0.96]"
-                  style={{ background: "linear-gradient(135deg,#948EEE,#575AE5)" }}>
-                  {initials}
-                </div>
+                <UserAvatar
+                  src={userProfileData?.profile?.profileImg}
+                  firstName={userProfileData?.profile?.firstName}
+                  lastName={userProfileData?.profile?.lastName}
+                  size="sm"
+                  className="transition-opacity hover:opacity-90 active:scale-[0.96]"
+                />
               </Link>
             </div>
           </header>
