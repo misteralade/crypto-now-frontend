@@ -27,7 +27,7 @@ import type {
 import { useTradeStepTwo } from "../../../hooks/components/trade/useTradeStepTwo.ts";
 import ResponsiveText from "../../../components/global/ResponsiveText.tsx";
 import TradePaymentUpload from "../../trade-crypto/TradePaymentUpload.tsx";
-import { ROUTES, SESSION_STORAGE_KEYS } from "../../../util/constants.util.ts";
+import { BUY_PAYMENT_PENDING_STATUSES, ROUTES, SESSION_STORAGE_KEYS } from "../../../util/constants.util.ts";
 import type { BuyRateInfo } from "./DashboardTradeStep1.tsx";
 import { useSelector } from "react-redux";
 import { getAnonymousEmail } from "../../../util/auth-session.util.ts";
@@ -618,7 +618,9 @@ export default function DashboardTradeStep2({
   // the "pay into this account" screen/fetch is no longer relevant, the user
   // should only see the verifying view.
   const receiptAlreadySubmitted =
-    isBuy && !!txStatus && txStatus !== "AWAITING_PAYMENT";
+    isBuy && !!txStatus &&
+    txStatus !== BUY_PAYMENT_PENDING_STATUSES.INITIATED &&
+    txStatus !== BUY_PAYMENT_PENDING_STATUSES.AWAITING_PAYMENT;
   // On remount (e.g. back-navigating into an in-progress trade), txStatus
   // starts undefined until this query resolves — during that gap
   // receiptAlreadySubmitted is falsely false, which used to flash the stale

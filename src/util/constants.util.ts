@@ -67,6 +67,11 @@ export const LOCAL_STORAGE_KEYS = {
   LAST_TRADE_TOKEN: "LAST_TRADE_TOKEN_V1",
 }
 
+export const BUY_PAYMENT_PENDING_STATUSES = {
+  INITIATED: "INITIATED",
+  AWAITING_PAYMENT: "AWAITING_PAYMENT",
+} as const;
+
 export const transactionStatusMessages: Record<string, { title: string, message: string }> = {
   INITIATED: {
     title: 'Transaction Initiated',

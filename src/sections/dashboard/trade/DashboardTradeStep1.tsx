@@ -1263,11 +1263,7 @@ export default function DashboardTradeStep1({
                 : "Sell Crypto"}
           </h2>
           <p className="text-xs" style={{ color: "#9A9A9A" }}>
-            {selectedToken
-              ? "Your unique deposit wallet"
-              : isBuy
-                ? "Choose what to buy"
-                : "Choose what to sell"}
+            {selectedToken || !isBuy ? "" : "Choose what to buy"}
           </p>
         </div>
       </div>
