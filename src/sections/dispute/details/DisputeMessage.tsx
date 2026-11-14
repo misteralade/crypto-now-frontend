@@ -234,7 +234,16 @@ const DisputeMessage = ({
         ) : (
           messages.map((msg) => {
             const isUser = msg.senderType === DISPUTE_SENDER_TYPE.USER;
-            const timeFormatted = moment(msg.createdAt).format("h:mm A");
+            const isToday = moment(msg.createdAt).isSame(moment(), "day");
+            const timeFormatted = isToday
+              ? moment(msg.createdAt).format("h:mm A")
+              : moment(msg.createdAt).format("MMM D, h:mm A");
+
+            const senderLabel = isUser
+              ? "You"
+              : msg.admin?.firstName
+              ? `${msg.admin.firstName} (Support)`
+              : "CryptoNow Support";
 
             return (
               <div
@@ -262,7 +271,7 @@ const DisputeMessage = ({
                       className="text-[10px] font-bold"
                       style={{ color: isUser ? "#6B6E6B" : "#575AE5" }}
                     >
-                      {isUser ? "You" : "CryptoNow Team"}
+                      {senderLabel}
                     </span>
                     <span className="text-[10px]" style={{ color: "#9A9A9A" }}>
                       {timeFormatted}
