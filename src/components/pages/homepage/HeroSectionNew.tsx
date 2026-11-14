@@ -18,7 +18,7 @@ const HeroSectionNew = () => {
         overflowX: "clip",
       }}
     >
-      {/* Purple glow — tight, bottom-center only */}
+      {/* Purple glow: tight, bottom-center only */}
       <div
         className="pointer-events-none absolute z-0 left-1/2"
         style={{
@@ -57,7 +57,7 @@ const HeroSectionNew = () => {
         />
       </div>
 
-      {/* ── BTC coin — bottom-left corner ── */}
+      {/* BTC coin: bottom-left corner */}
       <motion.div
         className="absolute z-10 hidden sm:block"
         style={{ bottom: "0px", left: "-2vw" }}
@@ -80,7 +80,7 @@ const HeroSectionNew = () => {
         />
       </motion.div>
 
-      {/* ── Naira coin — bottom-right corner ── */}
+      {/* Naira coin: bottom-right corner */}
       <motion.div
         className="absolute z-10 hidden sm:block"
         style={{ bottom: "0px", right: "-2vw" }}
@@ -105,7 +105,7 @@ const HeroSectionNew = () => {
         />
       </motion.div>
 
-      {/* ── Page content: headline + card, stacked in flow ── */}
+      {/* Page content: headline + card, stacked in flow */}
       <div className="relative z-20 flex flex-col items-center gap-8 pt-10 sm:pt-14 px-6">
         {/* Headline */}
         <motion.div
@@ -118,16 +118,15 @@ const HeroSectionNew = () => {
             className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight tracking-tight"
             style={{ fontFamily: "'DM Sans', sans-serif", color: "#0E0F0C" }}
           >
-            Trade Crypto for Naira.
+            Sell your crypto.
             <br />
-            <span style={{ color: "#948EEE" }}>Instantly.</span>
+            <span style={{ color: "#948EEE" }}>Get naira in your bank account.</span>
           </h1>
           <p
-            className="text-sm sm:text-base text-gray-400 font-normal max-w-xs"
+            className="text-sm sm:text-base text-gray-500 font-normal max-w-sm"
             style={{ fontFamily: "'DM Sans', sans-serif" }}
           >
-            Rate locks the second you start — no re-quotes, no waiting on slow exchanges.
-            <br /> Try a guest trade right now.
+            Exchange crypto for naira with CryptoNow. You can buy crypto with naira too.
           </p>
         </motion.div>
 
@@ -145,7 +144,7 @@ const HeroSectionNew = () => {
           <AppSimCard />
         </motion.div>
 
-        {/* Fast • Simple • Secure */}
+        {/* Tagline */}
         <p
           className="text-sm sm:text-base text-[#6B6E6B] relative z-40"
           style={{
@@ -153,7 +152,7 @@ const HeroSectionNew = () => {
             letterSpacing: "0.02em",
           }}
         >
-rate-locked. reviewed. paid out fast
+          Clear rates. Direct bank transfers.
         </p>
       </div>
     </section>

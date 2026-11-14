@@ -31,36 +31,36 @@ const BUY_STEPS: Step[] = [
   {
     icon: MagnifyingGlass,
     label: "Step 1",
-    title: "Get a locked rate",
-    body: "Pick your coin and amount. We quote today's rate and lock it for 3 minutes — long enough to pay without the price moving on you.",
+    title: "Check the current rate",
+    body: "Select your cryptocurrency and amount to see the current exchange rate and the amount you will pay.",
     actor: "You",
   },
   {
     icon: Bank,
     label: "Step 2",
     title: "Pay by bank transfer",
-    body: "Send Naira to our verified account — the same one every time, shown on your transaction screen.",
+    body: "Transfer the naira amount to the platform bank account displayed on your transaction screen.",
     actor: "You",
   },
   {
     icon: UploadSimple,
     label: "Step 3",
     title: "Upload your receipt",
-    body: "Attach proof of payment to your transaction so it can be matched and reviewed.",
+    body: "Attach your payment receipt so our team can verify the transfer.",
     actor: "You",
   },
   {
     icon: Eye,
     label: "Step 4",
-    title: "A person checks it",
-    body: "Our team confirms your transfer against the receipt — a real check, not just an automated flag.",
+    title: "Payment verification",
+    body: "Our team verifies your transfer against the submitted receipt.",
     actor: "CryptoNow",
   },
   {
     icon: Wallet,
     label: "Step 5",
-    title: "Crypto lands in your wallet",
-    body: "Once payment is confirmed, we send your crypto to the wallet address you provided.",
+    title: "Receive your crypto",
+    body: "Once payment is verified, we send your crypto to the wallet address you provided.",
     actor: "CryptoNow",
   },
 ];
@@ -69,36 +69,36 @@ const SELL_STEPS: Step[] = [
   {
     icon: MagnifyingGlass,
     label: "Step 1",
-    title: "Get a locked rate",
-    body: "Pick your coin and amount. We quote today's rate and lock it for 3 minutes before you send anything.",
+    title: "Enter your sell amount",
+    body: "Choose the cryptocurrency you want to sell, enter the amount, and provide your Nigerian bank account.",
     actor: "You",
   },
   {
     icon: PaperPlaneTilt,
     label: "Step 2",
     title: "Send your crypto",
-    body: "We assign you a secure deposit address for this trade and you send your crypto there.",
+    body: "We assign a dedicated deposit address for your transaction so you can send your crypto.",
     actor: "You",
   },
   {
     icon: ArrowsLeftRight,
     label: "Step 3",
-    title: "We watch the chain directly",
-    body: "Our system detects your deposit on-chain the moment it's confirmed — no manual lookup, no waiting for you to tell us.",
+    title: "Network confirmation",
+    body: "Our system detects your deposit on the blockchain and monitors the required network confirmations.",
     actor: "CryptoNow",
   },
   {
     icon: CoinVertical,
     label: "Step 4",
-    title: "Payout triggers automatically",
-    body: "As soon as your deposit clears, payout to your bank account starts automatically through our banking partner.",
+    title: "Automated bank payout",
+    body: "As soon as your crypto deposit confirms, our system automatically initiates the bank transfer to your account.",
     actor: "CryptoNow",
   },
   {
     icon: CheckCircle,
     label: "Step 5",
-    title: "Naira lands in your account",
-    body: "No manual queue for the normal case — most payouts complete within minutes of your deposit confirming.",
+    title: "Naira in your bank account",
+    body: "The payout completes directly into your Nigerian bank account with full status tracking.",
     actor: "CryptoNow",
   },
 ];
@@ -186,8 +186,7 @@ const HowItWorksPage = () => {
             What actually happens<br />when you trade.
           </h1>
           <p className="text-base" style={{ color: "#6B6E6B" }}>
-            No jargon, no hidden steps — here's exactly what we and our systems do,
-            in order, every time.
+            Here is how buying and selling works on CryptoNow, step by step.
           </p>
         </div>
 

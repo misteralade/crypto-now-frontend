@@ -72,7 +72,7 @@ export default function KycDocumentCaptureStep({
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-semibold text-gray-900">
-          {ID_LABELS[idType]} — {SIDE_LABELS[side]}
+          {ID_LABELS[idType]}: {SIDE_LABELS[side]}
         </h2>
         <p className="mt-1 text-sm text-gray-500">
           {side === "front"
@@ -158,7 +158,7 @@ export default function KycDocumentCaptureStep({
         <p className="font-medium">Tips for a good photo:</p>
         <ul className="space-y-0.5 list-disc list-inside text-blue-600">
           <li>Place document on a flat, dark surface</li>
-          <li>Ensure good lighting — avoid glare</li>
+          <li>Ensure good lighting and avoid glare</li>
           <li>All four corners must be visible</li>
           <li>Text must be sharp and readable</li>
         </ul>

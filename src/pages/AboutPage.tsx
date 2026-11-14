@@ -17,7 +17,7 @@ const AboutPage = () => {
             WE ARE MAKING CRYPTO AVAILABLE TO EVERYONE IN NIGERIA
           </h1>
           <p className="text-[#0E0F0C] font-light mt-4 text-xl">
-            Buy and sell crypto conveniently - you do not need a wallet,  just straight forward exchange of crypto for naira
+            Buy and sell crypto conveniently without an on-platform wallet: straightforward exchange between crypto and naira.
           </p>
         </aside>
         
@@ -40,7 +40,7 @@ const AboutPage = () => {
             </aside>
             <aside className="text-[#454745] text-lg md:text-2xl font-normal">
               <p className="mb-6">
-                Our platform makes crypto adoption in Nigeria effortless for everyone. We break down the barriers and ensure that anyone can conveniently and easily trade crypto for Naira.
+                Our platform makes exchanging crypto for naira simple and dependable. We provide clear rates, fast bank transfers, and responsive support.
               </p>
             </aside>
           </div>

@@ -218,7 +218,7 @@ export const useTransactionQuery = () => {
 
       return null;
     },
-    enabled: !!store.getState().transaction.dispute.details.id && !!matchRoute({ to: ROUTES.DISPUTE_DETAILS }),
+    enabled: !!store.getState().transaction.dispute.details.id && (!!matchRoute({ to: ROUTES.DISPUTE_DETAILS }) || !!matchRoute({ to: ROUTES.DISPUTE_LEGACY })),
     refetchInterval: TIME_IN_MILLISECONDS.FIVE_SECONDS,
   });
   
@@ -241,7 +241,7 @@ export const useTransactionQuery = () => {
 
       return null;
     },
-    enabled: !!store.getState().transaction.dispute.details.id && !!matchRoute({ to: ROUTES.DISPUTE_DETAILS }),
+    enabled: !!store.getState().transaction.dispute.details.id && (!!matchRoute({ to: ROUTES.DISPUTE_DETAILS }) || !!matchRoute({ to: ROUTES.DISPUTE_LEGACY })),
   });
 
   // Initiate Transaction Mutation

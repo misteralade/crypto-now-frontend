@@ -27,7 +27,8 @@ export const ROUTES = {
   DASHBOARD_KYC: '/dashboard/kyc',
   NOTIFICATIONS: '/dashboard/notifications',
   KYC: '/kyc',
-  DISPUTE_DETAILS: '/dispute/$id',
+  DISPUTE_DETAILS: '/dashboard/disputes/$id',
+  DISPUTE_LEGACY: '/dispute/$id',
 
 
   ABOUT: "/about",

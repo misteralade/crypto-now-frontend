@@ -198,7 +198,7 @@ export default function DashboardWalletsContent() {
             Your Crypto Wallets
           </h2>
           <p className="text-xs mt-1 max-w-sm" style={{ color: "#9A9A9A" }}>
-            Send crypto to any address below and receive NGN instantly to your bank account — no extra steps needed.
+            Send crypto to any address below to exchange it for naira sent directly to your bank account.
           </p>
         </div>
 

@@ -101,7 +101,7 @@ const FAQsNew = () => {
       className="relative py-20 px-4 overflow-hidden"
       style={{ background: "#0E0F0C" }}
     >
-      {/* Decorative arc rings — top-right */}
+      {/* Decorative arc rings: top-right */}
       <div
         className="pointer-events-none absolute right-0 top-0 z-0"
         style={{ width: "300px", height: "300px", transform: "translate(40%, -40%)" }}
@@ -110,7 +110,7 @@ const FAQsNew = () => {
         <div className="absolute rounded-full" style={{ inset: "48px", border: "1px solid rgba(148,142,238,0.08)" }} />
       </div>
 
-      {/* Purple glow — bottom-left */}
+      {/* Purple glow: bottom-left */}
       <div
         className="pointer-events-none absolute left-0 bottom-0 z-0"
         style={{

@@ -33,6 +33,7 @@ const getPageTitle = (pathname: string) => {
   if (pathname.startsWith(ROUTES.DASHBOARD_WALLETS)) return "Wallets";
   if (pathname.startsWith(ROUTES.TRANSACTION)) return "History";
   if (pathname.startsWith(ROUTES.PROFILE)) return "Profile";
+  if (pathname.includes("/dispute")) return "Dispute Details";
   return "Home";
 };
 

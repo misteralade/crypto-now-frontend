@@ -150,7 +150,7 @@ const TradeModal = ({ onClose }: TradeModalProps) => {
           ✕
         </button>
 
-        {/* Tabs — SELL first, BUY second */}
+        {/* Tabs: SELL first, BUY second */}
         <div className="flex border-b border-gray-100">
           {(["SELL", "BUY"] as const).map((tab) => (
             <button
@@ -209,7 +209,7 @@ const TradeModal = ({ onClose }: TradeModalProps) => {
             />
           </div>
 
-          {/* Quick chips — only shown for BUY (fiat amounts) */}
+          {/* Quick chips: only shown for BUY (fiat amounts) */}
           {!isSell && (
             <div className="flex gap-2">
               {(selectedCurrencyObj?.code === "NGN" ? QUICK_AMOUNTS_NGN : QUICK_AMOUNTS_USD).map((chip) => {
@@ -255,7 +255,7 @@ const TradeModal = ({ onClose }: TradeModalProps) => {
 
         {/* Footer */}
         <div className="border-t border-gray-100 pt-3 flex items-center justify-center gap-3 text-xs text-gray-400">
-          <span>Unlock more</span>
+          <span>Need higher limits?</span>
           <span className="text-gray-300">•</span>
           <button
             onClick={() => { navigate({ to: ROUTES.SIGNUP }); onClose(); }}

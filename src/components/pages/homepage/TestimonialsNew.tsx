@@ -5,32 +5,32 @@ import { usePublishedTestimonialsQuery } from "../../../queries/testimonial.quer
 import { TESTIMONIAL_CONTENT_TYPES } from "../../../util/constants.util.ts";
 import type { TestimonialResponse } from "../../../types/response.payload.types.ts";
 
-/* ── Fallback testimonials ── */
+/* Fallback testimonials */
 const FALLBACK_TESTIMONIALS: TestimonialResponse[] = [
   {
     id: "f1", creatorId: "", isPublished: true,
     contentType: TESTIMONIAL_CONTENT_TYPES.TEXT, contentLink: "",
     name: "Chukwuemeka A.",
-    description: "I sold BTC and the naira landed in under 10 minutes — no re-quote, no back-and-forth. That's the whole reason I moved off my old exchange.",
+    description: "I sold BTC and the naira arrived in under 10 minutes with no delays or back-and-forth. That's the whole reason I moved off my old exchange.",
     createdAt: "", updatedAt: "",
   },
   {
     id: "f2", creatorId: "", isPublished: true,
     contentType: TESTIMONIAL_CONTENT_TYPES.TEXT, contentLink: "",
     name: "Amara O.",
-    description: "The rate stayed locked for the full 3 minutes even though the market moved. Every other platform I'd used would've re-quoted me lower.",
+    description: "The quoted rate was clear and my bank transfer arrived promptly. The whole process was smooth.",
     createdAt: "", updatedAt: "",
   },
   {
     id: "f3", creatorId: "", isPublished: true,
     contentType: TESTIMONIAL_CONTENT_TYPES.TEXT, contentLink: "",
     name: "Tunde B.",
-    description: "Had a dispute on one transaction — flagged it and a real person resolved it the same day, not a bot loop.",
+    description: "Had a dispute on one transaction. I submitted a ticket from my dashboard and support resolved it the same day.",
     createdAt: "", updatedAt: "",
   },
 ];
 
-/* ── YouTube embed helper ── */
+/* YouTube embed helper */
 const toEmbedUrl = (url: string, autoplay = false) => {
   try {
     const u = new URL(url.trim());
@@ -49,7 +49,7 @@ const toEmbedUrl = (url: string, autoplay = false) => {
   return url;
 };
 
-/* ── Review label ── */
+/* Review label */
 const ReviewLabel = () => (
   <div className="inline-flex items-center gap-2 rounded-full border border-[#E9E9F2] bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#6B6E6B]">
     <span className="h-1.5 w-1.5 rounded-full bg-[#948EEE]" />
@@ -57,7 +57,7 @@ const ReviewLabel = () => (
   </div>
 );
 
-/* ── Skeleton ── */
+/* Skeleton */
 const SkeletonCard = () => (
   <div className="rounded-[24px] p-6 animate-pulse" style={{ background: "#fff", border: "1px solid rgba(15,23,42,0.06)" }}>
     <div className="inline-flex h-7 w-28 rounded-full bg-gray-100 mb-5" />
@@ -68,7 +68,7 @@ const SkeletonCard = () => (
   </div>
 );
 
-/* ── Full-screen video/image modal (desktop only) ── */
+/* Full-screen video/image modal (desktop only) */
 const ImmersiveModal = ({
   testimonial,
   onClose,
@@ -112,7 +112,7 @@ const ImmersiveModal = ({
           exit={{ opacity: 0 }}
         />
 
-        {/* Media — animates up from bottom */}
+        {/* Media: animates up from bottom */}
         <motion.div
           className="relative w-full h-full flex items-center justify-center"
           initial={{ y: 60, opacity: 0, scale: 0.97 }}
@@ -178,7 +178,7 @@ const ImmersiveModal = ({
   );
 };
 
-/* ── Individual card ── */
+/* Individual card */
 const TestimonialCard = ({
   testimonial,
   index,
@@ -226,7 +226,7 @@ const TestimonialCard = ({
     >
       <ReviewLabel />
 
-      {/* Video thumbnail — desktop: clickable to expand; mobile: inline iframe */}
+      {/* Video thumbnail: desktop clickable to expand; mobile inline iframe */}
       {testimonial.contentType === TESTIMONIAL_CONTENT_TYPES.VIDEO && (
         <>
           {/* Desktop: thumbnail with play overlay */}
@@ -271,7 +271,7 @@ const TestimonialCard = ({
         </>
       )}
 
-      {/* Image — desktop: click to expand; mobile: inline */}
+      {/* Image: desktop click to expand; mobile inline */}
       {testimonial.contentType === TESTIMONIAL_CONTENT_TYPES.IMAGE && (
         <div
           className={`w-full h-44 rounded-xl overflow-hidden bg-gray-100 ${window.innerWidth >= 768 ? "cursor-pointer" : ""}`}
@@ -312,7 +312,7 @@ const TestimonialCard = ({
   );
 };
 
-/* ── Section ── */
+/* Section */
 const TestimonialsNew = () => {
   const { testimonials, isLoading } = usePublishedTestimonialsQuery(1, 100);
   const headRef = useRef<HTMLDivElement>(null);
@@ -371,7 +371,7 @@ const TestimonialsNew = () => {
         )}
       </div>
 
-      {/* Immersive modal — desktop only */}
+      {/* Immersive modal: desktop only */}
       {activeModal && (
         <ImmersiveModal
           testimonial={activeModal}

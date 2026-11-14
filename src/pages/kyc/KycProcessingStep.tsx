@@ -91,7 +91,7 @@ export default function KycProcessingStep({
             Verifying your identity…
           </h2>
           <p className="mt-1 text-sm text-gray-500">
-            Do not close this page — your progress is saved if you do.
+            Please keep this window open while we finish verification.
           </p>
         </div>
       </div>

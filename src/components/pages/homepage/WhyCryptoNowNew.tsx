@@ -5,23 +5,23 @@ import { ShieldCheck, LockSimple, Lightning } from "@phosphor-icons/react";
 const features = [
   {
     icon: LockSimple,
-    label: "Rate locked",
-    title: "Your rate stays fixed for 5 full minutes.",
-    body: "Your rate is frozen for 5 minutes the moment you start. Powered by live CoinGecko data, there's zero slippage and zero guesswork. The price you see is exactly what you get.",
+    label: "Clear rates",
+    title: "See what you will receive before you send funds.",
+    body: "Our rates update with the live market, so you always see the estimated payout and fees upfront before confirming your trade.",
     align: "left" as const,
   },
   {
     icon: Lightning,
-    label: "Quick payout",
-    title: "Naira lands in your account in under 10 seconds.",
-    body: "No waiting around on the blockchain. The moment your trade confirms, your Naira lands in your account — under 10 seconds.",
+    label: "Automated payouts",
+    title: "Direct transfer to your Nigerian bank account.",
+    body: "When your crypto deposit reaches the required network confirmations, our system initiates your bank payout automatically.",
     align: "right" as const,
   },
   {
     icon: ShieldCheck,
-    label: "Human support",
-    title: "Let's chat on any of our support platforms.",
-    body: "Sometimes you just need to talk to a real person. Connect with our support team now, and we'll help you figure it out in no time.",
+    label: "Support when needed",
+    title: "Direct help if something goes wrong.",
+    body: "Every transaction can be tracked in your dashboard. If a transfer needs review or an issue arises, open a dispute and our team will assist you.",
     align: "left" as const,
   },
 ];
@@ -85,7 +85,7 @@ const WhyCryptoNowNew = () => {
       className="relative py-20 px-4 overflow-hidden"
       style={{ background: "#FAF9F7" }}
     >
-      {/* Faint arc decoration — bottom-left */}
+      {/* Faint arc decoration: bottom-left */}
       <div
         className="pointer-events-none absolute left-0 bottom-0 z-0 hidden sm:block"
         style={{ width: "320px", height: "320px", transform: "translate(-40%, 40%)" }}
@@ -104,18 +104,18 @@ const WhyCryptoNowNew = () => {
           className="mb-14"
         >
           <p className="text-xs font-semibold uppercase tracking-[0.18em] mb-3" style={{ color: "#8C87E6", fontFamily: "'DM Sans', sans-serif" }}>
-            Why us
+            Why CryptoNow
           </p>
           <h2
             className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight"
             style={{ color: "#0E0F0C", fontFamily: "'DM Sans', sans-serif" }}
           >
-            Tired of rates that move
+            A straightforward way to exchange
             <br />
-            before your trade clears?
+            crypto and naira.
           </h2>
           <p className="mt-3 text-base max-w-md" style={{ color: "#6B6E6B", fontFamily: "'DM Sans', sans-serif" }}>
-            If you've dealt with slow payouts or re-quoted rates on other exchanges, here's what we do differently.
+            Whether you are selling crypto to cover expenses or buying for your wallet, we keep each step clear and traceable.
           </p>
         </motion.div>
 

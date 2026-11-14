@@ -42,6 +42,7 @@ import { Route as DashboardKycRouteImport } from './routes/dashboard/kyc'
 import { Route as DashboardBuyRouteImport } from './routes/dashboard/buy'
 import { Route as DashboardTransactionsIndexRouteImport } from './routes/dashboard/transactions/index'
 import { Route as DashboardTransactionsIdRouteImport } from './routes/dashboard/transactions/$id'
+import { Route as DashboardDisputesIdRouteImport } from './routes/dashboard/disputes/$id'
 
 const VerifyAccountRoute = VerifyAccountRouteImport.update({
   id: '/verify-account',
@@ -221,6 +222,11 @@ const DashboardTransactionsIdRoute = DashboardTransactionsIdRouteImport.update({
   path: '/transactions/$id',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardDisputesIdRoute = DashboardDisputesIdRouteImport.update({
+  id: '/disputes/$id',
+  path: '/disputes/$id',
+  getParentRoute: () => DashboardRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -254,6 +260,7 @@ export interface FileRoutesByFullPath {
   '/sign-in/verify': typeof SignInVerifyRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/sign-in/': typeof SignInIndexRoute
+  '/dashboard/disputes/$id': typeof DashboardDisputesIdRoute
   '/dashboard/transactions/$id': typeof DashboardTransactionsIdRoute
   '/dashboard/transactions/': typeof DashboardTransactionsIndexRoute
 }
@@ -288,6 +295,7 @@ export interface FileRoutesByTo {
   '/sign-in/verify': typeof SignInVerifyRoute
   '/dashboard': typeof DashboardIndexRoute
   '/sign-in': typeof SignInIndexRoute
+  '/dashboard/disputes/$id': typeof DashboardDisputesIdRoute
   '/dashboard/transactions/$id': typeof DashboardTransactionsIdRoute
   '/dashboard/transactions': typeof DashboardTransactionsIndexRoute
 }
@@ -324,6 +332,7 @@ export interface FileRoutesById {
   '/sign-in/verify': typeof SignInVerifyRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/sign-in/': typeof SignInIndexRoute
+  '/dashboard/disputes/$id': typeof DashboardDisputesIdRoute
   '/dashboard/transactions/$id': typeof DashboardTransactionsIdRoute
   '/dashboard/transactions/': typeof DashboardTransactionsIndexRoute
 }
@@ -361,6 +370,7 @@ export interface FileRouteTypes {
     | '/sign-in/verify'
     | '/dashboard/'
     | '/sign-in/'
+    | '/dashboard/disputes/$id'
     | '/dashboard/transactions/$id'
     | '/dashboard/transactions/'
   fileRoutesByTo: FileRoutesByTo
@@ -395,6 +405,7 @@ export interface FileRouteTypes {
     | '/sign-in/verify'
     | '/dashboard'
     | '/sign-in'
+    | '/dashboard/disputes/$id'
     | '/dashboard/transactions/$id'
     | '/dashboard/transactions'
   id:
@@ -430,6 +441,7 @@ export interface FileRouteTypes {
     | '/sign-in/verify'
     | '/dashboard/'
     | '/sign-in/'
+    | '/dashboard/disputes/$id'
     | '/dashboard/transactions/$id'
     | '/dashboard/transactions/'
   fileRoutesById: FileRoutesById
@@ -694,6 +706,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardTransactionsIdRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/disputes/$id': {
+      id: '/dashboard/disputes/$id'
+      path: '/disputes/$id'
+      fullPath: '/dashboard/disputes/$id'
+      preLoaderRoute: typeof DashboardDisputesIdRouteImport
+      parentRoute: typeof DashboardRoute
+    }
   }
 }
 
@@ -705,6 +724,7 @@ interface DashboardRouteChildren {
   DashboardSellRoute: typeof DashboardSellRoute
   DashboardWalletsRoute: typeof DashboardWalletsRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardDisputesIdRoute: typeof DashboardDisputesIdRoute
   DashboardTransactionsIdRoute: typeof DashboardTransactionsIdRoute
   DashboardTransactionsIndexRoute: typeof DashboardTransactionsIndexRoute
 }
@@ -717,6 +737,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardSellRoute: DashboardSellRoute,
   DashboardWalletsRoute: DashboardWalletsRoute,
   DashboardIndexRoute: DashboardIndexRoute,
+  DashboardDisputesIdRoute: DashboardDisputesIdRoute,
   DashboardTransactionsIdRoute: DashboardTransactionsIdRoute,
   DashboardTransactionsIndexRoute: DashboardTransactionsIndexRoute,
 }

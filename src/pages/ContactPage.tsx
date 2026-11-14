@@ -77,13 +77,13 @@ const ContactPage = () => {
             Get in touch with us
           </h1>
           <p className="mt-4 text-base md:text-lg max-w-xl mx-auto" style={{ color: "rgba(14,15,12,0.5)" }}>
-            Whether you have a question, need help with your account, or want to share feedback — we're ready to assist you.
+            If you have a question, need help with a transaction, or want to share feedback, we are here to help.
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12 items-start">
 
-          {/* LHS — contact info */}
+          {/* LHS: contact info */}
           <aside className="lg:col-span-2 space-y-5">
 
             <div

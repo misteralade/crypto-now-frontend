@@ -131,27 +131,27 @@ export const SEO_CONFIGS: Record<string, SEOData> = {
   '/': {
     title: 'CryptoNow - Buy and Sell Cryptocurrency in Nigeria',
     description:
-      "CryptoNow (CryptoNow NG) is Nigeria's leading cryptocurrency exchange platform. Buy and sell Bitcoin, Ethereum, and other cryptocurrencies instantly with Naira. Secure, fast, and reliable crypto trading in Nigeria.",
+      'CryptoNow is a Nigerian cryptocurrency exchange. Exchange crypto for naira with clear rates, direct bank payouts, and responsive support.',
     keywords:
       'CryptoNow, CryptoNow NG, cryptocurrency Nigeria, buy bitcoin Nigeria, sell bitcoin Nigeria, crypto exchange Nigeria, buy ethereum Nigeria, cryptocurrency trading, crypto Nigeria',
   },
   '/about': {
     title: 'About Us - CryptoNow',
     description:
-      'Learn about CryptoNow (CryptoNow NG), Nigeria\'s trusted cryptocurrency exchange platform. We provide secure, fast, and reliable crypto trading services.',
+      'Learn about CryptoNow, our platform for exchanging crypto and naira with clear rates and direct bank transfers.',
     keywords: 'CryptoNow, CryptoNow NG, about cryptonow, cryptocurrency exchange Nigeria, crypto platform',
   },
   '/rates': {
     title: 'Cryptocurrency Exchange Rates - CryptoNow',
     description:
-      'View real-time cryptocurrency exchange rates in Nigeria on CryptoNow. Get the best rates for Bitcoin, Ethereum, and other cryptocurrencies.',
+      'View real-time cryptocurrency exchange rates for naira on CryptoNow. Check live buy and sell prices for supported coins.',
     keywords:
       'CryptoNow, CryptoNow NG, crypto rates Nigeria, bitcoin rate, ethereum rate, cryptocurrency prices Nigeria',
   },
   '/contact': {
     title: 'Contact Us - CryptoNow',
     description:
-      'Get in touch with CryptoNow. We\'re here to help with your cryptocurrency trading needs. Contact our support team.',
+      'Get in touch with CryptoNow. Contact our support team for help with transactions and account inquiries.',
     keywords: 'CryptoNow, CryptoNow NG, contact cryptonow, crypto support Nigeria, customer service',
   },
   '/privacy-policy': {

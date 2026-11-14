@@ -514,7 +514,7 @@ const AppSimCard = () => {
   const [activeSellPreset, setActiveSellPreset] = useState<number | "custom" | null>(null);
   const [customSellAmount, setCustomSellAmount] = useState("");
   // Set only when a keystroke or preset/custom amount was rejected for pushing
-  // the amount past the anonymous max — cleared as soon as the amount is back
+  // the amount past the anonymous max: cleared as soon as the amount is back
   // within range. Mirrors DashboardTradeStep1's BuyFields.handleAmountChange.
   const [maxLimitMessage, setMaxLimitMessage] = useState<string | null>(null);
   const [guestTransactionStatus, setGuestTransactionStatus] =
@@ -1021,7 +1021,7 @@ const AppSimCard = () => {
   }, [buyInputCurrency, isBuy, selectedCrypto, sellReceiveCurrency]);
 
   // Prefetch the rate the instant a crypto is selected (or the buy/sell tab
-  // or quote currency changes) — well before the user types an amount. This
+  // or quote currency changes): well before the user types an amount. This
   // just warms getExchangeRateWithCache's cache, so the amount-driven
   // fetchRate() below resolves instantly off cache instead of waiting on a
   // network round-trip once the user starts typing.
@@ -1168,7 +1168,7 @@ const AppSimCard = () => {
     );
     if (!data?.fiatRate) return;
 
-    // Keep full calc precision here — this becomes `amount`, which is later parsed
+    // Keep full calc precision here: this becomes `amount`, which is later parsed
     // back into submittedCryptoAmount for the actual trade. Running it through
     // formatForDisplay would re-truncate to the token's (smaller) displayDecimals
     // and silently submit less crypto than roundTokenAmountUp actually quoted.
@@ -1178,7 +1178,7 @@ const AppSimCard = () => {
 
     // Reject the preset/custom chip outright (leave the field as it was) and
     // surface the max as inline red text, rather than silently rewriting the
-    // chip's amount down to the max — mirrors DashboardTradeStep1.
+    // chip's amount down to the max (mirrors DashboardTradeStep1).
     if (
       anonymousMaximumCryptoAmount > 0 &&
       Number(roundedCryptoAmount) > anonymousMaximumCryptoAmount
@@ -1213,7 +1213,7 @@ const AppSimCard = () => {
     setGuestError(null);
   };
 
-  // Raw crypto-amount input (top box) — cleans the keystroke and rejects it
+  // Raw crypto-amount input (top box): cleans the keystroke and rejects it
   // outright if it would push the amount past the anonymous max, same as
   // DashboardTradeStep1's BuyFields.handleAmountChange.
   const handleAmountChange = (value: string) => {
@@ -1648,7 +1648,7 @@ const AppSimCard = () => {
                     className="flex-1 bg-transparent outline-none text-2xl font-bold text-[#0E0F0C] placeholder:text-gray-200"
                   />
                 </div>
-                {/* Min/max limit feedback — shown immediately as the user types
+                {/* Min/max limit feedback: shown immediately as the user types
                     or picks a preset, instead of only surfacing on submit. */}
                 {(maxLimitMessage || minLimitMessage) && (
                   <div className="px-4 pb-2 -mt-1">
@@ -1678,7 +1678,7 @@ const AppSimCard = () => {
                     )}
                   </div>
                 )}
-                {/* NGN / USD toggle — sits right above the preset chips it controls, so
+                {/* NGN / USD toggle: sits right above the preset chips it controls, so
                     it reads as "this switch picks the currency of the row below" rather
                     than a generic header control. */}
                 {(!loadingSupportedCurrencies || supportedCurrencies?.length) && usdCurrencyObj && (
@@ -1858,12 +1858,10 @@ const AppSimCard = () => {
                 style={{ background: "white", border: "1.5px solid #E8E8E8" }}
               >
                 <p className="text-sm font-bold text-[#0E0F0C] flex items-center gap-1.5">
-                  <Lock size={15} weight="duotone" /> Unlock More with an
-                  Account
+                  <Lock size={15} weight="duotone" /> Higher limits with an account
                 </p>
                 <p className="text-xs text-gray-400">
-                  Higher limits · Full order history · Priority support · Faster
-                  trades
+                  Higher limits · Full order history · Direct support
                 </p>
                 <div className="flex gap-2 mt-1">
                   <button
@@ -1946,7 +1944,7 @@ const AppSimCard = () => {
                 mono
               />
 
-              {/* Network selector — hidden when only one option */}
+              {/* Network selector: hidden when only one option */}
               {allowedNetworks.length > 1 ? (
                 <div
                   className="flex flex-col rounded-xl px-4 pt-2 pb-2 text-left relative"
@@ -2067,12 +2065,12 @@ const AppSimCard = () => {
                 value={email}
                 onChange={handleEmailChange}
                 onBlur={handleEmailBlur}
-                placeholder="you@email.com — for payout updates"
+                placeholder="you@email.com for transaction updates"
                 type="email"
                 error={emailError}
               />
 
-              {/* Network selector — hidden when only one option */}
+              {/* Network selector: hidden when only one option */}
               {allowedNetworks.length > 1 ? (
                 <div
                   className="flex flex-col rounded-xl px-4 pt-2 pb-2 text-left relative"
@@ -2243,7 +2241,7 @@ const AppSimCard = () => {
                     <span className="text-white font-bold text-lg">
                       {receiveAmount
                         ? `${currSymbol}${parseFloat(receiveAmount).toLocaleString()}`
-                        : "—"}
+                        : "-"}
                     </span>
                   </div>
                 </div>
@@ -2351,7 +2349,7 @@ const AppSimCard = () => {
                 onClick={() => setDone(true)}
                 className="text-center text-xs text-gray-400 hover:underline cursor-pointer bg-transparent border-none py-1"
               >
-                Skip — upload later
+                Skip and upload later
               </button>
             </motion.div>
           )}
@@ -2468,8 +2466,8 @@ const AppSimCard = () => {
                 className="rounded-xl p-3"
                 style={{ background: "white", border: "1.5px solid #E8E8E8" }}
               >
-                <SRow label="Payout Bank" value={guestTransactionStatus?.userBankAccount?.bank?.name ?? "—"} />
-                <SRow label="Account" value={guestTransactionStatus?.userBankAccount?.accountNumber ?? "—"} />
+                <SRow label="Payout Bank" value={guestTransactionStatus?.userBankAccount?.bank?.name ?? "-"} />
+                <SRow label="Account" value={guestTransactionStatus?.userBankAccount?.accountNumber ?? "-"} />
                 {guestTransactionStatus?.status && (
                   <SRow label="Status" value={guestTransactionStatus.status} />
                 )}
@@ -2761,8 +2759,8 @@ const AppSimCard = () => {
                         green
                       />
                     )}
-                    <SRow label="Sent To Bank" value={guestTransactionStatus?.userBankAccount?.bank?.name ?? "—"} />
-                    <SRow label="Account No." value={guestTransactionStatus?.userBankAccount?.accountNumber ?? "—"} />
+                    <SRow label="Sent To Bank" value={guestTransactionStatus?.userBankAccount?.bank?.name ?? "-"} />
+                    <SRow label="Account No." value={guestTransactionStatus?.userBankAccount?.accountNumber ?? "-"} />
                     <SRow label="Updates to" value={email} />
                   </>
                 )}
@@ -2776,11 +2774,10 @@ const AppSimCard = () => {
                 style={{ background: "#F5F5F5", border: "1.5px solid #E8E8E8" }}
               >
                 <p className="text-sm font-bold text-[#0E0F0C] mb-1 flex items-center gap-1.5">
-                  <TrendUp size={15} weight="duotone" /> Get the Full Experience
+                  <TrendUp size={15} weight="duotone" /> Create an Account
                 </p>
                 <p className="text-xs text-gray-400 mb-3">
-                  Sign up free to unlock order history, higher limits up to
-                  $10,000, priority support, and faster conversions.
+                  Sign up to track order history, access higher transaction limits, and manage saved bank accounts.
                 </p>
                 <div className="flex gap-2">
                   <button

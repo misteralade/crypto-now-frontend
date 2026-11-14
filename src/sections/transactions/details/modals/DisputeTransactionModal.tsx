@@ -53,7 +53,7 @@ const DisputeTransactionModal = ({ transactionId, onClose, onSubmit }: DisputeTr
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
   const [uploadedAttachments, setUploadedAttachments] = useState<MessageAttachment[]>([]);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  // Uploaded attachments live in a private bucket — att.url isn't signed and
+  // Uploaded attachments live in a private bucket: att.url isn't signed and
   // 404s if rendered directly. The image is already sitting in the browser
   // from the local file the user picked, so keep that blob preview alive
   // (keyed by the attachment's final url) instead of trying to (re)fetch a
@@ -62,7 +62,7 @@ const DisputeTransactionModal = ({ transactionId, onClose, onSubmit }: DisputeTr
   const attachmentPreviewsRef = useRef(attachmentPreviews);
   attachmentPreviewsRef.current = attachmentPreviews;
 
-  // Lock the background page's scroll while this modal is mounted — without
+  // Lock the background page's scroll while this modal is mounted: without
   // this, dragging inside the modal's scrollable body on mobile scrolled the
   // page behind it instead (the overlay is `fixed`, but that alone doesn't
   // stop background scroll on touch devices).
@@ -164,7 +164,7 @@ const DisputeTransactionModal = ({ transactionId, onClose, onSubmit }: DisputeTr
         setUploadedAttachments((prev) => [...prev, attachment]);
         setUploadingFiles((prev) => prev.filter((f) => f.id !== uploadingFile.id));
         // Hand the blob preview off to the "uploaded" list under its final
-        // url instead of revoking it — att.url points at a private bucket
+        // url instead of revoking it: att.url points at a private bucket
         // object with no signed access, so this blob is the only viewable
         // copy of the image there ever will be in this modal.
         if (uploadingFile.localPreview) {
@@ -275,7 +275,7 @@ const DisputeTransactionModal = ({ transactionId, onClose, onSubmit }: DisputeTr
                   "Ensure all transaction details are correct",
                   "Provide clear evidence of the issue",
                   "Our team resolves cases as soon as possible",
-                  "Disputes are in a live queue — please be patient",
+                  "Disputes are reviewed in order. We will respond in this message thread",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2 text-xs" style={{ color: "#7A6000" }}>
                     <span className="mt-0.5 shrink-0">•</span>
