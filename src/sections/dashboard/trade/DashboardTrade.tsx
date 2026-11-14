@@ -78,12 +78,6 @@ export default function DashboardTrade({
     })();
 
   const [step, setStep] = useState<number>(initialStep ?? (activeSessionId ? 2 : 1));
-  const previousStepRef = useRef(step);
-  useEffect(() => {
-    if (previousStepRef.current === step) return;
-    previousStepRef.current = step;
-    window.scrollTo(0, 0);
-  }, [step]);
   const [activeTab, setActiveTab] = useState<TradeType>(
     initialTradeType ?? (routeOption?.toLowerCase() === "sell" ? "sell" : "buy")
   );
