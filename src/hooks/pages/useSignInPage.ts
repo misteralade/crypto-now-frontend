@@ -1,5 +1,6 @@
-import { isEmailVerificationRequired } from "../../util/auth-error.util.ts";
+import { isEmailVerificationRequired, wasVerificationEmailSent } from "../../util/auth-error.util.ts";
 import { useState } from "react";
+import { startVerificationCooldown } from "../../util/verification-cooldown.ts";
 import { useNavigate } from "@tanstack/react-router";
 import { BASIC } from "../../config/index.config.ts";
 import { ROUTES } from "../../util/constants.util.ts";
@@ -37,9 +38,11 @@ export const useSignInPage = () => {
       }
     } catch (error) {
       if (isEmailVerificationRequired(error)) {
+        const alreadySent = wasVerificationEmailSent(error);
+        if (alreadySent) startVerificationCooldown();
         await navigate({
           to: ROUTES.CHECK_EMAIL,
-          search: { email: values.email, send: crypto.randomUUID() },
+          search: { email: values.email, send: alreadySent ? undefined : crypto.randomUUID() },
           replace: true,
         });
       }
