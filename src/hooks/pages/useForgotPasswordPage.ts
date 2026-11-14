@@ -3,6 +3,7 @@ import {authServiceApi} from "../../api/auth.api.ts";
 import {emailValidation} from "../../util/constants.regex.util.ts";
 import type {AuthResponse} from "../../types/response.payload.types.ts";
 import {toast} from "react-toastify";
+import {extractErrorMessage} from "../../util/index.util.ts";
 
 export const useForgotPasswordPage = () => {
   const [email, setEmail] = useState("");
@@ -33,8 +34,8 @@ export const useForgotPasswordPage = () => {
         toast.success(message);
       }
       
-    } catch (error: any) {
-      setError(error.message || 'Request Failed');
+    } catch (error: unknown) {
+      setError(extractErrorMessage(error) || "Something went wrong.");
     } finally {
       setIsLoading(false);
     }

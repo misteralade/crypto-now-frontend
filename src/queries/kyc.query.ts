@@ -5,13 +5,8 @@ import { QUERY_KEYS } from "./query.keys.ts";
 import { kycServiceApi } from "../api/kyc.api.ts";
 import { setKycSession } from "../redux/kyc.slice.ts";
 import { getAccessToken } from "../util/auth-session.util.ts";
+import { extractErrorMessage as getErrorMessage } from "../util/index.util.ts";
 import type { AxiosServerError } from "../types/response.payload.types.ts";
-
-function extractErrorMessage(error: AxiosServerError): string {
-  return (
-    error.response?.data?.message || error.message || "Something went wrong"
-  );
-}
 
 export const useKycQuery = () => {
   const dispatch = useDispatch();
@@ -50,7 +45,7 @@ export const useKycQuery = () => {
       }
     },
     onError: (error: AxiosServerError) => {
-      toast.error(extractErrorMessage(error));
+      toast.error(getErrorMessage(error) || "Something went wrong.");
     },
   });
 
@@ -70,7 +65,7 @@ export const useKycQuery = () => {
       }
     },
     onError: (error: AxiosServerError) => {
-      toast.error(extractErrorMessage(error));
+      toast.error(getErrorMessage(error) || "Something went wrong.");
     },
   });
 
@@ -79,7 +74,7 @@ export const useKycQuery = () => {
     mutationFn: () => kycServiceApi.startDiditVerification(),
     retry: false,
     onError: (error: AxiosServerError) => {
-      toast.error(extractErrorMessage(error));
+      toast.error(getErrorMessage(error) || "Something went wrong.");
     },
   });
 
@@ -101,7 +96,7 @@ export const useKycQuery = () => {
       }
     },
     onError: (error: AxiosServerError) => {
-      toast.error(extractErrorMessage(error));
+      toast.error(getErrorMessage(error) || "Something went wrong.");
     },
   });
 
@@ -131,7 +126,7 @@ export const useKycQuery = () => {
       });
     },
     onError: (error: AxiosServerError) => {
-      toast.error(extractErrorMessage(error));
+      toast.error(getErrorMessage(error) || "Something went wrong.");
     },
   });
 

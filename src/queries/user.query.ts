@@ -37,7 +37,6 @@ export const useUserQuery = () => {
     onSuccess: ({ success, message }) => {
       toast.dismiss();
       if (success) {
-        toast.success(message);
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.USER.GET_PROFILE] });
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.USER.ONBOARDING_STATUS] });
       } else {
@@ -83,7 +82,6 @@ export const useUserQuery = () => {
     onSuccess: ({ success, message }) => {
       toast.dismiss();
       if (success) {
-        toast.success(message);
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.USER.GET_PROFILE] });
       } else {
         toast.error(message);

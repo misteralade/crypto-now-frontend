@@ -92,13 +92,15 @@ export const useBankQuery = () => {
       // Invalidate and refetch user bank accounts after mutation
       if (success) {
         toast.dismiss(QUERY_KEYS.BANK.CREATE_USER_BANK_ACCOUNT);
-        toast.success(message || 'Account created successfully.');
         queryClient.invalidateQueries({
           queryKey: [QUERY_KEYS.BANK.USER_BANK_ACCOUNTS]
         });
         queryClient.invalidateQueries({
           queryKey: [QUERY_KEYS.USER.ONBOARDING_STATUS]
         });
+      } else {
+        toast.dismiss(QUERY_KEYS.BANK.CREATE_USER_BANK_ACCOUNT);
+        toast.error(message);
       }
 
       return { success, message };
@@ -127,10 +129,12 @@ export const useBankQuery = () => {
       // Invalidate and refetch user bank accounts after mutation
       if (success) {
         toast.dismiss();
-        toast.success(message || 'Default bank account updated successfully.');
         queryClient.invalidateQueries({
           queryKey: [QUERY_KEYS.BANK.USER_BANK_ACCOUNTS]
         });
+      } else {
+        toast.dismiss();
+        toast.error(message);
       }
       
       return { success, message };
@@ -163,7 +167,6 @@ export const useBankQuery = () => {
       // Invalidate and refetch user bank accounts after mutation
       toast.dismiss();
       if (success) {
-        toast.success(message || 'Bank account successfully deleted.');
         queryClient.invalidateQueries({
           queryKey: [QUERY_KEYS.BANK.USER_BANK_ACCOUNTS]
         });

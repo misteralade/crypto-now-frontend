@@ -1,5 +1,6 @@
 import {clearUserSessionStorage} from "./tradeProgress.storage.util.ts";
 import {clearAccessToken} from "./auth-session.util.ts";
+import axios, { AxiosError } from "axios";
 import type {AxiosServerError} from "../types/response.payload.types.ts";
 import {ZodError} from "zod";
 
@@ -52,7 +53,7 @@ export const formatFileSize = (bytes: number) => {
 export const extractErrorMessage = (error: AxiosServerError | ZodError | Error | unknown): string | undefined => {
   // Handle ZodError instances (client-side validation)
   // Handle server-side ZodError
-  if (error && typeof error === 'object' && 'response' in error) {
+  if (axios.isAxiosError(error)) {
     const axiosError = error as AxiosServerError;
     const errorData = axiosError?.response?.data?.error;
     
@@ -87,7 +88,7 @@ export const extractErrorMessage = (error: AxiosServerError | ZodError | Error |
   }
 
   // Handle AxiosError with StandardizedServerError response
-  if (error && typeof error === 'object' && 'response' in error) {
+  if (axios.isAxiosError(error)) {
     const axiosError = error as AxiosServerError;
     const { response } = axiosError;
 
@@ -128,8 +129,8 @@ export const extractErrorMessage = (error: AxiosServerError | ZodError | Error |
       // No response means network error or request was cancelled
       if ('code' in axiosError && typeof axiosError.code === 'string') {
         const code = axiosError.code;
-        if (code === 'ERR_NETWORK') {
-          return 'Network error. Please check your internet connection.';
+        if (code === AxiosError.ERR_NETWORK) {
+          return 'Something went wrong.';
         }
         if (code === 'ECONNABORTED' || code === 'ERR_CANCELED') {
           return 'Request was cancelled or timed out.';

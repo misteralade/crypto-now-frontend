@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import axios, { type AxiosRequestHeaders } from "axios";
+import axios, { AxiosError, type AxiosRequestHeaders } from "axios";
 import * as Sentry from "@sentry/react";
 import {BASIC} from "../config/index.config.ts";
 import {ROUTES} from "../util/constants.util.ts";
@@ -49,6 +49,15 @@ API_KIT.interceptors.response.use(
   },
   async (error) => {
     if (axios.isAxiosError(error)) {
+      if (error.code === AxiosError.ERR_NETWORK) {
+        Sentry.withScope((scope) => {
+          scope.setLevel("fatal");
+          scope.setTag("error_category", "api_unreachable");
+          scope.setTag("http_method", error.config?.method ?? "unknown");
+          Sentry.captureException(new Error("API server unreachable"));
+        });
+      }
+
       const status = error.response?.status;
       const message = error.response?.data?.message?.toLowerCase();
 

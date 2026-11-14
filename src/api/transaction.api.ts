@@ -45,7 +45,6 @@ class TransactionServiceApi {
     )
 
     if (response.success) {
-      toast.success(response.message);
       return response.data;
     } else {
       toast.error(response.message);
@@ -64,7 +63,6 @@ class TransactionServiceApi {
     )
     
     if (response.success) {
-      toast.success(response.message);
       return response.data;
     } else {
       toast.error(response.message);

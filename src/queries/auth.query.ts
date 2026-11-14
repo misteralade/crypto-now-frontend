@@ -25,10 +25,7 @@ export const useAuthQuery = () => {
       toast.dismiss();
       setLoggingInLoading(false);
       if (success) {
-        toast.success(message || "Login successfully.");
-        setTimeout(() => {
-          window.location.href = ROUTES.DASHBOARD;
-        }, 3000);
+        window.location.href = ROUTES.DASHBOARD;
       } else {
         toast.error(message || "Login failed");
       }
@@ -130,9 +127,7 @@ export const useAuthQuery = () => {
     },
     onSuccess: ({ success, message }) => {
       toast.dismiss();
-      if (success) {
-        toast.success(message);
-      } else {
+      if (!success) {
         toast.error(message || "Failed to login");
       }
     },

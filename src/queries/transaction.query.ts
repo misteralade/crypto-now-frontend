@@ -283,13 +283,12 @@ export const useTransactionQuery = () => {
 
       return await transactionServiceApi.initiateTransaction(payload);
     },
-    onSuccess: ({ data, message }) => {
+    onSuccess: ({ data }) => {
       toast.dismiss(QUERY_KEYS.TRANSACTION.INITIATE_TRANSACTION);
       console.info("[trade] initiated transaction", {
         sessionId: data?.sessionId,
       });
       sessionStorage.setItem(SESSION_STORAGE_KEYS.SESSION_ID, data?.sessionId as string);
-      toast.success(message);
     },
     onError: ( error: AxiosServerError ) => {
       toast.dismiss(QUERY_KEYS.TRANSACTION.INITIATE_TRANSACTION);
@@ -453,7 +452,6 @@ export const useTransactionQuery = () => {
     },
     onSuccess: async () => {
       toast.dismiss('confirm-receiving-account');
-      toast.success('Successfully confirmed receiving account');
       // Note: clearTradeProgress and step reset are handled in handleConfirmBankDetails
       sessionStorage.removeItem(SESSION_STORAGE_KEYS.SESSION_ID);
       await refreshTransactionData();
@@ -479,9 +477,8 @@ export const useTransactionQuery = () => {
       toast.loading(`Initiating dispute...`, { toastId: QUERY_KEYS.DISPUTE.INITIATE_DISPUTE_TRANSACTION });
       return await disputeServiceApi.initiateDisputeTransaction(sessionId, { reason, attachments: attachments as any });
     },
-    onSuccess: async ({ message, data }) => {
+    onSuccess: async ({ data }) => {
       toast.dismiss(QUERY_KEYS.DISPUTE.INITIATE_DISPUTE_TRANSACTION);
-      toast.success(message);
       // The transaction just flipped to DISPUTED server-side, and a dispute
       // now exists for it — refetch both so the title/status and the Dispute
       // button reflect that immediately instead of needing a manual refresh.
@@ -524,12 +521,11 @@ export const useTransactionQuery = () => {
       toast.loading(`Sending message...`, { toastId: QUERY_KEYS.DISPUTE.USER_SEND_DISPUTE_MESSAGE });
       return await disputeServiceApi.sendDisputeMessage(disputeId, message || '', attachments as Array<MessageAttachment>);
     },
-    onSuccess: ({ message }) => {
+    onSuccess: () => {
       toast.dismiss(QUERY_KEYS.DISPUTE.USER_SEND_DISPUTE_MESSAGE);
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.DISPUTE.GET_DISPUTE_MESSAGES]
       });
-      toast.success(message);
     },
     onError: ( error: AxiosServerError ) => {
       toast.dismiss(QUERY_KEYS.DISPUTE.USER_SEND_DISPUTE_MESSAGE);
@@ -597,9 +593,7 @@ export const useTransactionQuery = () => {
     },
     onSuccess: ({ message, success }) => {
       toast.dismiss();
-      if (success) {
-        toast.success(message);
-      } else {
+      if (!success) {
         toast.error(message)
       }
     },
@@ -622,9 +616,7 @@ export const useTransactionQuery = () => {
     },
     onSuccess: ({ message, success }) => {
       toast.dismiss();
-      if (success) {
-        toast.success(message);
-      } else {
+      if (!success) {
         toast.error(message)
       }
     },
