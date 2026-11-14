@@ -1,6 +1,31 @@
 ﻿// Status categories for semantic grouping
 import type { TransactionStatus } from "../types/request.payload.types.ts";
 
+export const TRANSACTION_STATUS = {
+  INITIATED: "INITIATED",
+  AWAITING_PAYMENT: "AWAITING_PAYMENT",
+  IN_REVIEW: "IN_REVIEW",
+  PROCESSING: "PROCESSING",
+  AWAITING_CRYPTO: "AWAITING_CRYPTO",
+  COMPLETED: "COMPLETED",
+  FAILED: "FAILED",
+  EXPIRED: "EXPIRED",
+  CANCELLED: "CANCELLED",
+  DISPUTED: "DISPUTED",
+  REFUNDED: "REFUNDED",
+  DEPOSIT_DETECTED: "DEPOSIT_DETECTED",
+  PENDING_CONFIRMATION: "PENDING_CONFIRMATION",
+  DEPOSIT_PENDING_MINIMUM: "DEPOSIT_PENDING_MINIMUM",
+  DEPOSIT_CONFIRMED: "DEPOSIT_CONFIRMED",
+  NO_OWNER: "NO_OWNER",
+  PAYOUT_INITIATED: "PAYOUT_INITIATED",
+  PENDING_PAYOUT: "PENDING_PAYOUT",
+  PAYOUT_FAILED: "PAYOUT_FAILED",
+} as const;
+
+export type TransactionStatusType =
+  (typeof TRANSACTION_STATUS)[keyof typeof TRANSACTION_STATUS];
+
 /**
  * `amountFiat` is stored in the transaction's settlement `currency`, which is
  * USD for stablecoin trades : not always NGN. Anywhere the amount is shown

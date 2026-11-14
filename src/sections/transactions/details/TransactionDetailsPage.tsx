@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   ArrowLeft,
   Check,
+  ChevronRight,
   Clock,
   Copy,
   ExternalLink,
@@ -21,7 +22,7 @@ import momentClient from "../../../lib/moment.ts";
 import DisputeTransactionModal from "./modals/DisputeTransactionModal.tsx";
 import TransactionReceiptsSection from "./TransactionReceiptsSection.tsx";
 import TransactionContextCard from "./TransactionContextCard.tsx";
-import { getStatusDisplayName } from "../../../util/transaction.util.ts";
+import { getStatusDisplayName, TRANSACTION_STATUS } from "../../../util/transaction.util.ts";
 
 const TransactionDetailsPage = () => {
   const navigate = useNavigate();
@@ -355,27 +356,53 @@ const TransactionDetailsPage = () => {
                   </div>
                 </div>
                 <div className="mt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                  <span
-                    className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold whitespace-nowrap self-start shrink-0"
-                    style={{
-                      background: transactionColorScheme?.bg?.includes("green")
-                        ? "#E8F8F0"
-                        : transactionColorScheme?.bg?.includes("red")
-                        ? "#FEECEC"
-                        : transactionColorScheme?.bg?.includes("yellow")
-                        ? "#FFF3D0"
-                        : "#F0EFFD",
-                      color: transactionColorScheme?.bg?.includes("green")
-                        ? "#037847"
-                        : transactionColorScheme?.bg?.includes("red")
-                        ? "#EB5757"
-                        : transactionColorScheme?.bg?.includes("yellow")
-                        ? "#A07000"
-                        : "#575AE5",
-                    }}
-                  >
-                    {getStatusDisplayName(transaction.status)}
-                  </span>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span
+                      className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold whitespace-nowrap self-start shrink-0"
+                      style={{
+                        background: transactionColorScheme?.bg?.includes("green")
+                          ? "#E8F8F0"
+                          : transactionColorScheme?.bg?.includes("red")
+                          ? "#FEECEC"
+                          : transactionColorScheme?.bg?.includes("yellow")
+                          ? "#FFF3D0"
+                          : "#F0EFFD",
+                        color: transactionColorScheme?.bg?.includes("green")
+                          ? "#037847"
+                          : transactionColorScheme?.bg?.includes("red")
+                          ? "#EB5757"
+                          : transactionColorScheme?.bg?.includes("yellow")
+                          ? "#A07000"
+                          : "#575AE5",
+                      }}
+                    >
+                      {getStatusDisplayName(transaction.status)}
+                    </span>
+
+                    {(transaction.status === TRANSACTION_STATUS.DISPUTED || !!disputeForTransaction) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (disputeForTransaction?.id) {
+                            navigate({
+                              to: ROUTES.DISPUTE_DETAILS,
+                              params: { id: disputeForTransaction.id },
+                            });
+                          } else {
+                            toggleDisputeTransaction();
+                          }
+                        }}
+                        className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold transition-all active:scale-95 cursor-pointer hover:opacity-90 shadow-sm"
+                        style={{
+                          background: "#03034D",
+                          color: "#FFFFFF",
+                        }}
+                      >
+                        <span>View Dispute</span>
+                        <ChevronRight size={12} strokeWidth={2.5} />
+                      </button>
+                    )}
+                  </div>
                   {transactionMessage?.message && (
                     <p className="text-xs leading-normal sm:text-right" style={{ color: "#6B6E6B" }}>
                       {transactionMessage.message}
