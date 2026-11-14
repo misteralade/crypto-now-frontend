@@ -118,6 +118,15 @@ const ACTIVE_GUEST_SELL_STATUSES = new Set([
   "PAYOUT_FAILED",
 ]);
 
+const GUEST_SELL_INITIAL_DEPOSIT_STATUSES = new Set([
+  "INITIATED",
+  "AWAITING_CRYPTO",
+]);
+const GUEST_SELL_AWAITING_DEPOSIT_STATUSES = new Set([
+  ...GUEST_SELL_INITIAL_DEPOSIT_STATUSES,
+  "DEPOSIT_PENDING_MINIMUM",
+]);
+
 const isGuestSellTransactionActive = (status?: string | null) =>
   !!status && ACTIVE_GUEST_SELL_STATUSES.has(status);
 
@@ -569,6 +578,8 @@ const AppSimCard = () => {
   });
   const guestTransactionTerminalStatus = guestTransactionStatus?.status ?? null;
   const guestPayoutFailed = guestTransactionTerminalStatus === "PAYOUT_FAILED";
+  const showGuestDepositInstructions = !!guestTransactionStatus &&
+    GUEST_SELL_AWAITING_DEPOSIT_STATUSES.has(guestTransactionStatus.status);
   const guestTransactionFailed =
     !!guestTransactionTerminalStatus &&
     GUEST_SELL_FAILED_STATUSES.has(guestTransactionTerminalStatus);
@@ -1412,21 +1423,28 @@ const AppSimCard = () => {
         return;
       }
       if (res?.data) {
-        const session = (res.data as any).sessionId || "";
+        const session = res.data.sessionId;
         setSessionId(session);
         setGuestTransactionStatus(null);
-        const wallet = await cryptoServiceApi.allocateGuestSellWallet({
-          sessionId: session,
-          cryptoId: selectedCrypto,
-          network,
-        });
-        if (!wallet?.success) {
-          const message = wallet?.message || "Failed to fetch deposit wallet";
-          setGuestError(message);
-          toast.error(message);
-          return;
+        if (res.data.resumed) {
+          if (!res.data.depositAddress) {
+            throw new Error("We couldn't load the deposit address. Please try again.");
+          }
+          setDepositWallet(res.data.depositAddress);
+        } else {
+          const wallet = await cryptoServiceApi.allocateGuestSellWallet({
+            sessionId: session,
+            cryptoId: selectedCrypto,
+            network,
+          });
+          if (!wallet?.success) {
+            const message = wallet?.message || "Failed to fetch deposit wallet";
+            setGuestError(message);
+            toast.error(message);
+            return;
+          }
+          setDepositWallet(wallet.data.walletAddress);
         }
-        setDepositWallet((wallet.data as any)?.walletAddress || "");
         setGuestError(null);
         setStep(3);
       }
@@ -2348,7 +2366,7 @@ const AppSimCard = () => {
             >
               <div className="flex items-center justify-between">
                 <p className="text-sm font-semibold text-[#0E0F0C]">
-                  Send to this wallet
+                  {showGuestDepositInstructions ? "Send to this wallet" : "Transaction status"}
                 </p>
                 {(() => {
                   const status = guestTransactionStatus?.status;
@@ -2373,15 +2391,18 @@ const AppSimCard = () => {
                 })()}
               </div>
 
+              {showGuestDepositInstructions && <>
               <div
                 className="rounded-xl p-3"
                 style={{ background: "white", border: "1.5px solid #E8E8E8" }}
               >
-                <CopyableSRow
-                  label="Amount to Send"
-                  value={`${amount} ${cryptoSymbol}`}
-                  copyValue={amount}
-                />
+                {guestTransactionStatus && GUEST_SELL_INITIAL_DEPOSIT_STATUSES.has(guestTransactionStatus.status) && (
+                  <CopyableSRow
+                    label="Amount to Send"
+                    value={`${guestExpectedCryptoAmount} ${cryptoSymbol}`}
+                    copyValue={String(guestExpectedCryptoAmount)}
+                  />
+                )}
                 <SRow label="Asset" value={cryptoSymbol} />
                 <SRow label="Network" value={networkLabel} />
               </div>
@@ -2421,11 +2442,10 @@ const AppSimCard = () => {
                   className="flex-shrink-0 text-[#948EEE]"
                 />
                 <p className="text-xs text-gray-500 leading-relaxed">
-                  <strong>Send &amp; forget.</strong> Once we detect your
-                  crypto, NGN is sent to your bank instantly. No further action
-                  needed.
+                  We'll check your deposit and update the transaction as it progresses.
                 </p>
               </div>
+              </>}
 
               {showGuestManualRecheck ? (
                 <ManualDepositRecheckAction
@@ -2448,8 +2468,8 @@ const AppSimCard = () => {
                 className="rounded-xl p-3"
                 style={{ background: "white", border: "1.5px solid #E8E8E8" }}
               >
-                <SRow label="Payout Bank" value={bankName} />
-                <SRow label="Account" value={accountNumber} />
+                <SRow label="Payout Bank" value={guestTransactionStatus?.userBankAccount?.bank?.name ?? "—"} />
+                <SRow label="Account" value={guestTransactionStatus?.userBankAccount?.accountNumber ?? "—"} />
                 {guestTransactionStatus?.status && (
                   <SRow label="Status" value={guestTransactionStatus.status} />
                 )}
@@ -2741,8 +2761,8 @@ const AppSimCard = () => {
                         green
                       />
                     )}
-                    <SRow label="Sent To Bank" value={bankName} />
-                    <SRow label="Account No." value={accountNumber} />
+                    <SRow label="Sent To Bank" value={guestTransactionStatus?.userBankAccount?.bank?.name ?? "—"} />
+                    <SRow label="Account No." value={guestTransactionStatus?.userBankAccount?.accountNumber ?? "—"} />
                     <SRow label="Updates to" value={email} />
                   </>
                 )}

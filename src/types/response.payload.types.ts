@@ -224,7 +224,7 @@ export type UserBankAccountResponseEntity = {
   userId: string;
   accountNumber: string;
   accountName: string;
-  bank: AllBanksResponse;
+  bank: AllBanksResponse | null;
   createdAt: string;
 };
 
@@ -263,6 +263,8 @@ export type AdminResponseEntity = {
 // Transaction Response
 export type InitiateTransactionAPIResponse = BaseApiResponse<{
   sessionId: string;
+  resumed?: boolean;
+  depositAddress?: string;
 }>;
 
 export type TransactionResponseEntity = {
