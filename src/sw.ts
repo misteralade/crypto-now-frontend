@@ -2,7 +2,7 @@
 /// <reference types="vite-plugin-pwa/client" />
 import { cleanupOutdatedCaches, precacheAndRoute } from "workbox-precaching";
 import { registerRoute } from "workbox-routing";
-import { CacheFirst, NetworkOnly, StaleWhileRevalidate } from "workbox-strategies";
+import { CacheFirst, NetworkFirst, NetworkOnly, StaleWhileRevalidate } from "workbox-strategies";
 import { ExpirationPlugin } from "workbox-expiration";
 import { CacheableResponsePlugin } from "workbox-cacheable-response";
 
@@ -108,8 +108,8 @@ registerRoute(
 
 registerRoute(
   ({ url }) => /\/crypto\/supported-cryptos/.test(url.pathname) || /\/crypto\/supported-crypto\//.test(url.pathname),
-  new StaleWhileRevalidate({
-    cacheName: "crypto-cache",
+  new NetworkFirst({
+    cacheName: "crypto-cache-v2",
     plugins: [
       new ExpirationPlugin({ maxEntries: 10, maxAgeSeconds: 60 * 60 }),
       new CacheableResponsePlugin({ statuses: [0, 200] }),

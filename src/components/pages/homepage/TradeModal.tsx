@@ -98,6 +98,12 @@ const TradeModal = ({ onClose }: TradeModalProps) => {
   // For BUY:  user sends fiat ($), receives crypto
   const isSell = activeTab === "SELL";
 
+  useEffect(() => {
+    if (!supportedCryptoCurrencies) return;
+    const available = supportedCryptoCurrencies.filter((coin) => isSell ? coin.sellEnabled : coin.buyEnabled);
+    if (!available.some((coin) => coin.id === selectedCrypto)) setSelectedCrypto(available[0]?.id ?? "");
+  }, [supportedCryptoCurrencies, isSell, selectedCrypto, setSelectedCrypto]);
+
   const sendLabel = isSell ? "You Will Send" : "You Will Send";
   const receiveLabel = isSell ? "You Will Receive" : "You Will Receive";
 
@@ -171,7 +177,7 @@ const TradeModal = ({ onClose }: TradeModalProps) => {
         <div className="flex flex-col gap-1.5">
           <span className="text-xs font-semibold text-gray-500 tracking-wide">{sendPickerLabel}</span>
           <CurrencyPicker
-            items={isSell ? supportedCryptoCurrencies : supportedCurrencies}
+            items={isSell ? supportedCryptoCurrencies?.filter((coin) => coin.sellEnabled) : supportedCurrencies}
             selectedId={isSell ? selectedCrypto : supportedCurrency}
             onSelect={isSell ? setSelectedCrypto : setSupportedCurrency}
             rateKey="sellRate"
@@ -183,7 +189,7 @@ const TradeModal = ({ onClose }: TradeModalProps) => {
         <div className="flex flex-col gap-1.5">
           <span className="text-xs font-semibold text-gray-500 tracking-wide">{receivePickerLabel}</span>
           <CurrencyPicker
-            items={isSell ? supportedCurrencies : supportedCryptoCurrencies}
+            items={isSell ? supportedCurrencies : supportedCryptoCurrencies?.filter((coin) => coin.buyEnabled)}
             selectedId={isSell ? supportedCurrency : selectedCrypto}
             onSelect={isSell ? setSupportedCurrency : setSelectedCrypto}
             rateKey={isSell ? "sellRate" : "buyRate"}

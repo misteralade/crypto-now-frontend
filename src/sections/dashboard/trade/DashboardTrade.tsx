@@ -8,6 +8,7 @@
  *       reachable only when resuming an in-flight transaction via ?sessionId=.
  */
 import { useState, useEffect, useRef } from "react";
+import { TRANSACTION_TYPE } from "../../../util/transaction.util";
 import { useSearch, useNavigate } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
 import type { TradeType } from "../../../types/trade.types.ts";
@@ -312,13 +313,15 @@ export default function DashboardTrade({
     });
   }, [activeSessionId, navigate, transactionSessionId]);
 
+  const isBuy = activeTab.toUpperCase() === TRANSACTION_TYPE.BUY;
+
   // Restore the last-used token from localStorage when the supported list loads
   useEffect(() => {
     if (!supportedCryptoCurrencies || step !== 1) return;
     const savedId = localStorage.getItem(LOCAL_STORAGE_KEYS.LAST_TRADE_TOKEN);
     if (!savedId) return;
     const found = supportedCryptoCurrencies.find((t) => t.id === savedId);
-    if (!found) return;
+    if (!found || (isBuy ? !found.buyEnabled : !found.sellEnabled)) return;
     setSelectedToken(found);
     if (activeTab === "buy") {
       setPendingBuyToken(found);
@@ -329,7 +332,7 @@ export default function DashboardTrade({
       setPendingSellToken(found);
       setSellNetwork(found.networks?.[0] ?? undefined);
     }
-  }, [supportedCryptoCurrencies]);
+  }, [supportedCryptoCurrencies, isBuy, step]);
 
 
 
@@ -341,7 +344,6 @@ export default function DashboardTrade({
     );
   }
 
-  const isBuy = activeTab === "buy";
 
   if (!hasChosenMode) {
     return (
@@ -419,7 +421,7 @@ export default function DashboardTrade({
                 tradeType={activeTab}
                 availableTokens={
                   (!loadingSupportedCryptocurrencies &&
-                    supportedCryptoCurrencies) ||
+                    supportedCryptoCurrencies?.filter((token) => isBuy ? token.buyEnabled : token.sellEnabled)) ||
                   []
                 }
                 selectedToken={

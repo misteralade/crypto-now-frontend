@@ -700,7 +700,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       lastCalculationRef.current?.from !== "numberOfToken" &&
       !calculationPerformed
     ) {
-      const calculated = (Number(amountToBuy) / calculationRate).toFixed(8).replace(/\.?0+$/, "");
+      const calculated = (Number(amountToBuy) / calculationRate).toFixed(selectedToken?.buyPrecision ?? 8).replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "");
       // Update the receive field (user is not typing here, so it's safe to format)
       if (calculated !== String(numberOfToken)) {
         nextNumberOfToken = calculated;
@@ -789,6 +789,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     exchangeRate?.currency,
     loadingExchangeRate,
     isCountdownLocked,
+    selectedToken?.buyPrecision,
   ]);
 
   // Initial selection from route params (or auto-select NGN when no currency param)

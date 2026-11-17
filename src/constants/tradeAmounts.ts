@@ -16,6 +16,10 @@ export const formatTradeFiatPreset = (
 
 import { roundForCalculation } from "../util/asset-precision.ts";
 
-export function roundTokenAmountUp(amount: number, symbol: string): number {
+export function roundTokenAmountUp(amount: number, symbol: string, precision?: number | null): number {
+  if (precision != null) {
+    const factor = Math.pow(10, precision);
+    return Math.ceil(amount * factor) / factor;
+  }
   return roundForCalculation(amount, symbol, "up");
 }

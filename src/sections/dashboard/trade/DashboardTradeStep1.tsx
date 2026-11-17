@@ -467,6 +467,7 @@ function BuyFields({
       const cryptoAmount = roundTokenAmountUp(
         targetFiatAmount / divisor,
         selectedToken.symbol,
+        selectedToken.buyPrecision,
       );
       // Check the resolved amount against the admin-configured max before
       // applying it : reject the preset/custom chip outright (leave the

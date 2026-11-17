@@ -29,7 +29,8 @@ Workbox precaches the injected build assets and serves matching requests from th
 | --- | --- | --- |
 | Authentication, profile, onboarding status, contact, exchange rates, transactions, wallets, disputes, sweeps, KYC, notifications, user bank accounts, and bank lookup | Network only | No service-worker response cache for the matching GET routes. |
 | Google Fonts stylesheets and font files | Cache first | Separate caches, up to 10 entries each, with a maximum age of 365 days. |
-| Supported cryptocurrencies, currencies, banks, and published testimonials | Stale while revalidate | Separate caches, up to 10 entries each, with a maximum age of one hour. A cached response can be returned while a network refresh runs. |
+| Supported cryptocurrencies | Network first | Up to 10 entries for one hour, used when the network is unavailable. |
+| Supported currencies, banks, and published testimonials | Stale while revalidate | Separate caches, up to 10 entries each, with a maximum age of one hour. A cached response can be returned while a network refresh runs. |
 
 The runtime cache rules accept successful `200` responses and opaque `0` responses where configured. Workbox routes default to GET; other methods are not cached by these routes. The exact URL patterns and rule order are defined in `src/sw.ts` and should be reviewed when endpoints change.
 

@@ -77,33 +77,9 @@ const withTimeout = async <T,>(
 const isTimeoutError = (error: unknown, timeoutMessage: string) =>
   error instanceof Error && error.message === timeoutMessage;
 
-const ALL_NETWORKS = [
-  { id: "TRC20", label: "TRC20 (Tron)" },
-  { id: "ERC20", label: "ERC20 (Ethereum)" },
-  { id: "BTC", label: "Bitcoin (BTC)" },
-  { id: "SOLANA", label: "Solana (SOL)" },
-];
-
-// Maps crypto symbol (uppercase) → allowed network IDs
-const CRYPTO_NETWORKS: Record<string, string[]> = {
-  BTC: ["BTC"],
-  USDT: ["TRC20", "ERC20"],
-  SOL: ["SOLANA"],
-};
-
-// Default network to pre-select for each crypto
-const CRYPTO_DEFAULT_NETWORK: Record<string, string> = {
-  BTC: "BTC",
-  USDT: "TRC20",
-  SOL: "SOLANA",
-};
-
 const getDefaultNetworkForCrypto = (
-  crypto?: { code?: string | null; symbol?: string | null } | null,
-) => {
-  const code = (crypto?.code || crypto?.symbol || "").toUpperCase();
-  return code ? CRYPTO_DEFAULT_NETWORK[code] || "" : "";
-};
+  crypto?: { networks?: string[] } | null,
+) => crypto?.networks?.[0] ?? "";
 
 const ACTIVE_GUEST_SELL_STATUSES = new Set([
   "INITIATED",
@@ -676,11 +652,12 @@ const AppSimCard = () => {
       ? `Minimum anonymous trade amount is ${formatForDisplay(anonymousMinimumCryptoAmount, cryptoSymbol)} ${cryptoSymbol}`
       : null;
 
-  // Init defaults once loaded (only if not already restored from localStorage)
+  // Keep the selected coin available for the current direction.
   useEffect(() => {
-    if (!selectedCrypto && supportedCryptoCurrencies?.length)
-      setSelectedCrypto(supportedCryptoCurrencies[0].id);
-  }, [supportedCryptoCurrencies]);
+    if (!supportedCryptoCurrencies) return;
+    const available = supportedCryptoCurrencies.filter((coin) => isBuy ? coin.buyEnabled : coin.sellEnabled);
+    if (!available.some((coin) => coin.id === selectedCrypto)) setSelectedCrypto(available[0]?.id ?? "");
+  }, [supportedCryptoCurrencies, isBuy, selectedCrypto]);
 
   useEffect(() => {
     if (!selectedCurrency && supportedCurrencies?.length)
@@ -704,12 +681,12 @@ const AppSimCard = () => {
     }
   }, [selectedBank?.name]);
 
-  // Auto-set network to the correct default when no saved network exists.
+  // Keep restored selections within the networks currently offered for the coin.
   useEffect(() => {
-    if (saved.network) return;
-    const defaultNet = getDefaultNetworkForCrypto(cryptoObj);
-    if (defaultNet) setNetwork(defaultNet);
-  }, [cryptoObj?.code, cryptoObj?.symbol, saved.network]);
+    if (!cryptoObj) return;
+    if (network && cryptoObj.networks?.includes(network)) return;
+    setNetwork(getDefaultNetworkForCrypto(cryptoObj));
+  }, [cryptoObj, network]);
 
   // Reset guest error on step transitions so that errors from previous step do not pollute the new step.
   useEffect(() => {
@@ -867,7 +844,6 @@ const AppSimCard = () => {
     (c) => c.id === selectedCurrency,
   );
   const currSymbol = transactionCurrencyObj?.symbol || transactionCurrencyObj?.code || "₦";
-  const cryptoCode = cryptoObj?.code?.toUpperCase() || cryptoSymbol.toUpperCase();
 
   const fetchUsdToNgnRate = async (
     cryptoId: string,
@@ -1173,7 +1149,7 @@ const AppSimCard = () => {
     // formatForDisplay would re-truncate to the token's (smaller) displayDecimals
     // and silently submit less crypto than roundTokenAmountUp actually quoted.
     const roundedCryptoAmount = String(
-      roundTokenAmountUp(targetNgnAmount / data.fiatRate, cryptoSymbol),
+      roundTokenAmountUp(targetNgnAmount / data.fiatRate, cryptoSymbol, isBuy ? cryptoObj?.buyPrecision : null),
     );
 
     // Reject the preset/custom chip outright (leave the field as it was) and
@@ -1518,13 +1494,9 @@ const AppSimCard = () => {
     localStorage.removeItem(LS_KEY);
   };
 
-  const allowedNetworks = ALL_NETWORKS.filter((n) =>
-    (CRYPTO_NETWORKS[cryptoCode] ?? ALL_NETWORKS.map((x) => x.id)).includes(
-      n.id
-    )
-  );
+  const allowedNetworks = cryptoObj?.networkOptions ?? [];
   const networkLabel =
-    ALL_NETWORKS.find((n) => n.id === network)?.label || network || "Select network";
+    allowedNetworks.find((n) => n.id === network)?.label || network || "Select network";
 
   return (
     <div
@@ -1603,7 +1575,7 @@ const AppSimCard = () => {
                 </div>
               ) : (
                 <div className="flex gap-2">
-                  {supportedCryptoCurrencies.map((item) => (
+                  {supportedCryptoCurrencies.filter((item) => isBuy ? item.buyEnabled : item.sellEnabled).map((item) => (
                   <TokenBtn
                     key={item.id}
                     item={item}

@@ -63,11 +63,15 @@ export type SupportedCryptoOrCurrencyResponse = {
   logoUrl: string;
   buyRate: string;
   sellRate: string;
+  buyEnabled: boolean;
+  sellEnabled: boolean;
+  buyPrecision: number | null;
   minTransactionLimit: string;
   maxTransactionLimit: string;
   minTradeAmountForAnonymous: string;
   maxTradeAmountForAnonymous: string;
   networks?: string[]; // Blockchain networks this crypto supports (e.g. ['TRC20', 'BTC'])
+  networkOptions?: Array<{ id: string; label: string }>;
 };
 
 export type SupportedExchangeRateResponse = {
