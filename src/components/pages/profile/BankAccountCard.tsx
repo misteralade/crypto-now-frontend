@@ -37,14 +37,14 @@ const BankAccountCard = ({
           <h3 className="text-base font-bold text-[#0E0F0C]">
             {account.label || `Account ${index + 1}`}
           </h3>
-          <button type="button" onClick={() => onEdit(account)} aria-label={`Edit ${account.label || `account ${index + 1}`}`} className="rounded-lg p-2 text-[#03034D] hover:bg-[#03034D]/5" title="Edit account">
-            <Pencil size={15} />
-          </button>
-          {account.isDefault && (
-            <span className="inline-block mt-0.5 text-[10px] font-semibold text-[#03034D]">
-              Default
-            </span>
-          )}
+          <div className="ml-auto flex items-center gap-2">
+            {account.isDefault && (
+              <span className="text-[10px] font-semibold text-[#03034D]">Default</span>
+            )}
+            <button type="button" onClick={() => onEdit(account)} aria-label={`Edit ${account.label || `account ${index + 1}`}`} className="rounded-lg p-2 text-[#03034D] hover:bg-[#03034D]/5" title="Edit account">
+              <Pencil size={15} />
+            </button>
+          </div>
         </div>
         
         <div className="space-y-2.5 flex-1">
