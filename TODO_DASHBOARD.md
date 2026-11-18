@@ -1,19 +1,17 @@
-# Dashboard TODO — Post-Redesign
+# Dashboard Implementation Status
 
-## 1. Notifications System
-- Backend: Create notifications API (`GET /notifications`, `PATCH /notifications/:id/read`)
-- Frontend: Wire `Bell` icon in `AuthenticatedLayout.tsx` header to real unread count
-- Frontend: Build `/dashboard/notifications` route + page
-- Reference: Bell button is at `src/layouts/AuthenticatedLayout.tsx` (desktop header + mobile tab)
+## Completed Items
 
-## 2. KYC Verification Status
-- Backend: Expose KYC tier on user profile response (`GET /user/profile`)
-- Frontend: Replace static "KYC Verified" pill in `DashboardContent.tsx` and `ProfilePage.tsx`
-  with real `userProfileData.kycStatus` check
-- Show "KYC Pending" / "Complete KYC" CTA when not verified
-- Files: `src/sections/dashboard/DashboardContent.tsx` (line ~115), `src/pages/ProfilePage.tsx` (line ~130)
+### 1. Notifications System [Completed]
+- Backend: Notifications API implemented (`GET /notification`, `PATCH /notification/:id/read`).
+- Frontend: Bell icon in `AuthenticatedLayout.tsx` header wired to real unread notification count.
+- Frontend: `/dashboard/notifications` route and page built (`src/routes/dashboard/notifications.tsx`).
 
-## 3. Live Rates Ticker Auto-refresh
-- Currently uses `supportedCryptoCurrencies` from `useCryptoQuery` (includes buyRate/sellRate)
-- Add `refetchInterval: 30_000` to the crypto query for real-time rate updates on dashboard
-- File: `src/queries/crypto.query.ts`
+### 2. KYC Verification Status [Completed]
+- Backend: Exposes KYC status and tier on user profile (`GET /user/profile` and `GET /kyc/status`).
+- Frontend: Dashboard and profile components display dynamic KYC verification badge based on user profile state.
+- Route: `/dashboard/kyc` integrated for user verification flows.
+
+### 3. Live Rates Ticker [Completed]
+- Frontend: Rate chips on Dashboard render platform buy and sell rates dynamically from `useCryptoQuery`.
+- Rate cache TTL and automated background refetching kept in sync with platform exchange rates.

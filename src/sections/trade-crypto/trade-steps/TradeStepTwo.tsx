@@ -476,13 +476,12 @@ function TradeStatusMonitoring({
       {showManualRecheck && (
         <ManualDepositRecheckAction
           title={`Already sent your ${selectedToken?.symbol ?? "crypto"}?`}
-          description="This triggers an immediate wallet recheck. Your status will update as soon as the deposit is confirmed."
           isPending={manualRecheckPending}
           disabled={!onManualRecheck}
           onConfirm={() => onManualRecheck?.()}
-          confirmTitle="Confirm manual deposit check"
-          confirmDescription="We will read the live wallet balance and compare it against the cached wallet state. If a deposit is found, the transaction status is updated right away."
-          confirmLabel="Yes, check now"
+
+
+
           pendingText="Rechecking deposit..."
         />
       )}

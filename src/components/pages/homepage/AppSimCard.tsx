@@ -272,7 +272,7 @@ const TokenBtn = ({
       style={{
         background: selected ? "rgba(148,142,238,0.1)" : "#F5F5F5",
         border: selected ? "1.5px solid #948EEE" : "1.5px solid transparent",
-        flex: "0 0 calc((100% - 32px) / 5)",
+        flex: "1 0 calc((100% - 32px) / 5)",
         minWidth: 68,
       }}
       aria-label={`Select ${item.name || label}`}
@@ -2426,13 +2426,12 @@ const AppSimCard = () => {
               {showGuestManualRecheck ? (
                 <ManualDepositRecheckAction
                   title={`Already sent your ${cryptoSymbol}?`}
-                  description="This triggers an immediate wallet recheck. Your status will update as soon as the deposit is confirmed."
                   isPending={guestManualRecheckPending}
                   disabled={!sessionId}
                   onConfirm={handleGuestManualRecheck}
-                  confirmTitle="Confirm manual deposit check"
-                  confirmDescription="We will read the live wallet balance and compare it against the cached wallet state. If a deposit is found, the transaction status is updated right away."
-                  confirmLabel="Yes, check now"
+
+
+
                   pendingText="Rechecking deposit..."
                 />
               ) : null}
