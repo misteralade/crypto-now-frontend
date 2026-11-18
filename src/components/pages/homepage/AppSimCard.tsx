@@ -1,3 +1,5 @@
+import TransactionReview from "../../global/TransactionReview.tsx";
+import { TRANSACTION_STATUS } from "../../../util/transaction.util.ts";
 import { useState, useRef, useEffect, type ReactNode } from "react";
 import { toast } from "react-toastify";
 import ResponsiveText from "../../global/ResponsiveText.tsx";
@@ -2438,6 +2440,7 @@ const AppSimCard = () => {
               ) : null}
 
               <TransactionTimeline type="sell" status={guestTransactionStatus?.status} statusEvents={guestTransactionStatus?.statusEvents} />
+              {sessionId && guestTransactionStatus?.status === TRANSACTION_STATUS.COMPLETED && <TransactionReview sessionId={sessionId} guest />}
 
               {/* Summary */}
               <div
@@ -2745,6 +2748,7 @@ const AppSimCard = () => {
               </div>
 
               {sessionId && <TransactionTimeline type={isBuy ? "buy" : "sell"} status={guestTransactionStatus?.status} statusEvents={guestTransactionStatus?.statusEvents} />}
+              {sessionId && guestTransactionStatus?.status === TRANSACTION_STATUS.COMPLETED && <TransactionReview sessionId={sessionId} guest />}
 
               {/* Upsell */}
               <div

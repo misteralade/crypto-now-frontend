@@ -1,3 +1,4 @@
+import TransactionReview from "../../../components/global/TransactionReview.tsx";
 import { Fragment, type ReactNode } from "react";
 import { useTransactionDetailsPage } from "../../../hooks/pages/useTransactionDetailsPage.ts";
 import { LoadingSpinner } from "../../../components/global/LoadingSpinner.tsx";
@@ -181,6 +182,7 @@ const TransactionDetailsPage = () => {
       ) : transaction ? (
         <Fragment>
           <div className="max-w-3xl mx-auto px-4 pb-12 pt-4 sm:px-5 lg:px-0 space-y-4">
+            {isBuy && transaction.status === TRANSACTION_STATUS.COMPLETED && <TransactionReview sessionId={transaction.sessionId} guest={false} />}
             {/* ── Header ── */}
             <div className="flex items-center justify-between gap-2 sm:gap-3 mb-2">
               <div className="flex items-center gap-2 sm:gap-3 min-w-0">

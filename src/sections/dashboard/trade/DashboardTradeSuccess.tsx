@@ -1,3 +1,5 @@
+import TransactionReview from "../../../components/global/TransactionReview.tsx";
+import { TRANSACTION_STATUS } from "../../../util/transaction.util.ts";
 /**
  * Success screen
  * BUY  → "Order Submitted! 🚀 / Receipt Received!" (frame 139)
@@ -351,6 +353,7 @@ export default function DashboardTradeSuccess({
         ))}
       </div>
 
+      {isBuy && transactionRef && txData?.status === TRANSACTION_STATUS.COMPLETED && <TransactionReview sessionId={transactionRef} guest={false} />}
       {/* TX ref */}
       {transactionRef && (
         <p
