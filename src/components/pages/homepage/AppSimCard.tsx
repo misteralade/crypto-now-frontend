@@ -1015,6 +1015,7 @@ const AppSimCard = () => {
   useEffect(() => {
     if (sessionId) return;
     if (!selectedCrypto || !quoteCurrencyObj?.id || !amount) {
+      quoteRequestIdRef.current++;
       setReceiveAmount("");
       setQuoteLoading(false);
       return;

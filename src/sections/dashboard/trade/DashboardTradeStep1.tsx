@@ -133,7 +133,6 @@ function BuyFields({
   onNetworkChange,
   buyRateInfo,
   onRateResolved,
-  onRateErrorChange,
 }: {
   selectedToken: SupportedCryptoOrCurrencyResponse;
   availableCurrencies?: SupportedCryptoOrCurrencyResponse[];
@@ -148,7 +147,6 @@ function BuyFields({
   onNetworkChange?: (v: string) => void;
   buyRateInfo?: BuyRateInfo | null;
   onRateResolved?: (info: BuyRateInfo | null) => void;
-  onRateErrorChange: (failed: boolean) => void;
 }) {
   const dispatch = useDispatch();
   const accentColor = "#948EEE";
@@ -157,7 +155,6 @@ function BuyFields({
   const [isFetchingRate, setIsFetchingRate] = useState(false);
   const [rateError, setRateError] = useState(false);
   const retryRateRef = useRef<(() => void) | null>(null);
-  useEffect(() => onRateErrorChange(rateError), [rateError, onRateErrorChange]);
   // Track the fiatAmount that's currently being fetched to avoid duplicate in-flight requests
   const fetchingRef = useRef<number | null>(null);
   // Rate is prefetched the instant a crypto/currency is selected (see the
@@ -1185,7 +1182,6 @@ export default function DashboardTradeStep1({
   onBack, // Added onBack prop
 }: DashboardTradeStep1Props & { onBack?: () => void }) {
   const isBuy = tradeType === "buy";
-  const [rateError, setRateError] = useState(false);
   const accentColor = isBuy ? "#948EEE" : "#F7A600";
 
   // Admin-configured min/max are token-denominated (see SupportedCryptoEntity),
@@ -1230,12 +1226,7 @@ export default function DashboardTradeStep1({
     ? "Processing…"
     : isRateLoading && selectedToken
       ? "Loading rate…"
-      : amountToBuy &&
-          Number(amountToBuy) > 0 &&
-          walletAddress?.trim() &&
-          !buyRateInfo && !rateError
-        ? "Waiting for rate…"
-        : minLimitMessage
+      : minLimitMessage
           ? minLimitMessage
           : selectedToken
             ? "Continue"
@@ -1368,7 +1359,6 @@ export default function DashboardTradeStep1({
           onNetworkChange={onNetworkChange}
           buyRateInfo={buyRateInfo}
           onRateResolved={onRateResolved}
-          onRateErrorChange={setRateError}
         />
       )}
 
