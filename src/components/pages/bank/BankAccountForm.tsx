@@ -7,7 +7,7 @@ import { Form, Formik } from "formik";
 
 interface BankAccountFormProps {
   banks: AllBanksResponse[];
-  onSubmit: () => void;
+  onSubmit: () => void | Promise<void>;
   onCancel?: () => void;
   onDuplicate?: (bankId: string, accountNumber: string) => boolean;
   handleChangeField: (
@@ -76,8 +76,8 @@ const BankAccountForm = ({
     }
   };
 
-  const handleSubmit = () => {
-    onSubmit();
+  const handleSubmit = async () => {
+    await onSubmit();
   };
 
   const initialState = {

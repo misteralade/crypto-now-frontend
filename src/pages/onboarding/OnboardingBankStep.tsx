@@ -39,7 +39,13 @@ const OnboardingBankStep = ({ onComplete }: OnboardingBankStepProps) => {
     const verifiedAccountName =
       (store.getState() as RootState).bank.createBankAccount.accountName ?? "";
 
-    const { success } = await createUserBankAccountMutation.mutateAsync();
+    let success: boolean;
+    try {
+      ({ success } = await createUserBankAccountMutation.mutateAsync());
+    } catch {
+      // The mutation displays the server's reason for the failure.
+      return;
+    }
     if (success) {
       const { firstName, lastName } = splitAccountName(verifiedAccountName);
       if (firstName || lastName) {
