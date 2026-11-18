@@ -268,11 +268,12 @@ const TokenBtn = ({
   return (
     <button
       onClick={onSelect}
-      className="flex-1 flex flex-col items-center py-3 px-1 rounded-xl transition-all cursor-pointer gap-1"
+      className="flex flex-col items-center py-3 px-1 rounded-xl transition-all cursor-pointer gap-1 shrink-0"
       style={{
         background: selected ? "rgba(148,142,238,0.1)" : "#F5F5F5",
         border: selected ? "1.5px solid #948EEE" : "1.5px solid transparent",
-        minWidth: 0,
+        flex: "0 0 calc((100% - 32px) / 5)",
+        minWidth: 68,
       }}
       aria-label={`Select ${item.name || label}`}
       title={item.name || label}
@@ -1574,7 +1575,12 @@ const AppSimCard = () => {
                   Crypto assets are unavailable right now.
                 </div>
               ) : (
-                <div className="flex gap-2">
+                <div
+                  className="flex gap-2 overflow-x-auto scroll-smooth overscroll-x-contain pb-1 [scrollbar-width:thin]"
+                  role="group"
+                  aria-label={isBuy ? "Buyable crypto assets" : "Sellable crypto assets"}
+                  tabIndex={0}
+                >
                   {supportedCryptoCurrencies.filter((item) => isBuy ? item.buyEnabled : item.sellEnabled).map((item) => (
                   <TokenBtn
                     key={item.id}
