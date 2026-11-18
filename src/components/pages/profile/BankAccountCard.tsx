@@ -1,10 +1,12 @@
 import type {UserBankAccountResponse} from "../../../types/response.payload.types.ts";
+import { Pencil } from "lucide-react";
 
 interface BankAccountCardProps {
   account: UserBankAccountResponse;
   index: number
   onMakeDefault: (id: string) => void
   onDelete: (index: string) => void
+  onEdit: (account: UserBankAccountResponse) => void
   canDelete: boolean
 }
 
@@ -13,10 +15,11 @@ const BankAccountCard = ({
   index,
   onMakeDefault,
   onDelete,
+  onEdit,
   canDelete,
 }: BankAccountCardProps) => {
   return (
-    <section className="relative p-5 rounded-2xl border border-[#ECECEC] bg-white shadow-sm overflow-hidden flex flex-col h-full w-full max-w-[330px] mx-auto sm:mx-0">
+    <section className="relative p-4 rounded-2xl border border-[#ECECEC] bg-white shadow-sm overflow-hidden flex flex-col h-full w-full max-w-[300px] mx-auto sm:mx-0">
       {/* Translucent Bank Logo Background */}
       {account.bank?.logoUrl && (
         <div
@@ -30,10 +33,13 @@ const BankAccountCard = ({
 
       {/* Content - positioned above the background */}
       <div className="relative z-10 flex flex-col flex-1">
-        <div className="mb-4">
+        <div className="mb-3 flex items-start justify-between gap-2">
           <h3 className="text-base font-bold text-[#0E0F0C]">
             {account.label || `Account ${index + 1}`}
           </h3>
+          <button type="button" onClick={() => onEdit(account)} aria-label={`Edit ${account.label || `account ${index + 1}`}`} className="rounded-lg p-2 text-[#03034D] hover:bg-[#03034D]/5" title="Edit account">
+            <Pencil size={15} />
+          </button>
           {account.isDefault && (
             <span className="inline-block mt-0.5 text-[10px] font-semibold text-[#03034D]">
               Default
@@ -41,7 +47,7 @@ const BankAccountCard = ({
           )}
         </div>
         
-        <div className="space-y-3 flex-1">
+        <div className="space-y-2.5 flex-1">
           <div>
             <div className="text-[10px] uppercase tracking-wide text-[#828282] mb-0.5">Account Name</div>
             <div className="text-sm text-[#101828] font-semibold">

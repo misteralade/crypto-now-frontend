@@ -29,6 +29,11 @@ export type CreateBankAccountRequestPayload = {
   bankLogo?: string | null;
 }
 
+export type UpdateBankAccountRequestPayload = {
+  bankId: string;
+  accountNumber: string;
+}
+
 export type UserCreateCryptoWalletRequestPayload = {
   walletAddress: string;
   network: string;

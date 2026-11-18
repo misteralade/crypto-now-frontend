@@ -6,7 +6,9 @@ import { clearProfilePersonalInfoField, setProfilePersonalInfoField } from "../.
 import {useAuthQuery} from "../../queries/auth.query.ts";
 import type {
   CreateBankAccountRequestPayload,
+  UpdateBankAccountRequestPayload,
 } from "../../types/request.payload.types.ts";
+import type { UserBankAccountResponse } from "../../types/response.payload.types.ts";
 import {
   clearNewBankAccount,
   clearUpdateSelectedBankAccountId,
@@ -18,12 +20,17 @@ export const useProfilePage = () => {
   const dispatch = useDispatch();
   const { userRequestPasswordChangeMutation, userToggleTwoFactorAuthenticationMutation } = useAuthQuery();
   const { userProfileData, loadingUserProfile, updateProfileMutation, removeProfilePictureMutation } = useUserQuery();
-  const { allBanks, loadingAllBanks } = useBankQuery();
-  const { userBankAccounts, loadingUserBankAccounts, createUserBankAccountMutation, updateDefaultBankAccountMutation, deleteBankAccountMutation } = useBankQuery();
+  const {
+    allBanks, loadingAllBanks,
+    userBankAccounts, loadingUserBankAccounts,
+    createUserBankAccountMutation, updateDefaultBankAccountMutation,
+    deleteBankAccountMutation, updateUserBankAccountMutation,
+  } = useBankQuery();
 
   const [selectedBank, setSelectedBank] = useState("");
 
   const [showCreateNewBankAccount, setShowCreateNewBankAccount] = useState(false);
+  const [bankAccountToEdit, setBankAccountToEdit] = useState<UserBankAccountResponse | null>(null);
   
   const handleSaveChanges = async () => {
     await updateProfileMutation.mutateAsync()
@@ -42,8 +49,8 @@ export const useProfilePage = () => {
     }))
   }
   
-  const handleNewBankAccountField = (field: keyof CreateBankAccountRequestPayload, value: any) => {
-    if (field === 'bankId') {
+  const handleNewBankAccountField = (field: keyof CreateBankAccountRequestPayload, value: CreateBankAccountRequestPayload[keyof CreateBankAccountRequestPayload]) => {
+    if (field === 'bankId' && typeof value === 'string') {
       setSelectedBank(value)
     }
     dispatch(setNewBankAccountField({
@@ -83,6 +90,15 @@ export const useProfilePage = () => {
       dispatch(clearUpdateSelectedBankAccountId());
     }
   }
+
+  const handleUpdateBankAccount = async (id: string, payload: UpdateBankAccountRequestPayload) => {
+    try {
+      const { success } = await updateUserBankAccountMutation.mutateAsync({ id, payload });
+      return success;
+    } catch {
+      return false;
+    }
+  };
   
   const handleRemoveProfilePicture = () => {
     removeProfilePictureMutation.mutate();
@@ -100,6 +116,7 @@ export const useProfilePage = () => {
     loadingUserBankAccounts,
     selectedBank,
     showCreateNewBankAccount,
+    bankAccountToEdit,
 
     // Functions
     handleChangePassword,
@@ -111,6 +128,8 @@ export const useProfilePage = () => {
     toggleShowCreateNewBankAccount,
     handleDefaultBankAccount,
     handleDeleteBankAccount,
+    setBankAccountToEdit,
+    handleUpdateBankAccount,
     handleRemoveProfilePicture,
   }
 }

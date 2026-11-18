@@ -8,7 +8,7 @@ import type {
   AllBanksResponse, BaseApiResponse,
   SupportedPlatformBankAccountResponse, UserBanksAPIResponse
 } from "../types/response.payload.types.ts";
-import type { CreateBankAccountRequestPayload } from "../types/request.payload.types.ts";
+import type { CreateBankAccountRequestPayload, UpdateBankAccountRequestPayload } from "../types/request.payload.types.ts";
 
 class BankServiceApi {
   private static instance: BankServiceApi;
@@ -51,6 +51,10 @@ class BankServiceApi {
   
   async makeBankAccountDefault(id: string) {
     return await axiosPatchRequestHandler(`/bank/user/${id}/make-default`) as BaseApiResponse<null>
+  }
+
+  async updateUserBankAccount(id: string, payload: UpdateBankAccountRequestPayload) {
+    return await axiosPatchRequestHandler(`/bank/user/${id}/update`, payload) as BaseApiResponse<null>;
   }
   
   async deleteBankAccount(id: string) {

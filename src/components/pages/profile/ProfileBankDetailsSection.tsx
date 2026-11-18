@@ -7,9 +7,10 @@ interface ProfileBankDetailsSectionProps {
   makeBankAccountDefault: (id: string) => void;
   handleDeleteBank: (id: string) => void;
   createNewBankModal: () => void;
+  onEditBankAccount: (account: UserBankAccountResponse) => void;
 }
 
-const ProfileBankDetailsSection = ({ banks, makeBankAccountDefault, handleDeleteBank }: ProfileBankDetailsSectionProps) => {
+const ProfileBankDetailsSection = ({ banks, makeBankAccountDefault, handleDeleteBank, onEditBankAccount }: ProfileBankDetailsSectionProps) => {
   const canDelete = (banks?.length ?? 0) > 1;
 
   return (
@@ -23,6 +24,7 @@ const ProfileBankDetailsSection = ({ banks, makeBankAccountDefault, handleDelete
               index={index}
               onMakeDefault={makeBankAccountDefault}
               onDelete={handleDeleteBank}
+              onEdit={onEditBankAccount}
               canDelete={canDelete}
             />
           ))}

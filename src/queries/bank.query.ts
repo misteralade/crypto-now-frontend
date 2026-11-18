@@ -8,6 +8,7 @@ import {useMatchRoute} from "@tanstack/react-router";
 import type {AxiosServerError} from "../types/response.payload.types.ts";
 import {extractErrorMessage} from "../util/index.util.ts";
 import {getAnonymousEmail} from "../util/auth-session.util.ts";
+import type { UpdateBankAccountRequestPayload } from "../types/request.payload.types.ts";
 
 export const useBankQuery = () => {
   const queryClient = useQueryClient();
@@ -145,6 +146,27 @@ export const useBankQuery = () => {
       toast.error(message);
     },
   });
+
+  const updateUserBankAccountMutation = useMutation({
+    mutationKey: [QUERY_KEYS.BANK.UPDATE_USER_BANK_ACCOUNT],
+    mutationFn: async ({ id, payload }: { id: string; payload: UpdateBankAccountRequestPayload }) => {
+      toast.loading("Updating bank account...");
+      return bankServiceApi.updateUserBankAccount(id, payload);
+    },
+    onSuccess: ({ success, message }) => {
+      toast.dismiss();
+      if (success) {
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.BANK.USER_BANK_ACCOUNTS] });
+      } else {
+        toast.error(message);
+      }
+      return { success, message };
+    },
+    onError: (error: AxiosServerError) => {
+      toast.dismiss();
+      toast.error(extractErrorMessage(error) || "Failed to update bank account. Please try again.");
+    },
+  });
   
   const deleteBankAccountMutation = useMutation({
     mutationKey: [QUERY_KEYS.BANK.UPDATE_DEFAULT_BANK_ACCOUNT],
@@ -201,6 +223,7 @@ export const useBankQuery = () => {
     createUserBankAccountMutation,
     loadingUserBankAccounts,
     updateDefaultBankAccountMutation,
+    updateUserBankAccountMutation,
     deleteBankAccountMutation,
   };
 };

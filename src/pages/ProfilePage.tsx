@@ -17,6 +17,7 @@ import { formatCompact } from "../util/asset-precision.ts";
 import { clearUserSessionStorage } from "../util/tradeProgress.storage.util.ts";
 import type { ProfileSection } from "../routes/dashboard/profile.tsx";
 import UserAvatar from "../components/global/UserAvatar.tsx";
+import EditBankAccountModal from "../components/pages/profile/modals/EditBankAccountModal.tsx";
 
 type Section = ProfileSection | null;
 
@@ -84,11 +85,13 @@ const ProfilePage = () => {
     allBanks, loadingAllBanks,
     userBankAccounts, loadingUserBankAccounts,
     selectedBank, showCreateNewBankAccount,
+    bankAccountToEdit,
     handleChangePassword, handlePersonalInfoProfileFieldUpdate,
     handleSaveChanges, handleEnableTwoFactor,
     handleNewBankAccountField, handleCreateBankAccount,
     toggleShowCreateNewBankAccount, handleDefaultBankAccount,
     handleDeleteBankAccount,
+    setBankAccountToEdit, handleUpdateBankAccount,
     handleRemoveProfilePicture,
   } = useProfilePage();
 
@@ -349,6 +352,7 @@ const ProfilePage = () => {
                             createNewBankModal={toggleShowCreateNewBankAccount}
                             makeBankAccountDefault={handleDefaultBankAccount}
                             handleDeleteBank={handleDeleteBankAccount}
+                            onEditBankAccount={setBankAccountToEdit}
                           />
                         </div>
                       )}
@@ -380,6 +384,12 @@ const ProfilePage = () => {
         handleChangeField={handleNewBankAccountField}
         onClose={toggleShowCreateNewBankAccount}
         onSubmit={handleCreateBankAccount}
+      />
+      <EditBankAccountModal
+        account={bankAccountToEdit}
+        banks={!loadingAllBanks && allBanks ? allBanks : []}
+        onClose={() => setBankAccountToEdit(null)}
+        onSubmit={handleUpdateBankAccount}
       />
     </>
   );
