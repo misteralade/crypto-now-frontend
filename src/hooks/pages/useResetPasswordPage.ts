@@ -30,7 +30,6 @@ export const useResetPasswordPage = () => {
       toast.dismiss();
       if (data?.response?.data?.message) {
         setError(data?.response?.data?.message);
-        toast.success(data?.response?.data?.message);
       }
       setTimeout(() => {
         setIsPasswordChanged(true);

@@ -5,24 +5,38 @@ export type FAQ = {
 
 export const faqs: FAQ[] = [
   {
-    question: "What is CryptoNow?",
+    question: "How are your exchange rates calculated?",
     answer:
-      "CryptoNow is built for Nigerians. Seamlessly buy and sell crypto with Naira 💰 it's fast, simple, and straight to the point! ​BIG PLUS: We only exchange! Your money and crypto stay with you. We don't hold your assets, ever. Get started now! 🚀",
+      "We quote live rates for supported cryptocurrencies against the naira. What you see during the quote is the rate used for your transaction, with no hidden percentage markups.",
   },
   {
-    question: "Is CryptoNow available outside Nigeria?",
-    answer: "Yes, we’re global! You can use CryptoNow from anywhere in the world, but we keep it real with 100% Naira transactions only.\n",
+    question: "How long does a bank payout take?",
+    answer:
+      "When selling crypto for naira, our system initiates your bank transfer as soon as your deposit confirms on the blockchain. Most payouts arrive in your Nigerian bank account within minutes.",
   },
   {
-    question: "How do I buy cryptocurrency on CryptoNow?",
-    answer: "To buy on CryptoNow is as easy as ABC ,  click on the buy now button and select the desired token to buy, provide and confirm your wallet details , make your naira payment into the bank account we have provided and we will process  your transaction immediately",
+    question: "How does buying crypto with naira work?",
+    answer:
+      "When buying crypto, you transfer naira to our designated platform bank account and upload your payment receipt. Our team verifies the transfer and sends the crypto directly to your wallet address.",
   },
   {
-    question: "How do I sell my crypto?",
-    answer: "To sell your crypto and receive Naira, simply click the Sell Now button, select the cryptocurrency you wish to trade, and provide your bank details for payment. Next, send the crypto to the wallet address we provide and upload a screenshot of your successful transfer; we will then make your Naira payment immediately.",
+    question: "Do you hold custody of my funds long term?",
+    answer:
+      "No. For sell orders, your crypto is held only for the duration of the exchange until network confirmations clear and the bank payout is sent. For buy orders, the crypto is delivered directly to your external wallet.",
   },
   {
-    question: "What happens if a transaction doesn't go well?",
-    answer: "There is no need to worry; all our transactions are well documented. If you encounter an issue, perhaps due to a bank or network delay, you can easily initiate a dispute for that transaction, and we will resolve it.",
+    question: "Can I trade without creating an account?",
+    answer:
+      "Yes. You can complete a guest trade with just your email and payout details. If you want higher transaction limits and full transaction history, you can create and verify a registered account.",
+  },
+  {
+    question: "What happens if there is an issue with my transaction?",
+    answer:
+      "Every transaction has a traceable session ID. If a transfer is delayed or an error occurs, you can open a dispute directly from the transaction page to get help from our support team.",
+  },
+  {
+    question: "Can I use CryptoNow from outside Nigeria?",
+    answer:
+      "You can initiate transactions from anywhere, but bank payouts and fiat payments settle in naira through Nigerian bank accounts.",
   },
 ];

@@ -1,6 +1,6 @@
-import {type ReactNode, useState} from "react";
+import { type ReactNode, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import {TIME_IN_MILLISECONDS} from "../util/constants.util.ts";
+import { TIME_IN_MILLISECONDS } from "../util/constants.util.ts";
 
 export default function ReactQueryRegistry({
   children,
@@ -19,7 +19,9 @@ export default function ReactQueryRegistry({
             refetchOnWindowFocus: false,
           },
           mutations: {
-            retry: 1,
+            // Mutations are generally non-idempotent; avoid automatic replays
+            // that can double-charge or exhaust rate/attempt limits.
+            retry: false,
             retryDelay: TIME_IN_MILLISECONDS.THREE_SECONDS,
           },
         },

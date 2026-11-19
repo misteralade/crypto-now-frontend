@@ -1,0 +1,2793 @@
+import TransactionReview from "../../global/TransactionReview.tsx";
+import { TRANSACTION_STATUS } from "../../../util/transaction.util.ts";
+import { useState, useRef, useEffect, type ReactNode } from "react";
+import { toast } from "react-toastify";
+import ResponsiveText from "../../global/ResponsiveText.tsx";
+import { RECEIPT_ACCEPT, receiptFileError } from "../../../util/receiptFile.ts";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  CreditCard,
+  ArrowCircleUp,
+  Lock,
+  Warning,
+  Receipt,
+  Lightning,
+  TrendUp,
+  ArrowLeft,
+  ArrowRight,
+} from "@phosphor-icons/react";
+import { useTradeCryptoCurrenciesButton } from "../../../hooks/components/useTradeCryptoCurrenciesButton.ts";
+import { useBankQuery } from "../../../queries/bank.query.ts";
+import { transactionServiceApi } from "../../../api/transaction.api.ts";
+import { bankServiceApi } from "../../../api/bank.api.ts";
+import { cryptoServiceApi } from "../../../api/crypto.api.ts";
+import { exchangeRateServiceApi } from "../../../api/rate.api.ts";
+import ManualDepositRecheckAction from "../../global/ManualDepositRecheckAction.tsx";
+import type {
+  SupportedCryptoOrCurrencyResponse,
+  TransactionResponseEntity,
+} from "../../../types/response.payload.types.ts";
+import { ROUTES } from "../../../util/constants.util.ts";
+import { useNavigate } from "@tanstack/react-router";
+import BankSelector from "../../global/BankSelector.tsx";
+import {
+  TRADE_FIAT_AMOUNT_PRESETS,
+  formatTradeFiatPreset,
+  roundTokenAmountUp,
+} from "../../../constants/tradeAmounts.ts";
+import type { SupportedExchangeRateResponse } from "../../../types/response.payload.types.ts";
+import { extractErrorMessage, isExchangeRateExpiryError } from "../../../util/index.util.ts";
+import { formatForDisplay, formatForDisplayLocalized } from "../../../util/asset-precision.ts";
+import { emailValidation } from "../../../util/constants.regex.util.ts";
+import { useTransactionLiveStatus } from "../../../hooks/components/trade/useTransactionLiveStatus.ts";
+import { TransactionTimeline } from "../../global/TransactionTimeline.tsx";
+
+const GUEST_RATE_FETCH_TIMEOUT_MS = 12_000;
+const GUEST_RATE_FETCH_TIMEOUT_MESSAGE =
+  "Rate preview is taking longer than expected. Please try again.";
+
+type QuoteCacheEntry = {
+  data: SupportedExchangeRateResponse;
+  cachedAt: number;
+};
+
+const buildGuestQuoteCacheKey = (
+  cryptoId: string,
+  currencyId: string,
+  action: "BUY" | "SELL",
+) => `${cryptoId}:${currencyId}:${action}`;
+
+const withTimeout = async <T,>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  timeoutMessage: string,
+) => {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  const timeoutPromise = new Promise<T>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new Error(timeoutMessage));
+    }, timeoutMs);
+  });
+
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+};
+
+const isTimeoutError = (error: unknown, timeoutMessage: string) =>
+  error instanceof Error && error.message === timeoutMessage;
+
+const getDefaultNetworkForCrypto = (
+  crypto?: { networks?: string[] } | null,
+) => crypto?.networks?.[0] ?? "";
+
+const ACTIVE_GUEST_SELL_STATUSES = new Set([
+  "INITIATED",
+  "AWAITING_CRYPTO",
+  "DEPOSIT_DETECTED",
+  "PENDING_CONFIRMATION",
+  "DEPOSIT_PENDING_MINIMUM",
+  "DEPOSIT_CONFIRMED",
+  "PAYOUT_INITIATED",
+  "PROCESSING",
+  "PENDING_PAYOUT",
+  "PAYOUT_FAILED",
+]);
+
+const GUEST_SELL_INITIAL_DEPOSIT_STATUSES = new Set([
+  "INITIATED",
+  "AWAITING_CRYPTO",
+]);
+const GUEST_SELL_AWAITING_DEPOSIT_STATUSES = new Set([
+  ...GUEST_SELL_INITIAL_DEPOSIT_STATUSES,
+  "DEPOSIT_PENDING_MINIMUM",
+]);
+
+const isGuestSellTransactionActive = (status?: string | null) =>
+  !!status && ACTIVE_GUEST_SELL_STATUSES.has(status);
+
+type GuestStatusTone = "info" | "warning" | "success" | "danger";
+
+const GUEST_STATUS_META: Record<
+  string,
+  { label: string; tone: GuestStatusTone }
+> = {
+  INITIATED: {
+    label: "Initiated",
+    tone: "info",
+  },
+  AWAITING_CRYPTO: {
+    label: "Waiting for Deposit",
+    tone: "warning",
+  },
+  DEPOSIT_DETECTED: {
+    label: "Deposit Detected",
+    tone: "info",
+  },
+  PENDING_CONFIRMATION: {
+    label: "Pending Confirmation",
+    tone: "warning",
+  },
+  DEPOSIT_PENDING_MINIMUM: {
+    label: "Below Minimum",
+    tone: "warning",
+  },
+  DEPOSIT_CONFIRMED: {
+    label: "Deposit Confirmed",
+    tone: "success",
+  },
+  NO_OWNER: {
+    label: "No Owner",
+    tone: "warning",
+  },
+  PAYOUT_INITIATED: {
+    label: "Payout Initiated",
+    tone: "info",
+  },
+  PROCESSING: {
+    label: "Processing",
+    tone: "info",
+  },
+  IN_REVIEW: {
+    label: "In Review",
+    tone: "warning",
+  },
+  PENDING_PAYOUT: {
+    label: "Pending Payout",
+    tone: "warning",
+  },
+  PAYOUT_FAILED: {
+    label: "Payout Failed",
+    tone: "danger",
+  },
+  DISPUTED: {
+    label: "Disputed",
+    tone: "danger",
+  },
+  COMPLETED: {
+    label: "Completed",
+    tone: "success",
+  },
+  FAILED: {
+    label: "Failed",
+    tone: "danger",
+  },
+  EXPIRED: {
+    label: "Expired",
+    tone: "danger",
+  },
+  CANCELLED: {
+    label: "Cancelled",
+    tone: "danger",
+  },
+};
+
+const GUEST_STATUS_TONE_STYLES: Record<GuestStatusTone, { bg: string; border: string; text: string; badge: string; dot: string }> = {
+  info: {
+    bg: "bg-sky-50",
+    border: "border-sky-200",
+    text: "text-sky-800",
+    badge: "bg-sky-100 text-sky-800 border-sky-200",
+    dot: "bg-sky-500",
+  },
+  warning: {
+    bg: "bg-amber-50",
+    border: "border-amber-200",
+    text: "text-amber-900",
+    badge: "bg-amber-100 text-amber-900 border-amber-200",
+    dot: "bg-amber-500",
+  },
+  success: {
+    bg: "bg-emerald-50",
+    border: "border-emerald-200",
+    text: "text-emerald-800",
+    badge: "bg-emerald-100 text-emerald-800 border-emerald-200",
+    dot: "bg-emerald-500",
+  },
+  danger: {
+    bg: "bg-rose-50",
+    border: "border-rose-200",
+    text: "text-rose-800",
+    badge: "bg-rose-100 text-rose-800 border-rose-200",
+    dot: "bg-rose-500",
+  },
+};
+
+const getGuestStatusMeta = (status?: string | null) =>
+  status && GUEST_STATUS_META[status]
+    ? GUEST_STATUS_META[status]
+    : {
+        label: "Monitoring",
+        tone: "info" as GuestStatusTone,
+      };
+
+const getGuestPayoutFailureCopy = () => ({
+  title: "Payout issue detected",
+  subtitle:
+    "We detected your crypto deposit, but the NGN payout could not be completed automatically.",
+});
+
+const GUEST_SELL_RECHECK_STATUSES = new Set([
+  "INITIATED",
+  "AWAITING_CRYPTO",
+  "DEPOSIT_DETECTED",
+  "PENDING_CONFIRMATION",
+]);
+
+const GUEST_SELL_FAILED_STATUSES = new Set([
+  "FAILED",
+  "CANCELLED",
+  "EXPIRED",
+  "PAYOUT_FAILED",
+  "DISPUTED",
+]);
+
+const GUEST_SELL_TERMINAL_STATUSES = new Set([
+  "COMPLETED",
+  "FAILED",
+  "CANCELLED",
+  "EXPIRED",
+  "PAYOUT_FAILED",
+  "DISPUTED",
+  "NO_OWNER",
+]);
+
+// ── Crypto token button ───────────────────────────────────────────────────────
+const TokenBtn = ({
+  item,
+  selected,
+  onSelect,
+}: {
+  item: SupportedCryptoOrCurrencyResponse;
+  selected: boolean;
+  onSelect: () => void;
+}) => {
+  const label = item.symbol || item.code || item.name || "Asset";
+  const initials = label.slice(0, 2).toUpperCase();
+
+  return (
+    <button
+      onClick={onSelect}
+      className="flex flex-col items-center py-3 px-1 rounded-xl transition-all cursor-pointer gap-1 shrink-0"
+      style={{
+        background: selected ? "rgba(148,142,238,0.1)" : "#F5F5F5",
+        border: selected ? "1.5px solid #948EEE" : "1.5px solid transparent",
+        flex: "1 0 calc((100% - 32px) / 5)",
+        minWidth: 68,
+      }}
+      aria-label={`Select ${item.name || label}`}
+      title={item.name || label}
+    >
+      <div className="w-8 h-8 flex items-center justify-center">
+        {item.logoUrl ? (
+          <img
+            src={item.logoUrl}
+            alt={`${item.name || label} logo`}
+            className="w-7 h-7 object-contain"
+          />
+        ) : (
+          <div className="w-7 h-7 rounded-full bg-white border border-gray-200 flex items-center justify-center">
+            <span className="text-[10px] font-bold text-gray-400">
+              {initials}
+            </span>
+          </div>
+        )}
+      </div>
+      <span
+        className={`text-xs font-bold leading-none ${
+          selected ? "text-[#948EEE]" : "text-[#0E0F0C]"
+        }`}
+      >
+        {label}
+      </span>
+      <span className="text-[10px] text-gray-400 leading-none">
+        {item.name}
+      </span>
+    </button>
+  );
+};
+
+// ── Summary row ───────────────────────────────────────────────────────────────
+const SRow = ({
+  label,
+  value,
+  green,
+}: {
+  label: string;
+  value: ReactNode;
+  green?: boolean;
+}) => (
+  <div className="flex justify-between items-center text-sm py-0.5">
+    <span className="text-gray-400">{label}</span>
+    <span
+      className={`font-semibold min-w-0 flex-1 max-w-[70%] text-right ${green ? "text-[#22c55e]" : "text-[#0E0F0C]"}`}
+    >
+      {value}
+    </span>
+  </div>
+);
+
+const CopyableSRow = ({
+  label,
+  value,
+  copyValue,
+  green,
+}: {
+  label: string;
+  value: string;
+  copyValue?: string;
+  green?: boolean;
+}) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(copyValue ?? value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setCopied(false);
+    }
+  };
+
+  return (
+    <div className="flex justify-between items-center gap-3 text-sm py-0.5">
+      <span className="text-gray-400">{label}</span>
+      <div className="flex items-center gap-2 min-w-0">
+        <span
+          className={`font-semibold whitespace-nowrap ${
+            green ? "text-[#22c55e]" : "text-[#0E0F0C]"
+          }`}
+        >
+          {value}
+        </span>
+        <button
+          type="button"
+          onClick={handleCopy}
+          className="shrink-0 text-[10px] font-semibold px-2.5 py-1 rounded-lg cursor-pointer"
+          style={{
+            background: "white",
+            border: "1.5px solid #E8E8E8",
+            color: copied ? "#22c55e" : "#948EEE",
+          }}
+          aria-label={`Copy ${label.toLowerCase()}`}
+          title={`Copy ${label.toLowerCase()}`}
+        >
+          {copied ? "Copied" : "Copy"}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// ── Floating-label input ──────────────────────────────────────────────────────
+const FloatInput = ({
+  label,
+  value,
+  onChange,
+  onBlur,
+  placeholder,
+  type = "text",
+  maxLength,
+  mono,
+  inputMode,
+  readOnly = false,
+  error,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  onBlur?: () => void;
+  placeholder?: string;
+  type?: string;
+  maxLength?: number;
+  mono?: boolean;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
+  readOnly?: boolean;
+  error?: string | null;
+}) => (
+  <div
+    className="flex flex-col rounded-xl px-4 pt-2 pb-3"
+    style={{ background: "#F5F5F5", border: "1.5px solid #E8E8E8" }}
+  >
+    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1">
+      {label}
+    </span>
+    <input
+      type={type}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      onBlur={onBlur}
+      placeholder={placeholder}
+      maxLength={maxLength}
+      inputMode={inputMode}
+      readOnly={readOnly}
+      aria-invalid={!!error}
+      className={`bg-transparent outline-none text-sm text-[#0E0F0C] font-medium placeholder:text-gray-300 ${
+        mono ? "font-mono" : ""
+      }`}
+    />
+    {error ? (
+      <p className="mt-1 text-[11px] font-medium text-rose-500">{error}</p>
+    ) : null}
+  </div>
+);
+
+// ── Slide animation ───────────────────────────────────────────────────────────
+const slide = {
+  initial: { opacity: 0, x: 40 },
+  animate: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: -40 },
+};
+
+const LS_KEY = "cryptonow_guest_trade";
+const GUEST_SESSION_QUERY_PARAM = "sessionId";
+
+function loadLS() {
+  try {
+    return JSON.parse(localStorage.getItem(LS_KEY) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+// ── Main card ─────────────────────────────────────────────────────────────────
+const AppSimCard = () => {
+  const navigate = useNavigate();
+  const { supportedCryptoCurrencies, loadingSupportedCrypto, errorSupportedCrypto, supportedCurrencies, loadingSupportedCurrencies } =
+    useTradeCryptoCurrenciesButton();
+  const { allBanks, loadingAllBanks } = useBankQuery();
+
+  const saved = loadLS();
+
+  const [tab, setTab] = useState<"BUY" | "SELL">(saved.tab || "BUY");
+  const [step, setStep] = useState<number>(saved.step || 1);
+  const [loading, setLoading] = useState(false);
+  const [quoteLoading, setQuoteLoading] = useState(false);
+
+  const [selectedCrypto, setSelectedCrypto] = useState(
+    saved.selectedCrypto || ""
+  );
+  const [selectedCurrency, setSelectedCurrency] = useState(
+    saved.selectedCurrency || ""
+  );
+  const [amount, setAmount] = useState(saved.amount || "");
+  const [receiveAmount, setReceiveAmount] = useState(saved.receiveAmount || "");
+  const [emailValidationError, setEmailValidationError] = useState<string | null>(null);
+  const emailValidationMessage = "Please enter a valid email address.";
+
+  // BUY: allow input in USD, but transact in NGN
+  const [buyInputCurrency, setBuyInputCurrency] = useState<"NGN" | "USD">(
+    "NGN"
+  );
+  // SELL: allow receive preview in USD, but transact in NGN
+  const [sellReceiveCurrency, setSellReceiveCurrency] = useState<"NGN" | "USD">(
+    "NGN"
+  );
+  const [usdToNgnRate, setUsdToNgnRate] = useState<number | null>(null);
+  const [usdRateLoading, setUsdRateLoading] = useState(false);
+  const [activeBuyPreset, setActiveBuyPreset] = useState<number | "custom" | null>(null);
+  const [customBuyAmount, setCustomBuyAmount] = useState("");
+  const [activeSellPreset, setActiveSellPreset] = useState<number | "custom" | null>(null);
+  const [customSellAmount, setCustomSellAmount] = useState("");
+  // Set only when a keystroke or preset/custom amount was rejected for pushing
+  // the amount past the anonymous max: cleared as soon as the amount is back
+  // within range. Mirrors DashboardTradeStep1's BuyFields.handleAmountChange.
+  const [maxLimitMessage, setMaxLimitMessage] = useState<string | null>(null);
+  const [guestTransactionStatus, setGuestTransactionStatus] =
+    useState<TransactionResponseEntity | null>(null);
+  const [guestError, setGuestError] = useState<string | null>(null);
+
+  const [email, setEmail] = useState((saved.email || "").trim());
+  const [walletAddress, setWalletAddress] = useState(saved.walletAddress || "");
+  const [selectedBankId, setSelectedBankId] = useState(saved.selectedBankId || "");
+  const [network, setNetwork] = useState(saved.network || "");
+  const [showNetworkPicker, setShowNetworkPicker] = useState(false);
+  const networkPickerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showNetworkPicker) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (
+        networkPickerRef.current &&
+        !networkPickerRef.current.contains(e.target as Node)
+      ) {
+        setShowNetworkPicker(false);
+      }
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [showNetworkPicker]);
+
+  const [bankName, setBankName] = useState(saved.bank?.name || "");
+  const [accountNumber, setAccountNumber] = useState(saved.accountNumber || "");
+  const [accountName, setAccountName] = useState(saved.accountName || "");
+  const [bankLookupError, setBankLookupError] = useState<string | null>(null);
+  const [isLookingUpBankName, setIsLookingUpBankName] = useState(false);
+
+  const [platformBank, setPlatformBank] = useState<any>(
+    saved.platformBank || null
+  );
+  const [sessionId, setSessionId] = useState(saved.sessionId || "");
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (sessionId) {
+      url.searchParams.set(GUEST_SESSION_QUERY_PARAM, sessionId);
+    } else {
+      url.searchParams.delete(GUEST_SESSION_QUERY_PARAM);
+    }
+    window.history.replaceState(window.history.state, "", url);
+  }, [sessionId]);
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const quoteRequestIdRef = useRef(0);
+  const [guestManualRecheckPending, setGuestManualRecheckPending] =
+    useState(false);
+
+  const [depositWallet, setDepositWallet] = useState(saved.depositWallet || "");
+  const [done, setDone] = useState(false);
+  const quoteCacheRef = useRef<Record<string, QuoteCacheEntry>>({});
+  const rateLimitNoticeShownRef = useRef(false);
+  const skipNextAutoQuoteRef = useRef(false);
+  const isBuy = tab === "BUY";
+  const guestTransactionLiveQuery = useTransactionLiveStatus(sessionId, {
+    enabled: !!sessionId && step === 3 && (!isBuy || done),
+  });
+  const guestTransactionTerminalStatus = guestTransactionStatus?.status ?? null;
+  const guestPayoutFailed = guestTransactionTerminalStatus === "PAYOUT_FAILED";
+  const showGuestDepositInstructions = !!guestTransactionStatus &&
+    GUEST_SELL_AWAITING_DEPOSIT_STATUSES.has(guestTransactionStatus.status);
+  const guestTransactionFailed =
+    !!guestTransactionTerminalStatus &&
+    GUEST_SELL_FAILED_STATUSES.has(guestTransactionTerminalStatus);
+  const guestTransactionDisputed = guestTransactionTerminalStatus === "DISPUTED";
+  const guestTransactionNoOwner = guestTransactionTerminalStatus === "NO_OWNER";
+  const normalizedEmail = email.trim();
+  const isEmailValid = normalizedEmail ? emailValidation.test(normalizedEmail) : false;
+  const emailError = emailValidationError;
+
+  const handleEmailChange = (nextEmail: string) => {
+    setEmail(nextEmail);
+    setEmailValidationError(null);
+    setGuestError(null);
+  };
+
+  const handleEmailBlur = () => {
+    if (!normalizedEmail) {
+      setEmailValidationError(null);
+      return;
+    }
+
+    if (!isEmailValid) {
+      setEmailValidationError(emailValidationMessage);
+      return;
+    }
+
+    setEmailValidationError(null);
+  };
+  const showGuestManualRecheck =
+    !isBuy &&
+    step === 3 &&
+    !!sessionId &&
+    !done &&
+    !guestPayoutFailed &&
+    ((guestTransactionStatus?.status &&
+      GUEST_SELL_RECHECK_STATUSES.has(guestTransactionStatus.status)) ||
+      !guestTransactionStatus?.status);
+
+  useEffect(() => {
+    if (!guestTransactionLiveQuery.data) {
+      return;
+    }
+
+    setGuestTransactionStatus(guestTransactionLiveQuery.data);
+    setReceiveAmount(String(guestTransactionLiveQuery.data.amountFiatNGN));
+
+    if (
+      !isBuy && GUEST_SELL_TERMINAL_STATUSES.has(guestTransactionLiveQuery.data.status)
+    ) {
+      setDone(true);
+    }
+  }, [guestTransactionLiveQuery.data, isBuy]);
+
+  const cryptoObj = supportedCryptoCurrencies?.find(
+    (c) => c.id === selectedCrypto
+  );
+  const cryptoSymbol = cryptoObj?.symbol || cryptoObj?.code || "";
+  const guestExpectedCryptoAmount = Number(
+    guestTransactionStatus?.expectedCryptoAmount ??
+      guestTransactionStatus?.rateSnapshot?.expectedCryptoAmount ??
+      amount ??
+      0,
+  );
+  const guestSettledCryptoAmount = Number(
+    guestTransactionStatus?.amountCrypto ?? amount ?? 0,
+  );
+  const guestSettledNgnAmount = Number(
+    guestTransactionStatus?.amountFiatNGN ?? receiveAmount ?? 0,
+  );
+  const guestHasAdjustedAmount =
+    !isBuy &&
+    guestTransactionTerminalStatus === "COMPLETED" &&
+    guestExpectedCryptoAmount > 0 &&
+    guestSettledCryptoAmount > 0 &&
+    Math.abs(guestExpectedCryptoAmount - guestSettledCryptoAmount) > 0.00000001;
+  const formatCryptoAmount = (value: number) =>
+    value.toLocaleString("en-US", {
+      maximumFractionDigits: 8,
+    });
+  const selectedBank = allBanks?.find((bank) => bank.id === selectedBankId);
+  const anonymousMinimumCryptoAmount = Number(
+    cryptoObj?.minTradeAmountForAnonymous || 0,
+  );
+  const anonymousMaximumCryptoAmount = Number(
+    cryptoObj?.maxTradeAmountForAnonymous || 0,
+  );
+  const numericTradeAmount = Number(amount || 0);
+  const amountBelowAnonymousMin =
+    numericTradeAmount > 0 &&
+    anonymousMinimumCryptoAmount > 0 &&
+    numericTradeAmount < anonymousMinimumCryptoAmount;
+  const minLimitMessage =
+    amountBelowAnonymousMin && cryptoSymbol
+      ? `Minimum anonymous trade amount is ${formatForDisplay(anonymousMinimumCryptoAmount, cryptoSymbol)} ${cryptoSymbol}`
+      : null;
+
+  // Keep the selected coin available for the current direction.
+  useEffect(() => {
+    if (!supportedCryptoCurrencies) return;
+    const available = supportedCryptoCurrencies.filter((coin) => isBuy ? coin.buyEnabled : coin.sellEnabled);
+    if (!available.some((coin) => coin.id === selectedCrypto)) setSelectedCrypto(available[0]?.id ?? "");
+  }, [supportedCryptoCurrencies, isBuy, selectedCrypto]);
+
+  useEffect(() => {
+    if (!selectedCurrency && supportedCurrencies?.length)
+      setSelectedCurrency(supportedCurrencies[0].id);
+  }, [supportedCurrencies]);
+
+  useEffect(() => {
+    if (!selectedBankId && bankName && allBanks?.length) {
+      const matchedBank = allBanks.find(
+        (bank) => bank.name.toLowerCase() === bankName.toLowerCase(),
+      );
+      if (matchedBank) {
+        setSelectedBankId(matchedBank.id);
+      }
+    }
+  }, [allBanks, bankName, selectedBankId]);
+
+  useEffect(() => {
+    if (selectedBank?.name) {
+      setBankName(selectedBank.name);
+    }
+  }, [selectedBank?.name]);
+
+  // Keep restored selections within the networks currently offered for the coin.
+  useEffect(() => {
+    if (!cryptoObj) return;
+    if (network && cryptoObj.networks?.includes(network)) return;
+    setNetwork(getDefaultNetworkForCrypto(cryptoObj));
+  }, [cryptoObj, network]);
+
+  // Reset guest error on step transitions so that errors from previous step do not pollute the new step.
+  useEffect(() => {
+    setGuestError(null);
+  }, [step]);
+
+  // Persist all state to localStorage on every change
+  useEffect(() => {
+    localStorage.setItem(
+      LS_KEY,
+      JSON.stringify({
+        tab,
+        step,
+        selectedCrypto,
+        selectedCurrency,
+        amount,
+        receiveAmount,
+        email,
+        walletAddress,
+        selectedBankId,
+        network,
+        bankName,
+        accountNumber,
+        accountName,
+        platformBank,
+        sessionId,
+        depositWallet,
+      })
+    );
+  }, [
+    tab,
+    step,
+    selectedCrypto,
+    selectedCurrency,
+    amount,
+    receiveAmount,
+    email,
+    walletAddress,
+    selectedBankId,
+    network,
+    bankName,
+    accountNumber,
+    accountName,
+    platformBank,
+    sessionId,
+    depositWallet,
+  ]);
+
+  const buyChipAmounts =
+    buyInputCurrency === "USD"
+      ? TRADE_FIAT_AMOUNT_PRESETS.usd
+      : TRADE_FIAT_AMOUNT_PRESETS.ngn;
+  const sellChipAmounts =
+    sellReceiveCurrency === "USD"
+      ? TRADE_FIAT_AMOUNT_PRESETS.usd
+      : TRADE_FIAT_AMOUNT_PRESETS.ngn;
+  const formatChip = (n: number, currencyCode: "NGN" | "USD") =>
+    formatTradeFiatPreset(n, currencyCode);
+  const buyChipItems = buyChipAmounts.map((value) => ({
+    value,
+    label: formatChip(value, buyInputCurrency),
+  }));
+  const sellChipItems = sellChipAmounts.map((value) => ({
+    value,
+    label: formatChip(value, sellReceiveCurrency),
+  }));
+  const customChipItem = {
+    value: "custom" as const,
+    label: "Custom",
+  };
+  const formatReceiveCryptoDisplay = (value: string) => {
+    const amountValue = Number(value);
+    if (!amountValue || Number.isNaN(amountValue)) return value;
+    return formatForDisplayLocalized(amountValue, cryptoSymbol);
+  };
+  const formatReceiveNgnDisplay = (value: string) => {
+    const amountValue = Number(value);
+    if (!amountValue || Number.isNaN(amountValue)) return `${ngnDisplayCode}0`;
+    return `${ngnDisplayCode}${formatForDisplayLocalized(amountValue, "NGN")}`;
+  };
+  const formatUsdEquivalentDisplay = (value: number) =>
+    `$${formatForDisplayLocalized(value, "USD")} USD equivalent`;
+  const getCachedQuote = (
+    cryptoId: string,
+    currencyId: string,
+    action: "BUY" | "SELL",
+  ) => {
+    const cacheKey = buildGuestQuoteCacheKey(cryptoId, currencyId, action);
+    const cachedEntry = quoteCacheRef.current[cacheKey];
+    if (!cachedEntry) return null;
+    return cachedEntry.data;
+  };
+  const setCachedQuote = (
+    cryptoId: string,
+    currencyId: string,
+    action: "BUY" | "SELL",
+    data: SupportedExchangeRateResponse,
+  ) => {
+    quoteCacheRef.current[buildGuestQuoteCacheKey(cryptoId, currencyId, action)] =
+      {
+        data,
+        cachedAt: Date.parse(data.cachedAt),
+      };
+  };
+  const isRateLimitedError = (error: unknown) =>
+    typeof error === "object" &&
+    error !== null &&
+    "response" in error &&
+    typeof (error as { response?: { status?: number } }).response?.status ===
+      "number" &&
+    (error as { response?: { status?: number } }).response?.status === 429;
+  const getExchangeRateWithCache = async (
+    cryptoId: string,
+    currencyId: string,
+    action: "BUY" | "SELL",
+    forceRefresh = false,
+  ) => {
+    const cachedQuote = forceRefresh
+      ? null
+      : getCachedQuote(cryptoId, currencyId, action);
+    if (cachedQuote) return { data: cachedQuote, fromCache: true };
+
+    try {
+      const { data, success } = await withTimeout(
+        exchangeRateServiceApi.getExchangeRate(cryptoId, currencyId, action),
+        GUEST_RATE_FETCH_TIMEOUT_MS,
+        GUEST_RATE_FETCH_TIMEOUT_MESSAGE,
+      );
+      if (success && data?.fiatRate > 0) {
+        setCachedQuote(cryptoId, currencyId, action, data);
+        rateLimitNoticeShownRef.current = false;
+        return { data, fromCache: false };
+      }
+      return { data: null, fromCache: false };
+    } catch (error) {
+      if (
+        !forceRefresh &&
+        cachedQuote &&
+        (isRateLimitedError(error) ||
+          isTimeoutError(error, GUEST_RATE_FETCH_TIMEOUT_MESSAGE))
+      ) {
+        rateLimitNoticeShownRef.current = true;
+        return { data: cachedQuote, fromCache: true };
+      }
+      throw error;
+    }
+  };
+
+  // Derive NGN amount when user is typing in USD
+  const ngnCurrencyObj = supportedCurrencies?.find((c) => c.code === "NGN");
+  const usdCurrencyObj = supportedCurrencies?.find((c) => c.code === "USD");
+  const ngnDisplayCode = ngnCurrencyObj?.code || "NGN";
+  const transactionCurrencyObj = ngnCurrencyObj;
+  const quoteCurrencyObj = ngnCurrencyObj ?? supportedCurrencies?.find(
+    (c) => c.id === selectedCurrency,
+  );
+  const currSymbol = transactionCurrencyObj?.symbol || transactionCurrencyObj?.code || "₦";
+
+  const fetchUsdToNgnRate = async (
+    cryptoId: string,
+    action: "BUY" | "SELL",
+  ) => {
+    if (!ngnCurrencyObj || !usdCurrencyObj) {
+      toast.error("USD input is not supported at this time.");
+      setBuyInputCurrency("NGN");
+      return null;
+    }
+    setUsdRateLoading(true);
+    try {
+      const { data } = await getExchangeRateWithCache(
+        cryptoId,
+        usdCurrencyObj.id,
+        action,
+      );
+      if (data && data.fiatRate > 0 && data.usdRate > 0) {
+        const resolvedRate = data.fiatRate / data.usdRate;
+        setUsdToNgnRate(resolvedRate);
+        return resolvedRate;
+      } else {
+        if (action === "BUY") setBuyInputCurrency("NGN");
+        if (action === "SELL") setSellReceiveCurrency("NGN");
+        return null;
+      }
+    } catch (error) {
+      console.error("AppSimCard: failed to fetch USD conversion rate", error);
+      if (usdToNgnRate) {
+        return usdToNgnRate;
+      }
+      if (action === "BUY") setBuyInputCurrency("NGN");
+      if (action === "SELL") setSellReceiveCurrency("NGN");
+      return null;
+    } finally {
+      setUsdRateLoading(false);
+    }
+  };
+
+  // `amount` is always the crypto quantity the user types/picks (for both BUY and SELL);
+  // `receiveAmount` is always the computed NGN fiat counterpart.
+  const fetchRate = async (overrideAmount?: string, forceRefresh = false) => {
+    const effectiveAmount = overrideAmount ?? amount;
+    if (!selectedCrypto || !quoteCurrencyObj?.id || !effectiveAmount) return;
+    const numericAmount = parseFloat(effectiveAmount);
+    if (Number.isNaN(numericAmount) || numericAmount <= 0) {
+      setReceiveAmount("");
+      return;
+    }
+
+    const requestId = ++quoteRequestIdRef.current;
+    setQuoteLoading(true);
+    try {
+      const { data } = await getExchangeRateWithCache(
+        selectedCrypto,
+        quoteCurrencyObj.id,
+        isBuy ? "BUY" : "SELL",
+        forceRefresh,
+      );
+      if (requestId !== quoteRequestIdRef.current) return;
+
+      if (data && data.fiatRate > 0) {
+        const computed = numericAmount * data.fiatRate;
+        setReceiveAmount(computed > 0 ? String(computed) : "");
+      } else {
+        setReceiveAmount("");
+      }
+    } catch (error) {
+      console.error("AppSimCard: failed to compute trade preview", error);
+      if (isTimeoutError(error, GUEST_RATE_FETCH_TIMEOUT_MESSAGE)) {
+        toast.error(GUEST_RATE_FETCH_TIMEOUT_MESSAGE);
+      }
+      if (requestId === quoteRequestIdRef.current) {
+        setReceiveAmount("");
+      }
+    } finally {
+      if (requestId === quoteRequestIdRef.current) {
+        setQuoteLoading(false);
+      }
+    }
+  };
+
+  const lookupAccountName = async (
+    accountNumberValue: string,
+    bankId: string,
+  ) => {
+    if (!bankId || accountNumberValue.length !== 10) return;
+
+    setIsLookingUpBankName(true);
+    setBankLookupError(null);
+    try {
+      const { data, success, message } = await bankServiceApi.lookupAccountName(
+        accountNumberValue,
+        bankId,
+      );
+      if (success && data?.accountName) {
+        setAccountName(data.accountName);
+        return;
+      }
+
+      setAccountName("");
+      setBankLookupError(
+        message || "We could not verify this account. Check the bank and account number.",
+      );
+    } catch (error) {
+      console.error("AppSimCard: failed to look up guest bank account", error);
+      setAccountName("");
+      setBankLookupError(
+        "We could not verify this account. Check the bank and account number.",
+      );
+    } finally {
+      setIsLookingUpBankName(false);
+    }
+  };
+
+  const handleBankSelect = (bankId: string) => {
+    setSelectedBankId(bankId);
+    setBankLookupError(null);
+    setAccountName("");
+  };
+
+  const handleAccountNumberChange = (value: string) => {
+    const digitsOnly = value.replace(/\D/g, "").slice(0, 10);
+    setAccountNumber(digitsOnly);
+    setAccountName("");
+    setBankLookupError(null);
+  };
+
+  useEffect(() => {
+    if (!selectedBankId || accountNumber.length !== 10) {
+      setAccountName("");
+      setBankLookupError(null);
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      void lookupAccountName(accountNumber, selectedBankId);
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [accountNumber, selectedBankId]);
+
+  useEffect(() => {
+    if (!selectedCrypto) return;
+    if (isBuy && buyInputCurrency === "USD") {
+      void fetchUsdToNgnRate(selectedCrypto, "BUY");
+    }
+    if (!isBuy && sellReceiveCurrency === "USD") {
+      void fetchUsdToNgnRate(selectedCrypto, "SELL");
+    }
+  }, [buyInputCurrency, isBuy, selectedCrypto, sellReceiveCurrency]);
+
+  // Prefetch the rate the instant a crypto is selected (or the buy/sell tab
+  // or quote currency changes): well before the user types an amount. This
+  // just warms getExchangeRateWithCache's cache, so the amount-driven
+  // fetchRate() below resolves instantly off cache instead of waiting on a
+  // network round-trip once the user starts typing.
+  useEffect(() => {
+    if (!selectedCrypto || !quoteCurrencyObj?.id) return;
+    void getExchangeRateWithCache(
+      selectedCrypto,
+      quoteCurrencyObj.id,
+      isBuy ? "BUY" : "SELL",
+    ).catch(() => undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCrypto, quoteCurrencyObj?.id, isBuy]);
+
+  useEffect(() => {
+    if (sessionId) return;
+    if (!selectedCrypto || !quoteCurrencyObj?.id || !amount) {
+      quoteRequestIdRef.current++;
+      setReceiveAmount("");
+      setQuoteLoading(false);
+      return;
+    }
+
+    if (skipNextAutoQuoteRef.current) {
+      skipNextAutoQuoteRef.current = false;
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      void fetchRate();
+    }, 250);
+
+    return () => clearTimeout(timeout);
+  }, [
+    sessionId,
+    amount,
+    buyInputCurrency,
+    isBuy,
+    quoteCurrencyObj?.id,
+    selectedCrypto,
+    sellReceiveCurrency,
+    usdToNgnRate,
+  ]);
+
+  const handleGuestManualRecheck = async () => {
+    if (!sessionId) return;
+
+    setGuestManualRecheckPending(true);
+    setGuestError(null);
+    const toastId = "guest-manual-sell-recheck";
+
+    console.info("AppSimCard: manual sell deposit recheck requested", {
+      sessionId,
+      status: guestTransactionStatus?.status ?? "unknown",
+    });
+    toast.loading("Rechecking deposit…", { toastId });
+
+    try {
+      const { success, message, data } =
+        await transactionServiceApi.manualRecheckAnonymousSellDeposit(sessionId);
+
+      toast.dismiss(toastId);
+
+      if (!success) {
+        const errorMessage =
+          message || "Failed to recheck this deposit. Please try again.";
+        setGuestError(errorMessage);
+        toast.error(errorMessage);
+        console.error("AppSimCard: manual sell deposit recheck failed", {
+          sessionId,
+          status: guestTransactionStatus?.status ?? "unknown",
+          message: errorMessage,
+          response: data,
+        });
+        return;
+      }
+
+      toast.success(message || "Deposit recheck submitted.");
+      console.info("AppSimCard: manual sell deposit recheck completed", {
+        sessionId,
+        status: data?.status ?? "unknown",
+        outcome: data?.outcome ?? "unknown",
+      });
+
+      if (data?.status) {
+        const nextStatus = data.status as TransactionResponseEntity["status"];
+        setGuestTransactionStatus((current) =>
+          current ? { ...current, status: nextStatus } : current,
+        );
+        if (GUEST_SELL_TERMINAL_STATUSES.has(nextStatus)) {
+          setDone(true);
+        }
+      }
+
+      const refreshed = await guestTransactionLiveQuery.refetch();
+      if (
+        refreshed.data &&
+        GUEST_SELL_TERMINAL_STATUSES.has(refreshed.data.status)
+      ) {
+        setDone(true);
+      }
+    } catch (error) {
+      toast.dismiss(toastId);
+      const message =
+        extractErrorMessage(error) ||
+        "Failed to recheck this deposit. Please try again.";
+      setGuestError(message);
+      toast.error(message);
+      console.error("AppSimCard: manual sell deposit recheck errored", {
+        sessionId,
+        status: guestTransactionStatus?.status ?? "unknown",
+        error,
+      });
+    } finally {
+      setGuestManualRecheckPending(false);
+    }
+  };
+
+  // Shared by BUY and SELL: a fiat preset/custom value is picked, we convert it to the
+  // crypto quantity that goes into the input (`amount`), and store the resolved NGN
+  // fiat value in `receiveAmount` as the preview/counterpart.
+  const applyFiatPresetAmount = async (
+    targetFiatAmount: number,
+    preset: number | "custom",
+  ) => {
+    if (!selectedCrypto || !quoteCurrencyObj?.id) return;
+
+    const displayCurrency = isBuy ? buyInputCurrency : sellReceiveCurrency;
+    const action = isBuy ? "BUY" : "SELL";
+
+    let resolvedUsdToNgnRate = usdToNgnRate;
+    if (displayCurrency === "USD" && !resolvedUsdToNgnRate) {
+      resolvedUsdToNgnRate = await fetchUsdToNgnRate(selectedCrypto, action);
+    }
+
+    const targetNgnAmount =
+      displayCurrency === "USD"
+        ? targetFiatAmount * (resolvedUsdToNgnRate || 0)
+        : targetFiatAmount;
+    if (!targetNgnAmount || Number.isNaN(targetNgnAmount)) return;
+
+    const { data } = await getExchangeRateWithCache(
+      selectedCrypto,
+      quoteCurrencyObj.id,
+      action,
+    );
+    if (!data?.fiatRate) return;
+
+    // Keep full calc precision here: this becomes `amount`, which is later parsed
+    // back into submittedCryptoAmount for the actual trade. Running it through
+    // formatForDisplay would re-truncate to the token's (smaller) displayDecimals
+    // and silently submit less crypto than roundTokenAmountUp actually quoted.
+    const roundedCryptoAmount = String(
+      roundTokenAmountUp(targetNgnAmount / data.fiatRate, cryptoSymbol, isBuy ? cryptoObj?.buyPrecision : null),
+    );
+
+    // Reject the preset/custom chip outright (leave the field as it was) and
+    // surface the max as inline red text, rather than silently rewriting the
+    // chip's amount down to the max (mirrors DashboardTradeStep1).
+    if (
+      anonymousMaximumCryptoAmount > 0 &&
+      Number(roundedCryptoAmount) > anonymousMaximumCryptoAmount
+    ) {
+      setMaxLimitMessage(
+        `Maximum anonymous trade amount is ${formatForDisplay(anonymousMaximumCryptoAmount, cryptoSymbol)} ${cryptoSymbol}`,
+      );
+      return;
+    }
+    setMaxLimitMessage(null);
+
+    const computedReceiveAmount = targetNgnAmount.toFixed(2);
+    skipNextAutoQuoteRef.current = true;
+    setAmount(roundedCryptoAmount);
+    setReceiveAmount(computedReceiveAmount);
+    if (isBuy) setActiveBuyPreset(preset);
+    else setActiveSellPreset(preset);
+    setGuestError(null);
+  };
+
+  const handleChipClick = async (targetFiatAmount: number) => {
+    if (isBuy) setCustomBuyAmount("");
+    else setCustomSellAmount("");
+    await applyFiatPresetAmount(targetFiatAmount, targetFiatAmount);
+  };
+
+  const handleCustomAmountChange = (value: string) => {
+    if (isBuy) setActiveBuyPreset("custom");
+    else setActiveSellPreset("custom");
+    if (isBuy) setCustomBuyAmount(value);
+    else setCustomSellAmount(value);
+    setGuestError(null);
+  };
+
+  // Raw crypto-amount input (top box): cleans the keystroke and rejects it
+  // outright if it would push the amount past the anonymous max, same as
+  // DashboardTradeStep1's BuyFields.handleAmountChange.
+  const handleAmountChange = (value: string) => {
+    let cleaned = value.replace(/[^0-9.]/g, "");
+    const firstDot = cleaned.indexOf(".");
+    if (firstDot !== -1) {
+      cleaned =
+        cleaned.slice(0, firstDot + 1) +
+        cleaned.slice(firstDot + 1).replace(/\./g, "");
+    }
+    const dotIndex = cleaned.indexOf(".");
+    if (dotIndex !== -1 && cleaned.length - dotIndex - 1 > 8) {
+      cleaned = cleaned.slice(0, dotIndex + 1 + 8);
+    }
+
+    if (
+      cleaned !== "" &&
+      cleaned !== "." &&
+      anonymousMaximumCryptoAmount > 0 &&
+      Number(cleaned) > anonymousMaximumCryptoAmount
+    ) {
+      setMaxLimitMessage(
+        `Maximum anonymous trade amount is ${formatForDisplay(anonymousMaximumCryptoAmount, cryptoSymbol)} ${cryptoSymbol}`,
+      );
+      return;
+    }
+
+    setMaxLimitMessage(null);
+    setAmount(cleaned);
+    setReceiveAmount("");
+    setGuestError(null);
+    setActiveBuyPreset(null);
+    setActiveSellPreset(null);
+  };
+
+  const activePreset = isBuy ? activeBuyPreset : activeSellPreset;
+  const customAmount = isBuy ? customBuyAmount : customSellAmount;
+
+  useEffect(() => {
+    if (activePreset !== "custom") return;
+
+    const trimmedValue = customAmount.trim();
+    if (!trimmedValue) {
+      setAmount("");
+      setReceiveAmount("");
+      return;
+    }
+
+    const targetValue = Number(trimmedValue);
+    if (!targetValue || Number.isNaN(targetValue)) {
+      setAmount("");
+      setReceiveAmount("");
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      void applyFiatPresetAmount(targetValue, "custom");
+    }, 300);
+
+    return () => window.clearTimeout(timer);
+  }, [activePreset, customAmount, isBuy, buyInputCurrency, sellReceiveCurrency, selectedCrypto, quoteCurrencyObj?.id, usdToNgnRate]);
+
+  const handleStep1Next = async () => {
+    if (!selectedCrypto || !quoteCurrencyObj?.id || !amount) return;
+
+    const submittedCryptoAmount = Number(amount);
+
+    if (anonymousMinimumCryptoAmount > 0) {
+      if (
+        !submittedCryptoAmount ||
+        Number.isNaN(submittedCryptoAmount) ||
+        submittedCryptoAmount < anonymousMinimumCryptoAmount
+      ) {
+        return;
+      }
+    }
+
+    if (anonymousMaximumCryptoAmount > 0) {
+      if (
+        !submittedCryptoAmount ||
+        Number.isNaN(submittedCryptoAmount) ||
+        submittedCryptoAmount > anonymousMaximumCryptoAmount
+      ) {
+        const maximumLabel = `${formatForDisplay(anonymousMaximumCryptoAmount, cryptoSymbol)} ${cryptoSymbol}`;
+        const errorMessage = `Anonymous trades must not exceed ${maximumLabel}.`;
+        setGuestError(errorMessage);
+        toast.error(errorMessage);
+        return;
+      }
+    }
+
+    setStep(2);
+  };
+
+  const handleBuyStep2Next = async (retrying = false) => {
+    const guestEmail = normalizedEmail;
+    if (!guestEmail || !isEmailValid || !walletAddress || !transactionCurrencyObj?.id) {
+      const message = !guestEmail || !isEmailValid
+        ? emailValidationMessage
+        : "Please complete the required fields before continuing.";
+      setEmailValidationError(!guestEmail || !isEmailValid ? message : null);
+      setGuestError(message);
+      return;
+    }
+    setLoading(true);
+    try {
+      setGuestError(null);
+      const res = await transactionServiceApi.initiateTransactionAnonymousUser({
+        action: "BUY",
+        coinId: selectedCrypto,
+        currencyId: transactionCurrencyObj?.id,
+        amountToSend: parseFloat(receiveAmount) || 0,
+        amountToReceive: parseFloat(amount),
+        email: guestEmail,
+        walletAddress,
+        network,
+      });
+      if (!res?.success) {
+        if (isExchangeRateExpiryError(res?.message) && !retrying) {
+          await fetchRate(undefined, true).catch(() => undefined);
+          return await handleBuyStep2Next(true);
+        }
+        const message = res?.message || "Failed to initiate transaction";
+        setGuestError(message);
+        toast.error(message);
+        return;
+      }
+      if (res?.data) {
+        setSessionId((res.data as any).sessionId || "");
+        setGuestTransactionStatus(null);
+        const bank = await bankServiceApi.getPlatformBankDetails();
+        if (!bank?.success) {
+          const message = bank?.message || "Failed to fetch payment details";
+          setGuestError(message);
+          toast.error(message);
+          return;
+        }
+        setPlatformBank(bank.data);
+        setGuestError(null);
+        setStep(3);
+      }
+    } catch (err: any) {
+      if (isExchangeRateExpiryError(err) && !retrying) {
+        await fetchRate(undefined, true).catch(() => undefined);
+        return await handleBuyStep2Next(true);
+      }
+      const msg = extractErrorMessage(err) || "Something went wrong. Please try again.";
+      if (!isExchangeRateExpiryError(err)) {
+        setGuestError(msg);
+        toast.error(msg);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSellStep2Next = async (retrying = false) => {
+    const guestEmail = normalizedEmail;
+    if (!guestEmail || !isEmailValid || !selectedBankId || !accountNumber || !accountName || !transactionCurrencyObj?.id) {
+      const message = !guestEmail || !isEmailValid
+        ? emailValidationMessage
+        : "Please complete the required fields before continuing.";
+      setEmailValidationError(!guestEmail || !isEmailValid ? message : null);
+      setGuestError(message);
+      return;
+    }
+    setLoading(true);
+    try {
+      setGuestError(null);
+      const bankAccount = await bankServiceApi.createAnonymousUserBankAccount({
+        email: guestEmail,
+        bankId: selectedBankId,
+        accountHolderName: accountName,
+        accountNumber,
+        isDefault: false,
+      });
+
+      if (!bankAccount?.success || !bankAccount?.data?.id) {
+        if (isExchangeRateExpiryError(bankAccount?.message) && !retrying) {
+          await fetchRate(undefined, true).catch(() => undefined);
+          return await handleSellStep2Next(true);
+        }
+        const message = bankAccount?.message || "Failed to save bank account";
+        setGuestError(message);
+        toast.error(message);
+        return;
+      }
+
+      const res = await transactionServiceApi.initiateTransactionAnonymousUser({
+        action: "SELL",
+        coinId: selectedCrypto,
+        currencyId: transactionCurrencyObj?.id,
+        amountToSend: parseFloat(amount),
+        amountToReceive: parseFloat(receiveAmount) || 0,
+        email: guestEmail,
+        accountId: bankAccount.data.id,
+        network,
+      });
+      if (!res?.success) {
+        if (isExchangeRateExpiryError(res?.message) && !retrying) {
+          await fetchRate(undefined, true).catch(() => undefined);
+          return await handleSellStep2Next(true);
+        }
+        const message = res?.message || "Failed to initiate transaction";
+        setGuestError(message);
+        toast.error(message);
+        return;
+      }
+      if (res?.data) {
+        const session = res.data.sessionId;
+        setSessionId(session);
+        setGuestTransactionStatus(null);
+        if (res.data.resumed) {
+          if (!res.data.depositAddress) {
+            throw new Error("We couldn't load the deposit address. Please try again.");
+          }
+          setDepositWallet(res.data.depositAddress);
+        } else {
+          const wallet = await cryptoServiceApi.allocateGuestSellWallet({
+            sessionId: session,
+            cryptoId: selectedCrypto,
+            network,
+          });
+          if (!wallet?.success) {
+            const message = wallet?.message || "Failed to fetch deposit wallet";
+            setGuestError(message);
+            toast.error(message);
+            return;
+          }
+          setDepositWallet(wallet.data.walletAddress);
+        }
+        setGuestError(null);
+        setStep(3);
+      }
+    } catch (err: any) {
+      if (isExchangeRateExpiryError(err) && !retrying) {
+        await fetchRate(undefined, true).catch(() => undefined);
+        return await handleSellStep2Next(true);
+      }
+      const msg = extractErrorMessage(err) || "Something went wrong. Please try again.";
+      if (!isExchangeRateExpiryError(err)) {
+        setGuestError(msg);
+        toast.error(msg);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBuySubmit = async () => {
+    setLoading(true);
+    try {
+      setGuestError(null);
+      if (receiptFile) {
+        const fd = new FormData();
+        fd.append("file", receiptFile);
+        sessionStorage.setItem("transactionSessionId", sessionId);
+        await transactionServiceApi.uploadTransactionReceipt(fd);
+      }
+      setDone(true);
+    } catch (error) {
+      const message = extractErrorMessage(error) || "Failed to upload receipt. Please try again.";
+      setGuestError(message);
+      toast.error(message);
+      console.error("AppSimCard: failed to upload receipt", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const copyToClipboard = (text: string) => navigator.clipboard.writeText(text);
+
+  const reset = () => {
+    setGuestError(null);
+    setEmailValidationError(null);
+    setMaxLimitMessage(null);
+    setStep(1);
+    setDone(false);
+    setAmount("");
+    setReceiveAmount("");
+    setEmail("");
+    setWalletAddress("");
+    setSelectedBankId("");
+    setBankName("");
+    setAccountNumber("");
+    setAccountName("");
+    setBankLookupError(null);
+    setReceiptFile(null);
+    setPlatformBank(null);
+    setDepositWallet("");
+    setSessionId("");
+    setGuestTransactionStatus(null);
+    setGuestManualRecheckPending(false);
+    setBuyInputCurrency("NGN");
+    setSellReceiveCurrency("NGN");
+    setUsdToNgnRate(null);
+    setActiveBuyPreset(null);
+    setCustomBuyAmount("");
+    setActiveSellPreset(null);
+    setCustomSellAmount("");
+    setNetwork(getDefaultNetworkForCrypto(cryptoObj));
+    localStorage.removeItem(LS_KEY);
+  };
+
+  const allowedNetworks = cryptoObj?.networkOptions ?? [];
+  const networkLabel =
+    allowedNetworks.find((n) => n.id === network)?.label || network || "Select network";
+
+  return (
+    <div
+      className="relative flex flex-col overflow-hidden"
+      style={{
+        width: "min(480px, calc(100vw - 32px))",
+        background: "#F7F7F8",
+        borderRadius: "20px",
+        boxShadow:
+          "0 8px 48px rgba(0,0,0,0.10), 0 2px 12px rgba(148,142,238,0.10)",
+        border: "1px solid rgba(0,0,0,0.06)",
+      }}
+    >
+      {/* Tabs */}
+      <div
+        className="flex border-b border-gray-200 bg-white"
+        style={{ borderRadius: "20px 20px 0 0" }}
+      >
+        {(["BUY", "SELL"] as const).map((t) => {
+          const active = tab === t;
+          const color = t === "BUY" ? "#948EEE" : "#22c55e";
+          return (
+            <button
+              key={t}
+              onClick={() => {
+                setTab(t);
+                reset();
+              }}
+              className="flex-1 py-4 text-sm font-semibold transition-all cursor-pointer border-b-2 -mb-px flex items-center justify-center gap-2"
+              style={{
+                borderBottomColor: active ? color : "transparent",
+                color: active ? color : "#9CA3AF",
+              }}
+            >
+              {t === "BUY" ? (
+                <CreditCard size={16} weight="duotone" />
+              ) : (
+                <ArrowCircleUp size={16} weight="duotone" />
+              )}
+              {t === "BUY" ? "Buy Crypto" : "Sell Crypto"}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Step content */}
+      <div className="relative px-5 pb-6 pt-4 overflow-hidden">
+        <AnimatePresence mode="wait">
+          {/* ── STEP 1 ── */}
+          {step === 1 && !done && (
+            <motion.div
+              key="s1"
+              {...slide}
+              transition={{ duration: 0.2 }}
+              className="flex flex-col gap-4"
+            >
+              {/* Step label */}
+              <p className="text-center text-sm text-gray-400">
+                Step 1 of {isBuy ? "3" : "2"} ·{" "}
+                {isBuy ? "Select & Amount" : "Select & Amount"}
+              </p>
+
+              {/* Crypto picker */}
+              {loadingSupportedCrypto && !supportedCryptoCurrencies ? (
+                <div className="rounded-xl border border-dashed border-gray-200 bg-white px-4 py-6 text-center text-sm text-gray-400 animate-pulse">
+                  Crypto assets are loading , pls wait
+                </div>
+              ) : errorSupportedCrypto ? (
+                <div className="rounded-xl border border-dashed border-red-200 bg-red-50 px-4 py-6 text-center text-sm text-red-500">
+                  Problem fetching tokens. Please check your network connection.
+                </div>
+              ) : !supportedCryptoCurrencies ||
+                supportedCryptoCurrencies.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-gray-200 bg-white px-4 py-6 text-center text-sm text-gray-400">
+                  Crypto assets are unavailable right now.
+                </div>
+              ) : (
+                <div
+                  className="flex gap-2 overflow-x-auto scroll-smooth overscroll-x-contain pb-1 [scrollbar-width:thin]"
+                  role="group"
+                  aria-label={isBuy ? "Buyable crypto assets" : "Sellable crypto assets"}
+                  tabIndex={0}
+                >
+                  {supportedCryptoCurrencies.filter((item) => isBuy ? item.buyEnabled : item.sellEnabled).map((item) => (
+                  <TokenBtn
+                    key={item.id}
+                    item={item}
+                    selected={item.id === selectedCrypto}
+                        onSelect={() => {
+                          setSelectedCrypto(item.id);
+                          setAmount("");
+                          setReceiveAmount("");
+                          setGuestError(null);
+                          setMaxLimitMessage(null);
+                          setActiveBuyPreset(null);
+                          setCustomBuyAmount("");
+                          setActiveSellPreset(null);
+                          setCustomSellAmount("");
+                          setNetwork(getDefaultNetworkForCrypto(item));
+                        }}
+                  />
+                  ))}
+                </div>
+              )}
+
+              {/* Amount input box */}
+              <div
+                className="rounded-xl overflow-hidden"
+                style={{ background: "white", border: "1.5px solid #E8E8E8" }}
+              >
+                <div className="pt-3 pb-1 px-4">
+                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+                    {cryptoSymbol || "Crypto"} to {isBuy ? "buy" : "sell"}
+                  </p>
+                </div>
+                <div className="flex items-center px-4 pb-3 gap-2">
+                  <span className="text-2xl font-bold text-gray-300">
+                    {cryptoSymbol}
+                  </span>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={amount}
+                    onChange={(e) => handleAmountChange(e.target.value)}
+                    placeholder="0"
+                    className="flex-1 bg-transparent outline-none text-2xl font-bold text-[#0E0F0C] placeholder:text-gray-200"
+                  />
+                </div>
+                {/* Min/max limit feedback: shown immediately as the user types
+                    or picks a preset, instead of only surfacing on submit. */}
+                {(maxLimitMessage || minLimitMessage) && (
+                  <div className="px-4 pb-2 -mt-1">
+                    <p className="text-xs font-semibold text-rose-500">
+                      {maxLimitMessage || minLimitMessage}
+                    </p>
+                  </div>
+                )}
+                {/* Fiat preview in the non-selected currency, once a quote resolves */}
+                {receiveAmount && usdToNgnRate && (
+                  <div className="px-4 pb-2 -mt-1">
+                    {usdRateLoading ? (
+                      <span className="text-xs text-gray-400">
+                        Fetching rate…
+                      </span>
+                    ) : (
+                      <span className="text-xs text-gray-400">
+                        ≈{" "}
+                        <span className="font-semibold text-[#0E0F0C]">
+                          {(isBuy ? buyInputCurrency : sellReceiveCurrency) === "USD"
+                            ? formatUsdEquivalentDisplay(
+                                parseFloat(receiveAmount) / usdToNgnRate,
+                              )
+                            : `₦${Math.round(parseFloat(receiveAmount)).toLocaleString()} NGN`}
+                        </span>
+                      </span>
+                    )}
+                  </div>
+                )}
+                {/* NGN / USD toggle: sits right above the preset chips it controls, so
+                    it reads as "this switch picks the currency of the row below" rather
+                    than a generic header control. */}
+                {(!loadingSupportedCurrencies || supportedCurrencies?.length) && usdCurrencyObj && (
+                  <div className="flex items-center justify-end px-4 pb-2">
+                    <div
+                      className="flex rounded-lg overflow-hidden"
+                      style={{ border: "1px solid #E8E8E8" }}
+                    >
+                      {(["NGN", "USD"] as const).map((cur) => {
+                        const activeCur = isBuy
+                          ? buyInputCurrency
+                          : sellReceiveCurrency;
+                        return (
+                          <button
+                            key={cur}
+                            onClick={() => {
+                              if (cur === activeCur) return;
+                              if (isBuy) {
+                                setBuyInputCurrency(cur);
+                              } else {
+                                setSellReceiveCurrency(cur);
+                              }
+                              setAmount("");
+                              setReceiveAmount("");
+                              setGuestError(null);
+                              setMaxLimitMessage(null);
+                              setActiveBuyPreset(null);
+                              setActiveSellPreset(null);
+                              setCustomBuyAmount("");
+                              setCustomSellAmount("");
+                            }}
+                            className="px-2.5 py-1 text-[10px] font-bold cursor-pointer transition-colors"
+                            style={{
+                              background:
+                                activeCur === cur
+                                  ? isBuy
+                                    ? "#948EEE"
+                                    : "#22c55e"
+                                  : "transparent",
+                              color: activeCur === cur ? "white" : "#9CA3AF",
+                            }}
+                          >
+                            {cur}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Quick chips */}
+                <div className="grid grid-cols-5 border-t border-gray-100">
+                  {[
+                    ...(isBuy ? buyChipItems : sellChipItems),
+                    customChipItem,
+                  ].map((chip) => {
+                    const isActive = activePreset === chip.value;
+                    return (
+                      <button
+                        key={chip.value}
+                        onClick={() => {
+                          if (chip.value === "custom") {
+                            if (isBuy) setActiveBuyPreset("custom");
+                            else setActiveSellPreset("custom");
+                            setAmount("");
+                            setReceiveAmount("");
+                            setCustomBuyAmount("");
+                            setCustomSellAmount("");
+                            setGuestError(null);
+                            setMaxLimitMessage(null);
+                            return;
+                          }
+                          void handleChipClick(chip.value);
+                        }}
+                        className="flex-1 py-2.5 text-xs font-semibold border-r border-gray-100 last:border-r-0 cursor-pointer transition-colors"
+                        data-active={isActive}
+                        style={{
+                          background: isActive
+                            ? "rgba(148,142,238,0.08)"
+                            : "transparent",
+                          color: isActive ? "#948EEE" : "#6B7280",
+                        }}
+                      >
+                        {chip.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                {activePreset === "custom" && (
+                  <div className="px-4 pb-4 pt-3">
+                    <div className="mx-auto w-full max-w-[220px]">
+                      <label
+                        className="block text-[10px] font-semibold uppercase tracking-widest text-center mb-2 text-gray-400"
+                        htmlFor="custom-trade-amount"
+                      >
+                        Enter custom {isBuy ? buyInputCurrency : sellReceiveCurrency}
+                      </label>
+                      <div
+                        className="flex items-center gap-2 rounded-xl px-3 py-2"
+                        style={{
+                          background: "#FFFFFF",
+                          border: "1.5px solid #E8E8E8",
+                        }}
+                      >
+                        <span className="text-sm font-bold text-gray-300 shrink-0">
+                          {(isBuy ? buyInputCurrency : sellReceiveCurrency) === "USD" ? "$" : "₦"}
+                        </span>
+                        <input
+                          id="custom-trade-amount"
+                          type="text"
+                          inputMode="decimal"
+                          value={customAmount}
+                          onChange={(e) => handleCustomAmountChange(e.target.value)}
+                          placeholder="0"
+                          className="flex-1 bg-transparent outline-none text-sm font-semibold text-[#0E0F0C] placeholder:text-gray-200 text-center"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Rate / receive preview */}
+              {(quoteLoading || receiveAmount) && (
+                <div className="flex flex-col gap-1 text-center">
+                  <p className="text-sm text-gray-400">
+                    {quoteLoading ? (
+                      "Calculating preview..."
+                    ) : (
+                      <>
+                        {isBuy ? "You pay:" : "You receive:"}{" "}
+                        <span className="font-bold text-[#22c55e]">
+                          {formatReceiveNgnDisplay(receiveAmount)}
+                        </span>
+                      </>
+                    )}
+                  </p>
+                  {isBuy && !quoteLoading && (
+                    <p className="text-xs text-gray-400">
+                      {cryptoSymbol.toUpperCase() === "USDT" && "Fees may apply - 1 USDT"}
+                      {cryptoSymbol.toUpperCase() === "SOL" && "Fees may apply - 0.0004 SOL"}
+                      {cryptoSymbol.toUpperCase() === "BTC" && "Fees may apply - BTC fees are unpredictable"}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <button
+                onClick={handleStep1Next}
+                disabled={
+                  !amount ||
+                  !selectedCrypto ||
+                  !quoteCurrencyObj?.id ||
+                  quoteLoading ||
+                  !!maxLimitMessage ||
+                  !!minLimitMessage
+                }
+                className="w-full py-3.5 rounded-xl font-bold text-sm text-white border-none transition-opacity disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                style={{ background: isBuy ? "#948EEE" : "#22c55e" }}
+              >
+                {!amount || !selectedCrypto ? (
+                  "Select crypto & enter amount"
+                ) : minLimitMessage ? (
+                  minLimitMessage
+                ) : maxLimitMessage ? (
+                  maxLimitMessage
+                ) : (
+                  <span className="flex items-center justify-center gap-1.5">
+                    Continue <ArrowRight size={15} weight="bold" />
+                  </span>
+                )}
+              </button>
+
+              {/* Upsell */}
+              <div
+                className="rounded-xl p-4 flex flex-col gap-2"
+                style={{ background: "white", border: "1.5px solid #E8E8E8" }}
+              >
+                <p className="text-sm font-bold text-[#0E0F0C] flex items-center gap-1.5">
+                  <Lock size={15} weight="duotone" /> Higher limits with an account
+                </p>
+                <p className="text-xs text-gray-400">
+                  Higher limits · Full order history · Direct support
+                </p>
+                <div className="flex gap-2 mt-1">
+                  <button
+                    onClick={() => navigate({ to: ROUTES.SIGNUP })}
+                    className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white border-none cursor-pointer"
+                    style={{ background: "#948EEE" }}
+                  >
+                    Sign up free
+                  </button>
+                  <button
+                    onClick={() => navigate({ to: ROUTES.SIGNIN })}
+                    className="flex-1 py-2.5 rounded-xl text-sm font-bold cursor-pointer"
+                    style={{
+                      background: "white",
+                      border: "1.5px solid #948EEE",
+                      color: "#948EEE",
+                    }}
+                  >
+                    Log in
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ── STEP 2 BUY: wallet + email ── */}
+          {step === 2 && isBuy && !done && (
+            <motion.div
+              key="s2buy"
+              {...slide}
+              transition={{ duration: 0.2 }}
+              className="flex flex-col gap-3"
+            >
+              <p className="text-center text-sm text-gray-400">
+                Step 2 of 3 · Enter your wallet
+              </p>
+
+              {/* Summary */}
+              <div
+                className="rounded-xl p-3"
+                style={{ background: "white", border: "1.5px solid #E8E8E8" }}
+              >
+                <SRow label="Buying" value={`${cryptoSymbol} with Naira`} />
+                <SRow
+                  label="You'll Receive"
+                  value={`${formatReceiveCryptoDisplay(amount)} ${cryptoSymbol}`}
+                />
+                {receiveAmount && (
+                  <SRow
+                    label="Amount to Pay"
+                    value={formatReceiveNgnDisplay(receiveAmount)}
+                    green
+                  />
+                )}
+              </div>
+
+              {guestError ? (
+                <div
+                  className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700"
+                  role="alert"
+                >
+                  {guestError}
+                </div>
+              ) : null}
+
+              <FloatInput
+                label="Your Email Address"
+                value={email}
+                onChange={handleEmailChange}
+                onBlur={handleEmailBlur}
+                placeholder="you@email.com"
+                type="email"
+                error={emailError}
+              />
+              <FloatInput
+                label="Your Wallet Address"
+                value={walletAddress}
+                onChange={setWalletAddress}
+                placeholder="e.g. TQmBY4Mn..."
+                mono
+              />
+
+              {/* Network selector: hidden when only one option */}
+              {allowedNetworks.length > 1 ? (
+                <div
+                  className="flex flex-col rounded-xl px-4 pt-2 pb-2 text-left relative"
+                  style={{
+                    background: "#F5F5F5",
+                    border: "1.5px solid #E8E8E8",
+                  }}
+                >
+                  <label htmlFor="network-select-buy" className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-0.5">
+                    Network
+                  </label>
+                  <div className="relative">
+                    <select
+                      id="network-select-buy"
+                      value={network}
+                      onChange={(e) => {
+                        setNetwork(e.target.value);
+                        setGuestError(null);
+                      }}
+                      className="w-full bg-transparent text-sm font-medium text-[#0E0F0C] outline-none border-none py-1 appearance-none cursor-pointer pr-8"
+                    >
+                      {allowedNetworks.map((n) => (
+                        <option key={n.id} value={n.id} className="text-black">
+                          {n.label}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-500">
+                      <span className="text-xs">▾</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div
+                  className="flex flex-col rounded-xl px-4 pt-2 pb-2.5"
+                  style={{
+                    background: "#F5F5F5",
+                    border: "1.5px solid #E8E8E8",
+                  }}
+                >
+                  <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1">
+                    Network
+                  </span>
+                  <span className="text-sm font-medium text-[#0E0F0C]">
+                    {networkLabel}
+                  </span>
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setStep(1)}
+                  className="px-4 py-3 rounded-xl text-sm text-gray-400 cursor-pointer"
+                  style={{ background: "white", border: "1.5px solid #E8E8E8" }}
+                >
+                  <span className="flex items-center gap-1.5">
+                    <ArrowLeft size={15} weight="bold" /> Back
+                  </span>
+                </button>
+                <button
+                  onClick={() => {
+                    void handleBuyStep2Next();
+                  }}
+                  disabled={!normalizedEmail || !isEmailValid || !walletAddress || loading}
+                  className="flex-1 py-3 rounded-xl font-bold text-sm text-white border-none transition-opacity disabled:opacity-40 cursor-pointer"
+                  style={{ background: "#948EEE" }}
+                >
+                  {loading ? (
+                    "Processing..."
+                  ) : (
+                    <span className="flex items-center justify-center gap-1.5">
+                      See Payment Details <ArrowRight size={15} weight="bold" />
+                    </span>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ── STEP 2 SELL: bank details ── */}
+          {step === 2 && !isBuy && !done && (
+            <motion.div
+              key="s2sell"
+              {...slide}
+              transition={{ duration: 0.2 }}
+              className="flex flex-col gap-3"
+            >
+              <p className="text-center text-sm text-gray-400">
+                Step 2 of 2 · Payment details
+              </p>
+
+              <div
+                className="rounded-xl p-3"
+                style={{ background: "white", border: "1.5px solid #E8E8E8" }}
+              >
+                <SRow label="Selling" value={cryptoSymbol} />
+                <SRow label="You Send" value={`${amount} ${cryptoSymbol}`} />
+                {receiveAmount && (
+                  <SRow
+                    label="You Receive"
+                    value={formatReceiveNgnDisplay(receiveAmount)}
+                    green
+                  />
+                )}
+              </div>
+
+              {guestError ? (
+                <div
+                  className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700"
+                  role="alert"
+                >
+                  {guestError}
+                </div>
+              ) : null}
+
+              <FloatInput
+                label="Your Email Address"
+                value={email}
+                onChange={handleEmailChange}
+                onBlur={handleEmailBlur}
+                placeholder="you@email.com for transaction updates"
+                type="email"
+                error={emailError}
+              />
+
+              {/* Network selector: hidden when only one option */}
+              {allowedNetworks.length > 1 ? (
+                <div
+                  className="flex flex-col rounded-xl px-4 pt-2 pb-2 text-left relative"
+                  style={{
+                    background: "#F5F5F5",
+                    border: "1.5px solid #E8E8E8",
+                  }}
+                >
+                  <label htmlFor="network-select-sell" className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-0.5">
+                    Network
+                  </label>
+                  <div className="relative">
+                    <select
+                      id="network-select-sell"
+                      value={network}
+                      onChange={(e) => {
+                        setNetwork(e.target.value);
+                        setGuestError(null);
+                      }}
+                      className="w-full bg-transparent text-sm font-medium text-[#0E0F0C] outline-none border-none py-1 appearance-none cursor-pointer pr-8"
+                    >
+                      {allowedNetworks.map((n) => (
+                        <option key={n.id} value={n.id} className="text-black">
+                          {n.label}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-500">
+                      <span className="text-xs">▾</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div
+                  className="flex flex-col rounded-xl px-4 pt-2 pb-2.5"
+                  style={{
+                    background: "#F5F5F5",
+                    border: "1.5px solid #E8E8E8",
+                  }}
+                >
+                  <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1">
+                    Network
+                  </span>
+                  <span className="text-sm font-medium text-[#0E0F0C]">
+                    {networkLabel}
+                  </span>
+                </div>
+              )}
+
+              <BankSelector
+                label="Your Bank"
+                placeholder="Select bank"
+                options={!loadingAllBanks ? allBanks : []}
+                value={selectedBankId}
+                onValueChange={handleBankSelect}
+              />
+              <FloatInput
+                label="Account Number"
+                value={accountNumber}
+                onChange={handleAccountNumberChange}
+                placeholder="0000000000"
+                maxLength={10}
+                mono
+                inputMode="numeric"
+              />
+              <FloatInput
+                label="Account Name"
+                value={accountName}
+                onChange={setAccountName}
+                placeholder={isLookingUpBankName ? "Looking up account name..." : "Will auto-fill after verification"}
+                readOnly
+              />
+              {bankLookupError && (
+                <p className="text-xs text-red-500 -mt-1">{bankLookupError}</p>
+              )}
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setStep(1)}
+                  className="px-4 py-3 rounded-xl text-sm text-gray-400 cursor-pointer"
+                  style={{ background: "white", border: "1.5px solid #E8E8E8" }}
+                >
+                  <span className="flex items-center gap-1.5">
+                    <ArrowLeft size={15} weight="bold" /> Back
+                  </span>
+                </button>
+                <button
+                  onClick={() => {
+                    void handleSellStep2Next();
+                  }}
+                  disabled={
+                    !normalizedEmail ||
+                    !isEmailValid ||
+                    !selectedBankId ||
+                    !accountNumber ||
+                    !accountName ||
+                    loading
+                  }
+                  className="flex-1 py-3 rounded-xl font-bold text-sm text-white border-none transition-opacity disabled:opacity-40 cursor-pointer"
+                  style={{ background: "#22c55e" }}
+                >
+                  {loading ? (
+                    "Processing..."
+                  ) : (
+                    <span className="flex items-center justify-center gap-1.5">
+                      Get My Deposit Wallet{" "}
+                      <ArrowRight size={15} weight="bold" />
+                    </span>
+                  )}
+                </button>
+              </div>
+
+            </motion.div>
+          )}
+
+          {/* ── STEP 3 BUY: bank transfer + receipt ── */}
+          {step === 3 && isBuy && !done && (
+            <motion.div
+              key="s3buy"
+              {...slide}
+              transition={{ duration: 0.2 }}
+              className="flex flex-col gap-3"
+            >
+              <p className="text-center text-sm text-gray-400">
+                Step 3 of 3 · Buy crypto with Naira
+              </p>
+
+              {/* Dark bank box */}
+              {platformBank && (
+                <div
+                  className="rounded-xl p-4 relative"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, #1e2a6e 0%, #2d3a8c 100%)",
+                  }}
+                >
+                  <p className="text-center text-[10px] font-semibold text-white/50 uppercase tracking-widest mb-2">
+                    Transfer to this account
+                  </p>
+                  <button
+                    onClick={() => copyToClipboard(platformBank.accountNumber)}
+                    className="absolute top-3 right-3 text-[10px] font-semibold px-3 py-1.5 rounded-lg cursor-pointer"
+                    style={{
+                      background: "rgba(255,255,255,0.15)",
+                      color: "white",
+                      border: "1px solid rgba(255,255,255,0.2)",
+                    }}
+                  >
+                    Copy
+                  </button>
+                  <p className="text-center text-white font-bold text-base mb-1">
+                    {platformBank.bank?.name}
+                  </p>
+                  <p
+                    className="text-center text-white font-bold text-3xl tracking-wider mb-1"
+                    style={{ fontFamily: "monospace" }}
+                  >
+                    {platformBank.accountNumber}
+                  </p>
+                  <p className="text-center text-white/50 text-xs uppercase tracking-widest mb-3">
+                    CRYPTONOW · {platformBank.accountHolderName}
+                  </p>
+                  <div
+                    className="flex justify-between items-center rounded-lg px-4 py-2.5"
+                    style={{ background: "rgba(255,255,255,0.1)" }}
+                  >
+                    <span className="text-white/60 text-sm">Send exactly</span>
+                    <span className="text-white font-bold text-lg">
+                      {receiveAmount
+                        ? `${currSymbol}${parseFloat(receiveAmount).toLocaleString()}`
+                        : "-"}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Order summary */}
+              <div
+                className="rounded-xl p-3"
+                style={{ background: "white", border: "1.5px solid #E8E8E8" }}
+              >
+                <SRow label="Buying" value={`${cryptoSymbol} with Naira`} />
+                <SRow
+                  label="You'll Get"
+                  value={`${parseFloat(amount).toFixed(4)} ${cryptoSymbol}`}
+                />
+                {receiveAmount && (
+                  <SRow
+                    label="Amount to Pay"
+                    value={`${currSymbol}${parseFloat(receiveAmount).toLocaleString()}`}
+                    green
+                  />
+                )}
+                <SRow
+                  label="To Wallet"
+                  value={
+                    <ResponsiveText text={walletAddress} />
+                  }
+                />
+                <SRow label="Network" value={networkLabel} />
+              </div>
+
+              {guestError ? (
+                <div
+                  className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700"
+                  role="alert"
+                >
+                  {guestError}
+                </div>
+              ) : null}
+
+              {/* Warning */}
+              <div
+                className="flex gap-2 items-start rounded-xl p-3"
+                style={{ background: "#FFFBEB", border: "1.5px solid #FDE68A" }}
+              >
+                <Warning
+                  size={18}
+                  weight="duotone"
+                  className="flex-shrink-0 text-amber-500"
+                />
+                <p className="text-xs text-amber-700 leading-relaxed">
+                  Transfer the <strong>exact amount</strong>. Then upload your
+                  receipt below for verification.
+                </p>
+              </div>
+
+              {/* Receipt upload */}
+              <div
+                onClick={() => fileRef.current?.click()}
+                className="flex flex-col items-center gap-2 py-6 rounded-xl cursor-pointer transition-colors"
+                style={{ background: "white", border: "1.5px dashed #D1D5DB" }}
+              >
+                <Receipt size={32} weight="duotone" className="text-gray-400" />
+                <p className="text-sm font-bold text-[#0E0F0C]">
+                  {receiptFile ? receiptFile.name : "Upload Receipt"}
+                </p>
+                <p className="text-xs text-gray-400">
+                  Screenshot or PDF of your transfer
+                </p>
+              </div>
+              <input
+                ref={fileRef}
+                type="file"
+                accept={RECEIPT_ACCEPT}
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  const error = receiptFileError(file);
+                  if (error) { toast.error(error); e.target.value = ""; return; }
+                  setReceiptFile(file);
+                }}
+              />
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setStep(2)}
+                  className="px-4 py-3.5 rounded-xl text-sm text-gray-400 cursor-pointer flex-shrink-0"
+                  style={{ background: "white", border: "1.5px solid #E8E8E8" }}
+                >
+                  <span className="flex items-center gap-1.5">
+                    <ArrowLeft size={15} weight="bold" /> Back
+                  </span>
+                </button>
+                <button
+                  onClick={handleBuySubmit}
+                  disabled={loading}
+                  className="flex-1 py-3.5 rounded-xl font-bold text-sm text-white border-none disabled:opacity-40 cursor-pointer"
+                  style={{ background: "#948EEE" }}
+                >
+                  {loading ? "Submitting..." : "Submit & Track Order"}
+                </button>
+              </div>
+              <button
+                onClick={() => setDone(true)}
+                className="text-center text-xs text-gray-400 hover:underline cursor-pointer bg-transparent border-none py-1"
+              >
+                Skip and upload later
+              </button>
+            </motion.div>
+          )}
+
+          {/* ── STEP 3 SELL: deposit wallet ── */}
+          {step === 3 && !isBuy && !done && (
+            <motion.div
+              key="s3sell"
+              {...slide}
+              transition={{ duration: 0.2 }}
+              className="flex flex-col gap-3"
+            >
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold text-[#0E0F0C]">
+                  {showGuestDepositInstructions ? "Send to this wallet" : "Transaction status"}
+                </p>
+                {(() => {
+                  const status = guestTransactionStatus?.status;
+                  const meta = getGuestStatusMeta(status);
+                  const tone = GUEST_STATUS_TONE_STYLES[meta.tone];
+                  const isActive = isGuestSellTransactionActive(status);
+
+                  return (
+                    <span
+                      className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold ${tone.badge}`}
+                    >
+                      {isActive ? (
+                        <span className="inline-flex h-3.5 w-3.5 items-center justify-center">
+                          <span className={`h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent ${tone.text}`} />
+                        </span>
+                      ) : (
+                        <span className={`w-2 h-2 rounded-full inline-block ${tone.dot}`} />
+                      )}
+                      <span>{meta.label}</span>
+                    </span>
+                  );
+                })()}
+              </div>
+
+              {showGuestDepositInstructions && <>
+              <div
+                className="rounded-xl p-3"
+                style={{ background: "white", border: "1.5px solid #E8E8E8" }}
+              >
+                {guestTransactionStatus && GUEST_SELL_INITIAL_DEPOSIT_STATUSES.has(guestTransactionStatus.status) && (
+                  <CopyableSRow
+                    label="Amount to Send"
+                    value={`${guestExpectedCryptoAmount} ${cryptoSymbol}`}
+                    copyValue={String(guestExpectedCryptoAmount)}
+                  />
+                )}
+                <SRow label="Asset" value={cryptoSymbol} />
+                <SRow label="Network" value={networkLabel} />
+              </div>
+
+              {/* Wallet box */}
+              <div
+                className="rounded-xl p-4 relative"
+                style={{ background: "#F5F5F5", border: "1.5px solid #E8E8E8" }}
+              >
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">
+                  Your unique {cryptoSymbol} deposit wallet ({networkLabel})
+                </p>
+                <p className="text-sm font-mono text-[#22c55e] break-all leading-relaxed">
+                  {depositWallet}
+                </p>
+                <button
+                  onClick={() => copyToClipboard(depositWallet)}
+                  className="absolute top-3 right-3 text-[10px] font-semibold px-3 py-1.5 rounded-lg cursor-pointer"
+                  style={{
+                    background: "white",
+                    border: "1.5px solid #E8E8E8",
+                    color: "#948EEE",
+                  }}
+                >
+                  Copy
+                </button>
+              </div>
+
+              {/* Info */}
+              <div
+                className="flex gap-2 items-start rounded-xl p-3"
+                style={{ background: "white", border: "1.5px solid #E8E8E8" }}
+              >
+                <Lightning
+                  size={18}
+                  weight="duotone"
+                  className="flex-shrink-0 text-[#948EEE]"
+                />
+                <p className="text-xs text-gray-500 leading-relaxed">
+                  We'll check your deposit and update the transaction as it progresses.
+                </p>
+              </div>
+              </>}
+
+              {showGuestManualRecheck ? (
+                <ManualDepositRecheckAction
+                  title={`Already sent your ${cryptoSymbol}?`}
+                  isPending={guestManualRecheckPending}
+                  disabled={!sessionId}
+                  onConfirm={handleGuestManualRecheck}
+
+
+
+                  pendingText="Rechecking deposit..."
+                />
+              ) : null}
+
+              <TransactionTimeline type="sell" status={guestTransactionStatus?.status} statusEvents={guestTransactionStatus?.statusEvents} />
+              {sessionId && guestTransactionStatus?.status === TRANSACTION_STATUS.COMPLETED && <TransactionReview sessionId={sessionId} guest />}
+
+              {/* Summary */}
+              <div
+                className="rounded-xl p-3"
+                style={{ background: "white", border: "1.5px solid #E8E8E8" }}
+              >
+                <SRow label="Payout Bank" value={guestTransactionStatus?.userBankAccount?.bank?.name ?? "-"} />
+                <SRow label="Account" value={guestTransactionStatus?.userBankAccount?.accountNumber ?? "-"} />
+                {guestTransactionStatus?.status && (
+                  <SRow label="Status" value={guestTransactionStatus.status} />
+                )}
+                {guestTransactionStatus?.failureReason && (
+                  <div className="mt-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2">
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-rose-500">
+                      Reason
+                    </p>
+                    <p className="mt-1 text-sm font-medium leading-relaxed text-rose-900">
+                      {guestTransactionStatus.failureReason}
+                    </p>
+                  </div>
+                )}
+                {guestTransactionDisputed ? (
+                  <div className="mt-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2">
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-rose-500">
+                      Support required
+                    </p>
+                    <p className="mt-1 text-sm font-medium leading-relaxed text-rose-900">
+                      The amount received did not exactly match your order. Please contact support so we can review the transaction.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => navigate({ to: ROUTES.CONTACT })}
+                      className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-rose-600 px-3 py-2 text-xs font-bold text-white"
+                    >
+                      Contact support
+                    </button>
+                  </div>
+                ) : null}
+                {guestTransactionNoOwner ? (
+                  <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-amber-500">
+                      Manual review required
+                    </p>
+                    <p className="mt-1 text-sm font-medium leading-relaxed text-amber-900">
+                      We received a deposit on a guest wallet, but no transaction owner was linked. The wallet has been retired from reuse.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => navigate({ to: ROUTES.CONTACT })}
+                      className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-amber-500 px-3 py-2 text-xs font-bold text-white"
+                    >
+                      Contact support
+                    </button>
+                  </div>
+                ) : null}
+                {receiveAmount && (
+                  <SRow
+                    label="NGN to Credit"
+                    value={formatReceiveNgnDisplay(receiveAmount)}
+                    green
+                  />
+                )}
+              </div>
+
+              {guestError ? (
+                <div
+                  className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700"
+                  role="alert"
+                >
+                  {guestError}
+                </div>
+              ) : null}
+
+              <button
+                onClick={() => setStep(2)}
+                className="w-full py-2.5 rounded-xl text-sm text-gray-400 cursor-pointer"
+                style={{ background: "white", border: "1.5px solid #E8E8E8" }}
+              >
+                <span className="flex items-center gap-1.5">
+                  <ArrowLeft size={15} weight="bold" /> Back
+                </span>
+              </button>
+            </motion.div>
+          )}
+
+          {/* ── SUCCESS ── */}
+          {done && (
+            <motion.div
+              key="done"
+              {...slide}
+              transition={{ duration: 0.2 }}
+              className="flex flex-col items-center gap-4 py-4"
+            >
+              {guestTransactionDisputed ? (
+                <>
+                  <div
+                    className="w-16 h-16 rounded-full flex items-center justify-center"
+                    style={{ background: "#FEF3C7" }}
+                  >
+                    <Warning size={30} weight="fill" className="text-amber-500" />
+                  </div>
+                  <div className="text-center">
+                    <p className="font-bold text-xl text-[#0E0F0C]">
+                      Deposit disputed
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1 px-3 leading-relaxed">
+                      The amount received did not exactly match the initiated transaction amount, so the transaction is waiting on support review.
+                    </p>
+                  </div>
+                  <div
+                    className="w-full rounded-xl p-4 text-left"
+                    style={{ background: "#FFFBEB", border: "1px solid #FDE68A" }}
+                  >
+                    <p className="text-sm font-bold text-amber-700">
+                      Support review required
+                    </p>
+                    <p className="text-xs mt-1 leading-relaxed text-amber-700/90">
+                      {guestTransactionStatus?.failureReason ||
+                        "Please contact support so we can review the transaction mismatch."}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => navigate({ to: ROUTES.CONTACT })}
+                      className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-amber-500 px-3 py-2 text-xs font-bold text-white"
+                    >
+                      Contact support
+                    </button>
+                  </div>
+                </>
+              ) : guestTransactionNoOwner ? (
+                <>
+                  <div
+                    className="w-16 h-16 rounded-full flex items-center justify-center"
+                    style={{ background: "#FEF3C7" }}
+                  >
+                    <Warning size={30} weight="fill" className="text-amber-500" />
+                  </div>
+                  <div className="text-center">
+                    <p className="font-bold text-xl text-[#0E0F0C]">
+                      Deposit recorded without owner
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1 px-3 leading-relaxed">
+                      We received a deposit on a guest wallet, but no transaction owner was linked.
+                    </p>
+                  </div>
+                  <div
+                    className="w-full rounded-xl p-4 text-left"
+                    style={{ background: "#FFFBEB", border: "1px solid #FDE68A" }}
+                  >
+                    <p className="text-sm font-bold text-amber-700">
+                      Manual review required
+                    </p>
+                    <p className="text-xs mt-1 leading-relaxed text-amber-700/90">
+                      {guestTransactionStatus?.failureReason ||
+                        "This deposit is being held for accounting review and will not be disbursed automatically."}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => navigate({ to: ROUTES.CONTACT })}
+                      className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-amber-500 px-3 py-2 text-xs font-bold text-white"
+                    >
+                      Contact support
+                    </button>
+                  </div>
+                </>
+              ) : guestTransactionFailed ? (
+                <>
+                  <div
+                    className="w-16 h-16 rounded-full flex items-center justify-center"
+                    style={{ background: "#FEE2E2" }}
+                  >
+                    <Warning size={30} weight="fill" className="text-rose-600" />
+                  </div>
+                  <div className="text-center">
+                    <p className="font-bold text-xl text-[#0E0F0C]">
+                      {guestPayoutFailed
+                        ? getGuestPayoutFailureCopy().title
+                        : "Transaction failed"}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1 px-3 leading-relaxed">
+                      {guestPayoutFailed
+                        ? getGuestPayoutFailureCopy().subtitle
+                        : "We could not complete this sell transaction, so no NGN was credited to your bank account."}
+                    </p>
+                  </div>
+                  <div
+                    className="w-full rounded-xl p-4 text-left"
+                    style={{ background: "#FFF1F2", border: "1px solid #FECDD3" }}
+                  >
+                    {guestPayoutFailed ? (
+                      <>
+                        <p className="text-sm font-bold text-rose-700">
+                          Support is already working on it
+                        </p>
+                        <p className="text-xs mt-1 leading-relaxed text-rose-700/90">
+                          We’ll notify you as soon as this is resolved. Sorry for the delay.
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-sm font-bold text-rose-700">
+                          No credit was issued
+                        </p>
+                        <p className="text-xs mt-1 leading-relaxed text-rose-700/90">
+                          Check the transaction status above or contact support if you expected a payout.
+                        </p>
+                      </>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div
+                    className="w-16 h-16 rounded-full flex items-center justify-center"
+                    style={{ background: "#22c55e" }}
+                  >
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M5 13l4 4L19 7"
+                        stroke="white"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
+                  <div className="text-center">
+                    <p className="font-bold text-xl text-[#0E0F0C]">
+                      {isBuy ? "Payment Submitted!" : "NGN Credited!"}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {isBuy
+                        ? "We'll confirm your transfer and send your crypto."
+                        : "Crypto received & auto-converted. Your bank account has been credited."}
+                    </p>
+                  </div>
+                  {guestHasAdjustedAmount ? (
+                    <div
+                      className="w-full rounded-xl border px-3 py-2 text-left"
+                      style={{ background: "#FFFBEB", borderColor: "#FDE68A" }}
+                    >
+                      <div className="flex items-center gap-2 text-amber-700">
+                        <Warning size={16} weight="fill" />
+                        <p className="text-sm font-bold">Adjusted amount</p>
+                      </div>
+                      <p className="mt-1 text-xs leading-relaxed text-amber-900">
+                        Expected {formatCryptoAmount(guestExpectedCryptoAmount)}{" "}
+                        {cryptoSymbol}, but received{" "}
+                        {formatCryptoAmount(guestSettledCryptoAmount)} {cryptoSymbol}.
+                      </p>
+                    </div>
+                  ) : null}
+                </>
+              )}
+
+              <div
+                className="w-full rounded-xl p-3"
+                style={{ background: "white", border: "1.5px solid #E8E8E8" }}
+              >
+                {isBuy ? (
+                  <>
+                    <SRow label="Buying" value={cryptoSymbol} />
+                    {receiveAmount && (
+                      <SRow
+                        label="You'll Get"
+                        value={`${formatReceiveCryptoDisplay(amount)} ${cryptoSymbol}`}
+                        green
+                      />
+                    )}
+                    <SRow label="Updates to" value={email} />
+                  </>
+                ) : (
+                  <>
+                    {guestHasAdjustedAmount ? (
+                      <>
+                        <SRow
+                          label="Expected Crypto"
+                          value={`${formatCryptoAmount(guestExpectedCryptoAmount)} ${cryptoSymbol}`}
+                        />
+                        <SRow
+                          label="Crypto Received"
+                          value={`${formatCryptoAmount(guestSettledCryptoAmount)} ${cryptoSymbol}`}
+                        />
+                      </>
+                    ) : (
+                      <SRow
+                        label="Crypto Sold"
+                        value={`${amount} ${cryptoSymbol}`}
+                      />
+                    )}
+                    {receiveAmount && (
+                      <SRow
+                        label="NGN Sent"
+                        value={formatReceiveNgnDisplay(
+                          `${guestSettledNgnAmount}`,
+                        )}
+                        green
+                      />
+                    )}
+                    <SRow label="Sent To Bank" value={guestTransactionStatus?.userBankAccount?.bank?.name ?? "-"} />
+                    <SRow label="Account No." value={guestTransactionStatus?.userBankAccount?.accountNumber ?? "-"} />
+                    <SRow label="Updates to" value={email} />
+                  </>
+                )}
+              </div>
+
+              {sessionId && <TransactionTimeline type={isBuy ? "buy" : "sell"} status={guestTransactionStatus?.status} statusEvents={guestTransactionStatus?.statusEvents} />}
+              {sessionId && guestTransactionStatus?.status === TRANSACTION_STATUS.COMPLETED && <TransactionReview sessionId={sessionId} guest />}
+
+              {/* Upsell */}
+              <div
+                className="w-full rounded-xl p-4"
+                style={{ background: "#F5F5F5", border: "1.5px solid #E8E8E8" }}
+              >
+                <p className="text-sm font-bold text-[#0E0F0C] mb-1 flex items-center gap-1.5">
+                  <TrendUp size={15} weight="duotone" /> Create an Account
+                </p>
+                <p className="text-xs text-gray-400 mb-3">
+                  Sign up to track order history, access higher transaction limits, and manage saved bank accounts.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => navigate({ to: ROUTES.SIGNUP })}
+                    className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white border-none cursor-pointer"
+                    style={{ background: "#948EEE" }}
+                  >
+                    Sign up free
+                  </button>
+                  <button
+                    onClick={reset}
+                    className="flex-1 py-2.5 rounded-xl text-sm font-bold cursor-pointer"
+                    style={{
+                      background: "white",
+                      border: "1.5px solid #E8E8E8",
+                      color: "#6B7280",
+                    }}
+                  >
+                    New trade
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+};
+
+export default AppSimCard;

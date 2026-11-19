@@ -1,4 +1,4 @@
-import { useParams } from "@tanstack/react-router";
+﻿import { useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useState, useRef } from "react";
 import { useDispatch } from "react-redux";
 import {
@@ -8,14 +8,31 @@ import {
 } from "../../redux/transaction.slice.ts";
 import { useTransactionQuery } from "../../queries/transaction.query.ts";
 import type { MessageAttachment } from "../../types/transaction.types.ts";
+import type { DisputeStatus } from "../../types/response.payload.types.ts";
 // trigger pr 2
-import { convertToMillify } from "../../util/index.util.ts";
+import { formatCompact } from "../../util/asset-precision.ts";
+import { ROUTES } from "../../util/constants.util.ts";
+import { toast } from "react-toastify";
+
+const DISPUTE_WINDOW_HOURS = 24;
+
+// A transaction can only ever carry one dispute : once it exists, the button
+// reflects its status instead of offering to create another one. Kept to
+// three plain labels, not a per-substatus message: "Dispute" (none yet),
+// "Ongoing dispute" (still active), "Disputed" (closed/resolved/rejected).
+const CLOSED_DISPUTE_STATUSES = new Set<DisputeStatus>([
+  "RESOLVED",
+  "REJECTED",
+  "CLOSED",
+]);
 
 export const useTransactionDetailsPage = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const {
     transactionDetails,
     loadingTransactionDetails,
+    disputeForTransaction,
     disputeTransactionInitiationMutation,
   } = useTransactionQuery();
 
@@ -30,6 +47,13 @@ export const useTransactionDetailsPage = () => {
   );
 
   const { id } = useParams({ from: "/dashboard/transactions/$id" });
+
+  // Past the 24-hour dispute window : the button stays clickable (so the
+  // toast in toggleDisputeTransaction still fires) but is rendered blurred
+  // to visually read as inactive.
+  const isDisputeExpired = !!transactionDetails?.createdAt &&
+    Date.now() - new Date(transactionDetails.createdAt).getTime() >
+      DISPUTE_WINDOW_HOURS * 60 * 60 * 1000;
 
   useEffect(() => {
     if (id) {
@@ -108,15 +132,43 @@ export const useTransactionDetailsPage = () => {
   };
 
   const openDisputeMailTo = () => {
-    const email = "cryptonownaijahelpdesk@gmail.com";
+    const email = "Support@cryptonow.ng";
     const subject = `Dispute Transaction - ${transactionDetails?.sessionId || ""}`;
-    const body = `Hello,\n\nI would like to dispute a transaction with the following details:\n\nTransaction ID: ${transactionDetails?.sessionId || ""}\nAmount: ${convertToMillify(Number(transactionDetails?.amountFiat)) || ""} ${transactionDetails?.currency || ""}\nDate: ${transactionDetails?.createdAt || ""}\n\nReason for Dispute:\n\n[Please provide your reason here]\n\nThank you.`;
+    const body = `Hello,\n\nI would like to dispute a transaction with the following details:\n\nTransaction ID: ${transactionDetails?.sessionId || ""}\nAmount: ${formatCompact(Number(transactionDetails?.amountFiat), transactionDetails?.currency || "NGN") || ""} ${transactionDetails?.currency || ""}\nDate: ${transactionDetails?.createdAt || ""}\n\nReason for Dispute:\n\n[Please provide your reason here]\n\nThank you.`;
 
     window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
 
-  const toggleDisputeTransaction = () =>
+  const toggleDisputeTransaction = () => {
+    if (!showDisputeTransaction) {
+      // A dispute already exists for this transaction : never open the create
+      // flow (the backend would reject it anyway); tell the user its status
+      // and take them straight to the existing thread instead.
+      if (disputeForTransaction) {
+        const isClosed = CLOSED_DISPUTE_STATUSES.has(disputeForTransaction.status);
+        toast[isClosed ? "error" : "info"](
+          isClosed
+            ? "This transaction has already been disputed. Taking you to it."
+            : "This transaction has an ongoing dispute. Taking you to it.",
+        );
+        navigate({ to: ROUTES.DISPUTE_DETAILS, params: { id: disputeForTransaction.id } });
+        return;
+      }
+
+      if (transactionDetails?.createdAt) {
+        const hoursElapsed =
+          (Date.now() - new Date(transactionDetails.createdAt).getTime()) /
+          (1000 * 60 * 60);
+        if (hoursElapsed > DISPUTE_WINDOW_HOURS) {
+          toast.error(
+            "The 24-hour dispute window for this transaction has closed. Please contact support for help.",
+          );
+          return;
+        }
+      }
+    }
     setShowDisputeTransaction(!showDisputeTransaction);
+  };
 
   return {
     // 🧩 Values
@@ -126,6 +178,16 @@ export const useTransactionDetailsPage = () => {
     copiedField,
     disputeCountdown,
     canDispute,
+    isDisputeExpired,
+    disputeForTransaction,
+    disputeStatusLabel: disputeForTransaction
+      ? CLOSED_DISPUTE_STATUSES.has(disputeForTransaction.status)
+        ? "Disputed"
+        : "Ongoing dispute"
+      : null,
+    isDisputeClosed: disputeForTransaction
+      ? CLOSED_DISPUTE_STATUSES.has(disputeForTransaction.status)
+      : false,
 
     // ⚙️ Functions 2222
     toggleDisputeTransaction,

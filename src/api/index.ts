@@ -1,23 +1,37 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import axios, { type AxiosRequestHeaders } from "axios";
+import axios, { AxiosError, type AxiosRequestHeaders } from "axios";
+import * as Sentry from "@sentry/react";
 import {BASIC} from "../config/index.config.ts";
-import {LOCAL_STORAGE_KEYS, ROUTES} from "../util/constants.util.ts";
+import {ROUTES} from "../util/constants.util.ts";
+import {clearUserSessionStorage} from "../util/tradeProgress.storage.util.ts";
+import {clearAccessToken, getAccessToken, setAccessToken} from "../util/auth-session.util.ts";
 import type {BaseApiResponse} from "../types/response.payload.types.ts";
 
 export const API_KIT = axios.create({
   baseURL: BASIC.API_BASE_URL,
   // timeout: 20000,
-  // withCredentials: true,
+  withCredentials: true,
 });
 
 API_KIT.interceptors.request.use(async (config) => {
-  const token = localStorage.getItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+  const token = getAccessToken();
+  const traceData =
+    typeof Sentry.getTraceData === "function" ? Sentry.getTraceData() : undefined;
+
   if (token) {
     config.headers = {
       ...config.headers,
       Authorization: `Bearer ${token}`,
     } as AxiosRequestHeaders;
   }
+
+  if (traceData) {
+    config.headers = {
+      ...config.headers,
+      ...traceData,
+    } as AxiosRequestHeaders;
+  }
+
   return config;
 });
 
@@ -29,16 +43,28 @@ API_KIT.interceptors.response.use(
       typeof accessToken === "string" &&
       accessToken.trim() !== ""
     ) {
-      localStorage.setItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN, accessToken);
+      setAccessToken(accessToken);
     }
     return response;
   },
   async (error) => {
     if (axios.isAxiosError(error)) {
-      if (error.response?.data?.message?.toLowerCase() === "jwt token error") {
-        setTimeout(() => {
-          window.location.href = ROUTES.SIGNIN;
-        }, 3000);
+      if (error.code === AxiosError.ERR_NETWORK) {
+        Sentry.withScope((scope) => {
+          scope.setLevel("fatal");
+          scope.setTag("error_category", "api_unreachable");
+          scope.setTag("http_method", error.config?.method ?? "unknown");
+          Sentry.captureException(new Error("API server unreachable"));
+        });
+      }
+
+      const status = error.response?.status;
+      const message = error.response?.data?.message?.toLowerCase();
+
+      if (status === 401 || message === "jwt token error") {
+        clearUserSessionStorage();
+        clearAccessToken();
+        window.location.href = ROUTES.SIGNIN;
       }
     }
     return Promise.reject(error);

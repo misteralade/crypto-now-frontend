@@ -1,8 +1,7 @@
-import type {TransactionResponseEntity} from "../../../types/response.payload.types.ts";
-import CustomLoader from "../../../components/global/Loader.tsx";
+import type { TransactionResponseEntity } from "../../../types/response.payload.types.ts";
 import TransactionRow from "./TransactionRow.tsx";
 import { useNavigate } from "@tanstack/react-router";
-import TableFooter from "../../../components/global/table/TableFooter.tsx";
+import { Loader2 } from "lucide-react";
 import { useCryptoQuery } from "../../../queries/crypto.query.ts";
 import { useCurrencyQuery } from "../../../queries/currency.query.ts";
 import { ROUTES } from "../../../util/constants.util.ts";
@@ -13,130 +12,240 @@ export interface FilterState {
   toDate: string | undefined;
   cryptocurrency: string | undefined;
   status: string | undefined;
+  type: string | undefined;
+  pending?: boolean;
 }
 
 interface TransactionTableProps {
   transactions: TransactionResponseEntity[];
-  totalPages: number;
-  currentPage: number;
-  pageSize: number;
-  totalItems: number;
-  onPageChange: (page: number) => void;
-  onPageSizeChange: (size: number) => void;
+  hasMore: boolean;
+  onLoadMore: () => void;
+  isLoadingMore: boolean;
   isLoading: boolean;
 }
 
-const TransactionTable = ({ transactions, isLoading, totalPages, currentPage, pageSize, totalItems, onPageChange, onPageSizeChange }: TransactionTableProps) => {
-  const COL_COUNT = 7;
-  const navigate = useNavigate();
-  const { supportedCryptoCurrencies, loadingSupportedCrypto } = useCryptoQuery();
-  const { supportedCurrencies, loadingSupportedCurrencies } = useCurrencyQuery();
-  
-  const [selectedCrypto, setSelectedCrypto] = useState<string>("");
-  const [supportedCurrency, setSupportedCurrency] = useState("");
-  const [selectedAction] = useState<"BUY" | "SELL">("BUY");
+/* skeleton card row */
+const SkeletonCard = () => (
+  <div className="px-4 py-3.5 flex items-center gap-3 animate-pulse">
+    <div
+      className="w-11 h-11 rounded-2xl shrink-0"
+      style={{ background: "#F0F0F0" }}
+    />
+    <div className="flex-1 space-y-2">
+      <div
+        className="h-3.5 rounded-lg w-28"
+        style={{ background: "#F0F0F0" }}
+      />
+      <div
+        className="h-2.5 rounded-lg w-20"
+        style={{ background: "#F0F0F0" }}
+      />
+    </div>
+    <div className="text-right space-y-2">
+      <div
+        className="h-3.5 rounded-lg w-16 ml-auto"
+        style={{ background: "#F0F0F0" }}
+      />
+      <div
+        className="h-2.5 rounded-lg w-10 ml-auto"
+        style={{ background: "#F0F0F0" }}
+      />
+    </div>
+  </div>
+);
 
-  // Select first crypto currency when loaded
+const TransactionTable = ({
+  transactions,
+  isLoading,
+  hasMore,
+  onLoadMore,
+  isLoadingMore,
+}: TransactionTableProps) => {
+  const navigate = useNavigate();
+  const { supportedCryptoCurrencies, loadingSupportedCrypto } =
+    useCryptoQuery();
+  const { supportedCurrencies, loadingSupportedCurrencies } =
+    useCurrencyQuery();
+  const [selectedCrypto, setSelectedCrypto] = useState("");
+  const [supportedCurrency, setSupportedCurrency] = useState("");
+
   useEffect(() => {
-    if (supportedCryptoCurrencies && supportedCryptoCurrencies.length > 0) {
+    if (supportedCryptoCurrencies?.length)
       setSelectedCrypto(supportedCryptoCurrencies[0].id);
-    }
   }, [loadingSupportedCrypto, supportedCryptoCurrencies]);
 
-  // Select first currency when loaded
   useEffect(() => {
-    if (supportedCurrencies && supportedCurrencies.length > 0) {
+    if (supportedCurrencies?.length)
       setSupportedCurrency(supportedCurrencies[0].id);
-    }
   }, [loadingSupportedCurrencies, supportedCurrencies]);
 
-  const handleTradeCrypto = () => {
-    if (selectedCrypto && supportedCurrency) {
-      navigate({
-        to: `${ROUTES.TRADE_CRYPTO}?option=${selectedAction.toLowerCase()}&currency=${supportedCurrency}&token=${selectedCrypto}`,
-      });
-    }
+  const goTrade = () => {
+    navigate({
+      to: ROUTES.DASHBOARD,
+    });
   };
-  
-  const renderTableBody = () => {
-    if (isLoading) {
-      return (
-        <tr>
-          <td colSpan={7} className="text-center p-8 text-lg text-gray-500">
-            <div className="flex justify-center items-center space-x-3 min-h-[150px] md:min-h-[300px]">
-              <CustomLoader />
-            </div>
-          </td>
-        </tr>
-      );
-    }
-    
-    if (transactions.length === 0) {
-      return (
-        <tr>
-          <td colSpan={COL_COUNT} className="text-center p-8 text-lg text-gray-500">
-            <div className={`flex flex-col gap-7 items-center justify-center text-center`}>
-              <h2 className={`text-primary text-[40px] font-semibold w-4/5 leading-12`}>No transaction had been performed yet</h2>
 
-              <button
-                onClick={handleTradeCrypto}
-                disabled={!selectedCrypto || !supportedCurrency || loadingSupportedCrypto || loadingSupportedCurrencies}
-                className={`py-4 md:py-2 rounded-full block md:order-2 w-full md:w-1/2 text-lg text-center font-semibold bg-primary text-white disabled:bg-gray-300 disabled:text-gray-500`}
-              >
-                Buy / Sell Crypto
-              </button>
-            </div>
-          </td>
-        </tr>
-      );
-    }
-    
-    return transactions.map((transaction, index) => (
-      <TransactionRow
-        key={transaction.id}
-        transaction={transaction}
-        isLast={index === transactions.length - 1}
-      />
-    ));
-  };
-  
-  
+  if (isLoading) {
+    return (
+      <div
+        className="rounded-3xl overflow-hidden"
+        style={{ border: "1px solid #F0F0F0" }}
+      >
+        {[...Array(5)].map((_, i) => (
+          <div key={i}>
+            <SkeletonCard />
+            {i < 4 && (
+              <div
+                style={{
+                  height: "1px",
+                  background: "#F7F7F9",
+                  margin: "0 16px",
+                }}
+              />
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (transactions.length === 0) {
+    return (
+      <div
+        className="rounded-3xl py-14 flex flex-col items-center gap-4 text-center"
+        style={{ border: "1px solid #F0F0F0" }}
+      >
+        <div
+          className="w-14 h-14 rounded-2xl flex items-center justify-center"
+          style={{ background: "#F0EFFD" }}
+        >
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#948EEE"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+          </svg>
+        </div>
+        <div>
+          <p className="text-base font-bold" style={{ color: "#0E0F0C" }}>
+            No transactions yet
+          </p>
+          <p className="text-sm mt-1" style={{ color: "#9A9A9A" }}>
+            Your orders will appear here
+          </p>
+        </div>
+        <button
+          onClick={goTrade}
+          disabled={!selectedCrypto || !supportedCurrency}
+          className="mt-1 px-6 py-2.5 rounded-full text-sm font-bold text-white disabled:opacity-40"
+          style={{ background: "#948EEE" }}
+        >
+          Buy / Sell Crypto
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
-      <div className="bg-card border border-border rounded-lg overflow-hidden">
+      {/* Mobile: card list */}
+      <div
+        className="lg:hidden rounded-3xl overflow-hidden"
+        style={{ border: "1px solid #F0F0F0" }}
+      >
+        {transactions.map((tx, i) => (
+          <TransactionRow
+            key={tx.id}
+            transaction={tx}
+            isLast={i === transactions.length - 1}
+            isMobileCard
+          />
+        ))}
+      </div>
+
+      {/* Desktop: table */}
+      <div
+        className="hidden lg:block rounded-3xl overflow-hidden"
+        style={{ border: "1px solid #ECECEC" }}
+      >
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-muted/50">
-            <tr>
-              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Session ID</th>
-              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Date</th>
-              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Type</th>
-              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Amount (Crypto)</th>
-              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Amount (USD)</th>
-              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Rate</th>
-              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Status</th>
-              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Action</th>
-            </tr>
+            <thead>
+              <tr
+                style={{
+                  background: "#F8F8FF",
+                  borderBottom: "1px solid #ECECEC",
+                }}
+              >
+                {[
+                  "Ref",
+                  "Date",
+                  "Type",
+                  "Crypto",
+                  "Amount (NGN)",
+                  "Rate",
+                  "Network",
+                  "Status",
+                ].map((h) => (
+                  <th
+                    key={h}
+                    className="px-5 py-4 text-left text-[12px] font-semibold uppercase tracking-wide"
+                    style={{ color: "#9A9A9A" }}
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
             </thead>
             <tbody>
-            {renderTableBody()}
+              {transactions.map((tx, i) => (
+                <TransactionRow
+                  key={tx.id}
+                  transaction={tx}
+                  isLast={i === transactions.length - 1}
+                  isMobileCard={false}
+                />
+              ))}
             </tbody>
           </table>
         </div>
       </div>
-      
-      {!isLoading && (
-        <TableFooter
-          currentPage={currentPage}
-          totalPages={totalPages}
-          pageSize={pageSize}
-          totalItems={totalItems}
-          onPageChange={onPageChange}
-          onPageSizeChange={onPageSizeChange}
-        />
+
+      {!isLoading && transactions.length > 0 && hasMore && (
+        <div className="flex flex-col items-center gap-2 pt-1 px-1">
+          <button
+            type="button"
+            onClick={onLoadMore}
+            disabled={isLoadingMore}
+            aria-busy={isLoadingMore}
+            className="w-full max-w-md py-3.5 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+            style={{
+              background: isLoadingMore
+                ? "#E8E8E8"
+                : "linear-gradient(135deg,#948EEE,#6B45D0)",
+              color: "#FFFFFF",
+              boxShadow: isLoadingMore ? "none" : "0 6px 20px #948EEE44",
+            }}
+          >
+            {isLoadingMore ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin shrink-0" aria-hidden />
+                Loading…
+              </>
+            ) : (
+              "View more"
+            )}
+          </button>
+        </div>
       )}
     </div>
-  )
-}
+  );
+};
 
 export default TransactionTable;

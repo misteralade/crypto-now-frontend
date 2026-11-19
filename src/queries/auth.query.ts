@@ -1,3 +1,4 @@
+import { isEmailVerificationRequired } from "../util/auth-error.util.ts";
 import {useMutation, useQueryClient} from "@tanstack/react-query";
 import {authServiceApi} from "../api/auth.api.ts";
 import {useState} from "react";
@@ -22,13 +23,9 @@ export const useAuthQuery = () => {
     },
     onSuccess: ({ success, message }) => {
       toast.dismiss();
-      toast.success("Login successfully.");
       setLoggingInLoading(false);
       if (success) {
-        toast.success(message);
-        setTimeout(() => {
-          window.location.href = ROUTES.DASHBOARD;
-        }, 3000);
+        window.location.href = ROUTES.DASHBOARD;
       } else {
         toast.error(message || "Login failed");
       }
@@ -50,9 +47,7 @@ export const useAuthQuery = () => {
     },
     onSuccess: ({ success, message }) => {
       toast.dismiss();
-      if (success) {
-        toast.success(message);
-      } else {
+      if (!success) {
         toast.error(message);
       }
     },
@@ -132,16 +127,16 @@ export const useAuthQuery = () => {
     },
     onSuccess: ({ success, message }) => {
       toast.dismiss();
-      if (success) {
-        toast.success(message);
-      } else {
+      if (!success) {
         toast.error(message || "Failed to login");
       }
     },
     onError: ( error: AxiosServerError ) => {
       toast.dismiss();
-      const message = extractErrorMessage(error) || "Failed to login"
-      toast.error(message);
+      if (!isEmailVerificationRequired(error)) {
+        const message = extractErrorMessage(error) || "Failed to login";
+        toast.error(message);
+      }
     },
   });
 

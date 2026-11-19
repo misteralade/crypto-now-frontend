@@ -1,6 +1,6 @@
 import {Fragment} from "react";
 import {useTwoFactorVerifyPage} from "../hooks/pages/useTwoFactorVerifyPage.ts";
-import Navbar from "../components/global/navbar/Navbar.tsx";
+import PublicNavbar from "../components/global/navbar/PublicNavbar.tsx";
 import AuthBg from "../assets/backgrounds/auth-bg.webp";
 
 const TwoFactorVerifyPage = () => {
@@ -19,7 +19,7 @@ const TwoFactorVerifyPage = () => {
   
   return (
     <Fragment>
-      <Navbar />
+      <PublicNavbar />
       
       <main className="min-h-screen flex">
         {/* Left Side - Form */}

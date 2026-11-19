@@ -1,4 +1,6 @@
+import { isEmailVerificationRequired, wasVerificationEmailSent } from "../../util/auth-error.util.ts";
 import { useState } from "react";
+import { startVerificationCooldown } from "../../util/verification-cooldown.ts";
 import { useNavigate } from "@tanstack/react-router";
 import { BASIC } from "../../config/index.config.ts";
 import { ROUTES } from "../../util/constants.util.ts";
@@ -26,13 +28,24 @@ export const useSignInPage = () => {
     const payload:AuthRequestSchema = {
       email: values.email,
       password: values.password,
-      keepLoggedIn: values.rememberMe,
     }
 
-    const { success, data } = await userSignInMutation.mutateAsync(payload);
-
-    if (success) {
-      navigate({ to: data ? ROUTES.TWO_FACTOR_VERIFY : ROUTES.DASHBOARD });
+    try {
+      const { success, data } = await userSignInMutation.mutateAsync(payload);
+      if (success) {
+        const target = data?.twoFactorRequired ? ROUTES.TWO_FACTOR_VERIFY : ROUTES.DASHBOARD;
+        await navigate({ to: target, replace: true });
+      }
+    } catch (error) {
+      if (isEmailVerificationRequired(error)) {
+        const alreadySent = wasVerificationEmailSent(error);
+        if (alreadySent) startVerificationCooldown();
+        await navigate({
+          to: ROUTES.CHECK_EMAIL,
+          search: { email: values.email, send: alreadySent ? undefined : crypto.randomUUID() },
+          replace: true,
+        });
+      }
     }
   };
 

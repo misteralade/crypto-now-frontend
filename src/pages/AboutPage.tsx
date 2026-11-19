@@ -1,24 +1,23 @@
-import Navbar from "../components/global/navbar/Navbar.tsx";
-import Footer from "../components/global/Footer.tsx";
+import PublicNavbar from "../components/global/navbar/PublicNavbar.tsx";
+import FooterNew from "../components/pages/homepage/FooterNew.tsx";
 import aboutImage from "../assets/backgrounds/crypto-about.png";
 import { WhatWeDo, WhyChooseUs } from "../components/pages/about/about.data.ts";
 import CustomButton from "../components/global/Button.tsx";
-import {Fragment} from "react";
 import {useTradeCryptoCurrenciesButton} from "../hooks/components/useTradeCryptoCurrenciesButton.ts";
 
 const AboutPage = () => {
   const { handleTradeCrypto } = useTradeCryptoCurrenciesButton();
-  
+
   return (
-    <Fragment>
-      <Navbar />
+    <div style={{ background: "#FAF9F7", minHeight: "100vh", fontFamily: "'DM Sans', sans-serif" }}>
+      <PublicNavbar />
       <main className="w-full md:w-[90%] 2xl:max-w-7xl mx-auto px-4 md:px-0 mt-[64px] mb-[30px] lg:mb-[121px] text-lg text-[#454745]">
         <aside className="xl:pr-56">
           <h1 className="text-3xl tracking-normal lg:text-3xl xl:text-[64px] xl:leading-[70px] text-[#0E0F0C] font-bold mb-6 xl">
             WE ARE MAKING CRYPTO AVAILABLE TO EVERYONE IN NIGERIA
           </h1>
           <p className="text-[#0E0F0C] font-light mt-4 text-xl">
-            Buy and sell crypto conveniently - you do not need a wallet,  just straight forward exchange of crypto for naira
+            Buy and sell crypto conveniently without an on-platform wallet: straightforward exchange between crypto and naira.
           </p>
         </aside>
         
@@ -41,7 +40,7 @@ const AboutPage = () => {
             </aside>
             <aside className="text-[#454745] text-lg md:text-2xl font-normal">
               <p className="mb-6">
-                Our platform makes crypto adoption in Nigeria effortless for everyone. We break down the barriers and ensure that anyone can conveniently and easily trade crypto for Naira.
+                Our platform makes exchanging crypto for naira simple and dependable. We provide clear rates, fast bank transfers, and responsive support.
               </p>
             </aside>
           </div>
@@ -126,8 +125,8 @@ const AboutPage = () => {
           />
         </aside>
       </main>
-      <Footer />
-    </Fragment>
+      <FooterNew />
+    </div>
   )
 };
 

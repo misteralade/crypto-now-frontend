@@ -1,10 +1,13 @@
 import type {UserBankAccountResponse} from "../../../types/response.payload.types.ts";
+import { Pencil } from "lucide-react";
 
 interface BankAccountCardProps {
   account: UserBankAccountResponse;
   index: number
   onMakeDefault: (id: string) => void
   onDelete: (index: string) => void
+  onEdit: (account: UserBankAccountResponse) => void
+  canDelete: boolean
 }
 
 const BankAccountCard = ({
@@ -12,63 +15,78 @@ const BankAccountCard = ({
   index,
   onMakeDefault,
   onDelete,
+  onEdit,
+  canDelete,
 }: BankAccountCardProps) => {
   return (
-    <section className="relative p-5 rounded-2xl border border-[#ECECEC] bg-white shadow-sm overflow-hidden">
+    <section className="relative p-4 rounded-2xl border border-[#ECECEC] bg-white shadow-sm overflow-hidden flex flex-col h-full w-full max-w-[300px] mx-auto sm:mx-0">
       {/* Translucent Bank Logo Background */}
-      {account.bankLogo && (
+      {account.bank?.logoUrl && (
         <div
           className="absolute inset-0 opacity-5 bg-no-repeat bg-right bg-contain pointer-events-none"
           style={{
-            backgroundImage: `url(${account.bankLogo})`,
-            backgroundPosition: 'right 20px center',
+            backgroundImage: `url(${account.bank?.logoUrl})`,
+            backgroundPosition: 'right 16px center',
           }}
         />
       )}
 
       {/* Content - positioned above the background */}
-      <div className="relative z-10">
-        <div className="text-[20px] md:text-2xl font-medium text-[#0E0F0C]">
-          {account.label || `Account ${index + 1}`}{' '}
-          {account.isDefault ? '– Default' : ''}
+      <div className="relative z-10 flex flex-col flex-1">
+        <div className="mb-3 flex items-start justify-between gap-2">
+          <h3 className="text-base font-bold text-[#0E0F0C]">
+            {account.label || `Account ${index + 1}`}
+          </h3>
+          <div className="ml-auto flex items-center gap-2">
+            {account.isDefault && (
+              <span className="text-[10px] font-semibold text-[#03034D]">Default</span>
+            )}
+            <button type="button" onClick={() => onEdit(account)} aria-label={`Edit ${account.label || `account ${index + 1}`}`} className="rounded-lg p-2 text-[#03034D] hover:bg-[#03034D]/5" title="Edit account">
+              <Pencil size={15} />
+            </button>
+          </div>
         </div>
-        <div className="mt-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="text-[#828282]">Account Name</div>
-            <div className="text-[#101828] font-medium">
+        
+        <div className="space-y-2.5 flex-1">
+          <div>
+            <div className="text-[10px] uppercase tracking-wide text-[#828282] mb-0.5">Account Name</div>
+            <div className="text-sm text-[#101828] font-semibold">
               {account.accountName || '--'}
             </div>
           </div>
-          <div className="flex items-center justify-between">
-            <div className="text-[#828282]">Account Number</div>
-            <div className="text-[#101828] font-medium">
+          
+          <div>
+            <div className="text-[10px] uppercase tracking-wide text-[#828282] mb-0.5">Account Number</div>
+            <div className="text-sm text-[#101828] font-medium font-mono">
               {account.accountNumber || '--'}
             </div>
           </div>
-          <div className="flex items-center justify-between">
-            <div className="text-[#828282]">Bank Name</div>
-            <div className="text-[#101828] font-medium">
-              {account.bankName || '--'}
+          
+          <div>
+            <div className="text-[10px] uppercase tracking-wide text-[#828282] mb-0.5">Bank Name</div>
+            <div className="text-sm text-[#101828] font-semibold">
+              {account.bank?.name || '--'}
             </div>
           </div>
         </div>
-        <div className="mt-[68px] flex items-center justify-end gap-x-4">
-          <div className="flex items-center gap-4">
-            {!account.isDefault && (
-              <button
-                className="text-[#03034D] text-sm font-semibold hover:opacity-80"
-                onClick={() => onMakeDefault(account.id || '')}
-              >
-                Make as default
-              </button>
-            )}
+        
+        <div className="mt-5 pt-3 border-t border-[#F0F0F0] flex items-center justify-between gap-3">
+          {!account.isDefault && (
             <button
-              className="text-[#EB5757] text-sm font-semibold hover:opacity-80 hover:cursor-pointer"
+              className="text-[#03034D] text-xs font-semibold hover:opacity-80 transition-opacity"
+              onClick={() => onMakeDefault(account.id || '')}
+            >
+              Make as default
+            </button>
+          )}
+          {canDelete && (
+            <button
+              className="text-[#EB5757] text-xs font-semibold hover:opacity-80 transition-opacity ml-auto"
               onClick={() => onDelete(account.id)}
             >
               Delete
             </button>
-          </div>
+          )}
         </div>
       </div>
     </section>

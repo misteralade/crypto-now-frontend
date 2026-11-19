@@ -1,5 +1,4 @@
 import type { UserBankAccountResponse } from "../../../types/response.payload.types.ts";
-import CustomButton from "../../global/Button.tsx";
 import {Fragment} from "react";
 import BankAccountCard from "./BankAccountCard.tsx";
 
@@ -8,12 +7,15 @@ interface ProfileBankDetailsSectionProps {
   makeBankAccountDefault: (id: string) => void;
   handleDeleteBank: (id: string) => void;
   createNewBankModal: () => void;
+  onEditBankAccount: (account: UserBankAccountResponse) => void;
 }
 
-const ProfileBankDetailsSection = ({ banks, makeBankAccountDefault, handleDeleteBank, createNewBankModal }: ProfileBankDetailsSectionProps) => {
+const ProfileBankDetailsSection = ({ banks, makeBankAccountDefault, handleDeleteBank, onEditBankAccount }: ProfileBankDetailsSectionProps) => {
+  const canDelete = (banks?.length ?? 0) > 1;
+
   return (
     <Fragment>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="flex flex-wrap gap-4 sm:gap-6 justify-start">
         {banks &&
           banks?.map((account, index) => (
             <BankAccountCard
@@ -22,16 +24,10 @@ const ProfileBankDetailsSection = ({ banks, makeBankAccountDefault, handleDelete
               index={index}
               onMakeDefault={makeBankAccountDefault}
               onDelete={handleDeleteBank}
+              onEdit={onEditBankAccount}
+              canDelete={canDelete}
             />
           ))}
-      </div>
-      
-      
-      <div className="w-full flex items-center justify-center">
-        <CustomButton
-          buttonText="Add New Bank Account"
-          onClick={createNewBankModal}
-        />
       </div>
     </Fragment>
   )

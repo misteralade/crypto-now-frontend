@@ -1,0 +1,144 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-toastify";
+import { useDispatch } from "react-redux";
+import { QUERY_KEYS } from "./query.keys.ts";
+import { kycServiceApi } from "../api/kyc.api.ts";
+import { setKycSession } from "../redux/kyc.slice.ts";
+import { getAccessToken } from "../util/auth-session.util.ts";
+import { extractErrorMessage as getErrorMessage } from "../util/index.util.ts";
+import type { AxiosServerError } from "../types/response.payload.types.ts";
+
+export const useKycQuery = () => {
+  const dispatch = useDispatch();
+  const queryClient = useQueryClient();
+
+  const {
+    data: sessionData,
+    isLoading: loadingSession,
+    refetch: refetchSession,
+  } = useQuery({
+    queryKey: [QUERY_KEYS.KYC.GET_SESSION],
+    queryFn: async () => {
+      const { data, success } = await kycServiceApi.getSession();
+      if (success && data) {
+        dispatch(setKycSession(data));
+      }
+      return data ?? null;
+    },
+    enabled: !!getAccessToken(),
+    staleTime: 0,
+    retry: 1,
+  });
+
+  const startSessionMutation = useMutation({
+    mutationKey: [QUERY_KEYS.KYC.START_SESSION],
+    mutationFn: async () => kycServiceApi.startOrResumeSession(),
+    retry: false,
+    onSuccess: ({ success, data, message }) => {
+      if (success && data) {
+        dispatch(setKycSession(data));
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.KYC.GET_SESSION],
+        });
+      } else {
+        toast.error(message);
+      }
+    },
+    onError: (error: AxiosServerError) => {
+      toast.error(getErrorMessage(error) || "Something went wrong.");
+    },
+  });
+
+  const saveNinMutation = useMutation({
+    mutationKey: [QUERY_KEYS.KYC.SAVE_NIN],
+    mutationFn: ({ nin, firstName }: { nin: string; firstName: string }) =>
+      kycServiceApi.saveNin(nin, firstName),
+    retry: false,
+    onSuccess: ({ success, data, message }) => {
+      if (success && data) {
+        dispatch(setKycSession(data));
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.KYC.GET_SESSION],
+        });
+      } else {
+        toast.error(message);
+      }
+    },
+    onError: (error: AxiosServerError) => {
+      toast.error(getErrorMessage(error) || "Something went wrong.");
+    },
+  });
+
+  const startDiditMutation = useMutation({
+    mutationKey: [QUERY_KEYS.KYC.SUBMIT],
+    mutationFn: () => kycServiceApi.startDiditVerification(),
+    retry: false,
+    onError: (error: AxiosServerError) => {
+      toast.error(getErrorMessage(error) || "Something went wrong.");
+    },
+  });
+
+  const reconcileCallbackMutation = useMutation({
+    mutationKey: [QUERY_KEYS.KYC.GET_STATUS],
+    mutationFn: ({
+      verificationSessionId,
+      status,
+    }: {
+      verificationSessionId?: string | null;
+      status?: string | null;
+    }) => kycServiceApi.reconcileDiditCallback(verificationSessionId, status),
+    retry: false,
+    onSuccess: ({ success, data, message }) => {
+      if (success && data) {
+        dispatch(setKycSession(data));
+      } else {
+        toast.error(message);
+      }
+    },
+    onError: (error: AxiosServerError) => {
+      toast.error(getErrorMessage(error) || "Something went wrong.");
+    },
+  });
+
+  const statusMutation = useMutation({
+    mutationKey: [QUERY_KEYS.KYC.GET_STATUS],
+    mutationFn: () => kycServiceApi.getStatus(),
+    retry: false,
+  });
+
+  const retryMutation = useMutation({
+    mutationKey: [QUERY_KEYS.KYC.RETRY],
+    mutationFn: () => kycServiceApi.retryVerification(),
+    retry: false,
+    onSuccess: ({ success, data, message }) => {
+      if (!success) {
+        toast.error(message);
+        return;
+      }
+
+      // Some actions can return success with null data; always re-fetch session.
+      if (data) {
+        dispatch(setKycSession(data));
+      }
+
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.KYC.GET_SESSION],
+      });
+    },
+    onError: (error: AxiosServerError) => {
+      toast.error(getErrorMessage(error) || "Something went wrong.");
+    },
+  });
+
+  return {
+    sessionData,
+    loadingSession,
+    refetchSession,
+    startSessionMutation,
+    saveNinMutation,
+    startDiditMutation,
+    reconcileCallbackMutation,
+    statusMutation,
+    retryMutation,
+  };
+};

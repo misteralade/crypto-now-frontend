@@ -8,7 +8,7 @@ export default function EmptyPendingTransaction() {
 
   const { incompleteTransactionsCount, loadingIncompleteTransactionsCount } = useTransactionQuery();
 
-  const navigateToTradeCrypto = () => {
+  const navigateToTrade = () => {
       handleRouting()
   }
 
@@ -29,7 +29,7 @@ export default function EmptyPendingTransaction() {
       <h4 className={`text-2xl font-medium`}>{getMessage()}</h4>
 
       <button
-        onClick={navigateToTradeCrypto}
+        onClick={navigateToTrade}
         type="button"
         disabled={false}
         className={`py-4 px-3 md:py-2 cursor-pointer rounded-full block md:order-2 text-lg text-center font-semibold bg-primary text-white disabled:bg-gray-300 disabled:text-gray-500`}

@@ -1,133 +1,171 @@
-import {ArrowDownToLine} from "lucide-react"
-import type {TransactionResponseEntity} from "../../../types/response.payload.types.ts";
-import CopyAccountDetails from "../../trade-crypto/CopyAccountDetails.tsx";
+import type { TransactionResponseEntity } from "../../../types/response.payload.types.ts";
 import momentClient from "../../../lib/moment.ts";
-import {getStatusColor, getStatusDot, getStatusDisplayName} from "../../../util/transaction.util.ts";
-import {useNavigate} from "@tanstack/react-router";
-import {ROUTES} from "../../../util/constants.util.ts";
-import {useTransactionQuery} from "../../../queries/transaction.query.ts";
-import { convertToMillify } from "../../../util/index.util.ts";
+import {
+  getStatusConfig,
+  getTransactionAmountFiatNGN,
+  TRANSACTION_STATUS,
+  TRANSACTION_TYPE,
+} from "../../../util/transaction.util.ts";
+import { useNavigate } from "@tanstack/react-router";
+import { ROUTES } from "../../../util/constants.util.ts";
+import { formatCompact } from "../../../util/asset-precision.ts";
 
 interface TransactionRowProps {
   transaction: TransactionResponseEntity;
-  isLast: boolean
+  isLast: boolean;
+  isMobileCard?: boolean;
 }
 
-const TransactionRow = ({transaction, isLast}: TransactionRowProps) => {
-  const { downloadSingleTransactionMutation } = useTransactionQuery();
+const TransactionRow = ({ transaction: tx, isLast, isMobileCard = false }: TransactionRowProps) => {
   const navigate = useNavigate();
-  
-  const handleViewTransaction = () => {
-    navigate({to: `${ROUTES.TRANSACTION}/${transaction.sessionId}`});
-  }
 
-  const handleViewDispute = () => {
-    if (transaction.dispute?.id) {
-      navigate({to: '/dispute/$id', params: { id: transaction.dispute.id }});
-    }
-  }
+  const isBuy = tx.type.toUpperCase() === TRANSACTION_TYPE.BUY;
+  const statusConfig = getStatusConfig(tx.status);
+  const badgeStyle = statusConfig.style;
+  const badgeLabel = statusConfig.displayName;
 
-  const handleContinueTransaction = () => {
-    // Navigate to trade page with sessionId as query parameter
-    const tradeType = transaction.type.toLowerCase() === 'sell' ? 'sell' : 'buy';
+  const canContinue =
+    ([
+      TRANSACTION_STATUS.INITIATED,
+      TRANSACTION_STATUS.AWAITING_CRYPTO,
+      TRANSACTION_STATUS.AWAITING_PAYMENT,
+    ] as string[]).includes(tx.status) &&
+    momentClient.isWithinDuration(tx.createdAt, 1, "hour");
+  const canDispute = tx.status === TRANSACTION_STATUS.DISPUTED;
+  const fiatAmt = formatCompact(getTransactionAmountFiatNGN(tx), "NGN", 0);
+  const cryptoAmt = Number(tx.amountCrypto).toFixed(4).replace(/\.?0+$/, "");
+
+  const handleView     = () => navigate({ to: `${ROUTES.TRANSACTION}/${tx.sessionId}` });
+  const handleDispute  = () => tx.dispute?.id && navigate({ to: "/dispute/$id", params: { id: tx.dispute.id } });
+  const handleContinue = () =>
     navigate({
-      to: ROUTES.TRADE_CRYPTO,
-      search: {
-        sessionId: transaction.sessionId,
-        option: tradeType,
-        currency: transaction.currency || '',
-        token: transaction.cryptocurrencyId || '',
-      },
+      to: ROUTES.DASHBOARD,
     });
+  /* MOBILE CARD: matches inspiration exactly */
+  if (isMobileCard) {
+    return (
+      <div>
+        <button className="w-full px-4 py-3.5 text-left" onClick={handleView}>
+          {/* Row 1: icon + title/ref + amount/badge */}
+          <div className="flex items-center gap-3">
+            {/* Colored icon block */}
+            <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden"
+              style={{ background: isBuy ? "rgba(3,120,71,0.10)" : "rgba(148,142,238,0.12)" }}>
+              <img src={tx.cryptocurrency.logoUrl} alt={tx.cryptocurrency.symbol}
+                className="w-7 h-7 object-contain" />
+            </div>
+
+            {/* Middle */}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold leading-snug" style={{ color: "#0E0F0C" }}>
+                {isBuy ? "Buy" : "Sell"} {cryptoAmt} {tx.cryptocurrency.symbol}
+              </p>
+              <p className="text-[11px] leading-snug mt-0.5" style={{ color: "#9A9A9A" }}>
+                {momentClient.formatToTransactionInitiationDate(tx.createdAt)}
+              </p>
+            </div>
+
+            {/* Right */}
+            <div className="text-right shrink-0">
+              <p className="text-sm font-extrabold" style={{ color: isBuy ? "#037847" : "#0E0F0C" }}>
+                ₦{fiatAmt}
+              </p>
+              <span className="inline-block text-[10px] font-bold px-1.5 py-0.5 rounded-full mt-0.5"
+                style={badgeStyle}>
+                {badgeLabel}
+              </span>
+            </div>
+          </div>
+
+          {/* Row 2: NETWORK | RATE (CRYPTO amount now lives in the heading above) */}
+          <div className="mt-2.5 ml-14 grid grid-cols-2 gap-2">
+            {[
+              { label: "NETWORK", val: tx.userCryptoWallet?.network ?? tx.adminCryptoWallet?.network ?? tx.walletNetwork ?? "-" },
+              { label: "RATE",    val: `₦${formatCompact(Number(tx.stableToFiatRate), "NGN", 0)}/${tx.cryptocurrency.symbol}` },
+            ].map(({ label, val }) => (
+              <div key={label}>
+                <p className="text-[9px] font-bold tracking-widest uppercase" style={{ color: "#BDBDBD" }}>{label}</p>
+                <p className="text-[11px] font-semibold mt-0.5 truncate" style={{ color: "#6B6E6B" }}>{val}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Action buttons (only when relevant) */}
+          {(canContinue || canDispute) && (
+            <div className="mt-2.5 ml-14 flex gap-2">
+              {canContinue && (
+                <button
+                  onClick={e => { e.stopPropagation(); handleContinue(); }}
+                  className="px-3 py-1 rounded-full text-[11px] font-bold"
+                  style={{ background: "#ECFDF3", color: "#037847" }}>
+                  Continue
+                </button>
+              )}
+              {canDispute && (
+                <button
+                  onClick={e => { e.stopPropagation(); handleDispute(); }}
+                  className="px-3 py-1 rounded-full text-[11px] font-bold"
+                  style={{ background: "#FEECEC", color: "#EB5757" }}>
+                  Dispute
+                </button>
+              )}
+            </div>
+          )}
+        </button>
+        {!isLast && <div style={{ height: "1px", background: "#F7F7F9", margin: "0 16px" }} />}
+      </div>
+    );
   }
 
-  // Check if transaction can be continued --- Only initiated transactions can be continued and createdAt is less than an hour ago
-  const canContinueTransaction = (transaction.status === "INITIATED" || transaction.status === "AWAITING_CRYPTO" || transaction.status === "AWAITING_PAYMENT") && momentClient.isWithinDuration(transaction.createdAt, 1, "hour");
-
-  // // If the dispute transaction is more than an hour and less than 24 hours ago, then it can be disputed
-  // const canDisputeTransaction = momentClient.isWithinDuration(transaction.createdAt, 1, "hour") && momentClient.isWithinDuration(transaction.createdAt, 24, "hours");
-
-  const canViewDispute = transaction.status === "DISPUTED";
-
-  const handleDownloadTransaction = async (sessionId: string) => {
-    const { success, data} = await downloadSingleTransactionMutation.mutateAsync(sessionId);
-
-    if (success && data) {
-      const blob = new Blob([data], { type: "text/csv" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `${sessionId}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    } else {
-      console.error("Download failed");
-    }
-  }
-
+  /* ══ DESKTOP TABLE ROW ══ */
   return (
-    <tr className={`hover:bg-muted/30 transition-colors ${!isLast ? "border-b border-border" : ""}`}>
-      <td className="p-4 text-sm text-foreground font-mono">
-        <CopyAccountDetails accountNumber={transaction.sessionId} className="!max-w-[100px]"/>
+    <tr
+      className={`transition-colors hover:bg-[#F8F8FF] cursor-pointer ${!isLast ? "border-b" : ""}`}
+      style={{ borderColor: "#F5F5FF" }}
+      onClick={handleView}
+    >
+      <td className="px-5 py-4 text-[14px] font-semibold text-[#101828]">
+        {tx.sessionId.slice(0, 8)}...
       </td>
-      <td className="p-4 text-sm text-muted-foreground">{momentClient.formatToTransactionInitiationDate(transaction.createdAt)}</td>
-      <td className="p-4 text-sm text-foreground">{transaction.type}</td>
-      <td className="p-4 text-sm text-foreground font-medium">{Number(transaction.amountCrypto).toFixed(4)} {transaction.cryptocurrency.symbol}</td>
-      <td className="p-4 text-sm text-foreground font-medium">{convertToMillify(transaction.currency === "USD" ? Number(transaction.amountFiat) : Number(transaction.amountFiat) / Number(transaction.stableToFiatRate || 1), 2)} USD</td>
-      <td className="p-4 text-sm text-foreground">{Number(transaction.stableToFiatRate).toFixed(4)}</td>
-      <td className="p-4">
-        <span
-          className={`flex items-center w-fit gap-2 py-1 px-3 rounded-3xl text-xs ${getStatusColor(transaction.status)}`}
-        >
-          <span className={`w-2 h-2 rounded-full ${getStatusDot(transaction.status)}`}></span>
-          <span className={`text-sm`}>{getStatusDisplayName(transaction.status)}</span>
-        </span>
+      <td className="px-5 py-4 text-[14px] text-[#667085] whitespace-nowrap">
+        {momentClient.formatToTransactionInitiationDate(tx.createdAt)}
       </td>
-      <td className="p-4">
+      <td className="px-5 py-4">
         <div className="flex items-center gap-2">
-          <button className="p-2 rounded-lg transition-colors" disabled={transaction.status === "FAILED"}>
-            <ArrowDownToLine
-              size={18}
-              className={`${transaction.status === "COMPLETED" || transaction.status === "FAILED" ? "text-accent1 cursor-pointer" : "text-grey4 cursor-not-allowed"}`}
-              onClick={() => handleDownloadTransaction(transaction.sessionId)}
-            />
-          </button>
-          
-          <button
-            className="px-2.5 md:px-3 py-1 rounded-full bg-[#E6E6FE] cursor-pointer hover:opacity-80 text-[#03034D] text-xs md:text-xs font-medium"
-            onClick={handleViewTransaction}
-          >
-            View
-          </button>
-
-          {canViewDispute && (
-            <button
-              disabled={transaction.status !== "DISPUTED" || !transaction.dispute?.id}
-              className={`px-2.5 md:px-3 py-1 rounded-full text-xs md:text-xs font-medium transition-opacity ${
-                transaction.status === "DISPUTED" && transaction.dispute?.id
-                  ? "bg-[#FFE6E6] cursor-pointer hover:opacity-80 text-[#8B0000]"
-                  : "bg-gray-200 cursor-not-allowed text-gray-500 opacity-60"
-              }`}
-              onClick={handleViewDispute}
-            >
-              Dispute
-            </button>
-          )}
-
-          {canContinueTransaction && (
-            <button
-              className="px-2.5 md:px-3 py-1 rounded-full bg-[#E6F7E6] cursor-pointer hover:opacity-80 text-[#0D4D0D] text-xs md:text-xs font-medium"
-              onClick={handleContinueTransaction}
-            >
-              Continue
-            </button>
-          )}
+          <div className="w-6 h-6 rounded-lg overflow-hidden flex items-center justify-center shrink-0"
+            style={{ background: isBuy ? "rgba(3,120,71,0.10)" : "rgba(148,142,238,0.12)" }}>
+            <img src={tx.cryptocurrency.logoUrl} alt="" className="w-4 h-4 object-contain" />
+          </div>
+          <span className="text-[14px] font-semibold" style={{ color: isBuy ? "#037847" : "#0E0F0C" }}>
+            {tx.type}
+          </span>
         </div>
       </td>
+      <td className="px-5 py-4">
+        <div>
+          <p className="text-[14px] font-semibold text-[#101828]">
+            {Number(tx.amountCrypto).toFixed(4).replace(/\.?0+$/, "")}
+          </p>
+          <p className="text-[11px] text-[#9A9A9A] mt-0.5">{tx.cryptocurrency.symbol}</p>
+        </div>
+      </td>
+      <td className="px-5 py-4 text-[14px] font-bold" style={{ color: "#101828" }}>
+        ₦{fiatAmt}
+      </td>
+      <td className="px-5 py-4 text-[14px] text-[#667085] whitespace-nowrap">
+        ₦{formatCompact(Number(tx.stableToFiatRate), "NGN", 0)}
+      </td>
+      <td className="px-5 py-4 text-[14px] font-medium text-[#667085] whitespace-nowrap">
+        {tx.userCryptoWallet?.network ?? tx.adminCryptoWallet?.network ?? tx.walletNetwork ?? "-"}
+      </td>
+      <td className="px-5 py-4">
+        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12px] font-semibold ${statusConfig.bgColor} ${statusConfig.textColor}`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${statusConfig.dotColor}`} />
+          {statusConfig.displayName}
+        </span>
+      </td>
     </tr>
-  )
-}
+  );
+};
 
 export default TransactionRow;

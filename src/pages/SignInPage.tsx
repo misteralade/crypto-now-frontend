@@ -142,24 +142,6 @@ const SignInPage = () => {
                 </div>
               </div>
 
-              {/* Keep me logged in checkbox */}
-              <div className="flex items-center">
-                <input
-                    id="rememberMe"
-                    name="rememberMe"
-                    type="checkbox"
-                    checked={values.rememberMe}
-                    onChange={handleChange}
-                    className="h-4 w-4 text-[#3B82F6] focus:ring-[#3B82F6] border-[#D1D5DB] rounded"
-                />
-                <label
-                    htmlFor="keep-logged-in"
-                    className="ml-3 text-[14px] text-[#374151]"
-                >
-                  Keep me logged in for 7 days
-                </label>
-              </div>
-
               {/* Sign Up Button */}
               <div className="pt-2">
                 <CustomButton

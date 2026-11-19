@@ -6,35 +6,31 @@ import { clearProfilePersonalInfoField, setProfilePersonalInfoField } from "../.
 import {useAuthQuery} from "../../queries/auth.query.ts";
 import type {
   CreateBankAccountRequestPayload,
-  UserCreateCryptoWalletRequestPayload
+  UpdateBankAccountRequestPayload,
 } from "../../types/request.payload.types.ts";
+import type { UserBankAccountResponse } from "../../types/response.payload.types.ts";
 import {
   clearNewBankAccount,
   clearUpdateSelectedBankAccountId,
   setNewBankAccountField,
   setUpdateSelectedBankAccountId
 } from "../../redux/bank.slice.ts";
-import {useCryptoQuery} from "../../queries/crypto.query.ts";
-import {
-  clearCreateCryptoWalletField,
-  clearUpdateCryptoWalletField,
-  setCreateCryptoWalletField,
-  setUpdateCryptoWalletId,
-} from "../../redux/crypto.slice.ts";
 
 export const useProfilePage = () => {
   const dispatch = useDispatch();
   const { userRequestPasswordChangeMutation, userToggleTwoFactorAuthenticationMutation } = useAuthQuery();
   const { userProfileData, loadingUserProfile, updateProfileMutation, removeProfilePictureMutation } = useUserQuery();
-  const { allBanks, loadingAllBanks } = useBankQuery();
-  const { supportedCryptoCurrencies, loadingSupportedCryptocurrencies, allUserCryptoWallets, loadingAllUserCryptoWallets, createUserWalletMutation, makeWalletPrimaryMutation, deleteUserWalletMutation } = useCryptoQuery();
-  const { userBankAccounts, loadingUserBankAccounts, createUserBankAccountMutation, updateDefaultBankAccountMutation, deleteBankAccountMutation } = useBankQuery();
-  
+  const {
+    allBanks, loadingAllBanks,
+    userBankAccounts, loadingUserBankAccounts,
+    createUserBankAccountMutation, updateDefaultBankAccountMutation,
+    deleteBankAccountMutation, updateUserBankAccountMutation,
+  } = useBankQuery();
+
   const [selectedBank, setSelectedBank] = useState("");
-  const [selectedWallet, setSelectedWallet] = useState("");
-  
+
   const [showCreateNewBankAccount, setShowCreateNewBankAccount] = useState(false);
-  const [showCreateWallet, setShowCreateWallet] = useState(false);
+  const [bankAccountToEdit, setBankAccountToEdit] = useState<UserBankAccountResponse | null>(null);
   
   const handleSaveChanges = async () => {
     await updateProfileMutation.mutateAsync()
@@ -53,8 +49,8 @@ export const useProfilePage = () => {
     }))
   }
   
-  const handleNewBankAccountField = (field: keyof CreateBankAccountRequestPayload, value: any) => {
-    if (field === 'bankId') {
+  const handleNewBankAccountField = (field: keyof CreateBankAccountRequestPayload, value: CreateBankAccountRequestPayload[keyof CreateBankAccountRequestPayload]) => {
+    if (field === 'bankId' && typeof value === 'string') {
       setSelectedBank(value)
     }
     dispatch(setNewBankAccountField({
@@ -63,16 +59,6 @@ export const useProfilePage = () => {
     }))
   }
  
-  const handleNewWalletField = (field: keyof UserCreateCryptoWalletRequestPayload, value: any) => {
-    if (field === 'cryptoId') {
-      setSelectedWallet(value);
-    }
-    dispatch(setCreateCryptoWalletField({
-      field,
-      value,
-    }))
-  }
-  
   // Mutation Functions
   const handleChangePassword = () => {
     userRequestPasswordChangeMutation.mutate();
@@ -84,14 +70,6 @@ export const useProfilePage = () => {
       toggleShowCreateNewBankAccount();
       setSelectedBank('')
       dispatch(clearNewBankAccount())
-    }
-  }
-  
-  const handleCreateWallet = async () => {
-    const { success } = await createUserWalletMutation.mutateAsync();
-    if (success) {
-      toggleShowCreateNewWallet();
-      dispatch(clearCreateCryptoWalletField());
     }
   }
   
@@ -112,31 +90,22 @@ export const useProfilePage = () => {
       dispatch(clearUpdateSelectedBankAccountId());
     }
   }
-  
-  const handleMakeWalletDefault = async (id: string) => {
-    dispatch(setUpdateCryptoWalletId(id))
-    const { success } = await makeWalletPrimaryMutation.mutateAsync()
-    if (success) {
-      dispatch(clearUpdateCryptoWalletField())
-    }
-  }
-  
-  const handleDeleteWallet = async (id: string) => {
-    dispatch(setUpdateCryptoWalletId(id))
-    const { success } = await deleteUserWalletMutation.mutateAsync()
-    if (success) {
-      dispatch(clearUpdateCryptoWalletField())
-    }
-  }
 
+  const handleUpdateBankAccount = async (id: string, payload: UpdateBankAccountRequestPayload) => {
+    try {
+      const { success } = await updateUserBankAccountMutation.mutateAsync({ id, payload });
+      return success;
+    } catch {
+      return false;
+    }
+  };
+  
   const handleRemoveProfilePicture = () => {
     removeProfilePictureMutation.mutate();
   }
   
   const toggleShowCreateNewBankAccount = () => setShowCreateNewBankAccount(!showCreateNewBankAccount);
-  
-  const toggleShowCreateNewWallet = () => setShowCreateWallet(!showCreateWallet);
-  
+
   return {
     // Values
     userProfileData,
@@ -147,13 +116,8 @@ export const useProfilePage = () => {
     loadingUserBankAccounts,
     selectedBank,
     showCreateNewBankAccount,
-    supportedCryptoCurrencies,
-    loadingSupportedCryptocurrencies,
-    allUserCryptoWallets,
-    loadingAllUserCryptoWallets,
-    showCreateWallet,
-    selectedWallet,
-    
+    bankAccountToEdit,
+
     // Functions
     handleChangePassword,
     handlePersonalInfoProfileFieldUpdate,
@@ -164,11 +128,8 @@ export const useProfilePage = () => {
     toggleShowCreateNewBankAccount,
     handleDefaultBankAccount,
     handleDeleteBankAccount,
-    toggleShowCreateNewWallet,
-    handleCreateWallet,
-    handleNewWalletField,
-    handleMakeWalletDefault,
-    handleDeleteWallet,
+    setBankAccountToEdit,
+    handleUpdateBankAccount,
     handleRemoveProfilePicture,
   }
 }

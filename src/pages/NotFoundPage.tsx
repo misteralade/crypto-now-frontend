@@ -1,7 +1,6 @@
-import { Fragment } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import Navbar from "../components/global/navbar/Navbar.tsx";
-import Footer from "../components/global/Footer.tsx";
+import PublicNavbar from "../components/global/navbar/PublicNavbar.tsx";
+import FooterNew from "../components/pages/homepage/FooterNew.tsx";
 import CustomButton from "../components/global/Button.tsx";
 import { ROUTES } from "../util/constants.util.ts";
 
@@ -9,8 +8,8 @@ const NotFoundPage = () => {
   const navigate = useNavigate();
 
   return (
-    <Fragment>
-      <Navbar />
+    <div style={{ background: "#FAF9F7", minHeight: "100vh", fontFamily: "'DM Sans', sans-serif" }}>
+      <PublicNavbar />
       <main className="w-full min-h-[calc(100vh-200px)] flex items-center justify-center px-4 py-20">
         <div className="max-w-2xl mx-auto text-center">
           <div className="mb-8">
@@ -38,8 +37,8 @@ const NotFoundPage = () => {
           </div>
         </div>
       </main>
-      <Footer />
-    </Fragment>
+      <FooterNew />
+    </div>
   );
 };
 

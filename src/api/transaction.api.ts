@@ -1,14 +1,19 @@
-import {toast} from "react-toastify";
+﻿import {toast} from "react-toastify";
 import {
   axiosGetRequestHandler,
   axiosPatchRequestHandler,
   axiosPostRequestHandler,
 } from "./index.ts";
-import type {SearchTransactionsRequestPayload} from "../types/request.payload.types.ts";
+import type {
+  InitiateTransactionRequestPayload,
+  SearchTransactionsRequestPayload
+} from "../types/request.payload.types.ts";
 import type {
   BaseApiResponse,
+  FilteredTransactionSummaryResponse,
   GetTransactionDetailsAPIResponse,
   InitiateTransactionAPIResponse,
+  ManualSellDepositRecheckResponse,
   TransactionSummaryResponse,
   UserTransactionsHistoryResponse
 } from "../types/response.payload.types.ts";
@@ -40,7 +45,6 @@ class TransactionServiceApi {
     )
 
     if (response.success) {
-      toast.success(response.message);
       return response.data;
     } else {
       toast.error(response.message);
@@ -59,75 +63,83 @@ class TransactionServiceApi {
     )
     
     if (response.success) {
-      toast.success(response.message);
       return response.data;
     } else {
       toast.error(response.message);
     }
   }
 
-  async calculateAmountToReceive(exchangeRateId: string, amountToSend: number) {
-    const { data, success }: { data: string, success: boolean} = await axiosPostRequestHandler(
-      `/transaction/calculate/amount/${exchangeRateId}`,
-      { amountToSend }
-    )
-
-    return { data, success };
-  }
-  
-  async initiateTransactionAnonymousUser(transactionData: Record<string, any>): Promise<InitiateTransactionAPIResponse> {
+  async initiateTransactionAnonymousUser(transactionData: InitiateTransactionRequestPayload): Promise<InitiateTransactionAPIResponse> {
     return await axiosPostRequestHandler(
       '/transaction/initiate/anonymous',
       transactionData
     ) as InitiateTransactionAPIResponse
   }
 
-  async initiateTransaction(transactionData: Record<string, any>) {
+  async createAndSubmitTransaction(payload: FormData | Record<string, unknown>): Promise<InitiateTransactionAPIResponse> {
+    const isMultipart = payload instanceof FormData;
+    return await axiosPostRequestHandler(
+      '/transaction/create-and-submit',
+      payload,
+      isMultipart ? { headers: { 'Content-Type': 'multipart/form-data' } } : undefined,
+    ) as InitiateTransactionAPIResponse;
+  }
+
+  async anonymousCreateAndSubmitTransaction(payload: FormData | Record<string, unknown>): Promise<InitiateTransactionAPIResponse> {
+    const isMultipart = payload instanceof FormData;
+    return await axiosPostRequestHandler(
+      '/transaction/create-and-submit/anonymous',
+      payload,
+      isMultipart ? { headers: { 'Content-Type': 'multipart/form-data' } } : undefined,
+    ) as InitiateTransactionAPIResponse;
+  }
+
+  async initiateTransaction(transactionData: InitiateTransactionRequestPayload) {
     return await axiosPostRequestHandler(
       '/transaction/initiate',
       transactionData
     ) as InitiateTransactionAPIResponse
   }
 
-  async makeTransactionPayment(paymentData: Record<string, any>) {
+  async makeTransactionPayment(paymentData: { sessionId: string } & Record<string, unknown>) {
     const {data, message, success, error}: {
       data: { sessionId: string },
       message: string,
       success: boolean,
-      error: any
+      error: { message?: string } | null | undefined
     } = await axiosPatchRequestHandler(
       `/transaction/make-payment/${paymentData.sessionId}`,
       paymentData
     )
 
     if (!success || error) {
-      toast.error(error.message || message || error || "Failed to initiate transaction");
+      toast.error(error?.message || message || "Failed to initiate transaction");
       return;
     }
 
     return data.sessionId;
   }
   
-  async anonymousUserMakeTransactionPayment(paymentData: Record<string, any>) {
+  async anonymousUserMakeTransactionPayment(paymentData: { sessionId: string } & Record<string, unknown>) {
     const {data, message, success, error}: {
       data: { sessionId: string },
       message: string,
       success: boolean,
-      error: any
+      error: { message?: string } | null | undefined
     } = await axiosPatchRequestHandler(
       `/transaction/make-payment/${paymentData.sessionId}/anonymous`,
       paymentData
     )
     
     if (!success || error) {
-      toast.error(error.message || message || error || "Failed to initiate transaction");
+      toast.error(error?.message || message || "Failed to initiate transaction");
       return;
     }
     
     return data.sessionId;
   }
 
-  async confirmReceivingPaymentAccount(sessionId: string, accountData: Record<string, any>) {
+  async confirmReceivingPaymentAccount(sessionId: string, accountData: Record<string, unknown>) {
      return await axiosPatchRequestHandler(
       `/transaction/confirm-receiving-payment-account/${sessionId}`,
       {
@@ -137,7 +149,7 @@ class TransactionServiceApi {
     ) as BaseApiResponse<{ sessionId: string }>
   }
   
-  async confirmAnonymousUserReceivingPaymentAccount(sessionId: string, accountData: Record<string, any>) {
+  async confirmAnonymousUserReceivingPaymentAccount(sessionId: string, accountData: Record<string, unknown>) {
     return await axiosPatchRequestHandler(
       `/transaction/confirm-receiving-payment-account/${sessionId}/anonymous`,
       {
@@ -153,7 +165,16 @@ class TransactionServiceApi {
 
     return { data, message, success };
   }
-  
+
+  // Same filters as searchUserTransactions : BOUGHT/SOLD totals scoped to
+  // whatever status/type/date-range/search is currently applied, so the
+  // Transaction History page's stat pills move with the active filter tab.
+  async getFilteredUserTransactionSummary(payload: SearchTransactionsRequestPayload) {
+    const { data, message, success }: { data: FilteredTransactionSummaryResponse, message: string, success: boolean } = await axiosPostRequestHandler("/transaction/user/search-history/summary", payload);
+
+    return { data, message, success };
+  }
+
   async getUserTransactionSummary() {
     const { data, message, success }: { data: TransactionSummaryResponse, message: string, success: boolean } = await axiosGetRequestHandler("/transaction/user/summary");
 
@@ -168,6 +189,31 @@ class TransactionServiceApi {
   
   async getTransactionDetails(sessionId: string) {
     return await axiosGetRequestHandler(`/transaction/details/${sessionId}`) as GetTransactionDetailsAPIResponse
+  }
+
+  async getResumableAnonymousSellTransaction(payload: {
+    email: string;
+    coinId: string;
+    network: string;
+  }) {
+    return await axiosPostRequestHandler(
+      "/transaction/anonymous/resumable-sell",
+      payload,
+    ) as BaseApiResponse<unknown>;
+  }
+
+  async manualRecheckSellDeposit(sessionId: string) {
+    return await axiosPostRequestHandler(
+      `/transaction/manual-recheck-sell-deposit/${sessionId}`,
+      {},
+    ) as BaseApiResponse<ManualSellDepositRecheckResponse>;
+  }
+
+  async manualRecheckAnonymousSellDeposit(sessionId: string) {
+    return await axiosPostRequestHandler(
+      `/transaction/manual-recheck-sell-deposit/anonymous/${sessionId}`,
+      {},
+    ) as BaseApiResponse<ManualSellDepositRecheckResponse>;
   }
 
   async downloadSingleTransactionDetails(sessionId: string) {

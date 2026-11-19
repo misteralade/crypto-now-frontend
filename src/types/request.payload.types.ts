@@ -1,22 +1,37 @@
-export type TradeType = "BUY" | "SELL";
+﻿export type TradeType = "BUY" | "SELL";
 export type OrderBy = "ASC" | "DESC";
 
 export type InitiateTransactionRequestPayload = {
-  exchangeRateId?: string;
   action?: TradeType;
   tokenId?: string;
+  coinId?: string;
   currencyId?: string;
   amountToReceive?: number;
   amountToSend?: number;
   receiptUrl?: string;
   transactionHash?: string;
+  accountId?: string;
+  custodialWalletId?: string;
+  walletAddress?: string;
+  network?: string;
+  email?: string;
 }
 
 export type CreateBankAccountRequestPayload = {
   bankId: string | null;
-  accountName: string | null;
+  accountName?: string | null;
+  accountHolderName?: string | null;
   accountNumber: string | null;
   isDefault: boolean | null;
+  email?: string | null;
+  bankName?: string | null;
+  bankCode?: string | null;
+  bankLogo?: string | null;
+}
+
+export type UpdateBankAccountRequestPayload = {
+  bankId: string;
+  accountNumber: string;
 }
 
 export type UserCreateCryptoWalletRequestPayload = {
@@ -29,7 +44,7 @@ export type UserCreateCryptoWalletRequestPayload = {
 }
 
 // Start Transaction
-export type TransactionStatus = "INITIATED" | "PENDING" | "AWAITING_PAYMENT" | "PAYMENT_RECEIVED" | "PAYMENT_CONFIRMED" | "PROCESSING" | "AWAITING_CRYPTO" | "CRYPTO_SENT" | "CRYPTO_RECEIVED" | "CRYPTO_CONFIRMED" | "COMPLETED" | "FAILED" | "EXPIRED" | "CANCELLED" | "DISPUTED" | "REFUNDING" | "REFUNDED" | "PAYMENT_ACCOUNT_CONFIRMED";
+export type TransactionStatus = "INITIATED" | "AWAITING_PAYMENT" | "IN_REVIEW" | "PROCESSING" | "AWAITING_CRYPTO" | "COMPLETED" | "FAILED" | "EXPIRED" | "CANCELLED" | "DISPUTED" | "REFUNDED" | "DEPOSIT_DETECTED" | "PENDING_CONFIRMATION" | "DEPOSIT_PENDING_MINIMUM" | "DEPOSIT_CONFIRMED" | "NO_OWNER" | "PAYOUT_INITIATED" | "PENDING_PAYOUT" | "PAYOUT_FAILED";
 export type TransactionPriority = "LOW" | "NORMAL" | "HIGH" | "URGENT";
 
 export type SearchTransactionsRequestPayload = {
@@ -37,7 +52,6 @@ export type SearchTransactionsRequestPayload = {
   sessionId: string | undefined;
   userId: string | undefined;
   cryptoCurrencyId: string | undefined;
-  exchangeRateId: string | undefined;
   type: TradeType | undefined;
   amountCrypto: number | undefined;
   amountFiat: number | undefined;
@@ -45,6 +59,10 @@ export type SearchTransactionsRequestPayload = {
   stableToCryptoRate: number | undefined;
   currency: string | undefined;
   status: TransactionStatus | undefined;
+  // Presentation-only grouping filter for the "Pending" tab : not a real
+  // transaction status, never persisted. Backend expands it into the actual
+  // set of in-flight statuses.
+  pending: boolean | undefined;
   priority: TransactionPriority | undefined
   userBankAccountId: string | undefined;
   adminBankAccountId: string | undefined;
@@ -77,6 +95,7 @@ export type SearchTransactionsRequestPayload = {
   includeUserBankAccount: boolean | undefined;
   includeUserCryptoWallet: boolean | undefined;
   includeProcessedBy: boolean | undefined;
+  includeDispute: boolean | undefined;
 
   // Pagination
   page: number | undefined;

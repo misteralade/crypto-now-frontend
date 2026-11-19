@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "packageManager": "pnpm@10.34.5",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -17,20 +18,23 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "clsx": "^2.1.1",
     "@material-tailwind/react": "^2.1.10",
+    "@phosphor-icons/react": "^2.1.10",
     "@reduxjs/toolkit": "^2.9.0",
+    "@sentry/react": "^10.55.0",
     "@tailwindcss/vite": "^4.1.11",
     "@tanstack/react-query": "^5.85.2",
     "@tanstack/react-router": "^1.131.10",
     "@tanstack/react-router-devtools": "^1.131.10",
-    "axios": "^1.11.0",
+    "axios": "^1.16.1",
+    "clsx": "^2.1.1",
+    "downshift": "^9.0.9",
     "formik": "^2.4.9",
+    "framer-motion": "^12.35.2",
     "lucide-react": "^0.539.0",
-    "millify": "^6.1.0",
     "moment": "^2.30.1",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
     "react-icons": "^5.5.0",
     "react-redux": "^9.2.0",
     "react-toastify": "^11.0.5",
@@ -54,6 +58,12 @@
     "husky": "^9.1.7",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.39.1",
-    "vite": "^7.1.2"
+    "vite": "^7.3.2",
+    "vite-plugin-pwa": "^1.3.0",
+    "workbox-cacheable-response": "^7.4.1",
+    "workbox-expiration": "^7.4.1",
+    "workbox-precaching": "^7.4.1",
+    "workbox-routing": "^7.4.1",
+    "workbox-strategies": "^7.4.1"
   }
 }

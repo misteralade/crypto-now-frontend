@@ -1,8 +1,7 @@
-import React, {useEffect, useRef, useState} from "react";
+import React, {useRef, useState} from "react";
 import {useAuthQuery} from "../../queries/auth.query.ts";
 import {ROUTES} from "../../util/constants.util.ts";
 import {useNavigate} from "@tanstack/react-router";
-import {toast} from "react-toastify";
 
 export const useTwoFactorVerifyPage = () => {
   const navigate = useNavigate();
@@ -10,9 +9,7 @@ export const useTwoFactorVerifyPage = () => {
   const [verificationCode, setVerificationCode] = useState<string[]>(Array(6).fill(""))
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
   
-  useEffect(() => {
-    toast.success("Verification code sent to your email...")
-  }, []);
+
   
   const handleSubmit = async (code: string) => {
     const { success } = await verifyCodeMutation.mutateAsync(code);

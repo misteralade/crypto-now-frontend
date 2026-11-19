@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { QUERY_KEYS } from "../../../queries/query.keys.ts";
 import type { TradeType } from "../../../types/trade.types.ts";
 import { bankServiceApi } from "../../../api/bank.api.ts";
 import type {
+  CustodialWalletResponse,
   SupportedCryptoOrCurrencyResponse,
   SupportedPlatformBankAccountResponse,
   SupportedPlatformCryptoWalletResponse,
@@ -14,27 +15,39 @@ import {
   loadTradeProgress,
   saveTradeProgress,
 } from "../../../util/tradeProgress.storage.util.ts";
+import { SESSION_STORAGE_KEYS } from "../../../util/constants.util.ts";
 import {type RootState, store} from "../../../store.ts";
 import {toast} from "react-toastify";
 import { useRateQuery } from "../../../queries/rate.query.ts";
+import { isAuthenticated } from "../../../util/auth-session.util.ts";
 
 interface UseTradeStepTwoProps {
   tradeType: TradeType;
-  exchangeRateId: string;
   amountToBuy: number;
   numberOfToken: number;
   selectedToken?: SupportedCryptoOrCurrencyResponse;
   selectedCurrency?: SupportedCryptoOrCurrencyResponse;
+  sellDepositWallet?: CustodialWalletResponse | null;
+  sellNetwork?: string;
+  transactionRef?: string;
+  // BUY: a receipt was already submitted (txStatus past AWAITING_PAYMENT), so
+  // the "pay into this account" details are no longer relevant : skip fetching
+  // them instead of racing/erroring while the caller shows the verifying view.
+  skipPaymentDetails?: boolean;
 }
 
 export const useTradeStepTwo = ({
   tradeType,
-  exchangeRateId,
   amountToBuy,
   numberOfToken,
   selectedToken,
   selectedCurrency,
+  sellDepositWallet,
+  sellNetwork,
+  transactionRef,
+  skipPaymentDetails,
 }: UseTradeStepTwoProps) => {
+  const savedTradeProgress = loadTradeProgress();
   const [files, setFiles] = useState<File[]>([]);
   const [uploadedFileUrl, setUploadedFileUrl] = useState<string | undefined>();
   const [transactionHash, setTransactionHash] = useState<string>("");
@@ -49,6 +62,7 @@ export const useTradeStepTwo = ({
   const rootState = store.getState() as RootState;
   const cryptoId = rootState.crypto.tradeCrypto.selectedCryptoId;
   const currencyId = selectedCurrency?.id;
+  const authenticated = isAuthenticated();
 
   // Fetch exchange rate to convert USD to NGN
   const { exchangeRate } = useRateQuery(
@@ -70,13 +84,24 @@ export const useTradeStepTwo = ({
     return amountToBuy;
   };
 
+  // For authenticated sell: use custodial wallet passed from parent; skip the platform wallet fetch
+  useEffect(() => {
+    if (tradeType === "sell" && sellDepositWallet) {
+      saveTradeProgress({ sellNetwork: sellDepositWallet.network });
+      setWalletDetails({
+        id: sellDepositWallet.id,
+        walletAddress: sellDepositWallet.walletAddress,
+        network: sellDepositWallet.network,
+      });
+    }
+  }, [tradeType, sellDepositWallet]);
+
   // Fetch payment details based on trade type
-  const { isLoading: paymentDetailsLoading, error: paymentDetailsError } =
+  const { isLoading: paymentDetailsLoading, error: paymentDetailsError, refetch: refetchPaymentDetails } =
     useQuery({
       queryKey: [
         QUERY_KEYS.BANK.PLATFORM_BANK_DETAILS,
         QUERY_KEYS.CRYPTO.PLATFORM_CRYPTO_WALLET,
-        exchangeRateId,
         tradeType,
       ],
       queryFn: async () => {
@@ -85,24 +110,66 @@ export const useTradeStepTwo = ({
           setBankDetails(data);
           return data;
         } else {
-          const rootState = store.getState() as RootState;
-          const cryptoId = rootState.crypto.tradeCrypto.selectedCryptoId
-          
-          if (!cryptoId) {
-            toast.error("Please select a crypto");
-            throw new Error("No crypto selected");
+          if (sellDepositWallet) {
+            const wallet = {
+              id: sellDepositWallet.id,
+              walletAddress: sellDepositWallet.walletAddress,
+              network: sellDepositWallet.network,
+            };
+            setWalletDetails(wallet);
+            return wallet;
           }
-          
+
+          const cryptoId =
+            selectedToken?.id || (store.getState() as RootState).crypto.tradeCrypto.selectedCryptoId;
+          const supportedNetworks = selectedToken?.networks ?? [];
+          const network = sellNetwork || savedTradeProgress?.sellNetwork;
+
+          if (!cryptoId || !network) {
+            toast.error("Please select a crypto and network");
+            throw new Error("Missing crypto or network");
+          }
+
+          if (supportedNetworks.length > 0 && !supportedNetworks.includes(network)) {
+            toast.error("The selected network does not match the chosen crypto.");
+            throw new Error("Invalid network for selected crypto");
+          }
+
+          if (!authenticated) {
+            const sessionId =
+              transactionRef ||
+              sessionStorage.getItem(SESSION_STORAGE_KEYS.SESSION_ID);
+
+            if (!sessionId) {
+              toast.error("Please restart the transaction and try again.");
+              throw new Error("Missing transaction session");
+            }
+
+            const { data } = await cryptoServiceApi.allocateGuestSellWallet({
+              sessionId,
+              cryptoId,
+              network,
+            });
+            saveTradeProgress({ sellNetwork: data.network });
+            setWalletDetails(data);
+            return data;
+          }
+
           const { data } = await cryptoServiceApi.getPlatformWallet(cryptoId);
           setWalletDetails(data);
           return data;
         }
       },
-      enabled: !!exchangeRateId,
+      // For sell: only fetch platform wallet if no custodial wallet is available.
+      // For buy: skip once a receipt is already submitted : nothing to pay into anymore.
+      enabled:
+        tradeType === "buy"
+          ? !skipPaymentDetails
+          : !sellDepositWallet || !authenticated,
     });
 
-  // Validation based on trade type - only require uploaded file
-  const submitInvalid = !uploadedFileUrl;
+  // Validation based on trade type - only require uploaded file for BUY transactions
+  const submitInvalid = tradeType === "buy" && !uploadedFileUrl;
 
   useEffect(() => {
     const saved = loadTradeProgress();
@@ -137,7 +204,7 @@ export const useTradeStepTwo = ({
         },
         {
           title: "Bank Name",
-          value: bankDetails.bankName,
+          value: bankDetails.bank?.name,
         },
         {
           title: "Amount to Pay",
@@ -186,7 +253,7 @@ export const useTradeStepTwo = ({
         {
           title:
             `Bank Name`.trim(),
-          value: bankDetails.bankName,
+          value: bankDetails.bank?.name,
         },
         {
           title: "Amount to Pay",
@@ -240,5 +307,6 @@ export const useTradeStepTwo = ({
     setTransactionHash,
     setUploadedFileUrl,
     oldGenerateAccountDetails,
+    refetchPaymentDetails,
   };
 };

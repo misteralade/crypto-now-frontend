@@ -26,11 +26,11 @@ class MomentClient {
   /**
    * Formats a Date object to a transaction initiation date string
    * @param: date - The Date object to format
-   * @return: string - The formatted date string in "DD-MM-YYYY, h:mm A" format
-   * @example: "05-10-2023, 2:48 PM"
+   * @return: string - The formatted date string in "D MMM YY, h:mmA" format
+   * @example: "8 Aug 26, 9:20PM"
    */
   formatToTransactionInitiationDate(date: Date): string {
-    return moment(date).format("DD-MM-YYYY, h:mm A");
+    return moment(date).format("D MMM YY, h:mmA");
   }
 
   /**

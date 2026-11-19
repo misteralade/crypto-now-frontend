@@ -1,50 +1,29 @@
-import { StrictMode } from "react";
-import ReactDOM from "react-dom/client";
-import { RouterProvider, createRouter } from "@tanstack/react-router";
-import { ToastContainer } from "react-toastify";
-import {Provider} from "react-redux";
-import QueryClientProviderWrapper from "../src/queries/ReactQuery.tsx";
-import "./index.css";
-import "./assets/css/colors.css";
+﻿import { initializeSentry } from "./config/sentry.ts";
+import { CACHE_BUST_VERSION } from "./lib/sw-version.ts";
+import "./pwa.ts";
+import { registerServiceWorker } from "./lib/service-worker.ts";
 
-import { routeTree } from "./routeTree.gen";
-import {persistor, store} from "./store.ts";
-import {PersistGate} from "redux-persist/integration/react";
+initializeSentry();
+registerServiceWorker();
 
-const router = createRouter({ routeTree });
+// ── SW Kill Switch ────────────────────────────────────────────────────────────
+// If CACHE_BUST_VERSION has been bumped since the last page load, send a
+// CLEAR_CACHE message to the active SW so it wipes runtime caches.
+// Runs once per version bump (stored in localStorage) : not on every load.
+if ("serviceWorker" in navigator) {
+  const SW_VERSION_KEY = "cryptonow_sw_cache_version";
+  const storedVersion = localStorage.getItem(SW_VERSION_KEY);
+  const lastVersion = storedVersion === null ? CACHE_BUST_VERSION : parseInt(storedVersion, 10);
 
-// Register the router instance for type safety
-declare module "@tanstack/react-router" {
-  interface Register {
-    router: typeof router;
+  if (storedVersion === null) {
+    localStorage.setItem(SW_VERSION_KEY, String(CACHE_BUST_VERSION));
+  } else if (lastVersion < CACHE_BUST_VERSION) {
+    navigator.serviceWorker.ready.then((registration) => {
+      registration.active?.postMessage({ type: "CLEAR_CACHE" });
+      localStorage.setItem(SW_VERSION_KEY, String(CACHE_BUST_VERSION));
+    });
   }
 }
+// ─────────────────────────────────────────────────────────────────────────────
 
-// Render the app
-const rootElement = document.getElementById("root")!;
-if (!rootElement.innerHTML) {
-  const root = ReactDOM.createRoot(rootElement);
-  root.render(
-    <StrictMode>
-      <Provider store={store}>
-        <PersistGate persistor={persistor} loading={null}>
-          <QueryClientProviderWrapper>
-            <ToastContainer
-              position="top-right"
-              autoClose={5000}
-              hideProgressBar={false}
-              newestOnTop={false}
-              closeOnClick
-              rtl={false}
-              pauseOnFocusLoss
-              draggable
-              pauseOnHover
-              className="toast-container"
-            />
-            <RouterProvider router={router} />
-          </QueryClientProviderWrapper>
-        </PersistGate>
-      </Provider>
-    </StrictMode>
-  );
-}
+void import("./app.tsx");

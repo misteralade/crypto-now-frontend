@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { startVerificationCooldown } from "../../util/verification-cooldown.ts";
 import {BASIC} from "../../config/index.config.ts";
 import { useDispatch } from "react-redux";
 import { setCreateUser } from "../../redux/user.slice.ts";
@@ -6,7 +7,6 @@ import type {CreateUserRequestType} from "../../schemas/user.schema.ts";
 import {useAuthQuery} from "../../queries/auth.query.ts";
 import {useNavigate} from "@tanstack/react-router";
 import {ROUTES} from "../../util/constants.util.ts";
-import {toast} from "react-toastify";
 
 export const useSignUpPage = () => {
   const dispatch = useDispatch();
@@ -14,7 +14,6 @@ export const useSignUpPage = () => {
   const { userCreateAccountMutation } = useAuthQuery();
   
   const [showPassword, setShowPassword] = useState(false);
-  const [otpSent, ] = useState(false);
   
   const handleGoogleSignUp = () => {
     // Redirect to your backend OAuth endpoint
@@ -25,16 +24,13 @@ export const useSignUpPage = () => {
     dispatch(setCreateUser(data));
     const { success } = await userCreateAccountMutation.mutateAsync();
     if (success) {
-      toast.info(`Account activation link sent to your email. If you don't see it in your inbox, please check your spam folder.`)
-      setTimeout(() => {
-        navigate({ to: ROUTES.SIGNIN })
-      }, 5000);
+      startVerificationCooldown();
+      await navigate({ to: ROUTES.CHECK_EMAIL, search: { email: data.email } });
     }
   }
   
   return {
     // Values
-    otpSent,
     showPassword,
     
     // Functions

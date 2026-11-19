@@ -10,15 +10,19 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VerifyAccountRouteImport } from './routes/verify-account'
-import { Route as TradeCryptoRouteImport } from './routes/trade-crypto'
 import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
 import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as SecurityPolicyRouteImport } from './routes/security-policy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RatesRouteImport } from './routes/rates'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as KycRouteImport } from './routes/kyc'
+import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as CheckEmailRouteImport } from './routes/check-email'
 import { Route as AmlPolicyRouteImport } from './routes/aml-policy'
 import { Route as ActivationResultRouteImport } from './routes/activation-result'
 import { Route as AboutRouteImport } from './routes/about'
@@ -30,17 +34,19 @@ import { Route as SignInVerifyRouteImport } from './routes/sign-in/verify'
 import { Route as OauthSuccessRouteImport } from './routes/oauth/success'
 import { Route as OauthErrorRouteImport } from './routes/oauth/error'
 import { Route as DisputeIdRouteImport } from './routes/dispute/$id'
+import { Route as DashboardWalletsRouteImport } from './routes/dashboard/wallets'
+import { Route as DashboardSellRouteImport } from './routes/dashboard/sell'
 import { Route as DashboardProfileRouteImport } from './routes/dashboard/profile'
+import { Route as DashboardNotificationsRouteImport } from './routes/dashboard/notifications'
+import { Route as DashboardKycRouteImport } from './routes/dashboard/kyc'
+import { Route as DashboardBuyRouteImport } from './routes/dashboard/buy'
+import { Route as DashboardTransactionsIndexRouteImport } from './routes/dashboard/transactions/index'
 import { Route as DashboardTransactionsIdRouteImport } from './routes/dashboard/transactions/$id'
+import { Route as DashboardDisputesIdRouteImport } from './routes/dashboard/disputes/$id'
 
 const VerifyAccountRoute = VerifyAccountRouteImport.update({
   id: '/verify-account',
   path: '/verify-account',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TradeCryptoRoute = TradeCryptoRouteImport.update({
-  id: '/trade-crypto',
-  path: '/trade-crypto',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsOfServiceRoute = TermsOfServiceRouteImport.update({
@@ -73,14 +79,39 @@ const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
   path: '/privacy-policy',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any).lazy(() => import('./routes/onboarding.lazy').then((d) => d.Route))
+const KycRoute = KycRouteImport.update({
+  id: '/kyc',
+  path: '/kyc',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HowItWorksRoute = HowItWorksRouteImport.update({
+  id: '/how-it-works',
+  path: '/how-it-works',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckEmailRoute = CheckEmailRouteImport.update({
+  id: '/check-email',
+  path: '/check-email',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AmlPolicyRoute = AmlPolicyRouteImport.update({
@@ -114,10 +145,12 @@ const SignInIndexRoute = SignInIndexRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardIndexRoute = DashboardIndexRouteImport.update({
-  id: '/dashboard/',
-  path: '/dashboard/',
-  getParentRoute: () => rootRouteImport,
-} as any)
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardRoute,
+} as any).lazy(() =>
+  import('./routes/dashboard/index.lazy').then((d) => d.Route),
+)
 const SignInVerifyRoute = SignInVerifyRouteImport.update({
   id: '/sign-in/verify',
   path: '/sign-in/verify',
@@ -138,15 +171,61 @@ const DisputeIdRoute = DisputeIdRouteImport.update({
   path: '/dispute/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardWalletsRoute = DashboardWalletsRouteImport.update({
+  id: '/wallets',
+  path: '/wallets',
+  getParentRoute: () => DashboardRoute,
+} as any).lazy(() =>
+  import('./routes/dashboard/wallets.lazy').then((d) => d.Route),
+)
+const DashboardSellRoute = DashboardSellRouteImport.update({
+  id: '/sell',
+  path: '/sell',
+  getParentRoute: () => DashboardRoute,
+} as any).lazy(() =>
+  import('./routes/dashboard/sell.lazy').then((d) => d.Route),
+)
 const DashboardProfileRoute = DashboardProfileRouteImport.update({
-  id: '/dashboard/profile',
-  path: '/dashboard/profile',
-  getParentRoute: () => rootRouteImport,
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => DashboardRoute,
+} as any).lazy(() =>
+  import('./routes/dashboard/profile.lazy').then((d) => d.Route),
+)
+const DashboardNotificationsRoute = DashboardNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => DashboardRoute,
+} as any).lazy(() =>
+  import('./routes/dashboard/notifications.lazy').then((d) => d.Route),
+)
+const DashboardKycRoute = DashboardKycRouteImport.update({
+  id: '/kyc',
+  path: '/kyc',
+  getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardBuyRoute = DashboardBuyRouteImport.update({
+  id: '/buy',
+  path: '/buy',
+  getParentRoute: () => DashboardRoute,
+} as any).lazy(() => import('./routes/dashboard/buy.lazy').then((d) => d.Route))
+const DashboardTransactionsIndexRoute =
+  DashboardTransactionsIndexRouteImport.update({
+    id: '/transactions/',
+    path: '/transactions/',
+    getParentRoute: () => DashboardRoute,
+  } as any).lazy(() =>
+    import('./routes/dashboard/transactions/index.lazy').then((d) => d.Route),
+  )
 const DashboardTransactionsIdRoute = DashboardTransactionsIdRouteImport.update({
-  id: '/dashboard/transactions/$id',
-  path: '/dashboard/transactions/$id',
-  getParentRoute: () => rootRouteImport,
+  id: '/transactions/$id',
+  path: '/transactions/$id',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardDisputesIdRoute = DashboardDisputesIdRouteImport.update({
+  id: '/disputes/$id',
+  path: '/disputes/$id',
+  getParentRoute: () => DashboardRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -155,24 +234,35 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/activation-result': typeof ActivationResultRoute
   '/aml-policy': typeof AmlPolicyRoute
+  '/check-email': typeof CheckEmailRoute
   '/contact': typeof ContactRoute
+  '/dashboard': typeof DashboardRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
+  '/how-it-works': typeof HowItWorksRoute
+  '/kyc': typeof KycRoute
+  '/onboarding': typeof OnboardingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/rates': typeof RatesRoute
   '/reset-password': typeof ResetPasswordRoute
   '/security-policy': typeof SecurityPolicyRoute
   '/sign-up': typeof SignUpRoute
   '/terms-of-service': typeof TermsOfServiceRoute
-  '/trade-crypto': typeof TradeCryptoRoute
   '/verify-account': typeof VerifyAccountRoute
+  '/dashboard/buy': typeof DashboardBuyRoute
+  '/dashboard/kyc': typeof DashboardKycRoute
+  '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/profile': typeof DashboardProfileRoute
+  '/dashboard/sell': typeof DashboardSellRoute
+  '/dashboard/wallets': typeof DashboardWalletsRoute
   '/dispute/$id': typeof DisputeIdRoute
   '/oauth/error': typeof OauthErrorRoute
   '/oauth/success': typeof OauthSuccessRoute
   '/sign-in/verify': typeof SignInVerifyRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/sign-in/': typeof SignInIndexRoute
+  '/dashboard/disputes/$id': typeof DashboardDisputesIdRoute
   '/dashboard/transactions/$id': typeof DashboardTransactionsIdRoute
+  '/dashboard/transactions/': typeof DashboardTransactionsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -180,24 +270,34 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/activation-result': typeof ActivationResultRoute
   '/aml-policy': typeof AmlPolicyRoute
+  '/check-email': typeof CheckEmailRoute
   '/contact': typeof ContactRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/how-it-works': typeof HowItWorksRoute
+  '/kyc': typeof KycRoute
+  '/onboarding': typeof OnboardingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/rates': typeof RatesRoute
   '/reset-password': typeof ResetPasswordRoute
   '/security-policy': typeof SecurityPolicyRoute
   '/sign-up': typeof SignUpRoute
   '/terms-of-service': typeof TermsOfServiceRoute
-  '/trade-crypto': typeof TradeCryptoRoute
   '/verify-account': typeof VerifyAccountRoute
+  '/dashboard/buy': typeof DashboardBuyRoute
+  '/dashboard/kyc': typeof DashboardKycRoute
+  '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/profile': typeof DashboardProfileRoute
+  '/dashboard/sell': typeof DashboardSellRoute
+  '/dashboard/wallets': typeof DashboardWalletsRoute
   '/dispute/$id': typeof DisputeIdRoute
   '/oauth/error': typeof OauthErrorRoute
   '/oauth/success': typeof OauthSuccessRoute
   '/sign-in/verify': typeof SignInVerifyRoute
   '/dashboard': typeof DashboardIndexRoute
   '/sign-in': typeof SignInIndexRoute
+  '/dashboard/disputes/$id': typeof DashboardDisputesIdRoute
   '/dashboard/transactions/$id': typeof DashboardTransactionsIdRoute
+  '/dashboard/transactions': typeof DashboardTransactionsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -206,24 +306,35 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/activation-result': typeof ActivationResultRoute
   '/aml-policy': typeof AmlPolicyRoute
+  '/check-email': typeof CheckEmailRoute
   '/contact': typeof ContactRoute
+  '/dashboard': typeof DashboardRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
+  '/how-it-works': typeof HowItWorksRoute
+  '/kyc': typeof KycRoute
+  '/onboarding': typeof OnboardingRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/rates': typeof RatesRoute
   '/reset-password': typeof ResetPasswordRoute
   '/security-policy': typeof SecurityPolicyRoute
   '/sign-up': typeof SignUpRoute
   '/terms-of-service': typeof TermsOfServiceRoute
-  '/trade-crypto': typeof TradeCryptoRoute
   '/verify-account': typeof VerifyAccountRoute
+  '/dashboard/buy': typeof DashboardBuyRoute
+  '/dashboard/kyc': typeof DashboardKycRoute
+  '/dashboard/notifications': typeof DashboardNotificationsRoute
   '/dashboard/profile': typeof DashboardProfileRoute
+  '/dashboard/sell': typeof DashboardSellRoute
+  '/dashboard/wallets': typeof DashboardWalletsRoute
   '/dispute/$id': typeof DisputeIdRoute
   '/oauth/error': typeof OauthErrorRoute
   '/oauth/success': typeof OauthSuccessRoute
   '/sign-in/verify': typeof SignInVerifyRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/sign-in/': typeof SignInIndexRoute
+  '/dashboard/disputes/$id': typeof DashboardDisputesIdRoute
   '/dashboard/transactions/$id': typeof DashboardTransactionsIdRoute
+  '/dashboard/transactions/': typeof DashboardTransactionsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -233,24 +344,35 @@ export interface FileRouteTypes {
     | '/about'
     | '/activation-result'
     | '/aml-policy'
+    | '/check-email'
     | '/contact'
+    | '/dashboard'
     | '/forgot-password'
+    | '/how-it-works'
+    | '/kyc'
+    | '/onboarding'
     | '/privacy-policy'
     | '/rates'
     | '/reset-password'
     | '/security-policy'
     | '/sign-up'
     | '/terms-of-service'
-    | '/trade-crypto'
     | '/verify-account'
+    | '/dashboard/buy'
+    | '/dashboard/kyc'
+    | '/dashboard/notifications'
     | '/dashboard/profile'
+    | '/dashboard/sell'
+    | '/dashboard/wallets'
     | '/dispute/$id'
     | '/oauth/error'
     | '/oauth/success'
     | '/sign-in/verify'
     | '/dashboard/'
     | '/sign-in/'
+    | '/dashboard/disputes/$id'
     | '/dashboard/transactions/$id'
+    | '/dashboard/transactions/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -258,24 +380,34 @@ export interface FileRouteTypes {
     | '/about'
     | '/activation-result'
     | '/aml-policy'
+    | '/check-email'
     | '/contact'
     | '/forgot-password'
+    | '/how-it-works'
+    | '/kyc'
+    | '/onboarding'
     | '/privacy-policy'
     | '/rates'
     | '/reset-password'
     | '/security-policy'
     | '/sign-up'
     | '/terms-of-service'
-    | '/trade-crypto'
     | '/verify-account'
+    | '/dashboard/buy'
+    | '/dashboard/kyc'
+    | '/dashboard/notifications'
     | '/dashboard/profile'
+    | '/dashboard/sell'
+    | '/dashboard/wallets'
     | '/dispute/$id'
     | '/oauth/error'
     | '/oauth/success'
     | '/sign-in/verify'
     | '/dashboard'
     | '/sign-in'
+    | '/dashboard/disputes/$id'
     | '/dashboard/transactions/$id'
+    | '/dashboard/transactions'
   id:
     | '__root__'
     | '/'
@@ -283,24 +415,35 @@ export interface FileRouteTypes {
     | '/about'
     | '/activation-result'
     | '/aml-policy'
+    | '/check-email'
     | '/contact'
+    | '/dashboard'
     | '/forgot-password'
+    | '/how-it-works'
+    | '/kyc'
+    | '/onboarding'
     | '/privacy-policy'
     | '/rates'
     | '/reset-password'
     | '/security-policy'
     | '/sign-up'
     | '/terms-of-service'
-    | '/trade-crypto'
     | '/verify-account'
+    | '/dashboard/buy'
+    | '/dashboard/kyc'
+    | '/dashboard/notifications'
     | '/dashboard/profile'
+    | '/dashboard/sell'
+    | '/dashboard/wallets'
     | '/dispute/$id'
     | '/oauth/error'
     | '/oauth/success'
     | '/sign-in/verify'
     | '/dashboard/'
     | '/sign-in/'
+    | '/dashboard/disputes/$id'
     | '/dashboard/transactions/$id'
+    | '/dashboard/transactions/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -309,24 +452,25 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   ActivationResultRoute: typeof ActivationResultRoute
   AmlPolicyRoute: typeof AmlPolicyRoute
+  CheckEmailRoute: typeof CheckEmailRoute
   ContactRoute: typeof ContactRoute
+  DashboardRoute: typeof DashboardRouteWithChildren
   ForgotPasswordRoute: typeof ForgotPasswordRoute
+  HowItWorksRoute: typeof HowItWorksRoute
+  KycRoute: typeof KycRoute
+  OnboardingRoute: typeof OnboardingRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   RatesRoute: typeof RatesRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SecurityPolicyRoute: typeof SecurityPolicyRoute
   SignUpRoute: typeof SignUpRoute
   TermsOfServiceRoute: typeof TermsOfServiceRoute
-  TradeCryptoRoute: typeof TradeCryptoRoute
   VerifyAccountRoute: typeof VerifyAccountRoute
-  DashboardProfileRoute: typeof DashboardProfileRoute
   DisputeIdRoute: typeof DisputeIdRoute
   OauthErrorRoute: typeof OauthErrorRoute
   OauthSuccessRoute: typeof OauthSuccessRoute
   SignInVerifyRoute: typeof SignInVerifyRoute
-  DashboardIndexRoute: typeof DashboardIndexRoute
   SignInIndexRoute: typeof SignInIndexRoute
-  DashboardTransactionsIdRoute: typeof DashboardTransactionsIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -336,13 +480,6 @@ declare module '@tanstack/react-router' {
       path: '/verify-account'
       fullPath: '/verify-account'
       preLoaderRoute: typeof VerifyAccountRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/trade-crypto': {
-      id: '/trade-crypto'
-      path: '/trade-crypto'
-      fullPath: '/trade-crypto'
-      preLoaderRoute: typeof TradeCryptoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms-of-service': {
@@ -387,6 +524,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrivacyPolicyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kyc': {
+      id: '/kyc'
+      path: '/kyc'
+      fullPath: '/kyc'
+      preLoaderRoute: typeof KycRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/how-it-works': {
+      id: '/how-it-works'
+      path: '/how-it-works'
+      fullPath: '/how-it-works'
+      preLoaderRoute: typeof HowItWorksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/forgot-password': {
       id: '/forgot-password'
       path: '/forgot-password'
@@ -394,11 +552,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/contact': {
       id: '/contact'
       path: '/contact'
       fullPath: '/contact'
       preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/check-email': {
+      id: '/check-email'
+      path: '/check-email'
+      fullPath: '/check-email'
+      preLoaderRoute: typeof CheckEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/aml-policy': {
@@ -445,10 +617,10 @@ declare module '@tanstack/react-router' {
     }
     '/dashboard/': {
       id: '/dashboard/'
-      path: '/dashboard'
+      path: '/'
       fullPath: '/dashboard/'
       preLoaderRoute: typeof DashboardIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof DashboardRoute
     }
     '/sign-in/verify': {
       id: '/sign-in/verify'
@@ -478,22 +650,101 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DisputeIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/wallets': {
+      id: '/dashboard/wallets'
+      path: '/wallets'
+      fullPath: '/dashboard/wallets'
+      preLoaderRoute: typeof DashboardWalletsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/sell': {
+      id: '/dashboard/sell'
+      path: '/sell'
+      fullPath: '/dashboard/sell'
+      preLoaderRoute: typeof DashboardSellRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/profile': {
       id: '/dashboard/profile'
-      path: '/dashboard/profile'
+      path: '/profile'
       fullPath: '/dashboard/profile'
       preLoaderRoute: typeof DashboardProfileRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/notifications': {
+      id: '/dashboard/notifications'
+      path: '/notifications'
+      fullPath: '/dashboard/notifications'
+      preLoaderRoute: typeof DashboardNotificationsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/kyc': {
+      id: '/dashboard/kyc'
+      path: '/kyc'
+      fullPath: '/dashboard/kyc'
+      preLoaderRoute: typeof DashboardKycRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/buy': {
+      id: '/dashboard/buy'
+      path: '/buy'
+      fullPath: '/dashboard/buy'
+      preLoaderRoute: typeof DashboardBuyRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/transactions/': {
+      id: '/dashboard/transactions/'
+      path: '/transactions'
+      fullPath: '/dashboard/transactions/'
+      preLoaderRoute: typeof DashboardTransactionsIndexRouteImport
+      parentRoute: typeof DashboardRoute
     }
     '/dashboard/transactions/$id': {
       id: '/dashboard/transactions/$id'
-      path: '/dashboard/transactions/$id'
+      path: '/transactions/$id'
       fullPath: '/dashboard/transactions/$id'
       preLoaderRoute: typeof DashboardTransactionsIdRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/disputes/$id': {
+      id: '/dashboard/disputes/$id'
+      path: '/disputes/$id'
+      fullPath: '/dashboard/disputes/$id'
+      preLoaderRoute: typeof DashboardDisputesIdRouteImport
+      parentRoute: typeof DashboardRoute
     }
   }
 }
+
+interface DashboardRouteChildren {
+  DashboardBuyRoute: typeof DashboardBuyRoute
+  DashboardKycRoute: typeof DashboardKycRoute
+  DashboardNotificationsRoute: typeof DashboardNotificationsRoute
+  DashboardProfileRoute: typeof DashboardProfileRoute
+  DashboardSellRoute: typeof DashboardSellRoute
+  DashboardWalletsRoute: typeof DashboardWalletsRoute
+  DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardDisputesIdRoute: typeof DashboardDisputesIdRoute
+  DashboardTransactionsIdRoute: typeof DashboardTransactionsIdRoute
+  DashboardTransactionsIndexRoute: typeof DashboardTransactionsIndexRoute
+}
+
+const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardBuyRoute: DashboardBuyRoute,
+  DashboardKycRoute: DashboardKycRoute,
+  DashboardNotificationsRoute: DashboardNotificationsRoute,
+  DashboardProfileRoute: DashboardProfileRoute,
+  DashboardSellRoute: DashboardSellRoute,
+  DashboardWalletsRoute: DashboardWalletsRoute,
+  DashboardIndexRoute: DashboardIndexRoute,
+  DashboardDisputesIdRoute: DashboardDisputesIdRoute,
+  DashboardTransactionsIdRoute: DashboardTransactionsIdRoute,
+  DashboardTransactionsIndexRoute: DashboardTransactionsIndexRoute,
+}
+
+const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
+  DashboardRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -501,24 +752,25 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   ActivationResultRoute: ActivationResultRoute,
   AmlPolicyRoute: AmlPolicyRoute,
+  CheckEmailRoute: CheckEmailRoute,
   ContactRoute: ContactRoute,
+  DashboardRoute: DashboardRouteWithChildren,
   ForgotPasswordRoute: ForgotPasswordRoute,
+  HowItWorksRoute: HowItWorksRoute,
+  KycRoute: KycRoute,
+  OnboardingRoute: OnboardingRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   RatesRoute: RatesRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SecurityPolicyRoute: SecurityPolicyRoute,
   SignUpRoute: SignUpRoute,
   TermsOfServiceRoute: TermsOfServiceRoute,
-  TradeCryptoRoute: TradeCryptoRoute,
   VerifyAccountRoute: VerifyAccountRoute,
-  DashboardProfileRoute: DashboardProfileRoute,
   DisputeIdRoute: DisputeIdRoute,
   OauthErrorRoute: OauthErrorRoute,
   OauthSuccessRoute: OauthSuccessRoute,
   SignInVerifyRoute: SignInVerifyRoute,
-  DashboardIndexRoute: DashboardIndexRoute,
   SignInIndexRoute: SignInIndexRoute,
-  DashboardTransactionsIdRoute: DashboardTransactionsIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

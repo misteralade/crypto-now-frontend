@@ -1,0 +1,1062 @@
+/**
+ * Step 2: Make Payment (Buy) or Unique Wallet + Monitoring (Sell)
+ *
+ * BUY sub-views:
+ *   "bank"   : purple hero card + blue bank card + warning + "I've Paid" CTA (frame 124)
+ *   "upload" : YOUR ORDER table + dashed upload zone + Submit (frame 133)
+ *
+ * SELL sub-views:
+ *   "wallet"     : loading → wallet active (frames 156 / 158)
+ *   "monitoring" : 4-step animated tracker (frames 172 / 203)
+ */
+import { useState, useEffect, type ReactNode } from "react";
+import { Copy, ArrowLeft, ArrowRight, Upload, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "react-toastify";
+import { useNavigate } from "@tanstack/react-router";
+import ManualDepositRecheckAction from "../../../components/global/ManualDepositRecheckAction.tsx";
+import { TransactionTimeline } from "../../../components/global/TransactionTimeline.tsx";
+import { TransactionStatusIcon } from "../../../components/global/TransactionStatusIcon.tsx";
+import { isTerminalTransactionStatus } from "../../../hooks/components/trade/useTransactionLiveStatus.ts";
+import type {
+  SupportedCryptoOrCurrencyResponse,
+  CustodialWalletResponse,
+  UserBankAccountResponse,
+} from "../../../types/response.payload.types.ts";
+import type {
+  TradeAdditionalInfoInterface,
+  TradeType,
+} from "../../../types/trade.types.ts";
+import { useTradeStepTwo } from "../../../hooks/components/trade/useTradeStepTwo.ts";
+import ResponsiveText from "../../../components/global/ResponsiveText.tsx";
+import TradePaymentUpload from "../../trade-crypto/TradePaymentUpload.tsx";
+import { BUY_PAYMENT_PENDING_STATUSES, ROUTES, SESSION_STORAGE_KEYS } from "../../../util/constants.util.ts";
+import type { BuyRateInfo } from "./DashboardTradeStep1.tsx";
+import { useSelector } from "react-redux";
+import { getAnonymousEmail } from "../../../util/auth-session.util.ts";
+import type { RootState } from "../../../store.ts";
+import { useQueryClient } from "@tanstack/react-query";
+import { QUERY_KEYS } from "../../../queries/query.keys.ts";
+import { transactionServiceApi } from "../../../api/transaction.api.ts";
+import { useTransactionQuery } from "../../../queries/transaction.query.ts";
+import { isExchangeRateExpiryError } from "../../../util/index.util.ts";
+import { formatForDisplay, formatForDisplayLocalized } from "../../../util/asset-precision.ts";
+
+interface DashboardTradeStep2Props {
+  tradeType: TradeType;
+  amountToBuy: number;
+  numberOfToken: number;
+  selectedToken?: SupportedCryptoOrCurrencyResponse;
+  selectedCurrency?: SupportedCryptoOrCurrencyResponse;
+  transactionRef: string | undefined;
+  additionalInfo: TradeAdditionalInfoInterface[];
+  handleReceiptUrl: (url: string) => void;
+  handleTransactionHash: (hash: string) => void;
+  handleSubmitPaymentProof: () => void;
+  formatReceiveAmount: (
+    amount: number | string,
+    code: string | undefined
+  ) => React.ReactNode | string;
+  formatSendAmount: (
+    amount: number | string,
+    code: string | undefined
+  ) => React.ReactNode | string;
+  onBack: () => void;
+  /** Wallet address entered in Step 1 (buy flow) */
+  buyWalletAddress?: string;
+  /** Network selected in Step 1 (buy flow) */
+  buyNetwork?: string;
+  /** Payout bank account for sell flow */
+  payoutBank?: UserBankAccountResponse;
+  /** Deposit wallet for sell flow */
+  sellDepositWallet?: CustodialWalletResponse | null;
+  /** Live label from useTradeStepDisplay (e.g. "2m 15s", "Expired"): quotes expire after ~3 minutes server-side */
+  rateLockCountdown?: string;
+  /** Rate info from local-first BUY flow (fetched at Step 1) */
+  buyRateInfo?: BuyRateInfo | null;
+  /** Called after BUY is successfully submitted (local-first flow) */
+  onBuySubmitSuccess?: () => void;
+  setTransactionSessionId: (id: string) => void;
+}
+
+/* ── helpers ── */
+function CopyToast({ visible }: { visible: boolean }) {
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 8 }}
+          className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-5 py-2.5 rounded-full text-sm font-bold text-white"
+          style={{ background: "#037847", boxShadow: "0 6px 20px #03784744" }}
+        >
+          Account number copied!
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+function BackHeader({
+  onBack,
+  title,
+  sub,
+}: {
+  onBack: () => void;
+  title: string;
+  sub?: string;
+}) {
+  return (
+    <div className="flex items-center gap-3 mb-1">
+      <button
+        type="button"
+        onClick={onBack}
+        className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-colors hover:bg-gray-50"
+        style={{ border: "1px solid #E8E8E8", background: "#FAFAFA" }}
+      >
+        <ArrowLeft size={16} style={{ color: "#0E0F0C" }} />
+      </button>
+      <div>
+        <p className="text-base font-extrabold" style={{ color: "#0E0F0C" }}>
+          {title}
+        </p>
+        {sub && (
+          <p className="text-[11px]" style={{ color: "#9A9A9A" }}>
+            {sub}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function SummaryRow({
+  label,
+  value,
+  green,
+}: {
+  label: string;
+  value: ReactNode;
+  green?: boolean;
+}) {
+  return (
+    <div className="flex justify-between items-center text-sm py-0.5">
+      <span className="text-gray-400">{label}</span>
+      <span
+        className={`font-semibold text-right break-words max-w-[60%] ${
+          green ? "text-[#22c55e]" : "text-[#0E0F0C]"
+        }`}
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
+
+/* ── SELL: Monitoring screen ── */
+type WalletSummary = {
+  walletAddress: string;
+  network: string;
+};
+
+function PayingToRow({ payoutBank }: { payoutBank: UserBankAccountResponse | undefined }) {
+  if (!payoutBank) return null;
+  return (
+    <div className="flex items-center gap-3 rounded-2xl border border-[#ECECEC] bg-[#F9FAFB] px-4 py-3">
+      <div className="w-10 h-10 rounded-full bg-white border border-[#ECECEC] flex items-center justify-center overflow-hidden">
+        {payoutBank.bank?.logoUrl ? (
+          <img src={payoutBank.bank?.logoUrl} alt={payoutBank.bank?.name} className="w-6 h-6 object-contain" />
+        ) : (
+          <span className="text-xs font-bold text-[#03034D]">{payoutBank.bank?.name?.slice(0, 2)}</span>
+        )}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Paying to</p>
+        <p className="text-sm font-bold text-[#0E0F0C] truncate">
+          {payoutBank.accountNumber} • {payoutBank.bank?.name}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function TradeMonitoringView({
+  selectedToken,
+  payoutBank,
+  sellDepositWallet,
+  amountToBuy,
+  status,
+  isBuy,
+  onManualRecheck,
+  manualRecheckPending,
+  statusEvents,
+}: {
+  selectedToken?: SupportedCryptoOrCurrencyResponse;
+  payoutBank?: UserBankAccountResponse;
+  sellDepositWallet?: WalletSummary | null;
+  amountToBuy?: number;
+  status?: string;
+  isBuy?: boolean;
+  onManualRecheck?: () => void;
+  manualRecheckPending?: boolean;
+  statusEvents?: Array<{ status: string; createdAt: string }>;
+}) {
+  const headline = isBuy ? "Verifying Payment" : "Monitoring Wallet";
+  const subHeadline = "Listening for Transaction…";
+  const isNoOwnerStatus = status === "NO_OWNER";
+  const showManualRecheck =
+    !isBuy &&
+    [
+      "INITIATED",
+      "AWAITING_CRYPTO",
+      "DEPOSIT_DETECTED",
+      "PENDING_CONFIRMATION",
+    ].includes(status ?? "");
+  const walletNetwork = sellDepositWallet?.network ?? "";
+  const walletAddress = sellDepositWallet?.walletAddress ?? "";
+  const showExpectedNgnRow =
+    !isBuy &&
+    ["DEPOSIT_CONFIRMED", "PAYOUT_INITIATED", "COMPLETED"].includes(status ?? "") &&
+    typeof amountToBuy === "number" &&
+    amountToBuy > 0;
+
+  return (
+    <div className="flex flex-col gap-5">
+      {/* Icon + headline */}
+      <div className="flex flex-col items-center gap-3 py-4">
+        <div
+          className="w-16 h-16 rounded-full flex items-center justify-center text-3xl"
+          style={{ 
+            background: isBuy ? "#F0EFFD" : "#E0F7F4", 
+            border: `2px solid ${isBuy ? "#6B45D033" : "#00BFA533"}` 
+          }}
+        >
+          {status === "COMPLETED" ? (
+            <CheckCircle2 size={32} style={{ color: "#22C55E" }} />
+          ) : isNoOwnerStatus ? (
+            <AlertTriangle size={32} style={{ color: "#F59E0B" }} />
+          ) : isBuy ? (
+            <span className="text-[#6B45D0]"><TransactionStatusIcon type="buy" active={!isTerminalTransactionStatus(status)} /></span>
+          ) : (
+            <span className="text-[#00BFA5]"><TransactionStatusIcon type="sell" active={!isTerminalTransactionStatus(status)} /></span>
+          )}
+        </div>
+        <div className="text-center">
+          <p className="text-base font-extrabold" style={{ color: "#0E0F0C" }}>
+            {status === "COMPLETED"
+              ? "Transaction Completed"
+              : isNoOwnerStatus
+                ? "Deposit Recorded Without Owner"
+                : headline}
+          </p>
+          {!isBuy && (
+            <p className="text-xs mt-1" style={{ color: "#9A9A9A" }}>
+              {status === "COMPLETED" ? "Success!" :
+               (isNoOwnerStatus ? "We received a guest-wallet deposit without a linked transaction owner." :
+               (status === "DEPOSIT_DETECTED" ? "Deposit Detected - Confirming..." :
+                status === "PENDING_CONFIRMATION" ? "Pending Confirmation - Rechecking..." :
+                status === "DEPOSIT_CONFIRMED" ? "Deposit Confirmed - Processing Payout..." :
+                status === "PAYOUT_INITIATED" ? "Payout Initiated - Checking Bank..." : subHeadline))}
+            </p>
+          )}
+        </div>
+        <p
+          className="text-xs text-center px-4 leading-relaxed"
+          style={{ color: "#6B6E6B" }}
+        >
+          {status === "COMPLETED" ? 
+            (isBuy ? `Your payment was verified and ${selectedToken?.symbol} has been sent to your wallet.` : 
+                    `Your ${selectedToken?.symbol} has been sold and NGN sent to your bank.`) :
+            (isBuy ? (status === "IN_REVIEW"
+              ? "We're reviewing your payment receipt."
+              : "We're verifying your bank transfer. Crypto will be released automatically once confirmed.") :
+                    (isNoOwnerStatus
+                      ? "We recorded a deposit on a guest wallet without a linked transaction owner. The wallet has been retired from reuse and the funds are held for manual accounting review."
+                      : `Send any amount of ${selectedToken?.symbol ?? "crypto"} to your wallet. NGN will hit your bank automatically.`))}
+        </p>
+      </div>
+
+      {!isBuy && (
+        <div
+          className="rounded-xl p-3"
+          style={{ background: "white", border: "1.5px solid #E8E8E8" }}
+        >
+          <SummaryRow label="Network" value={walletNetwork || "-"} />
+          {showExpectedNgnRow && (
+            <SummaryRow label="Expected NGN" value={`₦${amountToBuy!.toLocaleString()}`} />
+          )}
+        </div>
+      )}
+
+      {/* SELL: deposit wallet + payout bank summary */}
+      {!isBuy && (
+        <div className="space-y-2.5">
+          <div
+            className="rounded-xl p-4 relative"
+            style={{ background: "#F5F5F5", border: "1.5px solid #E8E8E8" }}
+          >
+            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2">
+              Your unique {selectedToken?.symbol ?? "crypto"} deposit wallet
+              {walletNetwork ? ` (${walletNetwork})` : ""}
+            </p>
+            <p className="text-sm font-mono text-[#22c55e] break-all leading-relaxed">
+              {walletAddress || "-"}
+            </p>
+            <button
+              onClick={() =>
+                walletAddress &&
+                navigator.clipboard.writeText(walletAddress)
+              }
+              className="absolute top-3 right-3 text-[10px] font-semibold px-3 py-1.5 rounded-lg cursor-pointer"
+              style={{
+                background: "white",
+                border: "1.5px solid #E8E8E8",
+                color: "#948EEE",
+              }}
+            >
+              Copy
+            </button>
+            <p className="mt-2 text-xs text-gray-500 leading-relaxed">
+              {walletNetwork
+                ? `Send only ${selectedToken?.symbol ?? "crypto"} on ${walletNetwork}.`
+                : `Waiting for the ${selectedToken?.symbol ?? "crypto"} deposit network.`}
+            </p>
+          </div>
+          <PayingToRow payoutBank={payoutBank} />
+        </div>
+      )}
+
+      {showManualRecheck && (
+        <ManualDepositRecheckAction
+          title={`Already sent your ${selectedToken?.symbol ?? "crypto"}?`}
+          isPending={manualRecheckPending}
+          disabled={!onManualRecheck}
+          onConfirm={() => onManualRecheck?.()}
+
+
+
+          pendingText="Rechecking deposit..."
+        />
+      )}
+
+      <TransactionTimeline type={isBuy ? "buy" : "sell"} status={status} statusEvents={statusEvents} />
+    </div>
+  );
+}
+
+/* ── BUY: Upload receipt view ── */
+function BuyUploadView({
+  selectedToken,
+  numberOfToken,
+  fiatAmountPaidDisplay,
+  walletAddress,
+  network,
+  submitInvalid,
+  onFileSelected,
+  onFileCleared,
+  onSubmit,
+}: {
+  selectedToken?: SupportedCryptoOrCurrencyResponse;
+  numberOfToken: number;
+  fiatAmountPaidDisplay: ReactNode;
+  walletAddress: string;
+  network: string;
+  submitInvalid: boolean;
+  onFileSelected: (file: File) => void;
+  onFileCleared: () => void;
+  onSubmit: () => void;
+}) {
+  const tableRows = [
+    { label: "Crypto", value: selectedToken?.symbol ?? "-" },
+    { label: "Amount Paid", value: fiatAmountPaidDisplay },
+    {
+      label: "You'll Receive",
+      value: `${numberOfToken} ${selectedToken?.symbol ?? ""}`,
+    },
+    {
+      label: "Wallet",
+      value: walletAddress ? <ResponsiveText text={walletAddress} /> : "-",
+    },
+    { label: "Network", value: network || "-" },
+  ];
+
+  const ctaDisabled = submitInvalid;
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="mb-1">
+        <p className="text-base font-extrabold" style={{ color: "#0E0F0C" }}>
+          Upload receipt
+        </p>
+        <p className="text-[11px] mt-0.5" style={{ color: "#9A9A9A" }}>
+          Choose your transfer receipt
+        </p>
+      </div>
+
+      {/* YOUR ORDER table */}
+      <div
+        className="rounded-2xl overflow-hidden"
+        style={{ border: "1px solid #EEEEEE" }}
+      >
+        <div
+          className="px-4 py-2.5"
+          style={{ background: "#F7F7F9", borderBottom: "1px solid #EEEEEE" }}
+        >
+          <p
+            className="text-[10px] font-bold tracking-widest uppercase"
+            style={{ color: "#9A9A9A" }}
+          >
+            Your Order
+          </p>
+        </div>
+        {tableRows.map(({ label, value }) => (
+          <div
+            key={label}
+            className="flex items-center justify-between px-4 py-2.5"
+            style={{ borderBottom: "1px solid #F7F7F9" }}
+          >
+            <span className="text-xs" style={{ color: "#9A9A9A" }}>
+              {label}
+            </span>
+            <span
+              className="text-xs font-semibold min-w-0 flex-1 max-w-[75%] text-right"
+              style={{ color: "#0E0F0C" }}
+            >
+              {value}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* Dashed upload area */}
+      <div
+        className="rounded-2xl overflow-hidden"
+        style={{ border: "2px dashed #D0D0D0" }}
+      >
+        <div className="px-4 pt-4 pb-2 text-center">
+          <Upload
+            size={20}
+            className="mx-auto mb-1"
+            style={{ color: "#948EEE" }}
+          />
+          <p className="text-xs font-semibold" style={{ color: "#6B6E6B" }}>
+            Tap to Upload Receipt
+          </p>
+        </div>
+        <TradePaymentUpload
+          maxFiles={1}
+          compact
+          onFileSelected={onFileSelected}
+          onFileCleared={onFileCleared}
+        />
+      </div>
+
+      {/* Submit */}
+      <button
+        type="button"
+        disabled={ctaDisabled}
+        onClick={onSubmit}
+        className="w-full py-4 rounded-2xl text-sm font-bold transition-all"
+        style={{
+          background: !ctaDisabled
+            ? "linear-gradient(135deg,#948EEE,#6B45D0)"
+            : "#F0F0F0",
+          color: !ctaDisabled ? "#FFFFFF" : "#9A9A9A",
+          boxShadow: !ctaDisabled ? "0 6px 20px #948EEE44" : "none",
+        }}
+      >
+        <span className="inline-flex items-center gap-2">
+          <span>Submit Receipt</span>
+          <ArrowRight size={16} />
+        </span>
+      </button>
+    </div>
+  );
+}
+
+/* ── Main component ── */
+type BuyView = "bank" | "upload";
+
+export default function DashboardTradeStep2({
+  tradeType,
+  amountToBuy,
+  numberOfToken,
+  selectedToken,
+  selectedCurrency,
+  transactionRef,
+  handleSubmitPaymentProof,
+  formatSendAmount,
+  onBack,
+  buyWalletAddress,
+  buyNetwork,
+  payoutBank,
+  sellDepositWallet,
+  buyRateInfo,
+  onBuySubmitSuccess,
+  setTransactionSessionId,
+}: DashboardTradeStep2Props) {
+  const isBuy = tradeType === "buy";
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { useTransactionStatus, manualSellDepositRecheckMutation } = useTransactionQuery();
+  const { data: txData, isFetched: txStatusFetched } = useTransactionStatus(transactionRef);
+  const txStatus = txData?.status;
+  // A receipt was already submitted (txStatus moved past AWAITING_PAYMENT):
+  // the "pay into this account" screen/fetch is no longer relevant, the user
+  // should only see the verifying view.
+  const receiptAlreadySubmitted =
+    isBuy && !!txStatus &&
+    txStatus !== BUY_PAYMENT_PENDING_STATUSES.INITIATED &&
+    txStatus !== BUY_PAYMENT_PENDING_STATUSES.AWAITING_PAYMENT;
+  // On remount (e.g. back-navigating into an in-progress trade), txStatus
+  // starts undefined until this query resolves: during that gap
+  // receiptAlreadySubmitted is falsely false, which used to flash the stale
+  // "Make Payment" screen for an already-submitted (IN_REVIEW) transaction
+  // before snapping to the correct verifying view a moment later.
+  const txStatusStillResolving = isBuy && !!transactionRef && !txStatusFetched;
+  // amountFiat can be USD-denominated (display-currency choice), never NGN
+  // settlement: only amountFiatNGN is safe to show as "Expected NGN".
+  const sellTxAmountFiat =
+    txData?.amountFiatNGN && Number(txData.amountFiatNGN) > 0
+      ? Number(txData.amountFiatNGN)
+      : amountToBuy;
+  const sellNetworkLabel =
+    txData?.walletNetwork ??
+    txData?.userCryptoWallet?.network ??
+    sellDepositWallet?.network ??
+    selectedToken?.networks?.[0] ??
+    "-";
+  const sellDepositAddress =
+    txData?.depositAddress ??
+    txData?.userCryptoWallet?.walletAddress ??
+    sellDepositWallet?.walletAddress ??
+    "-";
+  const sellMonitoringWallet = txData
+    ? {
+        walletAddress: sellDepositAddress,
+        network: sellNetworkLabel,
+      }
+    : sellDepositWallet;
+
+  const initiateForm = useSelector(
+    (s: RootState) => s.transaction.initiate.initiateTransaction
+  );
+
+  // Auto-transition to success screen (Step 4) only when status is COMPLETED
+  useEffect(() => {
+    if (txStatus === "COMPLETED") {
+      // Transaction history/summary queries are cached for minutes and never
+      // invalidated by the submit call: refresh them now so the dashboard
+      // reflects this transaction immediately instead of on next stale-refetch.
+      // The bell's "has new notifications" check is no longer polled, so a
+      // completed transaction is one of the few moments it needs to refetch too.
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.TRANSACTION.USER_SEARCH_TRANSACTION_HISTORY] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.TRANSACTION.USER_RECENT_TRANSACTIONS] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.TRANSACTION.USER_TRANSACTION_SUMMARY] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.TRANSACTION.USER_INCOMPLETE_TRANSACTIONS_COUNT] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.NOTIFICATION.HAS_NEW] });
+      onBuySubmitSuccess?.();
+    }
+  }, [txStatus, onBuySubmitSuccess, queryClient]);
+
+  const storedAnonymousEmail = useSelector(
+    (s: RootState) => s.user.trade.anonymous.email,
+  );
+  const userEmail = getAnonymousEmail(storedAnonymousEmail);
+  // buyRateInfo is transient parent (Step 1) component state: it does NOT
+  // survive a back-navigation/remount, so it must never gate which bank-details
+  // fetch/loading-state is trusted (that previously caused a permanent "Loading…"
+  // label with no spinner after navigating back into this screen). It's only
+  // used below for the local-first rate/amount display, which correctly falls
+  // back to the non-local values when it's absent.
+  const isLocalBuyFlow = isBuy && !!buyRateInfo;
+
+  const {
+    setUploadedFileUrl,
+    paymentDetailsLoading,
+    paymentDetailsError,
+    submitInvalid,
+    bankDetails: hookBankDetails,
+    refetchPaymentDetails,
+  } = useTradeStepTwo({
+    tradeType,
+    amountToBuy,
+    numberOfToken,
+    selectedToken,
+    selectedCurrency,
+    skipPaymentDetails: receiptAlreadySubmitted,
+  });
+
+  const [buyView, setBuyView] = useState<BuyView>("bank");
+  const [copyToastVisible, setCopyToastVisible] = useState(false);
+  const [storedYouPay, setStoredYouPay] = useState<string | null>(null);
+
+  // Resuming a transaction whose receipt was already submitted (e.g. via the
+  // dashboard's "Check Status" banner, which routes here with the existing
+  // sessionId) should land directly on the verifying view instead of the
+  // bank-details screen: there's nothing left to pay/upload.
+  useEffect(() => {
+    if (receiptAlreadySubmitted) {
+      setBuyView("upload");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [receiptAlreadySubmitted]);
+
+  // Once a BUY transaction has an active session (a bank-transfer reference
+  // was already created for it: whether or not the receipt has been
+  // uploaded yet), there's no sane "previous screen" to return to: Step 1's
+  // crypto-picker doesn't reconstruct the in-flight session and used to
+  // render broken/stale state when the browser/hardware back button fell
+  // through to default history navigation. Intercept it here and send the
+  // user to the dashboard instead: the in-app back ARROW (onBack prop /
+  // setBuyView) is unaffected and still steps between this screen's own
+  // sub-views normally.
+  useEffect(() => {
+    if (!isBuy || !transactionRef) return;
+    const handlePopState = () => {
+      navigate({ to: ROUTES.DASHBOARD, replace: true });
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [isBuy, transactionRef, navigate]);
+
+  const bankDetails = hookBankDetails;
+
+  // Bank details
+  const bankName = bankDetails?.bank?.name ?? "";
+  const accountNumber = bankDetails?.accountNumber ?? "";
+  const accountName = bankDetails?.accountHolderName ?? "";
+
+  useEffect(() => {
+    const v = sessionStorage.getItem(SESSION_STORAGE_KEYS.YOU_PAY_VALUE);
+    if (v && v !== "[object Object]" && v.trim()) setStoredYouPay(v);
+  }, []);
+
+  const payAmount = isLocalBuyFlow
+    ? formatSendAmount(
+        buyRateInfo!.fiatAmount.toLocaleString(),
+        selectedCurrency?.code,
+      )
+    : storedYouPay
+      ? storedYouPay
+      : formatSendAmount(amountToBuy.toLocaleString(), selectedCurrency?.code);
+
+  // Local-first BUY: track selected receipt File for multipart createAndSubmit
+  const [localReceiptFile, setLocalReceiptFile] = useState<File | undefined>();
+
+  const handleSetLocalReceiptFile = (file: File) => {
+    setLocalReceiptFile(file);
+  };
+
+  const [isLocalBuySubmitting, setIsLocalBuySubmitting] = useState(false);
+
+  const handleLocalBuySubmit = async () => {
+    if (!buyRateInfo || !localReceiptFile) return;
+
+    const formData = new FormData();
+    formData.append("file", localReceiptFile);
+    formData.append("coinId", initiateForm?.tokenId ?? "");
+    formData.append("currencyId", buyRateInfo.currencyId);
+    formData.append("action", initiateForm?.action ?? "BUY");
+    const exchangeRateId = buyRateInfo.rateId;
+    if (exchangeRateId) formData.append("exchangeRateId", exchangeRateId);
+    formData.append("amountToSend", String(buyRateInfo.fiatAmount));
+    formData.append("amountToReceive", String(buyRateInfo.cryptoAmount));
+    formData.append("walletAddress", buyWalletAddress ?? "");
+    formData.append("network", buyNetwork ?? "");
+    if (userEmail) formData.append("email", userEmail);
+
+    const toastId = "buy-submit";
+    toast.loading("Submitting transaction…", { toastId });
+    setIsLocalBuySubmitting(true);
+    try {
+      const result = userEmail
+        ? await transactionServiceApi.anonymousCreateAndSubmitTransaction(
+            formData
+          )
+        : await transactionServiceApi.createAndSubmitTransaction(formData);
+
+      toast.dismiss(toastId);
+      if (result?.data?.sessionId) {
+        sessionStorage.setItem(
+          SESSION_STORAGE_KEYS.SESSION_ID,
+          result.data.sessionId
+        );
+        setTransactionSessionId(result.data.sessionId);
+      }
+      toast.success(result?.message ?? "Transaction submitted!");
+      // Refresh Transaction History, Recent Orders, and the summary stat cards
+      // so the newly submitted transaction shows up immediately instead of
+      // waiting for an unrelated refetch elsewhere.
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.TRANSACTION.USER_SEARCH_TRANSACTION_HISTORY],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.TRANSACTION.USER_RECENT_TRANSACTIONS],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.TRANSACTION.USER_TRANSACTION_SUMMARY],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.TRANSACTION.USER_INCOMPLETE_TRANSACTIONS_COUNT],
+        }),
+      ]);
+      // We don't call onBuySubmitSuccess() here anymore.
+      // The polling effect will take us to Step 4 when status is COMPLETED.
+    } catch (err: unknown) {
+      toast.dismiss(toastId);
+      if (isExchangeRateExpiryError(err)) {
+        return;
+      }
+      const error = err as {
+        response?: {
+          data?: {
+            message?: string;
+            error?: { message?: string };
+          };
+        };
+      };
+      const msg =
+        error?.response?.data?.message ||
+        error?.response?.data?.error?.message ||
+        "Failed to submit transaction. Please try again.";
+      toast.error(msg);
+    } finally {
+      setIsLocalBuySubmitting(false);
+    }
+  };
+
+  const localBuySubmitInvalid = !localReceiptFile || isLocalBuySubmitting;
+
+  const handleCopyAccount = () => {
+    navigator.clipboard.writeText(accountNumber).then(() => {
+      setCopyToastVisible(true);
+      setTimeout(() => setCopyToastVisible(false), 2200);
+    });
+  };
+
+  // While we genuinely don't know yet whether a receipt was already
+  // submitted, show a neutral spinner rather than defaulting to the
+  // "Make Payment" view: receiptAlreadySubmitted only flips true once
+  // txStatus resolves, and rendering the bank/upload view in the meantime
+  // is what caused the stale "Make Payment" flash on back-navigation.
+  if (isBuy && txStatusStillResolving) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 gap-3">
+        <div
+          className="w-10 h-10 rounded-full border-2 border-t-transparent animate-spin"
+          style={{ borderColor: "#948EEE", borderTopColor: "transparent" }}
+        />
+        <p className="text-sm" style={{ color: "#9A9A9A" }}>
+          Loading your transaction…
+        </p>
+      </div>
+    );
+  }
+
+  /* ── loading / error ──
+   * None of this applies once a receipt is already submitted: bank-payment
+   * details are irrelevant at that point (skipPaymentDetails keeps the query
+   * disabled), so don't treat their absence as an error/missing state.
+   */
+  const effectiveBuyLoading = !receiptAlreadySubmitted && paymentDetailsLoading;
+  const effectiveBuyError = !receiptAlreadySubmitted && !!paymentDetailsError;
+  const effectiveBuyMissingDetails =
+    !receiptAlreadySubmitted &&
+    !effectiveBuyLoading &&
+    !effectiveBuyError &&
+    !bankName &&
+    !accountNumber;
+  const retryBankDetails = refetchPaymentDetails;
+
+  if (effectiveBuyLoading && isBuy) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 gap-3">
+        <div
+          className="w-10 h-10 rounded-full border-2 border-t-transparent animate-spin"
+          style={{ borderColor: "#948EEE", borderTopColor: "transparent" }}
+        />
+        <p className="text-sm" style={{ color: "#9A9A9A" }}>
+          Loading payment details…
+        </p>
+      </div>
+    );
+  }
+  if (isBuy && (effectiveBuyError || effectiveBuyMissingDetails)) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 gap-4 px-4 text-center">
+        <AlertTriangle size={32} style={{ color: "#F59E0B" }} />
+        <div>
+          <p className="text-sm font-bold" style={{ color: "#0E0F0C" }}>
+            Couldn't load payment account
+          </p>
+          <p className="text-xs mt-1" style={{ color: "#9A9A9A" }}>
+            We couldn't fetch the bank account to pay into. Please try again.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => retryBankDetails()}
+          className="px-5 py-2.5 rounded-full text-sm font-bold"
+          style={{
+            background: "linear-gradient(135deg,#948EEE,#6B45D0)",
+            color: "#FFFFFF",
+          }}
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  /* ── MONITORING ──
+   * Only once a receipt has actually been submitted (txStatus moves past
+   * AWAITING_PAYMENT) do we show the verifying/monitoring view. Before that,
+   * `transactionRef` alone can already be truthy (e.g. an INITIATED/
+   * AWAITING_PAYMENT transaction with no receipt yet), which used to
+   * intercept the render here and skip straight past the real upload form
+   * below: this condition previously only checked `transactionRef`.
+   */
+  if (buyView === "upload" && receiptAlreadySubmitted) {
+    return (
+      <div className="flex flex-col gap-4">
+        <BackHeader
+          // The receipt is already submitted: "bank" (Make Payment) is a
+          // dead screen at this point, there's nothing left to pay. Going
+          // there just to bounce back was the stale-screen bug; go straight
+          // to the dashboard instead, matching the hardware/browser back
+          // button's behavior for this same state.
+          onBack={() => navigate({ to: ROUTES.DASHBOARD, replace: true })}
+          title="Verifying Payment"
+          sub="Listening for confirmations"
+        />
+        <TradeMonitoringView
+          isBuy={true}
+          selectedToken={selectedToken}
+          status={txStatus}
+          statusEvents={txData?.statusEvents}
+        />
+      </div>
+    );
+  }
+
+  /* ── SELL ── */
+  if (!isBuy) {
+    return (
+      <div className="flex flex-col gap-4">
+        <BackHeader
+          onBack={onBack}
+          title={`Sell ${selectedToken?.symbol ?? "Crypto"}`}
+          sub="Watching for your transaction"
+        />
+
+        <motion.div
+          key="sell-monitoring"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <TradeMonitoringView
+            isBuy={false}
+            selectedToken={selectedToken}
+            payoutBank={payoutBank}
+            sellDepositWallet={sellMonitoringWallet}
+            amountToBuy={sellTxAmountFiat}
+            status={txStatus}
+            statusEvents={txData?.statusEvents}
+            onManualRecheck={
+              transactionRef
+                ? () =>
+                    manualSellDepositRecheckMutation.mutate({
+                      sessionId: transactionRef,
+                    })
+                : undefined
+            }
+            manualRecheckPending={manualSellDepositRecheckMutation.isPending}
+          />
+        </motion.div>
+      </div>
+    );
+  }
+
+  /* ── BUY: upload view ── */
+  if (buyView === "upload") {
+    // Use local-first submission if buyRateInfo is provided
+    const useLocalFlow = !!buyRateInfo;
+    return (
+      <div className="flex flex-col gap-4">
+        <BackHeader
+          onBack={() => setBuyView("bank")}
+          title="Upload Receipt"
+          sub="PNG, JPG or PDF"
+        />
+        <BuyUploadView
+          selectedToken={selectedToken}
+          numberOfToken={
+            useLocalFlow ? buyRateInfo!.cryptoAmount : numberOfToken
+          }
+          fiatAmountPaidDisplay={payAmount}
+          walletAddress={buyWalletAddress ?? ""}
+          network={buyNetwork ?? ""}
+          submitInvalid={useLocalFlow ? localBuySubmitInvalid : submitInvalid}
+          onFileSelected={useLocalFlow ? handleSetLocalReceiptFile : () => {}}
+          onFileCleared={useLocalFlow ? () => setLocalReceiptFile(undefined) : () => setUploadedFileUrl(undefined)}
+          onSubmit={
+            useLocalFlow ? handleLocalBuySubmit : handleSubmitPaymentProof
+          }
+        />
+      </div>
+    );
+  }
+
+  /* ── BUY: bank details view ── */
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key="buy-bank"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col gap-4"
+      >
+        <BackHeader
+          onBack={onBack}
+          title="Make Payment"
+          sub="Transfer exact amount to bank"
+        />
+
+        {/* Purple amount hero */}
+        <div
+          className="rounded-2xl p-5 text-center"
+          style={{
+            background: "linear-gradient(145deg,#2D1CB0,#4A2DBF,#6B45D0)",
+            boxShadow: "0 12px 40px #2D1CB055",
+          }}
+        >
+          <p className="text-[10px] font-bold tracking-widest uppercase text-white/60 mb-2">
+            Transfer This Exact Amount
+          </p>
+          <p className="text-3xl font-black text-white">
+            {typeof payAmount === "string" ? (
+              payAmount
+            ) : (
+              <span>{payAmount}</span>
+            )}
+          </p>
+          <p className="text-xs text-white/50 mt-1.5">
+            {isLocalBuyFlow && buyRateInfo ? (
+              <>Platform rate: NGN {formatForDisplayLocalized(buyRateInfo.platformRate, "NGN")}/USD</>
+            ) : selectedToken?.buyRate ? (
+              <>Platform rate: NGN {formatForDisplayLocalized(Number(selectedToken.buyRate), "NGN")}/USD</>
+            ) : null}
+          </p>
+          <p className="text-xs text-white/70 mt-1">
+            You'll receive{" "}
+            {isLocalBuyFlow && buyRateInfo
+              ? formatForDisplay(buyRateInfo.cryptoAmount, selectedToken?.symbol ?? "")
+              : numberOfToken}{" "}
+            {selectedToken?.symbol}
+          </p>
+        </div>
+
+        {/* Bank card */}
+        <div
+          className="rounded-2xl overflow-hidden"
+          style={{ border: "1.5px solid #D0D8FF", background: "#F8F9FF" }}
+        >
+          <div
+            className="flex items-center justify-between px-4 py-3"
+            style={{ borderBottom: "1px solid #E8ECFF" }}
+          >
+            <p
+              className="text-[10px] font-bold tracking-widest uppercase"
+              style={{ color: "#5B5EA6" }}
+            >
+              Pay Into This Account
+            </p>
+            <button
+              type="button"
+              onClick={handleCopyAccount}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all"
+              style={{
+                background: "#948EEE22",
+                color: "#948EEE",
+                border: "1px solid #948EEE33",
+              }}
+            >
+              <Copy size={10} /> Copy Acct
+            </button>
+          </div>
+          <div className="px-4 py-5">
+            <p
+              className="text-lg font-extrabold mb-1 uppercase tracking-wide"
+              style={{ color: "#4A4D9E" }}
+            >
+              {bankName?.toUpperCase() || "-"}
+            </p>
+            <p
+              className="text-4xl sm:text-[40px] font-black font-mono tracking-tight my-1.5"
+              style={{ color: "#0E0F0C" }}
+            >
+              {accountNumber || "-"}
+            </p>
+            <p
+              className="text-base sm:text-lg font-bold mt-1"
+              style={{ color: "#0E0F0C" }}
+            >
+              {accountName}
+            </p>
+            <div
+              className="flex items-center justify-between mt-3 pt-3"
+              style={{ borderTop: "1px solid #E8ECFF" }}
+            >
+              <span className="text-xs" style={{ color: "#9A9A9A" }}>
+                Exact Amount
+              </span>
+              <span className="text-sm font-black" style={{ color: "#948EEE" }}>
+                {typeof payAmount === "string" ? (
+                  payAmount
+                ) : (
+                  <span>{payAmount}</span>
+                )}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Warning */}
+        <div
+          className="flex items-start gap-3 rounded-2xl px-4 py-3"
+          style={{ background: "#FFFBF0", border: "1px solid #FFE4A0" }}
+        >
+          <AlertTriangle size={16} style={{ color: "#F59E0B" }} className="mt-0.5 shrink-0" />
+          <p className="text-xs leading-relaxed" style={{ color: "#A07000" }}>
+            Transfer the exact amount shown above. Use any bank app or USSD.
+            Then upload your receipt.
+          </p>
+        </div>
+
+        {/* CTA */}
+        <button
+          type="button"
+          onClick={() => setBuyView("upload")}
+          disabled={false}
+          className="w-full py-4 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{
+            background: "linear-gradient(135deg,#948EEE,#6B45D0)",
+            color: "#FFFFFF",
+            boxShadow: "0 6px 20px #948EEE44",
+          }}
+        >
+          <Upload size={16} />
+          <span>I've Paid: Upload Receipt</span>
+          <ArrowRight size={16} />
+        </button>
+
+        {/* Copy toast */}
+        <CopyToast visible={copyToastVisible} />
+      </motion.div>
+    </AnimatePresence>
+  );
+}

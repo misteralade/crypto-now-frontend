@@ -1,11 +1,6 @@
-import Navbar from "../components/global/navbar/Navbar.tsx";
 import DashboardContent from "../sections/dashboard/DashboardContent.tsx";
 
+// Standalone page wrapper (kept for legacy imports if any).
 export default function DashboardPage() {
-  return (
-    <div className={`space-y-10 md:space-y-20 pb-14`}>
-      <Navbar />
-      <DashboardContent />
-    </div>
-  );
+  return <DashboardContent />;
 }

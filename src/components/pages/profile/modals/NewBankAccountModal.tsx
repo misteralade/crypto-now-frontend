@@ -1,179 +1,101 @@
-import {Fragment, useEffect} from "react";
-import {AlertCircle, X} from "lucide-react";
-import type {AllBanksResponse} from "../../../../types/response.payload.types.ts";
-import type {CreateBankAccountRequestPayload} from "../../../../types/request.payload.types.ts";
-import BankSelector from "../../../global/BankSelector.tsx";
-import { CustomInput } from "../../../global/CustomInput.tsx";
-import { Form, Formik } from "formik";
+import { Fragment, useEffect } from "react";
+import { toast } from "react-toastify";
+import { X } from "lucide-react";
+import type { AllBanksResponse, UserBankAccountResponse } from "../../../../types/response.payload.types.ts";
+import type { CreateBankAccountRequestPayload } from "../../../../types/request.payload.types.ts";
+import BankAccountForm from "../../bank/BankAccountForm.tsx";
 
 interface NewBankAccountModalProps {
   isOpen: boolean;
-  banks: AllBanksResponse[]
+  banks: AllBanksResponse[];
+  existingAccounts: UserBankAccountResponse[];
   selectedBankId: string;
   onClose: () => void;
   onSubmit: () => void;
-  handleChangeField: (field: keyof CreateBankAccountRequestPayload, value: any) => void;
+  handleChangeField: (
+    field: keyof CreateBankAccountRequestPayload,
+    value: any,
+  ) => void;
 }
 
-const NewBankAccountModal = ({ isOpen, banks, selectedBankId, onClose, onSubmit, handleChangeField }: NewBankAccountModalProps) => {
+const NewBankAccountModal = ({
+  isOpen,
+  banks,
+  existingAccounts,
+  onClose,
+  onSubmit,
+  handleChangeField,
+}: NewBankAccountModalProps) => {
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = "hidden"
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = "unset"
+      document.body.style.overflow = "unset";
     }
     return () => {
-      document.body.style.overflow = "unset"
-    }
-  }, [isOpen])
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen]);
 
-  const handleSubmit = () => {
-    console.log("Selected Bank: ", selectedBankId);
-    onSubmit();
-  }
-
-  const iniitalState = {
-    bankId: null,
-    accountName: null,
-    accountNumber: null,
-    isDefault: true,
-  }
-  
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   return (
     <Fragment>
-      <div className="z-50 fixed inset-0 flex items-center justify-center p-4">
+      <div
+        className="z-50 fixed inset-0 flex items-center justify-center p-4 bg-black/50"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+      >
         {/* Backdrop */}
-        <div className="absolute inset-0 bg-black/50" onClick={onClose}/>
-        
+        <div
+          className="absolute inset-0"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+
         {/* Modal */}
-        <div className="max-w-2xl relative bg-white rounded-2xl shadow-xl w-full max-h-[90vh] overflow-y-auto">
-          <div className="p-6 space-y-8 md:p-10">
+        <div className="max-w-2xl relative bg-white rounded-3xl shadow-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="p-5 md:p-8">
             {/* Header */}
-            <div className="flex items-start justify-between">
-              <h2 className="text-3xl font-semibold text-titleColor">Create New Bank</h2>
-              <button onClick={onClose}>
-                <X className="w-6 h-6"/>
+            <div className="flex items-center justify-between mb-4">
+              <h2
+                id="modal-title"
+                className="text-2xl font-bold text-[#0E0F0C]"
+              >
+                Create New Bank
+              </h2>
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Close modal"
+                className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-[#03034D] focus:ring-offset-2"
+              >
+                <X className="w-5 h-5" style={{ color: "#6B6E6B" }} />
               </button>
             </div>
 
-            {/* Disclaimer */}
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex gap-3">
-              <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <p className="text-sm text-amber-800 font-medium">
-                  Important: Account holder name must match your profile name
-                </p>
-                <p className="text-xs text-amber-700 mt-1">
-                  Ensure the name on your bank account matches the name registered on your profile. Any mismatch may result in verification failure.
-                </p>
-              </div>
-            </div>
-            
-            <Formik initialValues={iniitalState} onSubmit={handleSubmit}>
-              {({ values, handleChange, handleBlur, touched, errors, isValid, isSubmitting }) => (
-                <Form>
-                  <div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                      <div className="flex flex-col gap-2">
-                        <BankSelector
-                          label="Select Bank"
-                          options={banks}
-                          value={values.bankId as unknown as string}
-                          onValueChange={(value) => {
-                            handleChange("bankId")(value)
-                            handleChangeField("bankId", value)
-                          }}
-                        />
-                        {touched.bankId && errors.bankId && (
-                          <p className="text-red-500 text-xs mt-1">{errors.bankId}</p>
-                        )}
-                      </div>
-                      
-                      <div className="flex flex-col gap-2">
-                        <CustomInput
-                            label="Account Holder name"
-                            type="text"
-                            value={values.accountName as unknown as string}
-                            onChange={(e) => {
-                              handleChange("accountName")(e.target.value)
-                              handleChangeField("accountName", e.target.value)
-                            }}
-                            onBlur={handleBlur("accountName")}
-                          />
-
-                        {touched.accountName && errors.accountName && (
-                          <p className="text-red-500 text-xs mt-1">{errors.accountName}</p>
-                        )}
-                      </div>
-                      
-                      <div className="flex flex-col gap-2">
-                        <CustomInput
-                          label="Account number"
-                          type="text"
-                          value={values.accountNumber as unknown as string}
-                          onChange={(e) => {
-                            handleChange("accountNumber")(e.target.value)
-                            handleChangeField("accountNumber", e.target.value)
-                          }}
-                          onBlur={handleBlur("accountNumber")}
-                        />
-
-                        {touched.accountNumber && errors.accountNumber && (
-                          <p className="text-red-500 text-xs mt-1">{errors.accountNumber}</p>
-                        )}
-                      </div>
-                      
-                      <div className="flex flex-col items-start justify-center gap-2">
-                        <div className="flex items-center gap-3">
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input
-                              id="isActive"
-                              type="checkbox"
-                              className="sr-only peer"
-                              onChange={(e) => {
-                                handleChangeField("isDefault", e.target.checked)
-                                handleChange("isDefault")(e.target.checked as unknown as string)
-                              }}
-                              onBlur={handleBlur("isDefault")}
-                              defaultChecked={values.isDefault as unknown as boolean}
-                            />
-                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-3 peer-focus:ring-gray-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#7c7c97] peer-checked:after:bg-[#03034D]"></div>
-                          </label>
-                          <span className="text-[16px] font-semibold text-[#454745]">Default Bank</span>
-                        </div>
-
-                        {touched.isDefault && errors.isDefault && (
-                          <p className="text-red-500 text-xs mt-1">{errors.isDefault}</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Action Buttons */}
-                  <div className="flex gap-4 pt-4">
-                    <button
-                      onClick={onClose}
-                      className="flex-1 h-12 rounded-full text-gray-700 font-semibold text-base hover:bg-gray-100 transition-colors hover:cursor-pointer"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      disabled={!isValid || isSubmitting}
-                      className="flex-1 h-12 rounded-full font-semibold text-base bg-[#1a1f5c] transition-colors text-white disabled:bg-gray-300 disabled:text-gray-500 hover:bg-[#151842] hover:cursor-pointer"
-                    >
-                      Confirm
-                    </button>
-                  </div>
-                </Form>
-              )}
-            </Formik>
+            <BankAccountForm
+              banks={banks}
+              onSubmit={onSubmit}
+              onCancel={onClose}
+              onDuplicate={(bankId, accountNumber) => {
+                const exists = existingAccounts.some((account) => !account.isDeleted && account.bank.id === bankId && account.accountNumber === accountNumber);
+                if (exists) {
+                  onClose();
+                  toast.error("This bank account has already been added.");
+                }
+                return exists;
+              }}
+              handleChangeField={handleChangeField}
+              submitLabel="Save Bank Account"
+              showCancelButton
+            />
           </div>
         </div>
       </div>
     </Fragment>
-  )
-}
+  );
+};
 
 export default NewBankAccountModal;

@@ -31,11 +31,11 @@ const CustomButton = (props: CustomButtonProps) => {
 
   // Base styles for both button and link variants
   const baseStyles =
-    `bg-[#03034D] cursor-pointer text-white px-6 py-3 rounded-full font-medium hover:bg-[#03034D]/90 transition-colors inline-block text-center no-underline disabled:opacity-50 disabled:cursor-not-allowed break-words`;
+    `bg-[#03034D] cursor-pointer text-white px-6 py-3 rounded-full font-medium hover:bg-[#03034D]/90 transition-all duration-200 inline-block text-center no-underline disabled:opacity-50 disabled:cursor-not-allowed break-words shadow-sm`;
 
   // Link variant styles (more subtle, underlined)
   const linkStyles =
-    "bg-transparent text-lg font-semibold flex justify-center items-center  text-[#03034D] px-0 py-0 rounded-none hover:bg-transparent hover:underline";
+    "bg-transparent text-lg font-semibold flex justify-center items-center text-[#03034D] px-0 py-0 rounded-none hover:bg-transparent hover:underline";
 
   const finalClassName =
     variant === "link"

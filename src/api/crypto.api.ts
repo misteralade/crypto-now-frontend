@@ -1,13 +1,12 @@
 import {
-  axiosDeleteRequestHandler,
   axiosGetRequestHandler,
-  axiosPatchRequestHandler,
   axiosPostRequestHandler
 } from "./index.ts";
 import type {
   BaseApiResponse,
+  CustodialWalletResponse,
   SupportedCryptoOrCurrencyResponse,
-  SupportedPlatformCryptoWalletResponse, UserCryptoWalletResponse
+  SupportedPlatformCryptoWalletResponse,
 } from "../types/response.payload.types.ts";
 
 class CryptoServiceApi {
@@ -39,38 +38,23 @@ class CryptoServiceApi {
     return { data, message, success };
   }
 
-  async getUserCryptoWallets(selectedCryptoId: string) {
-    const { data, message, success }: { data: any, message: string, success: boolean} = await axiosGetRequestHandler(`/crypto/user/wallets/${selectedCryptoId}`);
-
-    return { data: data.data as UserCryptoWalletResponse[], message, success };
-  }
-  
-  async getAllUserCryptoWallets() {
-    const { data, message, success }: { data: any, message: string, success: boolean} = await axiosGetRequestHandler(`/crypto/user/wallets`);
-    
-    return { data: data.data as UserCryptoWalletResponse[], message, success };
-  }
-  
-  async getAnonymousUserCryptoWallets(selectedCryptoId: string, email: string ) {
-    const { data, message, success }: { data: any, message: string, success: boolean} = await axiosGetRequestHandler(`/crypto/anonymous-user/wallets/${selectedCryptoId}`, { email });
-    
-    return { data: data.data as UserCryptoWalletResponse[], message, success };
+  async getMyCustodialWallets() {
+    return await axiosGetRequestHandler(`/custodial-wallet/my`) as BaseApiResponse<CustodialWalletResponse[]>;
   }
 
-  async userCreateCryptoWallet(selectedCryptoId: string, payload: Record<string, any>) {
-    return await axiosPostRequestHandler(`/crypto/user/wallet/${selectedCryptoId}/create`, payload) as BaseApiResponse<string>;
+  async generateCustodialWallet(cryptoId: string, network: string) {
+    return await axiosPostRequestHandler(`/custodial-wallet/generate/${cryptoId}/${network}`, {}) as BaseApiResponse<CustodialWalletResponse>;
   }
-  
-  async anonymousUserCreateCryptoWallet(selectedCryptoId: string, payload: Record<string, any>) {
-    return await axiosPostRequestHandler(`/crypto/anonymous-user/wallet/${selectedCryptoId}/create`, payload) as BaseApiResponse<string>;
+
+  async generateAllCustodialWallets() {
+    return await axiosPostRequestHandler(`/custodial-wallet/generate/all`, {}) as BaseApiResponse<CustodialWalletResponse[]>;
   }
-  
-  async userMakeWalletPrimary(walletId: string) {
-    return await axiosPatchRequestHandler(`/crypto/user/${walletId}/make-primary`) as BaseApiResponse<null>;
-  }
-  
-  async userDeleteCryptoWallet(walletId: string) {
-    return await axiosDeleteRequestHandler(`/crypto/user/${walletId}/delete`) as BaseApiResponse<null>;
+
+  async allocateGuestSellWallet(payload: { sessionId: string; cryptoId: string; network: string }) {
+    return await axiosPostRequestHandler(
+      `/custodial-wallet/guest/allocate`,
+      payload,
+    ) as BaseApiResponse<CustodialWalletResponse>;
   }
 }
 

@@ -3,6 +3,7 @@ import {useCryptoQuery} from "../../queries/crypto.query.ts";
 import {useCurrencyQuery} from "../../queries/currency.query.ts";
 import {useState, useEffect} from "react";
 import type {TradeOption} from "../../types/navbar.types.ts";
+import { ROUTES } from "../../util/constants.util.ts";
 
 export const useNavbarDropdown = (handleMenuItemClick?: (() => void) | undefined, isMobile?: boolean | undefined) => {
     const navigate = useNavigate()
@@ -36,10 +37,8 @@ export const useNavbarDropdown = (handleMenuItemClick?: (() => void) | undefined
         setDropStep(2);
     }
 
-    const handleRouting = (currency?: string) => {
-        const defaultCurrency = currency ? currency : supportedCurrencies?.[0]?.id;
-
-        navigate({to: `/trade-crypto?option=${activeDropOption}&currency=${defaultCurrency}&token=${selectedToken}`})
+  const handleRouting = (_currency?: string) => {
+        navigate({to: ROUTES.DASHBOARD})
 
         if (isMobile && handleMenuItemClick) {
             handleMenuItemClick();

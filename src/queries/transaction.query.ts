@@ -1,45 +1,73 @@
-import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
+﻿import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {toast} from "react-toastify";
-import {useMatchRoute} from "@tanstack/react-router";
+import {useMatchRoute, useLocation} from "@tanstack/react-router";
 import {QUERY_KEYS} from "./query.keys.ts";
 import {transactionServiceApi} from "../api/transaction.api.ts";
 import {type RootState, store} from "../store.ts";
 import {ROUTES, SESSION_STORAGE_KEYS, TIME_IN_MILLISECONDS} from "../util/constants.util.ts";
-import type {AxiosServerError} from "../types/response.payload.types.ts";
+import type {
+  AxiosServerError,
+  TransactionResponseEntity,
+} from "../types/response.payload.types.ts";
 import {disputeServiceApi} from "../api/dispute.api.ts";
 import type {MessageAttachment} from "../types/transaction.types.ts";
-import {extractErrorMessage} from "../util/index.util.ts";
+import {extractErrorMessage, isExchangeRateExpiryError} from "../util/index.util.ts";
 import { useSelector } from "react-redux";
+import { setInitiateTransactionField } from "../redux/transaction.slice.ts";
+import { useTransactionLiveStatus } from "../hooks/components/trade/useTransactionLiveStatus.ts";
+import { userSearchTransactionInitialState } from "../redux/states/initial-transaction.state.ts";
+import type { SearchTransactionsRequestPayload } from "../types/request.payload.types.ts";
+import { getAnonymousEmail } from "../util/auth-session.util.ts";
 
 export const useTransactionQuery = () => {
   const queryClient = useQueryClient();
   const matchRoute = useMatchRoute();
+  const location = useLocation();
+  // Include /dashboard/trade etc. so layout + bell can read pending counts off the home route match.
+  const isDashboardShell =
+    location.pathname === ROUTES.DASHBOARD ||
+    location.pathname.startsWith(`${ROUTES.DASHBOARD}/`);
   const searchTransactionPayload = useSelector((state: RootState) => state.transaction.dashboard.searchUserTransactions);
 
-  // Calculate Amount to Receive
-  const { data: calculatedAmount, isLoading: loadingCalculation } = useQuery({
-    queryKey: [QUERY_KEYS.TRANSACTION.GET_AMOUNT_TO_SEND, store.getState().transaction.exchangeRateId, store.getState().transaction.amountToSend],
-    queryFn: async () => {
-      const rootState = store.getState() as RootState;
-      const transaction = rootState.transaction;
+  const silentlyRefreshExchangeRates = async () => {
+    await queryClient.invalidateQueries({
+      queryKey: [QUERY_KEYS.EXCHANGE_RATE.GET_CRYPTO_TO_CURRENCY_EXCHANGE_RATE],
+    });
+  };
 
-      if (!transaction.amountToSend || !transaction.exchangeRateId) {
-        return;
-      }
+  // A submitted transaction (new BUY receipt, or a payment marked as paid) should
+  // show up immediately in the Transactions page, the dashboard's Recent Orders
+  // widget, and the Total/Bought/Sold stat cards : none of that happened before,
+  // so the newly created transaction was invisible until an unrelated refetch
+  // (page reload, the 10s notification poll, etc.) happened to catch it.
+  const refreshTransactionData = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.TRANSACTION.USER_SEARCH_TRANSACTION_HISTORY],
+      }),
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.TRANSACTION.USER_RECENT_TRANSACTIONS],
+      }),
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.TRANSACTION.USER_TRANSACTION_SUMMARY],
+      }),
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.TRANSACTION.USER_INCOMPLETE_TRANSACTIONS_COUNT],
+      }),
+      // A completed transaction can produce a new bell notification : refetch
+      // it here instead of relying on a poll interval (removed) or the user
+      // happening to open the dedicated Notifications page.
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.NOTIFICATION.HAS_NEW],
+      }),
+    ]);
+  };
 
-      const { data, success } = await transactionServiceApi.calculateAmountToReceive(transaction.exchangeRateId || '', transaction.amountToSend || 0);
-
-      if (success) {
-        return data;
-      }
-
-      return null;
-    },
-    // enabled: !!exchangeRateId && !!amountToSend && amountToSend > 0, // Only run the query if exchangeRateId and amountToSend are provided and valid
-    enabled: !!store.getState().transaction.exchangeRateId && !!store.getState().transaction.amountToSend && Number(store.getState().transaction?.amountToSend) > 0,
-  });
-
-  const { data: userTransactionHistory, isLoading: loadingUserTransactionHistory } = useQuery({
+  const {
+    data: userTransactionHistory,
+    isLoading: loadingUserTransactionHistory,
+    isFetching: fetchingUserTransactionHistory,
+  } = useQuery({
     queryKey: [QUERY_KEYS.TRANSACTION.USER_SEARCH_TRANSACTION_HISTORY, searchTransactionPayload],
     queryFn: async () => {
       if (!searchTransactionPayload) {
@@ -54,9 +82,48 @@ export const useTransactionQuery = () => {
 
       return null;
     },
-    enabled: !!(store.getState() as RootState)?.transaction?.dashboard?.searchUserTransactions && !!matchRoute({ to: ROUTES.DASHBOARD }),
+    enabled: !!searchTransactionPayload && isDashboardShell,
+    staleTime: TIME_IN_MILLISECONDS.ONE_HUNDRED_TWENTY_SECONDS,
+    retry: 1,
   });
-  
+
+  // BOUGHT/SOLD stat pills on the Transaction History page : scoped to the
+  // SAME filter payload as the search-history query above (minus page/size,
+  // which don't affect the totals, so they're excluded from the query key to
+  // avoid an extra refetch on "View more"), so the pills move with the
+  // active tab/filter instead of always showing unfiltered lifetime totals.
+  const filteredSummaryPayload = searchTransactionPayload
+    ? JSON.stringify(
+        Object.fromEntries(
+          Object.entries(searchTransactionPayload).filter(
+            ([key]) => key !== "page" && key !== "size",
+          ),
+        ),
+      )
+    : "";
+  const {
+    data: filteredTransactionSummary,
+    isLoading: loadingFilteredTransactionSummary,
+  } = useQuery({
+    queryKey: [QUERY_KEYS.TRANSACTION.USER_FILTERED_TRANSACTION_SUMMARY, filteredSummaryPayload],
+    queryFn: async () => {
+      if (!searchTransactionPayload) {
+        return;
+      }
+
+      const { data, success } = await transactionServiceApi.getFilteredUserTransactionSummary(searchTransactionPayload);
+
+      if (success) {
+        return data;
+      }
+
+      return null;
+    },
+    enabled: !!searchTransactionPayload && isDashboardShell,
+    staleTime: TIME_IN_MILLISECONDS.ONE_HUNDRED_TWENTY_SECONDS,
+    retry: 1,
+  });
+
   // Return Transaction Summary
   const { data: transactionSummary, isLoading: loadingTransactionSummary } = useQuery({
     queryKey: [QUERY_KEYS.TRANSACTION.USER_TRANSACTION_SUMMARY],
@@ -69,7 +136,7 @@ export const useTransactionQuery = () => {
 
       return null;
     },
-    enabled: !!matchRoute({ to: ROUTES.DASHBOARD }),
+    enabled: isDashboardShell,
   })
 
   // Get Incomplete Transactions Count
@@ -84,7 +151,7 @@ export const useTransactionQuery = () => {
 
       return null;
     },
-    enabled: !!matchRoute({ to: ROUTES.DASHBOARD }),
+    enabled: isDashboardShell,
   })
 
   // Get transaction Details
@@ -108,6 +175,29 @@ export const useTransactionQuery = () => {
     },
     enabled: !!store.getState().transaction.details.sessionId && !!matchRoute({ to: ROUTES.TRANSACTION_DETAILS }),
   });
+
+  // A transaction can only ever carry one dispute : look it up by the
+  // transaction's own id (not sessionId) so the Dispute button on the
+  // details page can reflect an existing dispute's status instead of
+  // always offering to create a new one.
+  const { data: disputeForTransaction, isLoading: loadingDisputeForTransaction } = useQuery({
+    queryKey: [QUERY_KEYS.DISPUTE.GET_DISPUTE_BY_TRANSACTION, transactionDetails?.id],
+    queryFn: async () => {
+      if (!transactionDetails?.id) {
+        return null;
+      }
+
+      const { data, success } = await disputeServiceApi.getDisputeByTransactionId(transactionDetails.id);
+
+      return success ? data : null;
+    },
+    enabled: !!transactionDetails?.id && !!matchRoute({ to: ROUTES.TRANSACTION_DETAILS }),
+  });
+
+  // Live transaction status stream with SSE fallback to polling
+  const useTransactionStatus = (sessionId?: string) => {
+    return useTransactionLiveStatus(sessionId);
+  };
   
   // Get Dispute Messages
   const { data: disputeMessages, isLoading: loadingDisputeMessages } = useQuery({
@@ -128,7 +218,7 @@ export const useTransactionQuery = () => {
 
       return null;
     },
-    enabled: !!store.getState().transaction.dispute.details.id && !!matchRoute({ to: ROUTES.DISPUTE_DETAILS }),
+    enabled: !!store.getState().transaction.dispute.details.id && (!!matchRoute({ to: ROUTES.DISPUTE_DETAILS }) || !!matchRoute({ to: ROUTES.DISPUTE_LEGACY })),
     refetchInterval: TIME_IN_MILLISECONDS.FIVE_SECONDS,
   });
   
@@ -151,7 +241,7 @@ export const useTransactionQuery = () => {
 
       return null;
     },
-    enabled: !!store.getState().transaction.dispute.details.id && !!matchRoute({ to: ROUTES.DISPUTE_DETAILS }),
+    enabled: !!store.getState().transaction.dispute.details.id && (!!matchRoute({ to: ROUTES.DISPUTE_DETAILS }) || !!matchRoute({ to: ROUTES.DISPUTE_LEGACY })),
   });
 
   // Initiate Transaction Mutation
@@ -161,11 +251,26 @@ export const useTransactionQuery = () => {
       toast.loading(`Initiating transaction...`, { toastId: QUERY_KEYS.TRANSACTION.INITIATE_TRANSACTION });
       const rootState = store.getState() as RootState;
       const transactionForm = rootState.transaction.initiate.initiateTransaction;
-      const userEmail = rootState.user.trade.anonymous.email;
+      const userEmail = getAnonymousEmail(rootState.user.trade.anonymous.email);
+      const selectedTradeBankAccountId = rootState.bank.tradeCrypto.selectedBankAccountId;
+      const accountId = transactionForm?.accountId ?? selectedTradeBankAccountId ?? undefined;
+
+      if (transactionForm?.action === "SELL" && !accountId) {
+        throw new Error("A payout bank account is required before starting a sell transaction.");
+      }
+
+      if (accountId && transactionForm?.accountId !== accountId) {
+        store.dispatch(setInitiateTransactionField({
+          field: "accountId",
+          value: accountId,
+        }));
+      }
 
       const payload = {
         ...transactionForm,
+        action: transactionForm?.action,
         coinId: transactionForm?.tokenId,
+        ...(accountId ? { accountId } : {}),
       }
       
       if (userEmail) {
@@ -178,13 +283,19 @@ export const useTransactionQuery = () => {
 
       return await transactionServiceApi.initiateTransaction(payload);
     },
-    onSuccess: ({ data, message }) => {
+    onSuccess: ({ data }) => {
       toast.dismiss(QUERY_KEYS.TRANSACTION.INITIATE_TRANSACTION);
+      console.info("[trade] initiated transaction", {
+        sessionId: data?.sessionId,
+      });
       sessionStorage.setItem(SESSION_STORAGE_KEYS.SESSION_ID, data?.sessionId as string);
-      toast.success(message);
     },
     onError: ( error: AxiosServerError ) => {
       toast.dismiss(QUERY_KEYS.TRANSACTION.INITIATE_TRANSACTION);
+      if (isExchangeRateExpiryError(error)) {
+        void silentlyRefreshExchangeRates();
+        return;
+      }
       const message = extractErrorMessage(error) || "Failed to initiate transaction. Please try again."
       console.log({
         message
@@ -201,7 +312,7 @@ export const useTransactionQuery = () => {
       const transactionForm = rootState.transaction.initiate.initiateTransaction;
       const transactionSessionId = sessionStorage.getItem(SESSION_STORAGE_KEYS.SESSION_ID);
       
-      const userEmail = rootState.user.trade.anonymous.email;
+      const userEmail = getAnonymousEmail(rootState.user.trade.anonymous.email);
       
       if (!transactionSessionId || !transactionForm) return;
       
@@ -220,9 +331,92 @@ export const useTransactionQuery = () => {
         coinId: transactionForm?.tokenId,
       });
     },
+    onSuccess: async () => {
+      await refreshTransactionData();
+    },
     onError: ( error: AxiosServerError ) => {
       toast.dismiss();
+      if (isExchangeRateExpiryError(error)) {
+        void silentlyRefreshExchangeRates();
+        return;
+      }
       const message = extractErrorMessage(error) || "Failed to update transaction payment. Please try again."
+      toast.error(message);
+    },
+  });
+
+  const manualSellDepositRecheckMutation = useMutation({
+    mutationKey: [QUERY_KEYS.TRANSACTION.MANUAL_SELL_DEPOSIT_RECHECK],
+    mutationFn: async (params: { sessionId: string; isAnonymous?: boolean }) => {
+      if (params.isAnonymous) {
+        return await transactionServiceApi.manualRecheckAnonymousSellDeposit(
+          params.sessionId,
+        );
+      }
+
+      return await transactionServiceApi.manualRecheckSellDeposit(
+        params.sessionId,
+      );
+    },
+    onSuccess: async ({ success, message, data }, variables) => {
+      if (success) {
+        toast.success(message);
+      } else {
+        toast.error(message);
+      }
+
+      const status = data?.status as TransactionResponseEntity["status"] | undefined;
+      if (status) {
+        const patchTransactionStatus = (
+          current: TransactionResponseEntity | null | undefined,
+        ) => {
+          if (!current) {
+            return current ?? null;
+          }
+
+          return {
+            ...current,
+            status,
+          };
+        };
+
+        queryClient.setQueryData<TransactionResponseEntity | null>(
+          [QUERY_KEYS.TRANSACTION.USER_TRANSACTION_DETAILS, variables.sessionId],
+          patchTransactionStatus,
+        );
+        queryClient.setQueryData<TransactionResponseEntity | null>(
+          [
+            QUERY_KEYS.TRANSACTION.USER_TRANSACTION_DETAILS,
+            variables.sessionId,
+            "status",
+          ],
+          patchTransactionStatus,
+        );
+      }
+
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: [
+            QUERY_KEYS.TRANSACTION.USER_TRANSACTION_DETAILS,
+            variables.sessionId,
+          ],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [
+            QUERY_KEYS.TRANSACTION.USER_TRANSACTION_DETAILS,
+            variables.sessionId,
+            "status",
+          ],
+        }),
+        // A recheck can complete the SELL, so refresh the list/summary too :
+        // not just this transaction's own detail view.
+        refreshTransactionData(),
+      ]);
+    },
+    onError: (error: AxiosServerError) => {
+      const message =
+        extractErrorMessage(error) ||
+        "Failed to recheck this deposit. Please try again.";
       toast.error(message);
     },
   });
@@ -234,12 +428,11 @@ export const useTransactionQuery = () => {
       toast.loading(`Confirming receiving account...`, { toastId: 'confirm-receiving-account' });
       const rootState = store.getState() as RootState;
       const transactionSessionId = sessionStorage.getItem(SESSION_STORAGE_KEYS.SESSION_ID);
-      const walletId = rootState.crypto.tradeCrypto?.selectedWalletId;
       const accountId = rootState.bank.tradeCrypto?.selectedBankAccountId;
-      const userEmail = rootState.user.trade.anonymous.email;
+      const userEmail = getAnonymousEmail(rootState.user.trade.anonymous.email);
 
-      if (!walletId && !accountId) {
-        throw new Error("Either walletId or accountId must be provided, and sessionId must exist");
+      if (!accountId) {
+        throw new Error("accountId must be provided, and sessionId must exist");
       }
 
       if (!transactionSessionId) {
@@ -248,22 +441,20 @@ export const useTransactionQuery = () => {
       
       if (userEmail) {
         return await transactionServiceApi.confirmAnonymousUserReceivingPaymentAccount(transactionSessionId, {
-          walletId,
           accountId,
           email: userEmail,
         })
       }
-      
+
       return await transactionServiceApi.confirmReceivingPaymentAccount(transactionSessionId, {
-        walletId,
         accountId,
       });
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.dismiss('confirm-receiving-account');
-      toast.success('Successfully confirmed receiving account');
       // Note: clearTradeProgress and step reset are handled in handleConfirmBankDetails
       sessionStorage.removeItem(SESSION_STORAGE_KEYS.SESSION_ID);
+      await refreshTransactionData();
     },
     onError: ( error: AxiosServerError ) => {
       toast.dismiss('confirm-receiving-account');
@@ -271,7 +462,7 @@ export const useTransactionQuery = () => {
       toast.error(message);
     },
   });
-  
+
   const disputeTransactionInitiationMutation = useMutation({
     mutationKey: [QUERY_KEYS.DISPUTE.INITIATE_DISPUTE_TRANSACTION],
     mutationFn: async () => {
@@ -286,9 +477,19 @@ export const useTransactionQuery = () => {
       toast.loading(`Initiating dispute...`, { toastId: QUERY_KEYS.DISPUTE.INITIATE_DISPUTE_TRANSACTION });
       return await disputeServiceApi.initiateDisputeTransaction(sessionId, { reason, attachments: attachments as any });
     },
-    onSuccess: ({ message, data }) => {
+    onSuccess: async ({ data }) => {
       toast.dismiss(QUERY_KEYS.DISPUTE.INITIATE_DISPUTE_TRANSACTION);
-      toast.success(message);
+      // The transaction just flipped to DISPUTED server-side, and a dispute
+      // now exists for it : refetch both so the title/status and the Dispute
+      // button reflect that immediately instead of needing a manual refresh.
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.TRANSACTION.USER_TRANSACTION_DETAILS],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.DISPUTE.GET_DISPUTE_BY_TRANSACTION],
+        }),
+      ]);
       return data;
     },
     onError: ( error: AxiosServerError ) => {
@@ -297,7 +498,7 @@ export const useTransactionQuery = () => {
       toast.error(message);
     },
   })
-  
+
   const userSendDisputeMutation = useMutation({
     mutationKey: [QUERY_KEYS.DISPUTE.USER_SEND_DISPUTE_MESSAGE],
     mutationFn: async () => {
@@ -320,16 +521,63 @@ export const useTransactionQuery = () => {
       toast.loading(`Sending message...`, { toastId: QUERY_KEYS.DISPUTE.USER_SEND_DISPUTE_MESSAGE });
       return await disputeServiceApi.sendDisputeMessage(disputeId, message || '', attachments as Array<MessageAttachment>);
     },
-    onSuccess: ({ message }) => {
+    onSuccess: () => {
       toast.dismiss(QUERY_KEYS.DISPUTE.USER_SEND_DISPUTE_MESSAGE);
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.DISPUTE.GET_DISPUTE_MESSAGES]
       });
-      toast.success(message);
     },
     onError: ( error: AxiosServerError ) => {
       toast.dismiss(QUERY_KEYS.DISPUTE.USER_SEND_DISPUTE_MESSAGE);
       const message = extractErrorMessage(error) || "Failed to send dispute message. Please try again."
+      toast.error(message);
+    },
+  });
+
+  // Create and Submit BUY Transaction Mutation (replaces initiate+makePayment for BUY)
+  const createAndSubmitTransactionMutation = useMutation({
+    mutationKey: [QUERY_KEYS.TRANSACTION.CREATE_AND_SUBMIT_TRANSACTION],
+    mutationFn: async () => {
+      toast.loading(`Submitting transaction...`, { toastId: QUERY_KEYS.TRANSACTION.CREATE_AND_SUBMIT_TRANSACTION });
+      const rootState = store.getState() as RootState;
+      const transactionForm = rootState.transaction.initiate.initiateTransaction;
+      const userEmail = getAnonymousEmail(rootState.user.trade.anonymous.email);
+
+      if (!transactionForm) throw new Error("Transaction form data missing");
+
+      const payload = {
+        coinId: transactionForm.tokenId,
+        currencyId: transactionForm.currencyId,
+        action: transactionForm.action,
+        amountToSend: transactionForm.amountToSend ?? 0,
+        amountToReceive: transactionForm.amountToReceive ?? 0,
+        receiptUrl: transactionForm.receiptUrl,
+        walletAddress: transactionForm.walletAddress,
+        network: transactionForm.network,
+        ...(userEmail ? { email: userEmail } : {}),
+      };
+
+      if (userEmail) {
+        return await transactionServiceApi.anonymousCreateAndSubmitTransaction(payload);
+      }
+      return await transactionServiceApi.createAndSubmitTransaction(payload);
+    },
+    onSuccess: async ({ data, message }) => {
+      toast.dismiss(QUERY_KEYS.TRANSACTION.CREATE_AND_SUBMIT_TRANSACTION);
+      console.info("[trade] submitted transaction", {
+        sessionId: data?.sessionId,
+      });
+      sessionStorage.setItem(SESSION_STORAGE_KEYS.SESSION_ID, data?.sessionId as string);
+      toast.success(message);
+      await refreshTransactionData();
+    },
+    onError: (error: AxiosServerError) => {
+      toast.dismiss(QUERY_KEYS.TRANSACTION.CREATE_AND_SUBMIT_TRANSACTION);
+      if (isExchangeRateExpiryError(error)) {
+        void silentlyRefreshExchangeRates();
+        return;
+      }
+      const message = extractErrorMessage(error) || "Failed to submit transaction. Please try again.";
       toast.error(message);
     },
   });
@@ -345,9 +593,7 @@ export const useTransactionQuery = () => {
     },
     onSuccess: ({ message, success }) => {
       toast.dismiss();
-      if (success) {
-        toast.success(message);
-      } else {
+      if (!success) {
         toast.error(message)
       }
     },
@@ -370,9 +616,7 @@ export const useTransactionQuery = () => {
     },
     onSuccess: ({ message, success }) => {
       toast.dismiss();
-      if (success) {
-        toast.success(message);
-      } else {
+      if (!success) {
         toast.error(message)
       }
     },
@@ -385,16 +629,19 @@ export const useTransactionQuery = () => {
   
   return {
     // Values
-    calculatedAmount,
-    loadingCalculation,
     userTransactionHistory,
     loadingUserTransactionHistory,
+    fetchingUserTransactionHistory,
+    filteredTransactionSummary,
+    loadingFilteredTransactionSummary,
     transactionSummary,
     loadingTransactionSummary,
     incompleteTransactionsCount,
     loadingIncompleteTransactionsCount,
     transactionDetails,
     loadingTransactionDetails,
+    disputeForTransaction,
+    loadingDisputeForTransaction,
     disputeMessages,
     loadingDisputeMessages,
     disputeDetails,
@@ -404,12 +651,43 @@ export const useTransactionQuery = () => {
     // Mutations
     initiateTransactionMutation,
     makePaymentTransactionMutation,
+    manualSellDepositRecheckMutation,
     receivingPaymentAccountConfirmationMutation,
+    createAndSubmitTransactionMutation,
     disputeTransactionInitiationMutation,
     userSendDisputeMutation,
     downloadSingleTransactionMutation,
     downloadAllTransactionMutation,
 
     // Functions
+    useTransactionStatus,
+  };
+};
+
+/**
+ * Dashboard's "Recent Orders" widget : always the caller's 5 most recent
+ * transactions, independent of whatever filters/pagination are active on the
+ * Transaction History page. That page reuses the SAME Redux search payload
+ * (state.transaction.dashboard.searchUserTransactions) for its own filtering,
+ * so reading through it here would let filters/pages set there leak back into
+ * this widget after navigating back to the dashboard.
+ */
+export const useRecentTransactionsQuery = () => {
+  const { data, isLoading, isFetching } = useQuery({
+    queryKey: [QUERY_KEYS.TRANSACTION.USER_RECENT_TRANSACTIONS],
+    queryFn: async () => {
+      const { data, success } = await transactionServiceApi.searchUserTransactions(
+        userSearchTransactionInitialState as SearchTransactionsRequestPayload,
+      );
+      return success ? data : null;
+    },
+    staleTime: TIME_IN_MILLISECONDS.ONE_HUNDRED_TWENTY_SECONDS,
+    retry: 1,
+  });
+
+  return {
+    recentTransactions: data,
+    loadingRecentTransactions: isLoading,
+    fetchingRecentTransactions: isFetching,
   };
 };

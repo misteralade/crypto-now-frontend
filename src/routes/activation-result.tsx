@@ -1,21 +1,30 @@
-import {createFileRoute, redirect} from '@tanstack/react-router'
+﻿import {createFileRoute, redirect} from '@tanstack/react-router'
 import {toast} from "react-toastify";
 import {ROUTES} from "../util/constants.util.ts";
+import {setAccessToken} from "../util/auth-session.util.ts";
 
 export const Route = createFileRoute('/activation-result')({
   beforeLoad: ({ search }) => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
-    const { message, success } = search
-    
-    // Save token to localStorage
-    if (success) {
-      toast.success(decodeURIComponent(message))
-    } else {
-      toast.error(decodeURIComponent(message))
+    const { message, success, token } = search
+
+    // Freshly verified: a token means the user is now logged in : send
+    // them straight to onboarding, same as the OAuth success flow does.
+    if (success && token) {
+      setAccessToken(token)
+      throw redirect({
+        to: ROUTES.ONBOARDING,
+      })
     }
-    
-    // Redirect immediately to /dashboard
+
+    // Already-verified (no token issued) or failed : unchanged behavior.
+    if (success) {
+      toast.success(decodeURIComponent(message), { toastId: "activation-result-toast" })
+    } else {
+      toast.error(decodeURIComponent(message), { toastId: "activation-result-toast" })
+    }
+
     throw redirect({
       to: ROUTES.SIGNIN,
     })

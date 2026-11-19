@@ -26,6 +26,10 @@ class AuthServiceApi {
     return await axiosPostRequestHandler("/user/auth/sign-up", payload);
   }
   
+  async resendSignupVerification(email: string) {
+    return await axiosPostRequestHandler("/user/auth/signup-verification/resend", { email }) as BaseApiResponse<null>;
+  }
+
   async forgotPassword(email: string) {
     return await axiosGetRequestHandler(`/user/auth/password-reset/request?email=${email}`);
   }

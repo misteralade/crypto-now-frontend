@@ -1,11 +1,8 @@
 import type { TradeType } from "../../../types/trade.types.ts";
-// import WalletDetails from "../WalletDetails.tsx";
 import CustomButton from "../../../components/global/Button.tsx";
 import ChangeBankDetails from "../ChangeBankDetails.tsx";
-import ChangeWalletDetails from "../ChangeWalletDetails.tsx";
 import type {
   UserBankAccountResponse,
-  UserCryptoWalletResponse,
 } from "../../../types/response.payload.types.ts";
 import {useConfirmBankDetailsModal} from "../../../hooks/components/trade/modal/useConfirmBankDetailsModal.ts";
 import {Fragment} from "react";
@@ -13,31 +10,25 @@ import {Fragment} from "react";
 interface ConfirmBankDetailsModalProps {
   isOpen: boolean;
   tradeType: TradeType;
-  cryptoAccounts: UserCryptoWalletResponse[] | undefined | null;
   bankAccounts: UserBankAccountResponse[] | undefined;
   onProceed: (value: number) => void;
   setShowConfirmBankDetails: (showConfirmBankDetails: boolean) => void;
 }
 
-export default function ConfirmBankDetailsModal({ isOpen, tradeType, cryptoAccounts = [], bankAccounts = [], onProceed, setShowConfirmBankDetails }: ConfirmBankDetailsModalProps) {
+export default function ConfirmBankDetailsModal({ isOpen, tradeType, bankAccounts = [], onProceed, setShowConfirmBankDetails }: ConfirmBankDetailsModalProps) {
   const {
     // Values
     selectedBankId,
     selectedBank,
-    // selectedWalletId,
-    // selectedWallet,
     viewState,
 
     // Functions
     handleBankSelection,
     setViewState,
-    // handleWalletSelection,
     handleSubmitBankDetails,
-    handleSubmitWalletDetails,
     handleViewSelectedBankDetails,
-    // handleViewSelectedWalletDetails,
     handleProceed,
-  } = useConfirmBankDetailsModal(cryptoAccounts, bankAccounts, tradeType, onProceed, setShowConfirmBankDetails);
+  } = useConfirmBankDetailsModal(bankAccounts, tradeType, onProceed, setShowConfirmBankDetails);
   
   /** ---------------- RENDERERS ---------------- */
   const renderBankList = () => (
@@ -61,8 +52,8 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, cryptoAccou
               {/* Bank Logo */}
               <div className="flex-shrink-0">
                 <img
-                  src={bank.bankLogo}
-                  alt={`${bank.bankName} logo`}
+                  src={bank.bank?.logoUrl}
+                  alt={`${bank.bank?.name} logo`}
                   className="w-12 h-12 rounded-full object-cover bg-gray-100"
                   onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
                     const target = e.currentTarget;
@@ -74,7 +65,7 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, cryptoAccou
                   }}
                 />
                 <div className="w-12 h-12 rounded-full bg-blue-100 items-center justify-center text-blue-600 font-semibold text-sm hidden">
-                  {bank.bankName.substring(0, 2).toUpperCase()}
+                  {bank.bank?.name.substring(0, 2).toUpperCase()}
                 </div>
               </div>
 
@@ -82,7 +73,7 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, cryptoAccou
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
                   <h4 className="text-sm font-semibold text-gray-900 truncate">
-                    {bank.bankName}
+                    {bank.bank?.name}
                   </h4>
                   {selectedBankId === bank.id && (
                     <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
@@ -154,15 +145,15 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, cryptoAccou
             <div className="p-4 border border-gray-200 rounded-lg bg-gray-50">
               <div className="flex items-center space-x-3 mb-3">
                 <img
-                  src={selectedBank.bankLogo}
-                  alt={`${selectedBank.bankName} logo`}
+                  src={selectedBank.bank?.logoUrl}
+                  alt={`${selectedBank.bank?.name} logo`}
                   className="w-10 h-10 rounded-full object-cover"
                   onError={(e) => {
                     e.currentTarget.style.display = "none";
                   }}
                 />
                 <h4 className="font-semibold text-gray-900">
-                  {selectedBank.bankName}
+                  {selectedBank.bank?.name}
                 </h4>
               </div>
               <div className="space-y-2 text-sm">
@@ -276,107 +267,64 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, cryptoAccou
   // );
 
   const renderContent = () => {
-    if (tradeType === "sell") {
-      switch (viewState) {
-        case "create-bank":
-          return (
-            <ChangeBankDetails
-              onConfirm={handleSubmitBankDetails}
-              onGoBack={() => setViewState("select-bank")}
-              canGoBack={bankAccounts && bankAccounts.length > 0}
-            />
-          );
-        case "bank-details":
-          return renderBankDetails();
-        case "select-bank":
-        default:
-          return renderBankList();
-      }
+    switch (viewState) {
+      case "create-bank":
+        return (
+          <ChangeBankDetails
+            onConfirm={handleSubmitBankDetails}
+            onGoBack={() => setViewState("select-bank")}
+            canGoBack={bankAccounts && bankAccounts.length > 0}
+          />
+        );
+      case "bank-details":
+        return renderBankDetails();
+      case "select-bank":
+      default:
+        return renderBankList();
     }
-
-    if (tradeType === "buy") {
-      // For buy transactions, always show create-wallet view
-      return (
-        <ChangeWalletDetails
-          onGoBack={() => {}}
-          onConfirm={handleSubmitWalletDetails}
-          canGoBack={false}
-        />
-      );
-    }
-
-    return null;
   };
 
   /** ---------------- ACTIONS ---------------- */
   const showActionButtons = () => {
-    // For buy transactions, don't show action buttons - use the Confirm button in ChangeWalletDetails instead
-    if (tradeType === "buy") {
-      return false;
+    if (viewState === "select-bank") {
+      return selectedBankId && bankAccounts && bankAccounts.length > 0;
     }
-    if (tradeType === "sell") {
-      if (viewState === "select-bank") {
-        return selectedBankId && bankAccounts && bankAccounts.length > 0;
-      }
-      if (viewState === "bank-details") {
-        return !!selectedBank;
-      }
+    if (viewState === "bank-details") {
+      return !!selectedBank;
     }
     return false;
   };
 
   const getActionButtonText = () => {
-    if (tradeType === "sell") {
-      if (viewState === "select-bank") return "View Details & Proceed";
-      return "Proceed with This Bank";
-    }
-    if (tradeType === "buy") {
-      return "Confirm";
-    }
-    return "Proceed";
+    if (viewState === "select-bank") return "View Details & Proceed";
+    return "Proceed with This Bank";
   };
 
   const handleMainAction = () => {
-    if (tradeType === "sell" && viewState === "select-bank") {
+    if (viewState === "select-bank") {
       handleViewSelectedBankDetails();
-    } else if (tradeType === "buy" && viewState === "create-wallet") {
-      // For buy transactions, submit wallet details (which creates wallet and then confirms payment)
-      handleSubmitWalletDetails();
     } else {
       handleProceed();
     }
   };
 
   const handleChangeAction = () => {
-    if (tradeType === "sell") {
-      if (viewState === "bank-details") {
-        setViewState("select-bank");
-      } else {
-        setViewState("create-bank");
-      }
+    if (viewState === "bank-details") {
+      setViewState("select-bank");
+    } else {
+      setViewState("create-bank");
     }
-    // For buy transactions, no change action needed since we always show create-wallet
   };
 
   const getChangeButtonText = () => {
-    if (tradeType === "sell") {
-      if (viewState === "bank-details")
-        return bankAccounts && bankAccounts.length > 1 ? "Change Bank" : "Back to Selection";
-      return "Add Bank Account";
-    }
-    return "Change";
+    if (viewState === "bank-details")
+      return bankAccounts && bankAccounts.length > 1 ? "Change Bank" : "Back to Selection";
+    return "Add Bank Account";
   };
 
   const showChangeButton = () => {
-    // For buy transactions, no change button needed since we always show create-wallet
-    if (tradeType === "sell") {
-      if (viewState === "select-bank") {
-        return true;
-      }
-      if (viewState === "bank-details") {
-        return bankAccounts && bankAccounts.length > 0;
-      }
-    }
+    if (viewState === "select-bank") return true;
+    if (viewState === "bank-details") return bankAccounts && bankAccounts.length > 0;
     return false;
   };
 
@@ -440,8 +388,8 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, cryptoAccou
                 <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
                   <div className="flex items-center space-x-3">
                     <img
-                      src={selectedBank.bankLogo}
-                      alt={`${selectedBank.bankName} logo`}
+                      src={selectedBank.bank?.logoUrl}
+                      alt={`${selectedBank.bank?.name} logo`}
                       className="w-8 h-8 rounded-full object-cover"
                       onError={(e) => {
                         e.currentTarget.style.display = "none";
@@ -449,7 +397,7 @@ export default function ConfirmBankDetailsModal({ isOpen, tradeType, cryptoAccou
                     />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-blue-900">
-                        Selected: {selectedBank.bankName}
+                        Selected: {selectedBank.bank?.name}
                       </p>
                       <p className="text-xs text-blue-700 truncate">
                         {selectedBank.accountName} -{" "}

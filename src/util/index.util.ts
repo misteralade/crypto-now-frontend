@@ -1,5 +1,6 @@
-import millify from "millify";
-import {LOCAL_STORAGE_KEYS} from "./constants.util.ts";
+import {clearUserSessionStorage} from "./tradeProgress.storage.util.ts";
+import {clearAccessToken} from "./auth-session.util.ts";
+import axios, { AxiosError } from "axios";
 import type {AxiosServerError} from "../types/response.payload.types.ts";
 import {ZodError} from "zod";
 
@@ -10,7 +11,8 @@ export const formatTime = (seconds: number) => {
 }
 
 export const handleLogout = () => {
-  localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN);
+  clearUserSessionStorage();
+  clearAccessToken();
   window.location.href = "/sign-in";
 }
 
@@ -19,11 +21,6 @@ export const formatNumber = (value: string | number) => {
     minimumFractionDigits: 2,
     maximumFractionDigits: 8,
   })
-}
-
-export const convertToMillify = (num: number, precision: number = 2): string => {
-  const safe = Number.isFinite(num) ? num : 0;
-  return millify(safe, { precision });
 }
 
 export const getFileType = (file: File) => {
@@ -56,7 +53,7 @@ export const formatFileSize = (bytes: number) => {
 export const extractErrorMessage = (error: AxiosServerError | ZodError | Error | unknown): string | undefined => {
   // Handle ZodError instances (client-side validation)
   // Handle server-side ZodError
-  if (error && typeof error === 'object' && 'response' in error) {
+  if (axios.isAxiosError(error)) {
     const axiosError = error as AxiosServerError;
     const errorData = axiosError?.response?.data?.error;
     
@@ -91,7 +88,7 @@ export const extractErrorMessage = (error: AxiosServerError | ZodError | Error |
   }
 
   // Handle AxiosError with StandardizedServerError response
-  if (error && typeof error === 'object' && 'response' in error) {
+  if (axios.isAxiosError(error)) {
     const axiosError = error as AxiosServerError;
     const { response } = axiosError;
 
@@ -132,8 +129,8 @@ export const extractErrorMessage = (error: AxiosServerError | ZodError | Error |
       // No response means network error or request was cancelled
       if ('code' in axiosError && typeof axiosError.code === 'string') {
         const code = axiosError.code;
-        if (code === 'ERR_NETWORK') {
-          return 'Network error. Please check your internet connection.';
+        if (code === AxiosError.ERR_NETWORK) {
+          return 'Something went wrong.';
         }
         if (code === 'ECONNABORTED' || code === 'ERR_CANCELED') {
           return 'Request was cancelled or timed out.';
@@ -160,6 +157,14 @@ export const extractErrorMessage = (error: AxiosServerError | ZodError | Error |
   // Fallback for unknown error types
   return 'An unexpected error occurred';
 }
+
+export const isExchangeRateExpiryError = (error: unknown): boolean => {
+  const message = extractErrorMessage(error)?.toLowerCase() ?? "";
+  return (
+    message.includes("exchange rate has expired") ||
+    message.includes("please refresh the rate and try again")
+  );
+};
 
 export const formatCurrency = (amount: number, currency?: string) => {
   return new Intl.NumberFormat('en-US', {

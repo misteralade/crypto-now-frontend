@@ -1,4 +1,4 @@
-import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
+﻿import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {QUERY_KEYS} from "./query.keys.ts";
 import {bankServiceApi} from "../api/bank.api.ts";
 import {toast} from "react-toastify";
@@ -7,6 +7,8 @@ import {ROUTES} from "../util/constants.util.ts";
 import {useMatchRoute} from "@tanstack/react-router";
 import type {AxiosServerError} from "../types/response.payload.types.ts";
 import {extractErrorMessage} from "../util/index.util.ts";
+import {getAnonymousEmail} from "../util/auth-session.util.ts";
+import type { UpdateBankAccountRequestPayload } from "../types/request.payload.types.ts";
 
 export const useBankQuery = () => {
   const queryClient = useQueryClient();
@@ -22,17 +24,18 @@ export const useBankQuery = () => {
       }
 
       return [];
-    }
+    },
+    staleTime: 1000 * 60 * 60 * 24, // 24 hours : bank list rarely changes
+    gcTime: 1000 * 60 * 60 * 24,
   });
 
   const { data: userBankAccounts, isLoading: loadingUserBankAccounts } = useQuery({
     queryKey: [QUERY_KEYS.BANK.USER_BANK_ACCOUNTS],
     queryFn: async () => {
       const rootState = store.getState() as RootState;
-      const userEmail = rootState.user.trade.anonymous.email;
-      const isAnonymous = rootState.user.trade.anonymous.isAnonymousUser;
+      const userEmail = getAnonymousEmail(rootState.user.trade.anonymous.email);
       
-      if (userEmail && isAnonymous) {
+      if (userEmail) {
         const { data, success } = await bankServiceApi.getAnonymousUserBankAccounts(userEmail);
 
         if (success) {
@@ -50,7 +53,14 @@ export const useBankQuery = () => {
 
       return [];
     },
-    enabled: !!(matchRoute({ to: ROUTES.PROFILE }) || matchRoute({ to: ROUTES.TRADE_CRYPTO })),
+    enabled: !!(
+      matchRoute({ to: ROUTES.PROFILE }) ||
+      matchRoute({ to: ROUTES.DASHBOARD }) ||
+      matchRoute({ to: ROUTES.DASHBOARD_WALLETS }) ||
+      matchRoute({ to: ROUTES.DASHBOARD_BUY }) ||
+      matchRoute({ to: ROUTES.DASHBOARD_SELL })
+    ),
+    staleTime: 1000 * 60 * 5, // 5 minutes : bank accounts don't change often
   });
 
   const createUserBankAccountMutation = useMutation({
@@ -58,8 +68,7 @@ export const useBankQuery = () => {
     mutationFn: async () => {
       toast.loading(`Creating bank account...`, { toastId: QUERY_KEYS.BANK.CREATE_USER_BANK_ACCOUNT });
       const rootState = store.getState() as RootState;
-      const userEmail = rootState.user.trade.anonymous.email;
-      const isAnonymous = rootState.user.trade.anonymous.isAnonymousUser;
+      const userEmail = getAnonymousEmail(rootState.user.trade.anonymous.email);
       const bank = rootState.bank;
 
       if (!bank.createBankAccount.bankId || !bank.createBankAccount.accountName || !bank.createBankAccount.accountNumber) {
@@ -74,7 +83,7 @@ export const useBankQuery = () => {
         isDefault: bank.createBankAccount.isDefault,
       }
       
-      if (userEmail && isAnonymous) {
+      if (userEmail) {
         return bankServiceApi.createAnonymousUserBankAccount({...payload, email: userEmail});
       }
 
@@ -84,12 +93,17 @@ export const useBankQuery = () => {
       // Invalidate and refetch user bank accounts after mutation
       if (success) {
         toast.dismiss(QUERY_KEYS.BANK.CREATE_USER_BANK_ACCOUNT);
-        toast.success(message || 'Account created successfully.');
         queryClient.invalidateQueries({
           queryKey: [QUERY_KEYS.BANK.USER_BANK_ACCOUNTS]
         });
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.USER.ONBOARDING_STATUS]
+        });
+      } else {
+        toast.dismiss(QUERY_KEYS.BANK.CREATE_USER_BANK_ACCOUNT);
+        toast.error(message);
       }
-      
+
       return { success, message };
     },
     onError: ( error: AxiosServerError ) => {
@@ -116,10 +130,12 @@ export const useBankQuery = () => {
       // Invalidate and refetch user bank accounts after mutation
       if (success) {
         toast.dismiss();
-        toast.success(message || 'Default bank account updated successfully.');
         queryClient.invalidateQueries({
           queryKey: [QUERY_KEYS.BANK.USER_BANK_ACCOUNTS]
         });
+      } else {
+        toast.dismiss();
+        toast.error(message);
       }
       
       return { success, message };
@@ -130,36 +146,67 @@ export const useBankQuery = () => {
       toast.error(message);
     },
   });
+
+  const updateUserBankAccountMutation = useMutation({
+    mutationKey: [QUERY_KEYS.BANK.UPDATE_USER_BANK_ACCOUNT],
+    mutationFn: async ({ id, payload }: { id: string; payload: UpdateBankAccountRequestPayload }) => {
+      toast.loading("Updating bank account...");
+      return bankServiceApi.updateUserBankAccount(id, payload);
+    },
+    onSuccess: ({ success, message }) => {
+      toast.dismiss();
+      if (success) {
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.BANK.USER_BANK_ACCOUNTS] });
+      } else {
+        toast.error(message);
+      }
+      return { success, message };
+    },
+    onError: (error: AxiosServerError) => {
+      toast.dismiss();
+      toast.error(extractErrorMessage(error) || "Failed to update bank account. Please try again.");
+    },
+  });
   
   const deleteBankAccountMutation = useMutation({
     mutationKey: [QUERY_KEYS.BANK.UPDATE_DEFAULT_BANK_ACCOUNT],
     mutationFn: async () => {
-      toast.loading(`Deleting bank account...`)
       const rootState = store.getState() as RootState;
       const id = rootState.bank.update.selectedBankAccountId;
-      
+
       if (!id) {
         throw new Error(`No bank selected`)
       }
-      
+
+      if ((userBankAccounts?.length ?? 0) <= 1) {
+        throw new Error("LAST_BANK_ACCOUNT");
+      }
+
+      toast.loading(`Deleting bank account...`)
       return await bankServiceApi.deleteBankAccount(id);
     },
     onSuccess: ({ success, message}) => {
       // Invalidate and refetch user bank accounts after mutation
       toast.dismiss();
       if (success) {
-        toast.success(message || 'Bank account successfully deleted.');
         queryClient.invalidateQueries({
           queryKey: [QUERY_KEYS.BANK.USER_BANK_ACCOUNTS]
+        });
+        queryClient.invalidateQueries({
+          queryKey: [QUERY_KEYS.USER.ONBOARDING_STATUS]
         });
       } else {
         toast.error(message)
       }
-      
+
       return { success, message };
     },
     onError: ( error: AxiosServerError ) => {
       toast.dismiss();
+      if (error instanceof Error && error.message === "LAST_BANK_ACCOUNT") {
+        toast.error("You must keep at least one bank account.");
+        return;
+      }
       const message = extractErrorMessage(error) || 'Failed to delete bank account. Please try again.'
       toast.error(message);
     },
@@ -176,6 +223,7 @@ export const useBankQuery = () => {
     createUserBankAccountMutation,
     loadingUserBankAccounts,
     updateDefaultBankAccountMutation,
+    updateUserBankAccountMutation,
     deleteBankAccountMutation,
   };
 };

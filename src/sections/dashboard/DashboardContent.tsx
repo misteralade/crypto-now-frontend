@@ -1,48 +1,957 @@
-import DashboardDataUI from "./DashboardDataUI.tsx";
-import OrderIcon from "../../assets/icons/fluent_tag-multiple-16-filled.svg";
-import EmptyPendingTransaction from "./EmptyPendingTransaction.tsx";
-import {TransactionDashboard} from "./TransactionHistory/TransactionDashboard.tsx";
-import {useDashboardContent} from "../../hooks/components/dashboard/useDashboardContent.ts";
-import type {TransactionSummaryResponseEntity} from "../../types/response.payload.types.ts";
-import { convertToMillify } from "../../util/index.util.ts";
+﻿import { useState, useEffect } from "react";
+import { Link, useNavigate, useRouter } from "@tanstack/react-router";
+import {
+  clearUserSessionStorage,
+  loadTradeProgress,
+  type TradeProgress,
+} from "../../util/tradeProgress.storage.util.ts";
+import { motion } from "framer-motion";
+import {
+  ArrowUpRight,
+  Bell,
+  Check,
+  ChevronRight,
+  Copy,
+} from "lucide-react";
+import { useDashboardContent } from "../../hooks/components/dashboard/useDashboardContent.ts";
+import { useCryptoQuery } from "../../queries/crypto.query.ts";
+import { useUserQuery } from "../../queries/user.query.ts";
+import { useRecentTransactionsQuery } from "../../queries/transaction.query.ts";
+import { useNotificationQuery } from "../../queries/notification.query.ts";
+import type {
+  TransactionResponseEntity,
+  SupportedCryptoOrCurrencyResponse,
+  CustodialWalletResponse,
+} from "../../types/response.payload.types.ts";
+import { formatCurrency } from "../../util/index.util.ts";
+import { formatCompact } from "../../util/asset-precision.ts";
+import {
+  getStatusConfig,
+  getTransactionAmountFiatNGN,
+  TRANSACTION_TYPE,
+} from "../../util/transaction.util.ts";
+import momentClient from "../../lib/moment.ts";
+import { ROUTES } from "../../util/constants.util.ts";
+import ResponsiveText from "../../components/global/ResponsiveText.tsx";
 
-export default function DashboardContent(){
-  const {
-    // Values
-    transactionSummary,
-    loadingTransactionSummary,
-    
-    // Functions
-  } = useDashboardContent()
-  
-  const pendingTransaction = []
-  
-  const orderTotal = !loadingTransactionSummary && transactionSummary ? transactionSummary?.total?.reduce((acc, item) => acc + Number(item.totalUsdAmount), 0) : 0;
-  
+/* ─────────────────────────── helpers ────────────────────────────── */
+const getInitials = (first?: string, last?: string) =>
+  ((first?.[0] ?? "") + (last?.[0] ?? "")).toUpperCase() || "U";
+
+/* ─────────────────────── Live Rate Chip ─────────────────────────── */
+function RateChip({
+  crypto,
+  platformBuyRate,
+  platformSellRate,
+}: {
+  crypto: SupportedCryptoOrCurrencyResponse;
+  platformBuyRate: number;
+  platformSellRate: number;
+}) {
   return (
-    <div className="w-full md:w-[90%] 2xl:max-w-7xl mx-auto md:-mt-10 px-3 md:px-0 space-y-10 ">
-      {/*Overview*/}
-      <div className="grid md:grid-cols-3 gap-5">
-        {!loadingTransactionSummary && transactionSummary && transactionSummary?.summary?.map((item: TransactionSummaryResponseEntity, index) => (
-          <DashboardDataUI
-            key={`${item.cryptoCurrencyId}-${item.cryptoCurrencyImageUrl}-${index}`}
-            imgSrc={item.cryptoCurrencyImageUrl}
-            Data={[
-              { title: `${item.cryptoCurrencySymbol} Bought`, value: `$ ${convertToMillify(Number(item.usdSpentOnBuying))}` },
-              { title: `${item.cryptoCurrencySymbol} Sold`, value: `$ ${convertToMillify(Number(item.usdReceivedFromSelling))}` }
-            ]}
-          />
-        ))}
-        <DashboardDataUI imgSrc={OrderIcon} Data={[
-          { title: 'Total Completed Orders', value: `$ ${convertToMillify(Number(orderTotal))}` }
-        ]} />
+    <div
+      className="flex items-center gap-2 px-3 py-2 rounded-2xl shrink-0"
+      style={{ background: "#F7F7F9", border: "1px solid #EEEEEE" }}
+    >
+      <img
+        src={crypto.logoUrl}
+        alt={crypto.symbol}
+        className="w-6 h-6 rounded-full object-cover shrink-0"
+      />
+      <div>
+        <p
+          className="text-xs font-bold leading-none"
+          style={{ color: "#0E0F0C" }}
+        >
+          {crypto.symbol}
+        </p>
+        <p
+          className="text-[10px] leading-none mt-0.5"
+          style={{ color: "#948EEE" }}
+        >
+          BUY ₦{platformBuyRate.toLocaleString()}/$
+        </p>
+        <p
+          className="text-[10px] leading-none mt-0.5"
+          style={{ color: "#037847" }}
+        >
+          SELL ₦{platformSellRate.toLocaleString()}/$
+        </p>
       </div>
-      
-      {/*Pending Transaction*/}
-      { !loadingTransactionSummary && transactionSummary && transactionSummary?.summary?.length > 0 && <div></div>}
-      {pendingTransaction.length === 0 && <EmptyPendingTransaction />}
-      
-      <TransactionDashboard />
     </div>
-  )
+  );
+}
+
+/* ──────────────────── Recent Order Row ──────────────────────────── */
+function RecentOrderRow({ tx }: { tx: TransactionResponseEntity }) {
+  const navigate = useNavigate();
+  const isBuy = tx.type.toUpperCase() === TRANSACTION_TYPE.BUY;
+  const statusConfig = getStatusConfig(tx.status);
+
+  return (
+    <button
+      className="w-full px-4 py-3 flex items-center gap-3 text-left active:bg-gray-50 transition-colors"
+      onClick={() => navigate({ to: `${ROUTES.TRANSACTION}/${tx.sessionId}` })}
+    >
+      {/* Crypto icon block */}
+      <div
+        className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden"
+        style={{
+          background: isBuy ? "rgba(3,120,71,0.10)" : "rgba(148,142,238,0.12)",
+        }}
+      >
+        <img
+          src={tx.cryptocurrency.logoUrl}
+          alt={tx.cryptocurrency.symbol}
+          className="w-7 h-7 object-contain"
+        />
+      </div>
+
+      {/* Left: name / ref / date */}
+      <div className="flex-1 min-w-0">
+        <p
+          className="text-sm font-semibold leading-snug"
+          style={{ color: "#0E0F0C" }}
+        >
+          {isBuy ? "Buy" : "Sell"} {Number(tx.amountCrypto).toFixed(4).replace(/\.?0+$/, "")} {tx.cryptocurrency.symbol}
+        </p>
+        <p
+          className="text-[11px] leading-snug mt-0.5 truncate"
+          style={{ color: "#9A9A9A" }}
+        >
+          {momentClient.formatToTransactionInitiationDate(tx.createdAt)}
+        </p>
+      </div>
+
+      {/* Right: amount / status */}
+      <div className="text-right shrink-0">
+        <p
+          className="text-sm font-bold leading-snug"
+          style={{ color: isBuy ? "#037847" : "#0E0F0C" }}
+        >
+          ₦{formatCompact(getTransactionAmountFiatNGN(tx), "NGN", 0)}
+        </p>
+        <span
+          className="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full mt-0.5"
+          style={statusConfig.style}
+        >
+          {statusConfig.displayName}
+        </span>
+      </div>
+    </button>
+  );
+}
+
+/* ──────────────────── Wallet Mini Card ──────────────────────── */
+function WalletMiniCard({
+  wallet,
+  crypto,
+}: {
+  wallet: CustodialWalletResponse;
+  crypto?: SupportedCryptoOrCurrencyResponse;
+}) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(wallet.walletAddress);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // ignore
+    }
+  };
+
+  const addr = wallet.walletAddress;
+
+  return (
+    <div className="flex items-center gap-3 px-4 py-3">
+      <div
+        className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 overflow-hidden"
+        style={{ background: "#F0EFFD" }}
+      >
+        {crypto?.logoUrl ? (
+          <img
+            src={crypto.logoUrl}
+            alt={crypto.symbol}
+            className="w-6 h-6 object-contain"
+          />
+        ) : (
+          <span className="text-[10px] font-black" style={{ color: "#948EEE" }}>
+            {crypto?.symbol?.slice(0, 2) ?? "?"}
+          </span>
+        )}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p
+          className="text-sm font-semibold leading-snug truncate"
+          style={{ color: "#0E0F0C" }}
+        >
+          {crypto?.symbol ?? "?"} · {wallet.network}
+        </p>
+        <p
+          className="text-[11px] font-mono leading-snug mt-0.5 truncate"
+          style={{ color: "#9A9A9A" }}
+        >
+          <ResponsiveText text={addr} />
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={handleCopy}
+        className="shrink-0 w-8 h-8 rounded-xl flex items-center justify-center transition-all"
+        style={{
+          background: copied ? "#E8F8F0" : "#F7F7F9",
+          border: `1px solid ${copied ? "#B6E8D0" : "#EEEEEE"}`,
+          color: copied ? "#037847" : "#6B6E6B",
+        }}
+      >
+        {copied ? <Check size={13} /> : <Copy size={13} />}
+      </button>
+    </div>
+  );
+}
+
+/* ═══════════════════════ MAIN DASHBOARD ═════════════════════════ */
+export default function DashboardContent() {
+  const navigate = useNavigate();
+  const router = useRouter();
+  const { transactionSummary, loadingTransactionSummary } =
+    useDashboardContent();
+  const {
+    supportedCryptoCurrencies,
+    loadingSupportedCryptocurrencies,
+    custodialWallets,
+    loadingCustodialWallets,
+  } = useCryptoQuery();
+  const { userProfileData, loadingUserProfile } = useUserQuery();
+  const {
+    recentTransactions,
+    loadingRecentTransactions,
+  } = useRecentTransactionsQuery();
+  const { hasNewNotifications } = useNotificationQuery();
+
+  const firstName = userProfileData?.profile?.firstName ?? "";
+  const lastName = userProfileData?.profile?.lastName ?? "";
+  void getInitials(firstName, lastName);
+
+  const bought = transactionSummary?.total
+    ? transactionSummary.total.reduce((sum, item) => sum + Number(item.fiatSpentOnBuying || 0), 0)
+    : 0;
+  const sold = transactionSummary?.total
+    ? transactionSummary.total.reduce((sum, item) => sum + Number(item.fiatReceivedFromSelling || 0), 0)
+    : 0;
+  const totalFiat = bought + sold;
+  const totalTransactionsCount = recentTransactions?.count ?? 0;
+
+  const recentOrders = recentTransactions?.transactions?.slice(0, 5) ?? [];
+
+  const cryptoMap = new Map(
+    (supportedCryptoCurrencies ?? []).map((c) => [c.id, c]),
+  );
+  const recentWallets = (custodialWallets ?? []).slice(0, 3);
+  void loadingCustodialWallets;
+  void recentWallets;
+  void WalletMiniCard;
+
+  const goTrade = (option: "buy" | "sell") => {
+    // Starting a new trade from these quick actions should never resume a
+    // stale in-progress one : any earlier trade is already recorded
+    // server-side, so the cache has nothing left to contribute here.
+    clearUserSessionStorage();
+    navigate({ to: option === "buy" ? ROUTES.DASHBOARD_BUY : ROUTES.DASHBOARD_SELL });
+  };
+
+  // Buy/Sell are the two highest-traffic destinations from this screen, but
+  // the quick-action buttons below fire navigate() directly rather than
+  // rendering a <Link>, so they never benefit from the router's hover/touch
+  // "intent" preload : on mobile there's no hover at all, so the tap and the
+  // chunk fetch would otherwise race each other every time. Preloading both
+  // as soon as this screen mounts means the chunk is normally already in
+  // memory by the time either button is pressed.
+  useEffect(() => {
+    void router.preloadRoute({ to: ROUTES.DASHBOARD_BUY });
+    void router.preloadRoute({ to: ROUTES.DASHBOARD_SELL });
+  }, [router]);
+
+  // Check for in-progress trade to offer "Continue" banner
+  const [pendingTrade, setPendingTrade] = useState<TradeProgress | null>(null);
+  useEffect(() => {
+    const saved = loadTradeProgress();
+    if (
+      saved &&
+      typeof saved.step === "number" &&
+      saved.step >= 1 &&
+      saved.step <= 2 &&
+      saved.activeTab
+    ) {
+      setPendingTrade(saved);
+    } else {
+      setPendingTrade(null);
+    }
+  }, []);
+
+  const handleContinueTrade = () => {
+    if (pendingTrade?.activeTab) {
+      // If a transaction was already created (e.g. a BUY receipt was
+      // submitted), route with its sessionId so useTradeStepDisplay's
+      // restoration effect fetches the live transaction from the server and
+      // drops the user straight into Step 2's monitoring/waiting view :
+      // rather than the "resume" flag's local-only path, which always
+      // restarts BUY at Step 1 for a fresh rate since buyRateInfo is never
+      // persisted.
+      navigate({
+        to: pendingTrade.activeTab === "buy" ? ROUTES.DASHBOARD_BUY : ROUTES.DASHBOARD_SELL,
+        search: pendingTrade.transactionSessionId
+          ? { sessionId: pendingTrade.transactionSessionId }
+          : { resume: true },
+      });
+    }
+  };
+
+  /* ─── Skeleton loaders ─── */
+  const Skel = ({ w, h = 4 }: { w: string; h?: number }) => (
+    <div
+      className={`animate-pulse rounded bg-white/25`}
+      style={{ width: w, height: `${h * 4}px` }}
+    />
+  );
+  const SkelDark = ({ w, h = 4 }: { w: string; h?: number }) => (
+    <div
+      className={`animate-pulse rounded`}
+      style={{ width: w, height: `${h * 4}px`, background: "#EEEEEE" }}
+    />
+  );
+
+  return (
+    <div style={{ background: "#FFFFFF", minHeight: "100dvh" }}>
+      {/* ═══════════════════════════════════════════
+          TOP BAR : greeting + bell (mobile only)
+      ════════════════════════════════════════════ */}
+      <div className="lg:hidden px-5 pt-6 pb-3 flex items-start justify-between">
+        <div>
+          {loadingUserProfile ? (
+            <SkelDark w="140px" h={6} />
+          ) : (
+            <h2
+              className="text-[22px] font-extrabold leading-tight mt-0.5"
+              style={{
+                color: "#0E0F0C",
+                fontFamily: "'DM Sans', sans-serif",
+                letterSpacing: "-0.02em",
+              }}
+            >
+              {firstName || "Welcome"}{" "}
+              <span style={{ color: "#948EEE" }}>{lastName}</span>
+            </h2>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={() => navigate({ to: ROUTES.NOTIFICATIONS })}
+          aria-label="View notifications"
+          className="relative mt-1 w-10 h-10 rounded-full flex items-center justify-center"
+          style={{ background: "#F7F7F9" }}
+        >
+          <Bell size={18} style={{ color: "#0E0F0C" }} />
+          {hasNewNotifications?.hasNew ? (
+            <span
+              className="absolute top-1.5 right-1.5 min-w-[8px] h-2 px-0.5 rounded-full bg-[#EB5757] border-2 border-white"
+              aria-hidden
+            />
+          ) : null}
+        </button>
+      </div>
+
+      {/* ═══════════════════════════════════════════
+          HERO PURPLE CARD : floating with side margin
+      ════════════════════════════════════════════ */}
+      <div className="lg:hidden px-5 mb-6">
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          className="relative overflow-hidden"
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(255,255,255,0.12), transparent 45%), linear-gradient(145deg, #2D1CB0 0%, #4A2DBF 35%, #6B45D0 65%, #3A1FA8 100%) padding-box, linear-gradient(145deg, rgba(255,255,255,0.65), rgba(255,255,255,0.1) 65%, rgba(255,255,255,0.25)) border-box",
+            border: "1px solid transparent",
+            borderRadius: "22px",
+            padding: "22px 20px 18px",
+          }}
+        >
+          {/* Volume */}
+          <p
+            className="text-[10px] font-bold tracking-[0.14em] uppercase mb-1"
+            style={{ color: "rgba(255,255,255,0.55)" }}
+          >
+            TOTAL VOLUME TRADED
+          </p>
+
+          {loadingTransactionSummary ? (
+            <Skel w="180px" h={9} />
+          ) : (
+            <h3
+              className="text-[36px] font-black leading-none text-white"
+              style={{
+                fontFamily: "'DM Sans', sans-serif",
+                letterSpacing: "-0.03em",
+              }}
+            >
+              ₦{formatCompact(totalFiat, "NGN", 0)}
+            </h3>
+          )}
+          <p
+            className="text-[11px] mt-1 mb-4"
+            style={{ color: "rgba(255,255,255,0.45)" }}
+          >
+            All transactions · Lifetime
+          </p>
+
+          {/* Stat sub-chips */}
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              {
+                label: "BOUGHT",
+                value: loadingTransactionSummary
+                  ? null
+                  : `₦${formatCompact(bought, "NGN", 0)}`,
+              },
+              {
+                label: "SOLD",
+                value: loadingTransactionSummary
+                  ? null
+                  : `₦${formatCompact(sold, "NGN", 0)}`,
+              },
+              {
+                label: "TOTAL",
+                value: loadingRecentTransactions
+                  ? null
+                  : totalTransactionsCount,
+              },
+            ].map(({ label, value }) => (
+              <div
+                key={label}
+                className="px-3 py-2.5 rounded-2xl"
+                style={{ background: "rgba(255,255,255,0.10)", border: "1px solid rgba(255,255,255,0.08)" }}
+              >
+                <p
+                  className="text-[9px] font-bold tracking-widest uppercase"
+                  style={{ color: "rgba(255,255,255,0.5)" }}
+                >
+                  {label}
+                </p>
+                {value === null ? (
+                  <Skel w="48px" h={4} />
+                ) : (
+                  <p className="text-sm font-extrabold text-white mt-0.5 truncate">
+                    {value}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      </div>
+
+      {/* DESKTOP hero (simplified horizontal layout) */}
+      <div className="hidden lg:block mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative overflow-hidden rounded-3xl p-7"
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(255,255,255,0.12), transparent 45%), linear-gradient(145deg, #2D1CB0, #4A2DBF 40%, #6B45D0 70%, #3A1FA8) padding-box, linear-gradient(145deg, rgba(255,255,255,0.65), rgba(255,255,255,0.1) 65%, rgba(255,255,255,0.25)) border-box",
+            border: "1px solid transparent",
+          }}
+        >
+          <div
+            className="absolute -top-10 -right-10 w-56 h-56 rounded-full pointer-events-none"
+            style={{ background: "rgba(255,255,255,0.05)" }}
+          />
+          <div className="flex items-end justify-between gap-8">
+            <div>
+              <p
+                className="text-[10px] font-bold tracking-widest uppercase mb-2"
+                style={{ color: "rgba(255,255,255,0.5)" }}
+              >
+                TOTAL VOLUME TRADED
+              </p>
+              {loadingTransactionSummary ? (
+                <Skel w="200px" h={10} />
+              ) : (
+                <h3
+                  className="text-5xl font-black text-white"
+                  style={{ letterSpacing: "-0.03em" }}
+                >
+                  ₦{formatCompact(totalFiat, "NGN", 0)}
+                </h3>
+              )}
+              <p
+                className="text-xs mt-1"
+                style={{ color: "rgba(255,255,255,0.4)" }}
+              >
+                All transactions · Lifetime
+              </p>
+            </div>
+            <div className="flex gap-3 shrink-0">
+              {[
+                { l: "BOUGHT", v: `₦${formatCompact(bought, "NGN", 0)}`, loading: loadingTransactionSummary },
+                { l: "SOLD", v: `₦${formatCompact(sold, "NGN", 0)}`, loading: loadingTransactionSummary },
+                { l: "TOTAL", v: totalTransactionsCount, loading: loadingRecentTransactions },
+              ].map(({ l, v, loading }) => (
+                <div
+                  key={l}
+                  className="px-4 py-3 rounded-2xl text-center min-w-[80px]"
+                  style={{ background: "rgba(255,255,255,0.10)", border: "1px solid rgba(255,255,255,0.08)" }}
+                >
+                  <p
+                    className="text-[9px] font-bold tracking-widest uppercase"
+                    style={{ color: "rgba(255,255,255,0.5)" }}
+                  >
+                    {l}
+                  </p>
+                  {loading ? (
+                    <Skel w="52px" h={5} />
+                  ) : (
+                    <p className="text-base font-extrabold text-white mt-1">
+                      {v}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* ═══════════════════════════════════════════
+          BODY CONTENT
+      ════════════════════════════════════════════ */}
+      <div className="px-5 lg:px-0 space-y-7">
+        {/* CONTINUE TRADE BANNER */}
+        {pendingTrade &&
+          (() => {
+            const isBuy = pendingTrade.activeTab !== "sell";
+            const token = pendingTrade.selectedTokenId
+              ? cryptoMap.get(pendingTrade.selectedTokenId)
+              : undefined;
+            const fiatAmt = pendingTrade.amountToBuy
+              ? formatCurrency(Number(pendingTrade.amountToBuy))
+              : null;
+            const cryptoAmt = pendingTrade.numberOfToken
+              ? Number(pendingTrade.numberOfToken)
+              : null;
+            // Once a receipt/deposit has already been submitted, there's
+            // nothing left to "complete" : the user is just checking status.
+            const alreadySubmitted = !!pendingTrade.transactionSessionId;
+            const action = alreadySubmitted
+              ? "Check Status"
+              : isBuy
+                ? "Complete Buying"
+                : "Complete Selling";
+            // e.g. "Complete Buying ₦50,000 of USDT" or "Check Status for USDT"
+            const detail = token
+              ? alreadySubmitted
+                ? `for ${token.symbol}`
+                : isBuy && fiatAmt
+                  ? `${fiatAmt} of ${token.symbol}`
+                  : !isBuy && cryptoAmt
+                    ? `${cryptoAmt} ${token.symbol}`
+                    : token.symbol
+              : null;
+
+            return (
+              <button
+                type="button"
+                onClick={handleContinueTrade}
+                className="w-full flex items-center justify-between gap-3 px-4 py-3.5 rounded-2xl transition-all active:scale-[0.98] cursor-pointer"
+                style={{
+                  background:
+                    "linear-gradient(135deg, #948EEE 0%, #575AE5 100%)",
+                  border: "none",
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 overflow-hidden"
+                    style={{ background: "rgba(255,255,255,0.2)" }}
+                  >
+                    {token?.logoUrl ? (
+                      <img
+                        src={token.logoUrl}
+                        alt={token.symbol}
+                        className="w-6 h-6 object-contain"
+                      />
+                    ) : (
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="white"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <polyline points="9 18 15 12 9 6" />
+                      </svg>
+                    )}
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-bold text-white leading-tight">
+                      {action}
+                      {detail ? ` ${detail}` : ""}
+                    </p>
+                    <p className="text-[11px] text-white/70 leading-tight mt-0.5">
+                      {pendingTrade.transactionSessionId
+                        ? "Payment submitted · Tap to view status"
+                        : isBuy
+                          ? "Get a fresh rate & complete your order"
+                          : `Step ${pendingTrade.step} of 3 · Tap to resume`}
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight size={18} className="text-white/80 shrink-0" />
+              </button>
+            );
+          })()}
+
+        {/* QUICK ACTIONS */}
+        <section>
+          <p
+            className="text-[11px] font-extrabold tracking-[0.12em] uppercase mb-3"
+            style={{ color: "#9A9A9A" }}
+          >
+            Quick Actions
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            {/* Buy Crypto */}
+            <button
+              onClick={() => goTrade("buy")}
+              className="flex items-center gap-2 px-3 py-3 rounded-3xl text-left transition-all active:scale-[0.97] cursor-pointer"
+              style={{
+                background: "#F0EFFD",
+                border: "1px solid rgba(148,142,238,0.2)",
+              }}
+            >
+              <div
+                className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: "#948EEE" }}
+              >
+                {/* Down arrow icon */}
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="white"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <polyline points="19 12 12 19 5 12" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-bold" style={{ color: "#0E0F0C" }}>
+                  Buy Crypto
+                </p>
+                <p className="text-[11px]" style={{ color: "#9A9A9A" }}>
+                  Pay NGN, get crypto
+                </p>
+              </div>
+            </button>
+
+            {/* Sell Crypto */}
+            <button
+              onClick={() => goTrade("sell")}
+              className="flex items-center gap-2 px-3 py-3 rounded-3xl text-left transition-all active:scale-[0.97] cursor-pointer"
+              style={{
+                background: "#FFF4F0",
+                border: "1px solid rgba(247,166,0,0.2)",
+              }}
+            >
+              <div
+                className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: "#F7A600" }}
+              >
+                {/* Up arrow icon */}
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="white"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="12" y1="19" x2="12" y2="5" />
+                  <polyline points="5 12 12 5 19 12" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-bold" style={{ color: "#0E0F0C" }}>
+                  Sell Crypto
+                </p>
+                <p className="text-[11px]" style={{ color: "#9A9A9A" }}>
+                  Send crypto, get NGN
+                </p>
+              </div>
+            </button>
+          </div>
+        </section>
+
+        {/* RATES */}
+        {!loadingSupportedCryptocurrencies &&
+          supportedCryptoCurrencies &&
+          supportedCryptoCurrencies.length > 0 && (
+            <section>
+              <p
+                className="text-[11px] font-extrabold tracking-[0.12em] uppercase mb-3"
+                style={{ color: "#9A9A9A" }}
+              >
+                Rates
+              </p>
+              <div
+                className="flex gap-2 overflow-x-auto pb-1"
+                style={{ scrollbarWidth: "none" }}
+              >
+                {supportedCryptoCurrencies.map((c) => (
+                  <RateChip
+                    key={c.id}
+                    crypto={c}
+                    platformBuyRate={Number(c.buyRate)}
+                    platformSellRate={Number(c.sellRate)}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
+        {/* DEPOSIT WALLETS */}
+        {/* DEPOSIT WALLETS
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <p
+              className="text-[11px] font-extrabold tracking-[0.12em] uppercase"
+              style={{ color: "#9A9A9A" }}
+            >
+              Deposit Wallets
+            </p>
+            <Link
+              to={ROUTES.DASHBOARD_WALLETS}
+              className="flex items-center gap-1 text-xs font-semibold"
+              style={{ color: "#948EEE" }}
+            >
+              View all <ArrowUpRight size={12} />
+            </Link>
+          </div>
+
+          {loadingCustodialWallets ? (
+            <div
+              className="rounded-3xl overflow-hidden"
+              style={{ border: "1px solid #F0F0F0" }}
+            >
+              {[...Array(2)].map((_, i) => (
+                <div key={i} className="px-4 py-3 flex items-center gap-3">
+                  <div
+                    className="w-9 h-9 rounded-xl shrink-0 animate-pulse"
+                    style={{ background: "#F0F0F0" }}
+                  />
+                  <div className="flex-1 space-y-2">
+                    <SkelDark w="100px" h={3} />
+                    <SkelDark w="140px" h={3} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : recentWallets.length === 0 ? (
+            <Link to={ROUTES.DASHBOARD_WALLETS}>
+              <div
+                className="rounded-3xl px-6 py-6 flex items-center gap-3"
+                style={{ border: "1px dashed #EEEEEE" }}
+              >
+                <div
+                  className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: "#F0EFFD" }}
+                >
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#948EEE"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M20 12V22H4V12" />
+                    <path d="M22 7H2v5h20V7z" />
+                    <path d="M12 22V7" />
+                    <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" />
+                    <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
+                  </svg>
+                </div>
+                <div>
+                  <p
+                    className="text-sm font-semibold"
+                    style={{ color: "#0E0F0C" }}
+                  >
+                    Set up deposit wallets
+                  </p>
+                  <p className="text-xs" style={{ color: "#9A9A9A" }}>
+                    Receive crypto and get NGN automatically
+                  </p>
+                </div>
+                <ChevronRight
+                  size={16}
+                  style={{ color: "#9A9A9A", marginLeft: "auto" }}
+                />
+              </div>
+            </Link>
+          ) : (
+            <div
+              className="rounded-3xl overflow-hidden"
+              style={{ border: "1px solid #F0F0F0" }}
+            >
+              {recentWallets.map((w, i) => (
+                <div key={w.id}>
+                  <WalletMiniCard
+                    wallet={w}
+                    crypto={cryptoMap.get(w.cryptocurrencyId)}
+                  />
+                  {i < recentWallets.length - 1 && (
+                    <div
+                      style={{
+                        height: "1px",
+                        background: "#F7F7F9",
+                        margin: "0 16px",
+                      }}
+                    />
+                  )}
+                </div>
+              ))}
+              <div style={{ borderTop: "1px solid #F7F7F9" }}>
+                <Link
+                  to={ROUTES.DASHBOARD_WALLETS}
+                  className="flex items-center justify-center gap-1.5 py-3.5 text-sm font-semibold w-full"
+                  style={{ color: "#948EEE" }}
+                >
+                  View all wallets <ChevronRight size={14} />
+                </Link>
+              </div>
+            </div>
+          )}
+        </section>
+        */}
+
+        {/* RECENT ORDERS */}
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <p
+              className="text-[11px] font-extrabold tracking-[0.12em] uppercase"
+              style={{ color: "#9A9A9A" }}
+            >
+              Recent Orders
+            </p>
+            <Link
+              to={ROUTES.TRANSACTION}
+              className="flex items-center gap-1 text-xs font-semibold"
+              style={{ color: "#948EEE" }}
+            >
+              See all <ArrowUpRight size={12} />
+            </Link>
+          </div>
+
+          {loadingRecentTransactions ? (
+            <div
+              className="rounded-3xl overflow-hidden"
+              style={{ border: "1px solid #F0F0F0" }}
+            >
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="px-4 py-3 flex items-center gap-3">
+                  <div
+                    className="w-11 h-11 rounded-2xl shrink-0 animate-pulse"
+                    style={{ background: "#F0F0F0" }}
+                  />
+                  <div className="flex-1 space-y-2">
+                    <SkelDark w="120px" h={3} />
+                    <SkelDark w="80px" h={3} />
+                  </div>
+                  <div className="text-right space-y-2">
+                    <SkelDark w="60px" h={3} />
+                    <SkelDark w="44px" h={3} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : recentOrders.length === 0 ? (
+            <div
+              className="rounded-3xl px-6 py-10 flex flex-col items-center gap-3 text-center"
+              style={{ border: "1px solid #F0F0F0" }}
+            >
+              <div
+                className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                style={{ background: "#F0EFFD" }}
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#948EEE"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                </svg>
+              </div>
+              <p className="text-sm font-semibold" style={{ color: "#0E0F0C" }}>
+                No transactions yet
+              </p>
+              <p className="text-xs" style={{ color: "#9A9A9A" }}>
+                Start by buying or selling crypto
+              </p>
+            </div>
+          ) : (
+            <div
+              className="rounded-3xl overflow-hidden"
+              style={{ border: "1px solid #F0F0F0" }}
+            >
+              {recentOrders.map((tx, i) => (
+                <div key={tx.id}>
+                  <RecentOrderRow tx={tx} />
+                  {i < recentOrders.length - 1 && (
+                    <div
+                      style={{
+                        height: "1px",
+                        background: "#F7F7F9",
+                        margin: "0 16px",
+                      }}
+                    />
+                  )}
+                </div>
+              ))}
+
+              {/* "View all history" footer */}
+              <div style={{ borderTop: "1px solid #F7F7F9" }}>
+                <Link
+                  to={ROUTES.TRANSACTION}
+                  className="flex items-center justify-center gap-1.5 py-3.5 text-sm font-semibold w-full"
+                  style={{ color: "#948EEE" }}
+                >
+                  View all transactions <ChevronRight size={14} />
+                </Link>
+              </div>
+            </div>
+          )}
+        </section>
+      </div>
+    </div>
+  );
 }

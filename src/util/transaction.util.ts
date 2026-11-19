@@ -1,217 +1,429 @@
-// Status categories for semantic grouping
-import type {TransactionStatus} from "../types/request.payload.types.ts";
+﻿// Status categories for semantic grouping
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error
-export enum StatusCategory {
-  INITIAL = 'initial',
-  IN_PROGRESS = 'in_progress',
-  AWAITING = 'awaiting',
-  SUCCESS = 'success',
-  FAILED = 'failed',
-  CANCELLED = 'cancelled',
-}
+export const TRANSACTION_STATUS = {
+  INITIATED: "INITIATED",
+  AWAITING_PAYMENT: "AWAITING_PAYMENT",
+  IN_REVIEW: "IN_REVIEW",
+  PROCESSING: "PROCESSING",
+  AWAITING_CRYPTO: "AWAITING_CRYPTO",
+  COMPLETED: "COMPLETED",
+  FAILED: "FAILED",
+  EXPIRED: "EXPIRED",
+  CANCELLED: "CANCELLED",
+  DISPUTED: "DISPUTED",
+  REFUNDED: "REFUNDED",
+  DEPOSIT_DETECTED: "DEPOSIT_DETECTED",
+  PENDING_CONFIRMATION: "PENDING_CONFIRMATION",
+  DEPOSIT_PENDING_MINIMUM: "DEPOSIT_PENDING_MINIMUM",
+  DEPOSIT_CONFIRMED: "DEPOSIT_CONFIRMED",
+  NO_OWNER: "NO_OWNER",
+  PAYOUT_INITIATED: "PAYOUT_INITIATED",
+  PENDING_PAYOUT: "PENDING_PAYOUT",
+  PAYOUT_FAILED: "PAYOUT_FAILED",
+} as const;
 
-// Status configuration with colors and metadata
-const statusConfig: Record<TransactionStatus, {
-  category: StatusCategory;
+export type TransactionStatusType =
+  (typeof TRANSACTION_STATUS)[keyof typeof TRANSACTION_STATUS];
+
+export const TRANSACTION_TYPE = {
+  BUY: "BUY",
+  SELL: "SELL",
+} as const;
+
+export type TransactionTypeValue =
+  (typeof TRANSACTION_TYPE)[keyof typeof TRANSACTION_TYPE];
+
+/**
+ * User-facing high-level transaction status categories.
+ */
+export const TRANSACTION_STATUS_CATEGORY = {
+  PENDING: "PENDING",
+  IN_REVIEW: "IN_REVIEW",
+  ACTION_NEEDED: "ACTION_NEEDED",
+  SUCCESSFUL: "SUCCESSFUL",
+  REFUNDED: "REFUNDED",
+  DISPUTED: "DISPUTED",
+  EXPIRED: "EXPIRED",
+  CANCELLED: "CANCELLED",
+  FAILED: "FAILED",
+} as const;
+
+export type TransactionStatusCategory =
+  (typeof TRANSACTION_STATUS_CATEGORY)[keyof typeof TRANSACTION_STATUS_CATEGORY];
+
+// Backward-compatibility alias
+export const StatusCategory = TRANSACTION_STATUS_CATEGORY;
+
+export interface TransactionStatusDisplayConfig {
+  category: TransactionStatusCategory;
+  displayName: string;
+  title: string;
+  message: string;
   bgColor: string;
   textColor: string;
   dotColor: string;
-  displayName: string;
-  description: string;
+  borderColor: string;
+  style: {
+    background: string;
+    color: string;
+    border: string;
+  };
   isActionable: boolean;
-}> = {
-  // Initial statuses
-  INITIATED: {
-    category: StatusCategory.INITIAL,
-    bgColor: 'bg-blue-50',
-    textColor: 'text-blue-700',
-    dotColor: 'bg-blue-500',
-    displayName: 'Initiated',
-    description: 'Transaction has been started',
-    isActionable: false,
-  },
+}
 
-  // In progress statuses
-  PENDING: {
-    category: StatusCategory.IN_PROGRESS,
-    bgColor: 'bg-amber-50',
-    textColor: 'text-amber-700',
-    dotColor: 'bg-amber-500',
-    displayName: 'Pending',
-    description: 'Transaction is being processed',
-    isActionable: false,
+const DEFAULT_STATUS_CONFIG: TransactionStatusDisplayConfig = {
+  category: TRANSACTION_STATUS_CATEGORY.PENDING,
+  displayName: "Pending",
+  title: "Transaction Pending",
+  message: "Your transaction is currently being processed.",
+  bgColor: "bg-blue-50",
+  textColor: "text-blue-700",
+  dotColor: "bg-blue-500",
+  borderColor: "border-blue-200",
+  style: {
+    background: "#F0EFFD",
+    color: "#575AE5",
+    border: "#C7C4F5",
   },
-  PROCESSING: {
-    category: StatusCategory.IN_PROGRESS,
-    bgColor: 'bg-indigo-50',
-    textColor: 'text-indigo-700',
-    dotColor: 'bg-indigo-500',
-    displayName: 'Processing',
-    description: 'Transaction is currently being processed',
-    isActionable: false,
-  },
-  PAYMENT_CONFIRMED: {
-    category: StatusCategory.IN_PROGRESS,
-    bgColor: 'bg-cyan-50',
-    textColor: 'text-cyan-700',
-    dotColor: 'bg-cyan-500',
-    displayName: 'Payment Confirmed',
-    description: 'Payment has been confirmed',
-    isActionable: false,
-  },
-  PAYMENT_ACCOUNT_CONFIRMED: {
-    category: StatusCategory.IN_PROGRESS,
-    bgColor: 'bg-teal-50',
-    textColor: 'text-teal-700',
-    dotColor: 'bg-teal-500',
-    displayName: 'Account Confirmed',
-    description: 'Payment account has been confirmed',
-    isActionable: false,
-  },
-  CRYPTO_SENT: {
-    category: StatusCategory.IN_PROGRESS,
-    bgColor: 'bg-purple-50',
-    textColor: 'text-purple-700',
-    dotColor: 'bg-purple-500',
-    displayName: 'Crypto Sent',
-    description: 'Cryptocurrency has been sent',
-    isActionable: false,
-  },
-  CRYPTO_CONFIRMED: {
-    category: StatusCategory.IN_PROGRESS,
-    bgColor: 'bg-violet-50',
-    textColor: 'text-violet-700',
-    dotColor: 'bg-violet-500',
-    displayName: 'Crypto Confirmed',
-    description: 'Cryptocurrency transaction confirmed',
-    isActionable: false,
-  },
+  isActionable: false,
+};
 
-  // Awaiting statuses
-  AWAITING_PAYMENT: {
-    category: StatusCategory.AWAITING,
-    bgColor: 'bg-yellow-50',
-    textColor: 'text-yellow-700',
-    dotColor: 'bg-yellow-500',
-    displayName: 'Awaiting Wallet Details',
-    description: 'Waiting for wallet details to be provided',
-    isActionable: true,
-  },
-  PAYMENT_RECEIVED: {
-    category: StatusCategory.AWAITING,
-    bgColor: 'bg-lime-50',
-    textColor: 'text-lime-700',
-    dotColor: 'bg-lime-500',
-    displayName: 'Payment Received',
-    description: 'Payment has been received, awaiting confirmation',
+export const TRANSACTION_STATUS_CONFIG: Record<
+  TransactionStatusType,
+  TransactionStatusDisplayConfig
+> = {
+  [TRANSACTION_STATUS.INITIATED]: {
+    category: TRANSACTION_STATUS_CATEGORY.PENDING,
+    displayName: "Pending",
+    title: "Transaction Pending",
+    message: "Your transaction has been initiated.",
+    bgColor: "bg-blue-50",
+    textColor: "text-blue-700",
+    dotColor: "bg-blue-500",
+    borderColor: "border-blue-200",
+    style: {
+      background: "#F0EFFD",
+      color: "#575AE5",
+      border: "#C7C4F5",
+    },
     isActionable: false,
   },
-  AWAITING_CRYPTO: {
-    category: StatusCategory.AWAITING,
-    bgColor: 'bg-orange-50',
-    textColor: 'text-orange-700',
-    dotColor: 'bg-orange-500',
-    displayName: 'Awaiting Bank Details',
-    description: 'Waiting for bank details to be provided',
+  [TRANSACTION_STATUS.AWAITING_PAYMENT]: {
+    category: TRANSACTION_STATUS_CATEGORY.PENDING,
+    displayName: "Pending",
+    title: "Awaiting Payment",
+    message: "Please complete payment using the provided details and upload your payment receipt.",
+    bgColor: "bg-yellow-50",
+    textColor: "text-yellow-700",
+    dotColor: "bg-yellow-500",
+    borderColor: "border-yellow-200",
+    style: {
+      background: "#FFFBF0",
+      color: "#B45309",
+      border: "#FDE68A",
+    },
+    isActionable: true,
+  },
+  [TRANSACTION_STATUS.IN_REVIEW]: {
+    category: TRANSACTION_STATUS_CATEGORY.IN_REVIEW,
+    displayName: "In Review",
+    title: "Payment Under Review",
+    message: "Your payment receipt has been submitted and is currently being verified by our team.",
+    bgColor: "bg-amber-50",
+    textColor: "text-amber-700",
+    dotColor: "bg-amber-500",
+    borderColor: "border-amber-200",
+    style: {
+      background: "#FFF7ED",
+      color: "#C2410C",
+      border: "#FED7AA",
+    },
     isActionable: false,
   },
-  CRYPTO_RECEIVED: {
-    category: StatusCategory.AWAITING,
-    bgColor: 'bg-emerald-50',
-    textColor: 'text-emerald-700',
-    dotColor: 'bg-emerald-500',
-    displayName: 'Crypto Received',
-    description: 'Cryptocurrency received, awaiting confirmation',
+  [TRANSACTION_STATUS.PROCESSING]: {
+    category: TRANSACTION_STATUS_CATEGORY.PENDING,
+    displayName: "Pending",
+    title: "Processing Transaction",
+    message: "Your transaction is being processed.",
+    bgColor: "bg-blue-50",
+    textColor: "text-blue-700",
+    dotColor: "bg-blue-500",
+    borderColor: "border-blue-200",
+    style: {
+      background: "#F0EFFD",
+      color: "#575AE5",
+      border: "#C7C4F5",
+    },
     isActionable: false,
   },
-
-  // Success statuses
-  COMPLETED: {
-    category: StatusCategory.SUCCESS,
-    bgColor: 'bg-green-50',
-    textColor: 'text-green-700',
-    dotColor: 'bg-green-600',
-    displayName: 'Completed',
-    description: 'Transaction completed successfully',
+  [TRANSACTION_STATUS.AWAITING_CRYPTO]: {
+    category: TRANSACTION_STATUS_CATEGORY.PENDING,
+    displayName: "Pending",
+    title: "Awaiting Crypto Transfer",
+    message: "Waiting to detect your crypto deposit on the network.",
+    bgColor: "bg-blue-50",
+    textColor: "text-blue-700",
+    dotColor: "bg-blue-500",
+    borderColor: "border-blue-200",
+    style: {
+      background: "#F0EFFD",
+      color: "#575AE5",
+      border: "#C7C4F5",
+    },
     isActionable: true,
   },
-  REFUNDED: {
-    category: StatusCategory.SUCCESS,
-    bgColor: 'bg-green-50',
-    textColor: 'text-green-700',
-    dotColor: 'bg-green-500',
-    displayName: 'Refunded',
-    description: 'Transaction has been refunded',
+  [TRANSACTION_STATUS.DEPOSIT_DETECTED]: {
+    category: TRANSACTION_STATUS_CATEGORY.PENDING,
+    displayName: "Pending",
+    title: "Deposit Detected",
+    message: "We detected your deposit on the blockchain. Waiting for network confirmations.",
+    bgColor: "bg-blue-50",
+    textColor: "text-blue-700",
+    dotColor: "bg-blue-500",
+    borderColor: "border-blue-200",
+    style: {
+      background: "#F0EFFD",
+      color: "#575AE5",
+      border: "#C7C4F5",
+    },
+    isActionable: false,
+  },
+  [TRANSACTION_STATUS.PENDING_CONFIRMATION]: {
+    category: TRANSACTION_STATUS_CATEGORY.PENDING,
+    displayName: "Pending",
+    title: "Pending Confirmation",
+    message: "Waiting for the required network block confirmations.",
+    bgColor: "bg-blue-50",
+    textColor: "text-blue-700",
+    dotColor: "bg-blue-500",
+    borderColor: "border-blue-200",
+    style: {
+      background: "#F0EFFD",
+      color: "#575AE5",
+      border: "#C7C4F5",
+    },
+    isActionable: false,
+  },
+  [TRANSACTION_STATUS.DEPOSIT_PENDING_MINIMUM]: {
+    category: TRANSACTION_STATUS_CATEGORY.ACTION_NEEDED,
+    displayName: "Action Needed",
+    title: "Deposit Below Minimum",
+    message: "We received your deposit, but it is below the minimum required amount. Send the remaining amount to proceed automatically.",
+    bgColor: "bg-orange-50",
+    textColor: "text-orange-700",
+    dotColor: "bg-orange-500",
+    borderColor: "border-orange-200",
+    style: {
+      background: "#FFF7ED",
+      color: "#EA580C",
+      border: "#FED7AA",
+    },
     isActionable: true,
   },
-
-  // Failed statuses
-  FAILED: {
-    category: StatusCategory.FAILED,
-    bgColor: 'bg-red-50',
-    textColor: 'text-red-700',
-    dotColor: 'bg-red-600',
-    displayName: 'Failed',
-    description: 'Transaction failed',
+  [TRANSACTION_STATUS.DEPOSIT_CONFIRMED]: {
+    category: TRANSACTION_STATUS_CATEGORY.PENDING,
+    displayName: "Pending",
+    title: "Deposit Confirmed",
+    message: "Your crypto deposit has been confirmed. Processing your bank payout.",
+    bgColor: "bg-blue-50",
+    textColor: "text-blue-700",
+    dotColor: "bg-blue-500",
+    borderColor: "border-blue-200",
+    style: {
+      background: "#F0EFFD",
+      color: "#575AE5",
+      border: "#C7C4F5",
+    },
+    isActionable: false,
+  },
+  [TRANSACTION_STATUS.PAYOUT_INITIATED]: {
+    category: TRANSACTION_STATUS_CATEGORY.PENDING,
+    displayName: "Pending",
+    title: "Payout Initiated",
+    message: "Your payout has been initiated and is being processed by the bank.",
+    bgColor: "bg-blue-50",
+    textColor: "text-blue-700",
+    dotColor: "bg-blue-500",
+    borderColor: "border-blue-200",
+    style: {
+      background: "#F0EFFD",
+      color: "#575AE5",
+      border: "#C7C4F5",
+    },
+    isActionable: false,
+  },
+  [TRANSACTION_STATUS.PENDING_PAYOUT]: {
+    category: TRANSACTION_STATUS_CATEGORY.PENDING,
+    displayName: "Pending",
+    title: "Processing Payout",
+    message: "Your payout is queued and will be processed shortly.",
+    bgColor: "bg-blue-50",
+    textColor: "text-blue-700",
+    dotColor: "bg-blue-500",
+    borderColor: "border-blue-200",
+    style: {
+      background: "#F0EFFD",
+      color: "#575AE5",
+      border: "#C7C4F5",
+    },
+    isActionable: false,
+  },
+  [TRANSACTION_STATUS.PAYOUT_FAILED]: {
+    category: TRANSACTION_STATUS_CATEGORY.ACTION_NEEDED,
+    displayName: "Action Needed",
+    title: "Payout Failed",
+    message: "The transfer to your bank account could not be completed. Please check your bank details or contact support.",
+    bgColor: "bg-red-50",
+    textColor: "text-red-700",
+    dotColor: "bg-red-500",
+    borderColor: "border-red-200",
+    style: {
+      background: "#FEECEC",
+      color: "#EB5757",
+      border: "#F5C0C0",
+    },
     isActionable: true,
   },
-  EXPIRED: {
-    category: StatusCategory.FAILED,
-    bgColor: 'bg-red-50',
-    textColor: 'text-red-600',
-    dotColor: 'bg-red-500',
-    displayName: 'Expired',
-    description: 'Transaction has expired',
+  [TRANSACTION_STATUS.COMPLETED]: {
+    category: TRANSACTION_STATUS_CATEGORY.SUCCESSFUL,
+    displayName: "Successful",
+    title: "Transaction Successful",
+    message: "Your transaction has completed successfully.",
+    bgColor: "bg-green-50",
+    textColor: "text-green-700",
+    dotColor: "bg-green-500",
+    borderColor: "border-green-200",
+    style: {
+      background: "#E8F8F0",
+      color: "#037847",
+      border: "#A8E6C8",
+    },
+    isActionable: false,
+  },
+  [TRANSACTION_STATUS.DISPUTED]: {
+    category: TRANSACTION_STATUS_CATEGORY.DISPUTED,
+    displayName: "Disputed",
+    title: "Transaction Disputed",
+    message: "This transaction is currently under dispute review. Our support team is handling the case.",
+    bgColor: "bg-purple-50",
+    textColor: "text-purple-700",
+    dotColor: "bg-purple-500",
+    borderColor: "border-purple-200",
+    style: {
+      background: "#F5F3FF",
+      color: "#7C3AED",
+      border: "#DDD6FE",
+    },
     isActionable: true,
   },
-  DISPUTED: {
-    category: StatusCategory.FAILED,
-    bgColor: 'bg-rose-50',
-    textColor: 'text-rose-700',
-    dotColor: 'bg-rose-500',
-    displayName: 'Disputed',
-    description: 'Transaction is under dispute',
+  [TRANSACTION_STATUS.REFUNDED]: {
+    category: TRANSACTION_STATUS_CATEGORY.REFUNDED,
+    displayName: "Refunded",
+    title: "Refund Completed",
+    message: "Your refund has been processed and funds returned to your original payment method.",
+    bgColor: "bg-emerald-50",
+    textColor: "text-emerald-700",
+    dotColor: "bg-emerald-500",
+    borderColor: "border-emerald-200",
+    style: {
+      background: "#ECFDF5",
+      color: "#047857",
+      border: "#A7F3D0",
+    },
+    isActionable: false,
+  },
+  [TRANSACTION_STATUS.EXPIRED]: {
+    category: TRANSACTION_STATUS_CATEGORY.EXPIRED,
+    displayName: "Expired",
+    title: "Transaction Expired",
+    message: "This transaction expired because payment was not completed within the allowed time.",
+    bgColor: "bg-gray-100",
+    textColor: "text-gray-700",
+    dotColor: "bg-gray-400",
+    borderColor: "border-gray-200",
+    style: {
+      background: "#F4F4F5",
+      color: "#52525B",
+      border: "#E4E4E7",
+    },
+    isActionable: false,
+  },
+  [TRANSACTION_STATUS.CANCELLED]: {
+    category: TRANSACTION_STATUS_CATEGORY.CANCELLED,
+    displayName: "Cancelled",
+    title: "Transaction Cancelled",
+    message: "This transaction was cancelled.",
+    bgColor: "bg-gray-100",
+    textColor: "text-gray-700",
+    dotColor: "bg-gray-400",
+    borderColor: "border-gray-200",
+    style: {
+      background: "#F4F4F5",
+      color: "#52525B",
+      border: "#E4E4E7",
+    },
+    isActionable: false,
+  },
+  [TRANSACTION_STATUS.FAILED]: {
+    category: TRANSACTION_STATUS_CATEGORY.FAILED,
+    displayName: "Failed",
+    title: "Transaction Failed",
+    message: "This transaction could not be completed. Please contact support for assistance.",
+    bgColor: "bg-red-50",
+    textColor: "text-red-700",
+    dotColor: "bg-red-500",
+    borderColor: "border-red-200",
+    style: {
+      background: "#FEECEC",
+      color: "#EB5757",
+      border: "#F5C0C0",
+    },
     isActionable: true,
   },
-
-  // Cancelled statuses
-  CANCELLED: {
-    category: StatusCategory.CANCELLED,
-    bgColor: 'bg-gray-50',
-    textColor: 'text-gray-700',
-    dotColor: 'bg-gray-500',
-    displayName: 'Cancelled',
-    description: 'Transaction was cancelled',
-    isActionable: true,
-  },
-  REFUNDING: {
-    category: StatusCategory.CANCELLED,
-    bgColor: 'bg-slate-50',
-    textColor: 'text-slate-700',
-    dotColor: 'bg-slate-500',
-    displayName: 'Refunding',
-    description: 'Refund is being processed',
+  [TRANSACTION_STATUS.NO_OWNER]: {
+    category: TRANSACTION_STATUS_CATEGORY.FAILED,
+    displayName: "Under Review",
+    title: "Deposit Under Review",
+    message: "Deposit received on an unlinked address. Held for manual review.",
+    bgColor: "bg-amber-50",
+    textColor: "text-amber-700",
+    dotColor: "bg-amber-500",
+    borderColor: "border-amber-200",
+    style: {
+      background: "#FFF7ED",
+      color: "#C2410C",
+      border: "#FED7AA",
+    },
     isActionable: false,
   },
 };
+
+/**
+ * `amountFiat` is stored in the transaction's settlement `currency`, which is
+ * USD for stablecoin trades: not always NGN. Anywhere the amount is shown
+ * with a ₦ symbol must convert through `stableToFiatRate` first.
+ */
+export function getTransactionAmountFiatNGN(tx: {
+  amountFiat: string | number;
+  currency: string;
+  stableToFiatRate: string | number;
+}): number {
+  const amountFiat = Number(tx.amountFiat ?? 0);
+  const stableToFiatRate = Number(tx.stableToFiatRate ?? 0);
+  if (tx.currency === "NGN") return amountFiat;
+  if (tx.currency === "USD" && stableToFiatRate > 0)
+    return amountFiat * stableToFiatRate;
+  return amountFiat;
+}
 
 // Utility functions
-export const getStatusConfig = (status: string): typeof statusConfig[TransactionStatus] => {
-  const normalizedStatus = status.toUpperCase() as TransactionStatus;
-  return statusConfig[normalizedStatus] || {
-    category: StatusCategory.IN_PROGRESS,
-    bgColor: 'bg-gray-50',
-    textColor: 'text-gray-700',
-    dotColor: 'bg-gray-500',
-    displayName: status,
-    description: 'Unknown status',
-    isActionable: false,
-  };
+export const getStatusConfig = (status?: string | null): TransactionStatusDisplayConfig => {
+  if (!status) return DEFAULT_STATUS_CONFIG;
+  const normalizedStatus = status.toUpperCase() as TransactionStatusType;
+  return TRANSACTION_STATUS_CONFIG[normalizedStatus] || DEFAULT_STATUS_CONFIG;
 };
 
-export const getStatusColors = (status: string) => {
+export const getStatusColors = (status?: string | null) => {
   const config = getStatusConfig(status);
   return {
     background: config.bgColor,
@@ -220,64 +432,20 @@ export const getStatusColors = (status: string) => {
   };
 };
 
-export const getStatusDisplayName = (status: string): string => {
-  return getStatusConfig(status).displayName;
-};
-
-export const getStatusDescription = (status: string): string => {
-  return getStatusConfig(status).description;
-};
-
-export const isStatusActionable = (status: string): boolean => {
-  return getStatusConfig(status).isActionable;
-};
-
-export const getStatusCategory = (status: string): StatusCategory => {
-  return getStatusConfig(status).category;
-};
-
-// Filter functions for different status categories
-export const isSuccessStatus = (status: string): boolean => {
-  return getStatusCategory(status) === StatusCategory.SUCCESS;
-};
-
-export const isFailedStatus = (status: string): boolean => {
-  return getStatusCategory(status) === StatusCategory.FAILED;
-};
-
-export const isPendingStatus = (status: string): boolean => {
-  const category = getStatusCategory(status);
-  return category === StatusCategory.IN_PROGRESS || category === StatusCategory.AWAITING;
-};
-
-export const isFinalStatus = (status: string): boolean => {
-  const category = getStatusCategory(status);
-  return category === StatusCategory.SUCCESS ||
-    category === StatusCategory.FAILED ||
-    category === StatusCategory.CANCELLED;
-};
-
-// Get icon color for download button
-export const getDownloadIconColor = (status: string): string => {
-  if (isSuccessStatus(status) || isFailedStatus(status)) {
-    return "text-accent1 cursor-pointer";
-  }
-  return "text-grey4 cursor-not-allowed";
-};
-
-// Check if download should be disabled
-export const isDownloadDisabled = (status: string): boolean => {
-  return !isFinalStatus(status);
-};
-
-// Simple function to get status colors (compatible with Material Tailwind)
-export const getStatusColor = (status: string): string => {
+export const getStatusDisplayName = (status?: string | null): string => {
   const config = getStatusConfig(status);
-  return `${config.textColor} ${config.bgColor}`;
+  return config.displayName;
 };
 
-// Simple function to get status dot colors
-export const getStatusDot = (status: string): string => {
-  const config = getStatusConfig(status);
-  return config.dotColor;
+export const getStatusColor = (status?: string | null) => {
+  return getStatusColors(status).text;
 };
+
+export const getStatusDot = (status?: string | null) => {
+  return getStatusColors(status).dot;
+};
+
+export const getStatusBadgeStyle = (status?: string | null) => {
+  return getStatusConfig(status).style;
+};
+

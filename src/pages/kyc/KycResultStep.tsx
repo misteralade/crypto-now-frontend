@@ -1,0 +1,143 @@
+import { CheckCircle, XCircle, Clock, Loader2, RefreshCw } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import { ROUTES } from "../../util/constants.util.ts";
+import type { KycSessionStep } from "../../types/kyc.types.ts";
+
+interface KycResultStepProps {
+  currentStep: KycSessionStep;
+  failureReason: string | null;
+  identityVerificationAttempts: number;
+  identityVerificationAttemptsRemaining: number;
+  onRetry: () => void;
+  isRetryPending: boolean;
+}
+
+export default function KycResultStep({
+  currentStep,
+  failureReason,
+  identityVerificationAttempts,
+  identityVerificationAttemptsRemaining,
+  onRetry,
+  isRetryPending,
+}: KycResultStepProps) {
+  const navigate = useNavigate();
+  const canRetry = identityVerificationAttemptsRemaining > 0;
+
+  if (currentStep === "Approved") {
+    return (
+      <div className="space-y-6 text-center py-4">
+        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 mx-auto">
+          <CheckCircle className="w-10 h-10 text-green-500" />
+        </div>
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900">
+            Verification Complete!
+          </h2>
+          <p className="mt-2 text-sm text-gray-500">
+            Your identity has been verified. You can now access all platform
+            features.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => navigate({ to: ROUTES.DASHBOARD })}
+          className="w-full py-3 px-6 rounded-xl bg-[#03034D] text-white font-medium text-sm hover:bg-[#03034D]/90 transition-colors"
+        >
+          Go to Dashboard
+        </button>
+      </div>
+    );
+  }
+
+  if (
+    currentStep === "Declined" ||
+    currentStep === "Expired" ||
+    currentStep === "Abandoned"
+  ) {
+    return (
+      <div className="space-y-6 py-4">
+        <div className="text-center space-y-3">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-red-100 mx-auto">
+            <XCircle className="w-10 h-10 text-red-500" />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Verification Failed
+            </h2>
+            {failureReason && (
+              <p className="mt-2 text-sm text-gray-500">{failureReason}</p>
+            )}
+          </div>
+        </div>
+
+        <div className="p-4 rounded-xl bg-gray-50 border border-gray-200 space-y-1 text-sm">
+          <p className="text-gray-600">
+            Attempts used:{" "}
+            <span className="font-semibold text-gray-900">
+              {identityVerificationAttempts}
+            </span>
+          </p>
+          <p className="text-gray-600">
+            Attempts left:{" "}
+            <span className="font-semibold text-gray-900">
+              {identityVerificationAttemptsRemaining}
+            </span>
+          </p>
+          {!canRetry && (
+            <p className="text-red-600 text-xs">
+              Maximum attempts reached. Your case has been escalated for manual
+              review.
+            </p>
+          )}
+        </div>
+
+        <div className="space-y-3">
+          {canRetry && (
+            <button
+              type="button"
+              onClick={onRetry}
+              disabled={isRetryPending}
+              className="w-full flex items-center justify-center gap-2 py-3 px-6 rounded-xl bg-[#03034D] text-white font-medium text-sm disabled:opacity-50 hover:bg-[#03034D]/90 transition-colors"
+            >
+              {isRetryPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  <RefreshCw className="w-4 h-4" /> Retry Verification
+                </>
+              )}
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Pending review or resubmission state
+  return (
+    <div className="space-y-6 text-center py-4">
+      <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-amber-100 mx-auto">
+        <Clock className="w-10 h-10 text-amber-500" />
+      </div>
+      <div>
+        <h2 className="text-xl font-semibold text-gray-900">
+          {currentStep === "Resubmitted"
+            ? "Resubmission Required"
+            : "Under Manual Review"}
+        </h2>
+        <p className="mt-2 text-sm text-gray-500">
+          {currentStep === "Resubmitted"
+            ? "Additional verification steps are required. Please complete the resubmission request in Didit."
+            : "Your case has been escalated to our compliance team for manual review. You'll receive an email notification with the outcome."}
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={() => navigate({ to: ROUTES.DASHBOARD })}
+        className="w-full py-3 px-6 rounded-xl border border-gray-300 text-gray-700 font-medium text-sm hover:bg-gray-50 transition-colors"
+      >
+        Back to Home
+      </button>
+    </div>
+  );
+}

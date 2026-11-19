@@ -1,25 +1,38 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
-import {LOCAL_STORAGE_KEYS} from "../../util/constants.util.ts";
+﻿import { createFileRoute, isRedirect, redirect } from '@tanstack/react-router'
+import { ROUTES } from "../../util/constants.util.ts";
+import {userServiceApi} from "../../api/user.api.ts";
+import {setAccessToken} from "../../util/auth-session.util.ts";
 
 export const Route = createFileRoute('/oauth/success')({
-  beforeLoad: ({ search }) => {
+  beforeLoad: async ({ search }) => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
     const { token } = search
-    
-    if (token) {
-      // Save token to localStorage
-      localStorage.setItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN, token)
-      
-      // Redirect immediately to /dashboard
-      throw redirect({
-        to: '/dashboard',
-      })
-    } else {
+
+    if (!token) {
       // If no token, redirect to login (optional)
       throw redirect({
         to: '/sign-up',
       })
+    }
+
+    // Save token to localStorage
+    setAccessToken(token)
+
+    try {
+      const { success, data } = await userServiceApi.getOnboardingStatus()
+      if (success && data?.isComplete) {
+        throw redirect({ to: ROUTES.DASHBOARD })
+      }
+      throw redirect({ to: ROUTES.ONBOARDING })
+    } catch (error) {
+      if (isRedirect(error)) {
+        throw error
+      }
+      // Fail-safe: if the status check errors, default to onboarding :
+      // worst case an already-onboarded user sees it once and it
+      // self-resolves via onboarding.tsx's own isComplete check.
+      throw redirect({ to: ROUTES.ONBOARDING })
     }
   },
   component: RouteComponent,

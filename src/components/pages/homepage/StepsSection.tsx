@@ -20,7 +20,7 @@ const StepsSection = ({ tradeCrypto, isAuthenticated }: StepsSectionProps) => {
   };
 
   const buttonText = isAuthenticated === false 
-    ? "Setup an account now" 
+    ? "Set up an account now" 
     : "Buy & sell crypto now";
 
 
@@ -54,7 +54,7 @@ const StepsSection = ({ tradeCrypto, isAuthenticated }: StepsSectionProps) => {
                     Create Your Account
                   </h3>
                   <p className="text-[#454745] max-w-[360px]">
-                    Sign up with just your email and password, add 2fa for extra security
+                    Sign up using your email and password. Enable 2FA for extra security.
                   </p>
                 </div>
               </div>
@@ -69,8 +69,7 @@ const StepsSection = ({ tradeCrypto, isAuthenticated }: StepsSectionProps) => {
                     Choose Buy or Sell
                   </h3>
                   <p className="text-[#454745] max-w-[360px]">
-                    Pick your currency, enter your amount, and review the
-                    details
+                    Select your currency, enter an amount, and review the transaction details.
                   </p>
                 </div>
               </div>
@@ -85,8 +84,7 @@ const StepsSection = ({ tradeCrypto, isAuthenticated }: StepsSectionProps) => {
                     Confirm & Complete
                   </h3>
                   <p className="text-[#454745] max-w-[360px]">
-                    Follow our payment or deposit instructions. We'll verify and
-                    process your transaction
+                    Follow the payment instructions. We'll instantly verify and process your transaction.
                   </p>
                 </div>
               </div>

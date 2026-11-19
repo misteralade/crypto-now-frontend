@@ -1,6 +1,5 @@
-import { CustomInput } from "../../global/CustomInput.tsx";
-import {useState, useRef, type ChangeEvent} from "react";
-import {useUploadQuery} from "../../../queries/upload.query.ts";
+import { useState, useRef, type ChangeEvent } from "react";
+import { useUploadQuery } from "../../../queries/upload.query.ts";
 import momentClient from "../../../lib/moment.ts";
 
 interface PersonalInfoSectionProps {
@@ -10,123 +9,189 @@ interface PersonalInfoSectionProps {
   phoneNumber: string;
   dob?: string;
   profileImg?: string;
-  handleFieldChange: (field: 'firstName' | 'lastName' | 'phoneNumber' | 'dob' | 'profileImg', value: string) => void;
+  handleFieldChange: (
+    field: "firstName" | "lastName" | "phoneNumber" | "dob" | "profileImg",
+    value: string,
+  ) => void;
   handleRemoveProfilePicture: () => void;
 }
 
-const ProfilePersonalInfoSection = ({ firstName, lastName, email, phoneNumber, dob, profileImg, handleFieldChange, handleRemoveProfilePicture }: PersonalInfoSectionProps) => {
+// Custom input component matching theme
+const CustomInput = ({
+  label,
+  value,
+  onChange,
+  type = "text",
+  disabled = false,
+  max,
+}: {
+  label: string;
+  value: string;
+  onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
+  type?: string;
+  disabled?: boolean;
+  max?: string;
+}) => {
+  const [isFocused, setIsFocused] = useState(false);
+  const hasValue = value && value.length > 0;
+
+  return (
+    <div className="relative">
+      <input
+        type={type}
+        value={value}
+        onChange={onChange}
+        disabled={disabled}
+        max={max}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+        className={`
+          w-full h-14 px-4 pt-4 pb-2
+          rounded-2xl
+          border transition-all
+          bg-white
+          text-sm text-[#0E0F0C]
+          placeholder-transparent
+          focus:outline-none
+          ${disabled 
+            ? 'border-[#EEEEEE] bg-[#FAFAFA] text-[#9A9A9A] cursor-not-allowed' 
+            : isFocused 
+              ? 'border-[#03034D] ring-2 ring-[#03034D]/10' 
+              : 'border-[#EEEEEE] hover:border-[#BDBDBD]'
+          }
+        `}
+        placeholder={label}
+      />
+      <label
+        className={`
+          absolute left-4 transition-all pointer-events-none
+          ${hasValue || isFocused
+            ? 'top-2 text-[10px] font-semibold'
+            : 'top-1/2 -translate-y-1/2 text-sm'
+          }
+          ${disabled
+            ? 'text-[#BDBDBD]'
+            : isFocused
+              ? 'text-[#03034D]'
+              : 'text-[#9A9A9A]'
+          }
+        `}
+      >
+        {label}
+      </label>
+    </div>
+  );
+};
+
+const ProfilePersonalInfoSection = ({
+  firstName,
+  lastName,
+  email,
+  phoneNumber,
+  dob,
+  profileImg,
+  handleFieldChange,
+  handleRemoveProfilePicture,
+}: PersonalInfoSectionProps) => {
   const { uploadProfilePictureMutation } = useUploadQuery();
-  const [imagePreview, setImagePreview] = useState<string | null>(profileImg || null);
+  const [imagePreview, setImagePreview] = useState<string | null>(
+    profileImg || null,
+  );
   const [imageError, setImageError] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [phone, setPhone] = useState(phoneNumber);
-  const [dateOfBirth, setDateOfBirth] = useState(dob)
-  
+  const [dateOfBirth, setDateOfBirth] = useState(dob ?? "");
+
   const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     setImageError("");
-    
     if (!file) return;
-    
-    // Validate file type
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+
+    const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
     if (!validTypes.includes(file.type)) {
       setImageError("Please upload a valid image file (JPEG, PNG, or WebP)");
       return;
     }
-    
-    // Validate file size (5MB = 5 * 1024 * 1024 bytes)
-    const maxSize = 5 * 1024 * 1024;
-    if (file.size > maxSize) {
+    if (file.size > 5 * 1024 * 1024) {
       setImageError("Image size must be less than 5MB");
       return;
     }
-    
-    // Upload the profile image
+
     const formData = new FormData();
     formData.append("file", file);
-    
     const url = await uploadProfilePictureMutation.mutateAsync(formData);
     handleFieldChange("profileImg", url);
-    
-    // Create preview and convert to base64
+
     const reader = new FileReader();
-    reader.onloadend = () => {
-      const result = reader.result as string;
-      setImagePreview(result);
-    };
+    reader.onloadend = () => setImagePreview(reader.result as string);
     reader.readAsDataURL(file);
   };
-  
+
   const handleRemoveImage = () => {
-    handleRemoveProfilePicture()
+    handleRemoveProfilePicture();
     setImagePreview(null);
     setImageError("");
     handleFieldChange("profileImg", "");
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
-  
-  const triggerFileInput = () => {
-    fileInputRef.current?.click();
-  };
-  
+
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-semibold">Personal Info</h3>
-      
-      {/* Profile Image Upload */}
-      <div className="flex flex-col items-center gap-4">
-        <div className="relative">
+      <h3 className="text-base font-bold text-[#0E0F0C]">
+        Personal Info
+      </h3>
+
+      {/* Avatar upload */}
+      <div className="flex items-center gap-4">
+        <div className="relative shrink-0">
           {imagePreview ? (
-            <div className="relative">
+            <>
               <img
                 src={imagePreview}
-                alt="Profile preview"
-                className="w-32 h-32 rounded-full object-cover border-4 border-gray-100"
+                alt="Profile"
+                className="w-16 h-16 rounded-full object-cover border-3 border-[#F0F0F0]"
               />
               <button
                 type="button"
                 onClick={handleRemoveImage}
-                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition-colors shadow-lg hover:cursor-pointer"
-                aria-label="Remove image"
+                className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center bg-[#EB5757] hover:bg-[#d84545] transition-colors"
+                aria-label="Remove profile picture"
               >
                 <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
+                  width="10"
+                  height="10"
                   viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="white"
+                  strokeWidth="3"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
+                  <path d="M18 6L6 18M6 6l12 12" />
                 </svg>
               </button>
-            </div>
+            </>
           ) : (
-            <div className="w-32 h-32 rounded-full bg-gray-100 flex items-center justify-center border-4 border-gray-100">
+            <div
+              className="w-16 h-16 rounded-full flex items-center justify-center"
+              style={{
+                background:
+                  "linear-gradient(135deg,#6DD5FA,#2980B9,#948EEE,#575AE5)",
+              }}
+            >
               <svg
-                className="w-12 h-12 text-gray-400"
-                fill="none"
-                stroke="currentColor"
+                width="22"
+                height="22"
                 viewBox="0 0 24 24"
+                fill="none"
+                stroke="white"
+                strokeWidth="2"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                />
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
               </svg>
             </div>
           )}
         </div>
-        
-        <div className="text-center">
+        <div>
           <input
             ref={fileInputRef}
             type="file"
@@ -136,78 +201,71 @@ const ProfilePersonalInfoSection = ({ firstName, lastName, email, phoneNumber, d
           />
           <button
             type="button"
-            onClick={triggerFileInput}
-            className="text-[#03034D] text-sm font-semibold transition-opacity hover:opacity-80 hover:cursor-pointer"
+            onClick={() => fileInputRef.current?.click()}
+            className="text-sm font-semibold text-[#948EEE] hover:text-[#7c7ed9] transition-colors"
           >
             {imagePreview ? "Change Photo" : "Upload Photo"}
           </button>
-          <p className="text-xs text-gray-500 mt-1">Max size: 5MB</p>
+          <p className="text-[11px] mt-0.5 text-[#9A9A9A]">
+            JPG, PNG or WebP · max 5 MB
+          </p>
           {imageError && (
-            <p className="text-sm text-red-500 mt-2">{imageError}</p>
+            <p className="text-xs mt-1 text-[#EB5757]">
+              {imageError}
+            </p>
           )}
         </div>
       </div>
-      
-      {/* Name Fields */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+
+      {/* Name row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <CustomInput
           label="First name"
-          type="text"
-          placeholder={firstName}
           value={firstName}
           disabled
-          readOnly
         />
-        
         <CustomInput
           label="Last name"
-          type="text"
-          placeholder={lastName}
           value={lastName}
           disabled
-          readOnly
         />
       </div>
-      
-      {/* Email and Phone */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-        <CustomInput
-          label="Email"
-          type="email"
-          value={email}
-          disabled
-          readOnly
-        />
 
-        <CustomInput
-          label="Phone number"
-          type="tel"
-          placeholder={phoneNumber}
-          value={phone}
-          onChange={(e) => {
-            setPhone(e.target.value)
-            handleFieldChange("phoneNumber", e.target.value)
-          }}
-        />
-      </div>
-      
-      {/* Date of Birth */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-        <CustomInput
-          label="Date of Birth"
-          type="date"
-          value={dateOfBirth}
-          onChange={(e) => {
-            const isoString = momentClient.toISOStringFromDate(new Date(e.target.value));
-            setDateOfBirth(e.target.value)
-            handleFieldChange("dob", isoString);
-          }}
-          max={new Date().toISOString().split('T')[0]}
-          placeholder="dd/mm/yyyy"
-        />
-      </div>
+      {/* Email */}
+      <CustomInput
+        label="Email address"
+        type="email"
+        value={email}
+        disabled
+      />
+
+      {/* Phone */}
+      <CustomInput
+        label="Phone number"
+        type="tel"
+        value={phone}
+        onChange={(e) => {
+          setPhone(e.target.value);
+          handleFieldChange("phoneNumber", e.target.value);
+        }}
+      />
+
+      {/* Date of birth */}
+      <CustomInput
+        label="Date of Birth"
+        type="date"
+        value={dateOfBirth}
+        onChange={(e) => {
+          const iso = momentClient.toISOStringFromDate(
+            new Date(e.target.value),
+          );
+          setDateOfBirth(e.target.value);
+          handleFieldChange("dob", iso);
+        }}
+        max={new Date().toISOString().split("T")[0]}
+      />
     </div>
   );
-}
+};
 
 export default ProfilePersonalInfoSection;

@@ -33,7 +33,7 @@ export const WhyChooseUs = [
     title: "Support",
     icon: supportIcon,
     description:
-      "Your journey is our journey. We’re here to help every step of the way with responsive support and resources for success in the digital economy.",
+      "We are here to help whenever you need assistance, with fast customer support and clear status updates for every transaction.",
   },
 ];
 

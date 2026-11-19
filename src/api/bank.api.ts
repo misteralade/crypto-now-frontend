@@ -8,6 +8,7 @@ import type {
   AllBanksResponse, BaseApiResponse,
   SupportedPlatformBankAccountResponse, UserBanksAPIResponse
 } from "../types/response.payload.types.ts";
+import type { CreateBankAccountRequestPayload, UpdateBankAccountRequestPayload } from "../types/request.payload.types.ts";
 
 class BankServiceApi {
   private static instance: BankServiceApi;
@@ -35,25 +36,33 @@ class BankServiceApi {
   async getUserBankAccounts() {
     return  await axiosGetRequestHandler(`/bank/user/bank-accounts`) as UserBanksAPIResponse;
   }
-  
+
   async getAnonymousUserBankAccounts(email: string) {
     return await axiosGetRequestHandler(`/bank/anonymous-user/bank-accounts`, { email }) as UserBanksAPIResponse;
   }
-  
-  async createUserBankAccount(payload: Record<string, any>) {
+
+  async createUserBankAccount(payload: CreateBankAccountRequestPayload) {
     return await axiosPostRequestHandler("/bank/user/create", payload) as BaseApiResponse<null>;
   }
-  
-  async createAnonymousUserBankAccount(payload: Record<string, any>) {
-    return await axiosPostRequestHandler("/bank/anonymous-user/create", payload) as BaseApiResponse<null>;
+
+  async createAnonymousUserBankAccount(payload: CreateBankAccountRequestPayload) {
+    return await axiosPostRequestHandler("/bank/anonymous-user/create", payload) as BaseApiResponse<{ id: string }>;
   }
   
   async makeBankAccountDefault(id: string) {
     return await axiosPatchRequestHandler(`/bank/user/${id}/make-default`) as BaseApiResponse<null>
   }
+
+  async updateUserBankAccount(id: string, payload: UpdateBankAccountRequestPayload) {
+    return await axiosPatchRequestHandler(`/bank/user/${id}/update`, payload) as BaseApiResponse<null>;
+  }
   
   async deleteBankAccount(id: string) {
     return await axiosDeleteRequestHandler(`/bank/user/${id}/delete`) as BaseApiResponse<null>
+  }
+
+  async lookupAccountName(accountNumber: string, bankId: string) {
+    return await axiosPostRequestHandler("/bank/bank/lookup", { accountNumber, bankId }) as BaseApiResponse<{ accountName: string }>;
   }
 }
 

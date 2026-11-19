@@ -1,4 +1,4 @@
-import type { AxiosError } from "axios";
+﻿import type { AxiosError } from "axios";
 import type {
   TradeType,
   TransactionPriority,
@@ -33,6 +33,20 @@ export type BaseApiResponse<T> = {
   data: T;
 };
 
+export type ManualSellDepositRecheckResponse = {
+  outcome:
+    | "COOLDOWN_ACTIVE"
+    | "NO_BALANCE_CHANGE"
+    | "DEPOSIT_FOUND"
+    | "BALANCE_INCREASED_UNRESOLVED"
+    | "RECHECK_UNAVAILABLE";
+  status: string;
+  baselineBalance: number;
+  liveBalance: number | null;
+  dispatchedDeposits: number;
+  cooldownMsRemaining: number;
+};
+
 // Start Auth
 export type AuthResponse = {
   message: string;
@@ -49,27 +63,30 @@ export type SupportedCryptoOrCurrencyResponse = {
   logoUrl: string;
   buyRate: string;
   sellRate: string;
+  buyEnabled: boolean;
+  sellEnabled: boolean;
+  buyPrecision: number | null;
   minTransactionLimit: string;
   maxTransactionLimit: string;
   minTradeAmountForAnonymous: string;
   maxTradeAmountForAnonymous: string;
+  networks?: string[]; // Blockchain networks this crypto supports (e.g. ['TRC20', 'BTC'])
+  networkOptions?: Array<{ id: string; label: string }>;
 };
 
 export type SupportedExchangeRateResponse = {
+  cachedAt: string;
+  validitySeconds: number;
   fiatRate: number;
   coinGeckoRate: number;
   currency: string; // "NGN" or "USD"
-  validUntil: string; // ISO date string
-  rateId: string;
-  usdRate?: number; // Only present when currency is "USD"
-  platformRate: string;
+  platformRate: number;
+  usdRate: number; // Always present so the frontend can derive USD/NGN from one response
 };
 
 export type SupportedPlatformBankAccountResponse = {
   id: string;
-  bankName: string;
-  bankLogo: string;
-  type: string;
+  bank: AllBanksResponse;
   accountNumber: string;
   accountHolderName: string;
 };
@@ -89,12 +106,12 @@ export type AllBanksResponse = {
   id: string;
   name: string;
   logoUrl: string;
+  bankCode: string;
 };
 
 export type UserBankAccountResponse = {
   id: string;
-  bankName: string;
-  bankLogo: string;
+  bank: AllBanksResponse;
   label: string;
   isDefault: boolean;
   accountNumber: string;
@@ -108,6 +125,23 @@ export type UserBankAccountResponse = {
 export type UserCryptoWalletAPIResponse = BaseApiResponse<
   Array<UserCryptoWalletResponse>
 >;
+
+export type CustodialWalletResponse = {
+  id: string;
+  userId: string | null;
+  cryptocurrencyId: string;
+  network: string;
+  blockchainEnvironment: "testnet" | "mainnet";
+  walletAddress: string;
+  derivationIndex: number;
+  isActive: boolean;
+  createdAt: Date;
+  walletPurpose?: "USER" | "GUEST";
+  leasedTransactionId?: string | null;
+  leaseStartedAt?: Date | null;
+  leaseExpiresAt?: Date | null;
+  note?: string;
+};
 
 export type UserCryptoWalletResponse = {
   id: string;
@@ -145,6 +179,12 @@ export type GetUserProfileResponse = {
   profile: UserProfilePayload;
 };
 
+export type OnboardingStatusResponse = {
+  needsName: boolean;
+  needsBankAccount: boolean;
+  isComplete: boolean;
+};
+
 // Start Transactions
 export type CryptoCurrencyResponseEntity = {
   id: string;
@@ -180,7 +220,6 @@ export type ExchangeRateResponseEntity = {
   platformRate: string;
   rate: string;
   action: TradeType;
-  validUntil: Date;
   createdAt: Date;
 };
 
@@ -189,8 +228,7 @@ export type UserBankAccountResponseEntity = {
   userId: string;
   accountNumber: string;
   accountName: string;
-  bankName: string;
-  bankLogo: string;
+  bank: AllBanksResponse | null;
   createdAt: string;
 };
 
@@ -198,6 +236,7 @@ export type AdminBankAccountResponseEntity = {
   id: string;
   accountNumber: string;
   accountHolderName: string;
+  bank: AllBanksResponse;
   isActive: boolean;
   bankName: string;
   bankLogo: string;
@@ -228,14 +267,19 @@ export type AdminResponseEntity = {
 // Transaction Response
 export type InitiateTransactionAPIResponse = BaseApiResponse<{
   sessionId: string;
+  resumed?: boolean;
+  depositAddress?: string;
 }>;
 
 export type TransactionResponseEntity = {
+  statusEvents?: Array<{ status: TransactionStatus; createdAt: string }>;
+  adminPaymentReceiptUrl?: string | null;
+  expectedCryptoAmount?: number | null;
   id: string;
   userId: string;
   sessionId: string;
   cryptocurrencyId: string;
-  exchangeRateId: string;
+  rateSnapshot: Record<string, any> | null;
   type: TradeType;
   amountCrypto: string;
   amountFiatNGN: string;
@@ -257,6 +301,13 @@ export type TransactionResponseEntity = {
   userNotes: string | null;
   internalNotes: string | null;
   failureReason: string | null;
+  payoutFailureReason?: string | null;
+  custodialWalletId?: string | null;
+  depositAddress?: string | null;
+  depositBalanceBaseline?: number | null;
+  walletNetwork?: string | null;
+  confirmationCount?: number;
+  requiredConfirmations?: number;
   processedBy: string | null;
   processedAt: string | null;
   createdAt: Date;
@@ -264,7 +315,6 @@ export type TransactionResponseEntity = {
   cryptocurrency: CryptoCurrencyResponseEntity;
   dispute: DisputeDetailsResponse;
   user: UserResponseEntity;
-  exchangeRate: ExchangeRateResponseEntity;
   userBankAccount: UserBankAccountResponseEntity | null;
   adminBankAccount: AdminBankAccountResponseEntity | null;
   userCryptoWallet: AdminAndUserCryptoWalletResponseEntity | null;
@@ -280,9 +330,34 @@ export type UserTransactionsHistoryResponse = {
   transactions: TransactionResponseEntity[];
 };
 
+export type NotificationResponseEntity = {
+  id: string;
+  userId: string;
+  transactionId: string | null;
+  transactionSessionId: string | null;
+  disputeId: string | null;
+  type: string;
+  title: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
+};
+
+export type UserNotificationsHistoryResponse = {
+  count: number;
+  limit: number;
+  page: number;
+  totalPages: number;
+  notifications: NotificationResponseEntity[];
+};
+
+export type HasNewNotificationsResponse = {
+  hasNew: boolean;
+};
+
 // Stat Transaction
 export type GetTransactionDetailsAPIResponse =
-  BaseApiResponse<SearchTransactionsResponse>;
+  BaseApiResponse<TransactionResponseEntity>;
 
 export type GetDisputeMessagesAPIResponse = BaseApiResponse<
   Array<DisputeMessageResponse>
@@ -291,19 +366,33 @@ export type GetDisputeMessagesAPIResponse = BaseApiResponse<
 export type GetDisputeDetailsAPIResponse =
   BaseApiResponse<DisputeDetailsResponse>;
 
+export type DisputeStatus =
+  | "OPEN"
+  | "UNDER_REVIEW"
+  | "AWAITING_EVIDENCE"
+  | "AWAITING_USER_RESPONSE"
+  | "AWAITING_ADMIN_RESPONSE"
+  | "ESCALATED"
+  | "RESOLVED"
+  | "REJECTED"
+  | "CLOSED";
+
+// A transaction can only ever carry one dispute : this is a lookup (not a
+// search), so `data` is null when the transaction has never been disputed.
+export type DisputeByTransactionResponse = {
+  id: string;
+  status: DisputeStatus;
+  resolution: string | null;
+  createdAt: Date;
+} | null;
+
+export type GetDisputeByTransactionAPIResponse =
+  BaseApiResponse<DisputeByTransactionResponse>;
+
 export type DisputeDetailsResponse = {
   id: string;
   disputeReason: string;
-  status:
-    | "OPEN"
-    | "UNDER_REVIEW"
-    | "AWAITING_EVIDENCE"
-    | "AWAITING_USER_RESPONSE"
-    | "AWAITING_ADMIN_RESPONSE"
-    | "ESCALATED"
-    | "RESOLVED"
-    | "REJECTED"
-    | "CLOSED";
+  status: DisputeStatus;
   priority: "LOW" | "NORMAL" | "HIGH" | "URGENT";
   lastMessageAt: Date;
   attachments: MessageAttachment[];
@@ -335,7 +424,7 @@ export type SearchTransactionsResponse = {
   userId: string;
   sessionId: string;
   cryptocurrencyId: string;
-  exchangeRateId: string;
+  rateSnapshot: Record<string, any> | null;
   type: TransactionAction;
   amountCrypto: string;
   amountFiat: string;
@@ -357,6 +446,9 @@ export type SearchTransactionsResponse = {
   userNotes: string;
   internalNotes: string;
   failureReason: string;
+  payoutFailureReason?: string | null;
+  confirmationCount?: number;
+  requiredConfirmations?: number;
   processedBy: string;
   processedAt: Date;
   usdAmount: number;
@@ -367,7 +459,6 @@ export type SearchTransactionsResponse = {
   user?: GetUserProfileResponse;
   profile?: UserProfilePayload;
   cryptocurrency?: CryptoCurrencyResponseEntity;
-  exchangeRate?: ExchangeRateResponseEntity;
   userBankAccount?: UserBankAccountResponse;
   userCryptoWallet?: UserCryptoWalletResponse;
 };
@@ -409,9 +500,38 @@ export type TotalTransactionSummaryEntity = {
   usdReceivedFromSelling: string;
 };
 
+/**
+ * A single grand-total row across ALL of the user's cryptocurrencies :
+ * unlike TotalTransactionSummaryEntity, which is one row per crypto. Not
+ * pre-filtered to COMPLETED: breaks completed/terminally-failed/pending out
+ * so a genuine success rate can be computed.
+ */
+export type OverallTransactionTotalsEntity = {
+  transactionCount: string;
+  buyCount: string;
+  sellCount: string;
+  completedCount: string;
+  terminallyFailedCount: string;
+  pendingCount: string;
+  totalFiatAmount: string;
+  pendingFiatBuying: string;
+  pendingFiatSelling: string;
+};
+
 export type TransactionSummaryResponse = {
   summary: TransactionSummaryResponseEntity[];
   total: TotalTransactionSummaryEntity[];
+  thisMonth: TotalTransactionSummaryEntity[];
+  overallTotals: OverallTransactionTotalsEntity;
+  overallTotalsThisMonth: OverallTransactionTotalsEntity;
+};
+
+// BOUGHT/SOLD totals scoped to the same filters as a search-history request :
+// backs the Transaction History page's stat pills.
+export type FilteredTransactionSummaryResponse = {
+  transactionCount: string;
+  fiatSpentOnBuying: string;
+  fiatReceivedFromSelling: string;
 };
 // End Transactions
 

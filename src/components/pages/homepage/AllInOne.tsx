@@ -21,7 +21,7 @@ const AllInOne = ({ tradeCrypto, isAuthenticated }: AllInOneProps) => {
   };
 
   const buttonText = isAuthenticated === false 
-    ? "Setup an account now" 
+    ? "Set up an account now" 
     : "Buy & sell crypto now";
     
   return (
@@ -36,11 +36,10 @@ const AllInOne = ({ tradeCrypto, isAuthenticated }: AllInOneProps) => {
             <div className="max-md:px-1 space-y-6 mb-10">
               <div>
                 <h3 className="text-xl font-normal text-[#0E0F0C] mb-1">
-                  Do more with basic
+                  Everything at a glance
                 </h3>
                 <p className="text-[#454745] max-w-[360px]">
-                  See your BTC, USDT, and USD equivalent at a glance. Track your
-                  last transactions instantly.
+                  See your BTC, USDT, and fiat equivalent instantly. Track your recent transactions with ease.
                 </p>
               </div>
 
@@ -59,8 +58,7 @@ const AllInOne = ({ tradeCrypto, isAuthenticated }: AllInOneProps) => {
                   Status Tracking
                 </h3>
                 <p className="text-[#454745] max-w-[360px]">
-                  Know exactly where your trade stands, pending, processing, or
-                  completed.
+                  Know exactly where your trade stands: pending, processing, or completed.
                 </p>
               </div>
             </div>

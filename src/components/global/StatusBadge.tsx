@@ -1,28 +1,23 @@
 import clsx from "clsx";
-import { transactionStatusStyles } from "../../util/constants.util";
+import { getStatusConfig } from "../../util/transaction.util.ts";
 
 interface StatusBadgeProps {
   status: string;
 }
 
 export const StatusBadge = ({ status }: StatusBadgeProps) => {
-  const variant = transactionStatusStyles[status.toUpperCase()] ?? {
-    text: status,
-    bg: "bg-gray-50",
-    dot: "bg-gray-400",
-    textColor: "text-gray-700",
-  };
+  const config = getStatusConfig(status);
   
   return (
     <span
       className={clsx(
         "inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium",
-        variant.bg,
-        variant.textColor
+        config.bgColor,
+        config.textColor
       )}
     >
-      <span className={clsx("h-2 w-2 rounded-full", variant.dot)} />
-      {variant.text}
+      <span className={clsx("h-2 w-2 rounded-full", config.dotColor)} />
+      {config.displayName}
     </span>
   );
 };
