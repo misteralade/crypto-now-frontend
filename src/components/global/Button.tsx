@@ -16,7 +16,7 @@ interface ButtonProps extends BaseProps {
   type?: "button" | "submit" | "reset";
   disabled?: boolean;
 }
-
+// extra
 interface LinkProps extends BaseProps {
   variant: "link";
   to: string;
