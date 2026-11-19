@@ -24,7 +24,7 @@ dev-dist
 *.sln
 *.sw?
 
-.env
+.env*
 
 # Ignore all pdf files
 *.pdf
