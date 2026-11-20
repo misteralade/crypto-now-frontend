@@ -133,12 +133,12 @@ const RatePage = () => {
                       </td>
                       <td className="px-6 py-5 text-right">
                         <div className="text-[#454745]">
-                          {formatCompact(isRegistered ? Number(crypto.minTransactionLimit) : Number(crypto.minTradeAmountForAnonymous), crypto.symbol, 10)} {crypto.symbol}
+                          {formatCompact(isRegistered ? Number(crypto.minTransactionLimit) : Number(crypto.minTradeAmountForAnonymous), crypto.symbol, crypto.buyPrecision)} {crypto.symbol}
                         </div>
                       </td>
                       <td className="px-6 py-5 text-right">
                         <div className="text-[#454745]">
-                          {formatCompact(isRegistered ? Number(crypto.maxTransactionLimit) : Number(crypto.maxTradeAmountForAnonymous), crypto.symbol, 10)} {crypto.symbol}
+                          {formatCompact(isRegistered ? Number(crypto.maxTransactionLimit) : Number(crypto.maxTradeAmountForAnonymous), crypto.symbol, crypto.buyPrecision)} {crypto.symbol}
                         </div>
                       </td>
                     </tr>
@@ -177,13 +177,13 @@ const RatePage = () => {
                       <div>
                         <div className="text-xs text-[#9A9A9A] mb-1">Min Trade (token)</div>
                         <div className="text-[#454745]">
-                          {formatCompact(isRegistered ? Number(crypto.minTransactionLimit) : Number(crypto.minTradeAmountForAnonymous), crypto.symbol, 10)} {crypto.symbol}
+                          {formatCompact(isRegistered ? Number(crypto.minTransactionLimit) : Number(crypto.minTradeAmountForAnonymous), crypto.symbol, crypto.buyPrecision)} {crypto.symbol}
                         </div>
                       </div>
                       <div>
                         <div className="text-xs text-[#9A9A9A] mb-1">Max Trade (token)</div>
                         <div className="text-[#454745]">
-                          {formatCompact(isRegistered ? Number(crypto.maxTransactionLimit) : Number(crypto.maxTradeAmountForAnonymous), crypto.symbol, 10)} {crypto.symbol}
+                          {formatCompact(isRegistered ? Number(crypto.maxTransactionLimit) : Number(crypto.maxTradeAmountForAnonymous), crypto.symbol, crypto.buyPrecision)} {crypto.symbol}
                         </div>
                       </div>
                     </div>

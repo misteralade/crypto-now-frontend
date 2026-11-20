@@ -652,7 +652,7 @@ const AppSimCard = () => {
     numericTradeAmount < anonymousMinimumCryptoAmount;
   const minLimitMessage =
     amountBelowAnonymousMin && cryptoSymbol
-      ? `Minimum anonymous trade amount is ${formatForDisplay(anonymousMinimumCryptoAmount, cryptoSymbol)} ${cryptoSymbol}`
+      ? `Minimum anonymous trade amount is ${formatForDisplay(anonymousMinimumCryptoAmount, cryptoSymbol, cryptoObj?.buyPrecision)} ${cryptoSymbol}`
       : null;
 
   // Keep the selected coin available for the current direction.
@@ -1139,7 +1139,7 @@ const AppSimCard = () => {
       displayCurrency === "USD"
         ? targetFiatAmount * (resolvedUsdToNgnRate || 0)
         : targetFiatAmount;
-    if (!targetNgnAmount || Number.isNaN(targetNgnAmount)) return;
+    if (!targetNgnAmount || Number.isNaN(targetNgnAmount) || !cryptoObj || cryptoObj.buyPrecision == null) return;
 
     const { data } = await getExchangeRateWithCache(
       selectedCrypto,
@@ -1153,7 +1153,7 @@ const AppSimCard = () => {
     // formatForDisplay would re-truncate to the token's (smaller) displayDecimals
     // and silently submit less crypto than roundTokenAmountUp actually quoted.
     const roundedCryptoAmount = String(
-      roundTokenAmountUp(targetNgnAmount / data.fiatRate, cryptoSymbol, isBuy ? cryptoObj?.buyPrecision : null),
+      roundTokenAmountUp(targetNgnAmount / data.fiatRate, cryptoObj.buyPrecision),
     );
 
     // Reject the preset/custom chip outright (leave the field as it was) and
@@ -1164,7 +1164,7 @@ const AppSimCard = () => {
       Number(roundedCryptoAmount) > anonymousMaximumCryptoAmount
     ) {
       setMaxLimitMessage(
-        `Maximum anonymous trade amount is ${formatForDisplay(anonymousMaximumCryptoAmount, cryptoSymbol)} ${cryptoSymbol}`,
+        `Maximum anonymous trade amount is ${formatForDisplay(anonymousMaximumCryptoAmount, cryptoSymbol, cryptoObj?.buyPrecision)} ${cryptoSymbol}`,
       );
       return;
     }
@@ -1216,7 +1216,7 @@ const AppSimCard = () => {
       Number(cleaned) > anonymousMaximumCryptoAmount
     ) {
       setMaxLimitMessage(
-        `Maximum anonymous trade amount is ${formatForDisplay(anonymousMaximumCryptoAmount, cryptoSymbol)} ${cryptoSymbol}`,
+        `Maximum anonymous trade amount is ${formatForDisplay(anonymousMaximumCryptoAmount, cryptoSymbol, cryptoObj?.buyPrecision)} ${cryptoSymbol}`,
       );
       return;
     }
@@ -1277,7 +1277,7 @@ const AppSimCard = () => {
         Number.isNaN(submittedCryptoAmount) ||
         submittedCryptoAmount > anonymousMaximumCryptoAmount
       ) {
-        const maximumLabel = `${formatForDisplay(anonymousMaximumCryptoAmount, cryptoSymbol)} ${cryptoSymbol}`;
+        const maximumLabel = `${formatForDisplay(anonymousMaximumCryptoAmount, cryptoSymbol, cryptoObj?.buyPrecision)} ${cryptoSymbol}`;
         const errorMessage = `Anonymous trades must not exceed ${maximumLabel}.`;
         setGuestError(errorMessage);
         toast.error(errorMessage);
@@ -2236,7 +2236,7 @@ const AppSimCard = () => {
                 <SRow label="Buying" value={`${cryptoSymbol} with Naira`} />
                 <SRow
                   label="You'll Get"
-                  value={`${parseFloat(amount).toFixed(4)} ${cryptoSymbol}`}
+                  value={`${formatForDisplay(Number(amount), cryptoSymbol, cryptoObj?.buyPrecision)} ${cryptoSymbol}`}
                 />
                 {receiveAmount && (
                   <SRow

@@ -111,10 +111,10 @@ export function formatPlainDecimalString(
   return str;
 }
 
-export function formatForDisplay(amount: number, symbolOrCode: string): string {
+export function formatForDisplay(amount: number, symbolOrCode: string, precision?: number): string {
   if (typeof amount !== "number" || Number.isNaN(amount)) amount = 0;
   const { displayDecimals, trimTrailingZeros } = getRule(symbolOrCode);
-  const fixed = amount.toFixed(displayDecimals);
+  const fixed = amount.toFixed(precision ?? displayDecimals);
   return trimTrailingZeros ? stripTrailingZeros(fixed) : fixed;
 }
 
@@ -122,12 +122,12 @@ export function formatForDisplay(amount: number, symbolOrCode: string): string {
  * Format an amount for display with thousands separators (e.g. "2,275,000" NGN,
  * "0.00054497" BTC). Prefer this over formatForDisplay for anything shown to a user.
  */
-export function formatForDisplayLocalized(amount: number, symbolOrCode: string, locale = "en-US"): string {
+export function formatForDisplayLocalized(amount: number, symbolOrCode: string, locale = "en-US", precision?: number): string {
   if (typeof amount !== "number" || Number.isNaN(amount)) amount = 0;
   const { displayDecimals, trimTrailingZeros } = getRule(symbolOrCode);
   const formatted = new Intl.NumberFormat(locale, {
     minimumFractionDigits: trimTrailingZeros ? 0 : displayDecimals,
-    maximumFractionDigits: displayDecimals,
+    maximumFractionDigits: precision ?? displayDecimals,
   }).format(amount);
   return formatted;
 }

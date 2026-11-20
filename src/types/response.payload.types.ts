@@ -36,9 +36,8 @@ export type BaseApiResponse<T> = {
 export type ManualSellDepositRecheckResponse = {
   outcome:
     | "COOLDOWN_ACTIVE"
-    | "NO_BALANCE_CHANGE"
+    | "NO_CHAIN_TRANSFER_FOUND"
     | "DEPOSIT_FOUND"
-    | "BALANCE_INCREASED_UNRESOLVED"
     | "RECHECK_UNAVAILABLE";
   status: string;
   baselineBalance: number;
@@ -65,7 +64,7 @@ export type SupportedCryptoOrCurrencyResponse = {
   sellRate: string;
   buyEnabled: boolean;
   sellEnabled: boolean;
-  buyPrecision: number | null;
+  buyPrecision: number;
   minTransactionLimit: string;
   maxTransactionLimit: string;
   minTradeAmountForAnonymous: string;
@@ -199,6 +198,7 @@ export type CryptoCurrencyResponseEntity = {
   logoUrl: string;
   buyRate: string;
   sellRate: string;
+  buyPrecision: number;
   isActive: boolean;
   websiteUrl: string;
   whitepaperUrl: string;

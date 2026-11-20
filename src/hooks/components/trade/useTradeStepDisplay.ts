@@ -700,7 +700,8 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
       lastCalculationRef.current?.from !== "numberOfToken" &&
       !calculationPerformed
     ) {
-      const calculated = (Number(amountToBuy) / calculationRate).toFixed(selectedToken?.buyPrecision ?? 8).replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "");
+      if (!selectedToken || selectedToken.buyPrecision == null) return;
+      const calculated = (Number(amountToBuy) / calculationRate).toFixed(selectedToken.buyPrecision).replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "");
       // Update the receive field (user is not typing here, so it's safe to format)
       if (calculated !== String(numberOfToken)) {
         nextNumberOfToken = calculated;
@@ -722,7 +723,8 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
         (isEditingAmountToBuy || (noFieldFocused && lastCalculationRef.current?.from !== "numberOfToken")) &&
         lastCalculationRef.current?.from !== "numberOfToken"
       ) {
-        const calculated = (Number(amountToBuy) / calculationRate).toFixed(8).replace(/\.?0+$/, "");
+        if (!selectedToken) return;
+        const calculated = (Number(amountToBuy) / calculationRate).toFixed(selectedToken.buyPrecision).replace(/\.?0+$/, "");
         // Update the enter amount field (user is not typing here, so it's safe to format)
         if (calculated !== String(numberOfToken) && Number(calculated) > 0) {
           nextNumberOfToken = calculated;
@@ -1409,7 +1411,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
     
     // For BUY transactions, just show the crypto amount
     if (activeTab.toLocaleLowerCase() === 'buy') {
-      return `${formatForDisplay(Number(numberOfToken), selectedToken?.symbol ?? "")} ${selectedToken?.symbol}`;
+      return `${formatForDisplay(Number(numberOfToken), selectedToken?.symbol ?? "", selectedToken?.buyPrecision ?? undefined)} ${selectedToken?.symbol}`;
     }
 
     // For SELL transactions, show fiat conversions
@@ -1447,7 +1449,7 @@ export const useTradeStepDisplay = ( token: string, activeTab: TradeType, curren
 
     // For SELL transactions, show the crypto amount being sent
     if (activeTab.toLowerCase() === 'sell') {
-      return `${formatForDisplay(Number(numberOfToken), selectedToken?.symbol ?? "")} ${selectedToken?.symbol}`;
+      return `${formatForDisplay(Number(numberOfToken), selectedToken?.symbol ?? "", selectedToken?.buyPrecision ?? undefined)} ${selectedToken?.symbol}`;
     }
 
     // For BUY transactions, show fiat amount with proper formatting

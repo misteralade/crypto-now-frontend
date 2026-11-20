@@ -325,7 +325,7 @@ const TransactionDetailsPage = () => {
                     className="text-xs font-semibold mt-0.5"
                     style={{ color: "#6B6E6B" }}
                   >
-                    {formatForDisplay(Number(transaction.amountCrypto), transaction.cryptocurrency?.symbol ?? "")}{" "}
+                    {formatForDisplay(Number(transaction.amountCrypto), transaction.cryptocurrency?.symbol ?? "", transaction.cryptocurrency?.buyPrecision)}{" "}
                     {transaction.cryptocurrency?.symbol}
                   </p>
                 </div>
@@ -429,7 +429,7 @@ const TransactionDetailsPage = () => {
               <div className="grid grid-cols-2 gap-4">
                 <InfoRow
                   label="Crypto Amount"
-                  value={`${formatForDisplay(Number(transaction.amountCrypto), transaction.cryptocurrency?.symbol ?? "")} ${
+                  value={`${formatForDisplay(Number(transaction.amountCrypto), transaction.cryptocurrency?.symbol ?? "", transaction.cryptocurrency?.buyPrecision)} ${
                     transaction.cryptocurrency?.symbol
                   }`}
                 />

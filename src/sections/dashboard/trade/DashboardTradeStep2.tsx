@@ -954,7 +954,7 @@ export default function DashboardTradeStep2({
           <p className="text-xs text-white/70 mt-1">
             You'll receive{" "}
             {isLocalBuyFlow && buyRateInfo
-              ? formatForDisplay(buyRateInfo.cryptoAmount, selectedToken?.symbol ?? "")
+              ? formatForDisplay(buyRateInfo.cryptoAmount, selectedToken?.symbol ?? "", selectedToken?.buyPrecision)
               : numberOfToken}{" "}
             {selectedToken?.symbol}
           </p>

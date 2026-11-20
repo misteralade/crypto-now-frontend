@@ -431,7 +431,7 @@ function BuyFields({
   ) => {
     const currencyId = selectedCurrency?.id;
     const cryptoId = selectedToken.id;
-    if (!targetFiatAmount || !currencyId || !cryptoId) return;
+    if (!targetFiatAmount || !currencyId || !cryptoId || selectedToken.buyPrecision == null) return;
 
     setRateError(false);
     onRateResolved?.(null);
@@ -463,7 +463,6 @@ function BuyFields({
         : rateData.coinGeckoRate;
       const cryptoAmount = roundTokenAmountUp(
         targetFiatAmount / divisor,
-        selectedToken.symbol,
         selectedToken.buyPrecision,
       );
       // Check the resolved amount against the admin-configured max before

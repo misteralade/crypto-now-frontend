@@ -24,7 +24,7 @@ import type {
   CustodialWalletResponse,
 } from "../../types/response.payload.types.ts";
 import { formatCurrency } from "../../util/index.util.ts";
-import { formatCompact } from "../../util/asset-precision.ts";
+import { formatCompact, formatForDisplay } from "../../util/asset-precision.ts";
 import {
   getStatusConfig,
   getTransactionAmountFiatNGN,
@@ -113,7 +113,7 @@ function RecentOrderRow({ tx }: { tx: TransactionResponseEntity }) {
           className="text-sm font-semibold leading-snug"
           style={{ color: "#0E0F0C" }}
         >
-          {isBuy ? "Buy" : "Sell"} {Number(tx.amountCrypto).toFixed(4).replace(/\.?0+$/, "")} {tx.cryptocurrency.symbol}
+          {isBuy ? "Buy" : "Sell"} {formatForDisplay(Number(tx.amountCrypto), tx.cryptocurrency.symbol, tx.cryptocurrency.buyPrecision)} {tx.cryptocurrency.symbol}
         </p>
         <p
           className="text-[11px] leading-snug mt-0.5 truncate"

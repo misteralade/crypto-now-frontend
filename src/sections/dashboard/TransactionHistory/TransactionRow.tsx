@@ -8,7 +8,7 @@ import {
 } from "../../../util/transaction.util.ts";
 import { useNavigate } from "@tanstack/react-router";
 import { ROUTES } from "../../../util/constants.util.ts";
-import { formatCompact } from "../../../util/asset-precision.ts";
+import { formatCompact, formatForDisplay } from "../../../util/asset-precision.ts";
 
 interface TransactionRowProps {
   transaction: TransactionResponseEntity;
@@ -33,7 +33,7 @@ const TransactionRow = ({ transaction: tx, isLast, isMobileCard = false }: Trans
     momentClient.isWithinDuration(tx.createdAt, 1, "hour");
   const canDispute = tx.status === TRANSACTION_STATUS.DISPUTED;
   const fiatAmt = formatCompact(getTransactionAmountFiatNGN(tx), "NGN", 0);
-  const cryptoAmt = Number(tx.amountCrypto).toFixed(4).replace(/\.?0+$/, "");
+  const cryptoAmt = formatForDisplay(Number(tx.amountCrypto), tx.cryptocurrency.symbol, tx.cryptocurrency.buyPrecision);
 
   const handleView     = () => navigate({ to: `${ROUTES.TRANSACTION}/${tx.sessionId}` });
   const handleDispute  = () => tx.dispute?.id && navigate({ to: "/dispute/$id", params: { id: tx.dispute.id } });
@@ -144,7 +144,7 @@ const TransactionRow = ({ transaction: tx, isLast, isMobileCard = false }: Trans
       <td className="px-5 py-4">
         <div>
           <p className="text-[14px] font-semibold text-[#101828]">
-            {Number(tx.amountCrypto).toFixed(4).replace(/\.?0+$/, "")}
+            {cryptoAmt}
           </p>
           <p className="text-[11px] text-[#9A9A9A] mt-0.5">{tx.cryptocurrency.symbol}</p>
         </div>
