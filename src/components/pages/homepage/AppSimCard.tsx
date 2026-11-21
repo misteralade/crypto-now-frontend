@@ -492,10 +492,6 @@ const AppSimCard = () => {
   const [customBuyAmount, setCustomBuyAmount] = useState("");
   const [activeSellPreset, setActiveSellPreset] = useState<number | "custom" | null>(null);
   const [customSellAmount, setCustomSellAmount] = useState("");
-  // Set only when a keystroke or preset/custom amount was rejected for pushing
-  // the amount past the anonymous max: cleared as soon as the amount is back
-  // within range. Mirrors DashboardTradeStep1's BuyFields.handleAmountChange.
-  const [maxLimitMessage, setMaxLimitMessage] = useState<string | null>(null);
   const [guestTransactionStatus, setGuestTransactionStatus] =
     useState<TransactionResponseEntity | null>(null);
   const [guestError, setGuestError] = useState<string | null>(null);
@@ -653,6 +649,12 @@ const AppSimCard = () => {
   const minLimitMessage =
     amountBelowAnonymousMin && cryptoSymbol
       ? `Minimum anonymous trade amount is ${formatForDisplay(anonymousMinimumCryptoAmount, cryptoSymbol, cryptoObj?.buyPrecision)} ${cryptoSymbol}`
+      : null;
+
+  const maxLimitMessage =
+    numericTradeAmount > 0 && anonymousMaximumCryptoAmount > 0 &&
+    numericTradeAmount > anonymousMaximumCryptoAmount && cryptoSymbol
+      ? `Maximum anonymous trade amount is ${formatForDisplay(anonymousMaximumCryptoAmount, cryptoSymbol, cryptoObj?.buyPrecision)} ${cryptoSymbol}`
       : null;
 
   // Keep the selected coin available for the current direction.
@@ -1156,20 +1158,6 @@ const AppSimCard = () => {
       roundTokenAmountUp(targetNgnAmount / data.fiatRate, cryptoObj.buyPrecision),
     );
 
-    // Reject the preset/custom chip outright (leave the field as it was) and
-    // surface the max as inline red text, rather than silently rewriting the
-    // chip's amount down to the max (mirrors DashboardTradeStep1).
-    if (
-      anonymousMaximumCryptoAmount > 0 &&
-      Number(roundedCryptoAmount) > anonymousMaximumCryptoAmount
-    ) {
-      setMaxLimitMessage(
-        `Maximum anonymous trade amount is ${formatForDisplay(anonymousMaximumCryptoAmount, cryptoSymbol, cryptoObj?.buyPrecision)} ${cryptoSymbol}`,
-      );
-      return;
-    }
-    setMaxLimitMessage(null);
-
     const computedReceiveAmount = targetNgnAmount.toFixed(2);
     skipNextAutoQuoteRef.current = true;
     setAmount(roundedCryptoAmount);
@@ -1193,9 +1181,7 @@ const AppSimCard = () => {
     setGuestError(null);
   };
 
-  // Raw crypto-amount input (top box): cleans the keystroke and rejects it
-  // outright if it would push the amount past the anonymous max, same as
-  // DashboardTradeStep1's BuyFields.handleAmountChange.
+  // Keep the crypto input numeric while allowing amounts outside the trade limits.
   const handleAmountChange = (value: string) => {
     let cleaned = value.replace(/[^0-9.]/g, "");
     const firstDot = cleaned.indexOf(".");
@@ -1209,19 +1195,6 @@ const AppSimCard = () => {
       cleaned = cleaned.slice(0, dotIndex + 1 + 8);
     }
 
-    if (
-      cleaned !== "" &&
-      cleaned !== "." &&
-      anonymousMaximumCryptoAmount > 0 &&
-      Number(cleaned) > anonymousMaximumCryptoAmount
-    ) {
-      setMaxLimitMessage(
-        `Maximum anonymous trade amount is ${formatForDisplay(anonymousMaximumCryptoAmount, cryptoSymbol, cryptoObj?.buyPrecision)} ${cryptoSymbol}`,
-      );
-      return;
-    }
-
-    setMaxLimitMessage(null);
     setAmount(cleaned);
     setReceiveAmount("");
     setGuestError(null);
@@ -1469,7 +1442,6 @@ const AppSimCard = () => {
   const reset = () => {
     setGuestError(null);
     setEmailValidationError(null);
-    setMaxLimitMessage(null);
     setStep(1);
     setDone(false);
     setAmount("");
@@ -1594,7 +1566,6 @@ const AppSimCard = () => {
                           setAmount("");
                           setReceiveAmount("");
                           setGuestError(null);
-                          setMaxLimitMessage(null);
                           setActiveBuyPreset(null);
                           setCustomBuyAmount("");
                           setActiveSellPreset(null);
@@ -1685,7 +1656,6 @@ const AppSimCard = () => {
                               setAmount("");
                               setReceiveAmount("");
                               setGuestError(null);
-                              setMaxLimitMessage(null);
                               setActiveBuyPreset(null);
                               setActiveSellPreset(null);
                               setCustomBuyAmount("");
@@ -1729,7 +1699,6 @@ const AppSimCard = () => {
                             setCustomBuyAmount("");
                             setCustomSellAmount("");
                             setGuestError(null);
-                            setMaxLimitMessage(null);
                             return;
                           }
                           void handleChipClick(chip.value);
