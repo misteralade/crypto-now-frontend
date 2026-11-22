@@ -1273,8 +1273,6 @@ export default function DashboardTradeStep1({
         </p>
       </div>
 
-      <NetworkFeeNotice symbol={selectedToken?.symbol} />
-
       {/* Crypto grid : 2×2 */}
       <div className="grid grid-cols-2 gap-3">
         {availableTokens.map((token) => {
@@ -1349,6 +1347,8 @@ export default function DashboardTradeStep1({
           onRateResolved={onRateResolved}
         />
       )}
+
+      {isBuy && <NetworkFeeNotice symbol={selectedToken?.symbol} />}
 
       {/* SELL: payout bank (read-only : always the default account) */}
       {!isBuy && (

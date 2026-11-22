@@ -1770,7 +1770,7 @@ const AppSimCard = () => {
                 </div>
               )}
 
-              <NetworkFeeNotice symbol={cryptoSymbol} className="text-center" />
+              {isBuy && <NetworkFeeNotice symbol={cryptoSymbol} className="text-center" />}
 
               <button
                 onClick={handleStep1Next}
