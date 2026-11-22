@@ -23,6 +23,7 @@ import {
   roundTokenAmountUp,
 } from "../../../constants/tradeAmounts.ts";
 import { roundForCalculation, formatForDisplayLocalized, formatPlainDecimalString } from "../../../util/asset-precision.ts";
+import NetworkFeeNotice from "../../../components/global/NetworkFeeNotice.tsx";
 
 export interface BuyRateInfo {
   rate: number; // NGN per 1 crypto (fiatRate from API)
@@ -1271,6 +1272,8 @@ export default function DashboardTradeStep1({
             : "Sell crypto. Send it to your deposit address. We confirm your deposit and process your bank transfer."}
         </p>
       </div>
+
+      <NetworkFeeNotice symbol={selectedToken?.symbol} />
 
       {/* Crypto grid : 2×2 */}
       <div className="grid grid-cols-2 gap-3">

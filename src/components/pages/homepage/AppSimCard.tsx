@@ -1,4 +1,5 @@
 import TransactionReview from "../../global/TransactionReview.tsx";
+import NetworkFeeNotice from "../../global/NetworkFeeNotice.tsx";
 import { TRANSACTION_STATUS } from "../../../util/transaction.util.ts";
 import { useState, useRef, useEffect, type ReactNode } from "react";
 import { toast } from "react-toastify";
@@ -1766,15 +1767,10 @@ const AppSimCard = () => {
                       </>
                     )}
                   </p>
-                  {isBuy && !quoteLoading && (
-                    <p className="text-xs text-gray-400">
-                      {cryptoSymbol.toUpperCase() === "USDT" && "Fees may apply - 1 USDT"}
-                      {cryptoSymbol.toUpperCase() === "SOL" && "Fees may apply - 0.0004 SOL"}
-                      {cryptoSymbol.toUpperCase() === "BTC" && "Fees may apply - BTC fees are unpredictable"}
-                    </p>
-                  )}
                 </div>
               )}
+
+              <NetworkFeeNotice symbol={cryptoSymbol} className="text-center" />
 
               <button
                 onClick={handleStep1Next}
