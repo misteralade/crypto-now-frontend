@@ -1,8 +1,8 @@
 const NETWORK_FEE_BY_TOKEN: Record<string, string> = {
-  TRX: "Network fees may apply to guest and signed-in users: 1.5 TRX.",
-  LTC: "Network fees may apply to guest and signed-in users: 0.0001 LTC.",
-  BTC: "Network fees may apply to guest and signed-in users. BTC fees vary.",
-  USDT: "Network fees may apply to guest and signed-in users: $1.",
+  TRX: "Network fee: 1.5 TRX",
+  LTC: "Network fee: 0.0001 LTC",
+  BTC: "Network fee varies",
+  USDT: "Network fee: $1",
 };
 
 type Props = { symbol?: string; className?: string };
