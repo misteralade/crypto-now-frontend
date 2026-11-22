@@ -696,6 +696,8 @@ function BuyFields({
         )}
       </div>
 
+      <NetworkFeeNotice symbol={selectedToken.symbol} className="text-center" />
+
       {fiatPreview && !isFetchingRate && !limitMessage && !rateError && (
         <p className="text-center text-sm text-gray-400">
           You will pay: {" "}
@@ -1330,7 +1332,6 @@ export default function DashboardTradeStep1({
       </div>
 
       {/* BUY: amount + wallet fields (shown when token is selected) */}
-      {isBuy && <NetworkFeeNotice symbol={selectedToken?.symbol} />}
       {isBuy && selectedToken && (
         <BuyFields
           selectedToken={selectedToken}
