@@ -1330,6 +1330,7 @@ export default function DashboardTradeStep1({
       </div>
 
       {/* BUY: amount + wallet fields (shown when token is selected) */}
+      {isBuy && <NetworkFeeNotice symbol={selectedToken?.symbol} />}
       {isBuy && selectedToken && (
         <BuyFields
           selectedToken={selectedToken}
@@ -1348,7 +1349,6 @@ export default function DashboardTradeStep1({
         />
       )}
 
-      {isBuy && <NetworkFeeNotice symbol={selectedToken?.symbol} />}
 
       {/* SELL: payout bank (read-only : always the default account) */}
       {!isBuy && (

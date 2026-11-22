@@ -1578,6 +1578,8 @@ const AppSimCard = () => {
                 </div>
               )}
 
+              {isBuy && <NetworkFeeNotice symbol={cryptoSymbol} />}
+
               {/* Amount input box */}
               <div
                 className="rounded-xl overflow-hidden"
@@ -1770,7 +1772,6 @@ const AppSimCard = () => {
                 </div>
               )}
 
-              {isBuy && <NetworkFeeNotice symbol={cryptoSymbol} className="text-center" />}
 
               <button
                 onClick={handleStep1Next}
