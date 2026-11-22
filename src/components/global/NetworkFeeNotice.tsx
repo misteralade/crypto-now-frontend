@@ -1,6 +1,7 @@
 const NETWORK_FEE_BY_TOKEN: Record<string, string> = {
   TRX: "Network fee: 1.5 TRX",
   LTC: "Network fee: 0.0001 LTC",
+  SOL: "Network fee: 0.0004 SOL",
   BTC: "Network fee is unpredictable",
   USDT: "Network fee: $1",
 };
