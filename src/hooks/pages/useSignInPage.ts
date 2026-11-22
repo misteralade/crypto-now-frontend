@@ -28,6 +28,7 @@ export const useSignInPage = () => {
     const payload:AuthRequestSchema = {
       email: values.email,
       password: values.password,
+      keepLoggedIn: values.rememberMe,
     }
 
     try {

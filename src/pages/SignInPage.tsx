@@ -132,7 +132,17 @@ const SignInPage = () => {
                 </div>
 
                 {/* Forgot Password Link */}
-                <div className="flex justify-end mt-3">
+                <div className="flex flex-wrap items-center justify-between gap-3 mt-3">
+                  <label className="flex items-center gap-2 text-[14px] text-[#374151]">
+                    <input
+                      type="checkbox"
+                      name="rememberMe"
+                      checked={values.rememberMe}
+                      onChange={handleChange}
+                      className="accent-[#575AE5]"
+                    />
+                    Stay logged in for 7 days
+                  </label>
                   <a
                       href={ROUTES.FORGOT_PASSWORD}
                       className="text-[14px] text-[#6B7280] hover:text-[#1E1B4B] underline transition-colors duration-200"
